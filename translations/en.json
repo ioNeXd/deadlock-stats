@@ -1,0 +1,8 @@
+{
+  "site_title": "Deadlock Stats",
+  "nav_heroes": "Heroes",
+  "nav_items": "Items",
+  "table_hero": "Hero",
+  "table_winrate": "Win Rate",
+  "footer_credit": "Data provided by deadlock-api.com"
+}
