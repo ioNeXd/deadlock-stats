@@ -97,6 +97,11 @@ const TableModule = (() => {
 
   function renderRows() {
     const tbody = document.getElementById("stats-table-body");
+    if (!tbody) {
+      console.warn("stats-table-body not found; skipping renderRows.");
+      return;
+    }
+
     tbody.innerHTML = "";
 
     let rows = [...state.rows];
@@ -140,6 +145,21 @@ const TableModule = (() => {
         });
       }
 
+      if (state.type === "heroes" && row.id != null) {
+        tr.classList.add("clickable-row");
+        tr.tabIndex = 0;
+        tr.setAttribute("role", "link");
+        tr.setAttribute("aria-label", row.name);
+        const goToHero = () => navigateToHero(row.id);
+        tr.addEventListener("click", goToHero);
+        tr.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            goToHero();
+          }
+        });
+      }
+
       tbody.appendChild(tr);
     }
   }
@@ -169,6 +189,11 @@ const TableModule = (() => {
   async function renderTable(type) {
     state.type = type;
     const header = document.getElementById("table-name-header");
+    if (!header) {
+      console.warn("table-name-header not found; skipping renderTable.");
+      return;
+    }
+
     let stats, entitiesById, idField;
 
     showLoader();
@@ -212,6 +237,7 @@ const TableModule = (() => {
             ? entity.images && entity.images.icon_image_small
             : entity.shop_image;
         return {
+          id: stat[idField],
           name: entity.name || "Unknown",
           imageUrl: imageUrl || "",
           winRate,
@@ -224,7 +250,6 @@ const TableModule = (() => {
       announceStatus("Table updated");
       renderRows();
 
-      // Move focus to the table header for keyboard users after content updates
       const nameHeader = document.getElementById("table-name-header");
       if (nameHeader) nameHeader.focus();
     } catch (err) {
@@ -303,6 +328,13 @@ const TableModule = (() => {
       });
   }
 
+  function onTableRouteActive() {
+    renderTable(state.type);
+  }
+
+  window.onTableRouteActive = onTableRouteActive;
+  window.renderTable = renderTable;
+
   async function showLastUpdated() {
     const el = document.getElementById("last-updated");
     if (el) el.textContent = t("loading");
@@ -320,12 +352,21 @@ const TableModule = (() => {
   async function init() {
     await initI18n();
     bindEvents();
-    await renderTable("heroes");
+
+    if (typeof initRouter === "function") {
+      initRouter();
+    }
+
+    if (typeof handleRouteChange === "function") {
+      await handleRouteChange();
+    } else {
+      await renderTable("heroes");
+    }
+
     showLastUpdated();
   }
 
   return { init, renderTable };
 })();
 
-// Initialize module
 TableModule.init();

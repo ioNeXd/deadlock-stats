@@ -1,4 +1,3 @@
-
 const fs = require("fs");
 const path = require("path");
 
@@ -58,7 +57,9 @@ function main() {
     }
 
     if (extraKeys.length > 0) {
-      console.error(`   Chaves extras / possível erro de digitação (${extraKeys.length}):`);
+      console.error(
+        `   Chaves extras / possível erro de digitação (${extraKeys.length}):`,
+      );
       for (const key of extraKeys) console.error(`     - ${key}`);
     }
   }

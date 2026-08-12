@@ -41,82 +41,87 @@
       </nav>
     </header>
     <main>
-      <div
-        id="error-banner"
-        class="error-banner hidden"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
-        <span id="error-banner-message"></span>
-        <button id="error-retry" class="error-retry" data-i18n="retry_button">
-          Retry
-        </button>
-      </div>
-
-      <div
-        id="loading-container"
-        class="loading-container"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        <div class="spinner" aria-hidden="true"></div>
-        <span id="loading-text" class="loading-text" data-i18n="loading"
-          >Loading...</span
+      <div id="table-view">
+        <div
+          id="error-banner"
+          class="error-banner hidden"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
         >
-      </div>
+          <span id="error-banner-message"></span>
+          <button id="error-retry" class="error-retry" data-i18n="retry_button">
+            Retry
+          </button>
+        </div>
 
-      <div
-        id="sr-status"
-        class="visually-hidden"
-        aria-live="polite"
-        aria-atomic="true"
-      ></div>
+        <div
+          id="loading-container"
+          class="loading-container"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div class="spinner" aria-hidden="true"></div>
+          <span id="loading-text" class="loading-text" data-i18n="loading"
+            >Loading...</span
+          >
+        </div>
 
-      <table
-        id="stats-table"
-        aria-describedby="loading-text error-banner-message"
-        aria-busy="true"
-        aria-label="Statistics table"
-      >
-        <caption
-          id="stats-caption"
+        <div
+          id="sr-status"
           class="visually-hidden"
-          data-i18n="table_caption"
+          aria-live="polite"
+          aria-atomic="true"
+        ></div>
+
+        <table
+          id="stats-table"
+          aria-describedby="loading-text error-banner-message"
+          aria-busy="true"
+          aria-label="Statistics table"
         >
-          Hero and item statistics table
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col"></th>
-            <th id="table-name-header" data-i18n="table_hero" tabindex="0">
-              Hero
-            </th>
-            <th
-              id="header-winrate"
-              data-i18n="table_winrate"
-              style="cursor: pointer"
-              role="button"
-              tabindex="0"
-              aria-sort="none"
-            >
-              Win Rate
-            </th>
-            <th
-              id="header-pickrate"
-              data-i18n="table_pickrate"
-              style="cursor: pointer"
-              role="button"
-              tabindex="0"
-              aria-sort="none"
-            >
-              Pick Rate
-            </th>
-          </tr>
-        </thead>
-        <tbody id="stats-table-body"></tbody>
-      </table>
+          <caption id="stats-caption" class="visually-hidden" data-i18n="table_caption">
+            Hero and item statistics table
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col"></th>
+              <th id="table-name-header" data-i18n="table_hero" tabindex="0">
+                Hero
+              </th>
+              <th
+                id="header-winrate"
+                data-i18n="table_winrate"
+                style="cursor: pointer"
+                role="button"
+                tabindex="0"
+                aria-sort="none"
+              >
+                Win Rate
+              </th>
+              <th
+                id="header-pickrate"
+                data-i18n="table_pickrate"
+                style="cursor: pointer"
+                role="button"
+                tabindex="0"
+                aria-sort="none"
+              >
+                Pick Rate
+              </th>
+            </tr>
+          </thead>
+          <tbody id="stats-table-body"></tbody>
+        </table>
+      </div>
+
+      <div id="hero-detail-view" class="hidden">
+        <button id="back-to-table" data-i18n="back_to_table">
+          ← Back to table
+        </button>
+        <div id="hero-detail-content"></div>
+      </div>
     </main>
 
     <footer>
@@ -126,6 +131,13 @@
     <script src="js/i18n.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/api.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/hero-detail.js"></script>
     <script src="js/table.js"></script>
+    <script>
+      document
+        .getElementById("back-to-table")
+        .addEventListener("click", navigateToTable);
+    </script>
   </body>
 </html>

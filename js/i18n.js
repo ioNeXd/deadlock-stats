@@ -13,7 +13,7 @@ function safeGetLocalStorage(key) {
   try {
     return localStorage.getItem(key);
   } catch (e) {
-    console.warn('localStorage get failed', e);
+    console.warn("localStorage get failed", e);
     return null;
   }
 }
@@ -22,7 +22,7 @@ function safeSetLocalStorage(key, value) {
   try {
     localStorage.setItem(key, value);
   } catch (e) {
-    console.warn('localStorage set failed', e);
+    console.warn("localStorage set failed", e);
   }
 }
 
@@ -34,15 +34,15 @@ async function loadTranslations(lang) {
       const res = await fetch(`translations/en.json`);
       baseTranslations = await res.json();
     } catch (err) {
-      console.warn('Failed to load base English translations:', err);
+      console.warn("Failed to load base English translations:", err);
       baseTranslations = {};
     }
   }
 
-  if (lang === 'en') {
+  if (lang === "en") {
     currentTranslations = { ...baseTranslations };
-    currentLang = 'en';
-    document.documentElement.lang = 'en';
+    currentLang = "en";
+    document.documentElement.lang = "en";
     return;
   }
 
@@ -55,29 +55,38 @@ async function loadTranslations(lang) {
     currentLang = lang;
     document.documentElement.lang = lang;
   } catch (err) {
-    console.warn(`Failed to load translations for ${lang}, falling back to English:`, err);
+    console.warn(
+      `Failed to load translations for ${lang}, falling back to English:`,
+      err,
+    );
     // fallback to base
     currentTranslations = { ...baseTranslations };
-    currentLang = 'en';
-    document.documentElement.lang = 'en';
+    currentLang = "en";
+    document.documentElement.lang = "en";
   }
 }
 
 function applyTranslations() {
-  const elements = document.querySelectorAll('[data-i18n]');
+  const elements = document.querySelectorAll("[data-i18n]");
   for (const el of elements) {
-    const key = el.getAttribute('data-i18n');
+    const key = el.getAttribute("data-i18n");
     el.textContent = t(key);
   }
 }
 
 function t(key) {
-  if (key == null) return '';
-  if (currentTranslations && Object.prototype.hasOwnProperty.call(currentTranslations, key)) {
+  if (key == null) return "";
+  if (
+    currentTranslations &&
+    Object.prototype.hasOwnProperty.call(currentTranslations, key)
+  ) {
     return currentTranslations[key];
   }
   // fallback to base
-  if (baseTranslations && Object.prototype.hasOwnProperty.call(baseTranslations, key)) {
+  if (
+    baseTranslations &&
+    Object.prototype.hasOwnProperty.call(baseTranslations, key)
+  ) {
     missingKeys.add(`${currentLang}:${key}`);
     return baseTranslations[key];
   }
@@ -100,17 +109,20 @@ function reportMissingTranslations() {
 }
 
 function buildLanguageMenu() {
-  const menu = document.getElementById('lang-menu');
+  const menu = document.getElementById("lang-menu");
   if (!menu) return;
-  menu.innerHTML = '';
+  menu.innerHTML = "";
   for (const lang of availableLanguages) {
-    const li = document.createElement('li');
-    const button = document.createElement('button');
-    button.type = 'button';
+    const li = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
     button.textContent = lang.label;
-    button.style.setProperty('--flag-url', `url(https://flagcdn.com/w40/${lang.flag}.png)`);
-    button.classList.add('lang-option');
-    button.addEventListener('click', async () => {
+    button.style.setProperty(
+      "--flag-url",
+      `url(https://flagcdn.com/w40/${lang.flag}.png)`,
+    );
+    button.classList.add("lang-option");
+    button.addEventListener("click", async () => {
       await selectLanguage(lang.code);
     });
     li.appendChild(button);
@@ -119,29 +131,31 @@ function buildLanguageMenu() {
 }
 
 function updateLangToggle() {
-  const current = availableLanguages.find((lang) => lang.code === currentLang) || availableLanguages[0];
-  const toggle = document.getElementById('lang-toggle');
+  const current =
+    availableLanguages.find((lang) => lang.code === currentLang) ||
+    availableLanguages[0];
+  const toggle = document.getElementById("lang-toggle");
   if (!toggle) return;
   if (current) {
     toggle.style.backgroundImage = `url(https://flagcdn.com/w80/${current.flag}.png)`;
   }
-  toggle.setAttribute('aria-label', t('lang_selector_label'));
+  toggle.setAttribute("aria-label", t("lang_selector_label"));
 }
 
 function closeLangMenu() {
-  const menu = document.getElementById('lang-menu');
-  const toggle = document.getElementById('lang-toggle');
-  if (menu) menu.classList.add('hidden');
-  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+  const menu = document.getElementById("lang-menu");
+  const toggle = document.getElementById("lang-toggle");
+  if (menu) menu.classList.add("hidden");
+  if (toggle) toggle.setAttribute("aria-expanded", "false");
 }
 
 function toggleLangMenu() {
-  const menu = document.getElementById('lang-menu');
+  const menu = document.getElementById("lang-menu");
   if (!menu) return;
-  const isOpen = !menu.classList.contains('hidden');
-  menu.classList.toggle('hidden');
-  const toggle = document.getElementById('lang-toggle');
-  if (toggle) toggle.setAttribute('aria-expanded', String(!isOpen));
+  const isOpen = !menu.classList.contains("hidden");
+  menu.classList.toggle("hidden");
+  const toggle = document.getElementById("lang-toggle");
+  if (toggle) toggle.setAttribute("aria-expanded", String(!isOpen));
 }
 
 async function selectLanguage(lang) {
@@ -149,12 +163,12 @@ async function selectLanguage(lang) {
     await loadTranslations(lang);
     applyTranslations();
     updateLangToggle();
-    safeSetLocalStorage('lang', lang);
+    safeSetLocalStorage("lang", lang);
     closeLangMenu();
 
-    if (typeof onLanguageChange === 'function') onLanguageChange();
+    if (typeof onLanguageChange === "function") onLanguageChange();
   } catch (err) {
-    console.error('selectLanguage failed', err);
+    console.error("selectLanguage failed", err);
     // show a minimal user-facing fallback
     applyTranslations();
     updateLangToggle();
@@ -165,16 +179,16 @@ function setupLanguageSwitcher() {
   buildLanguageMenu();
   updateLangToggle();
 
-  const toggle = document.getElementById('lang-toggle');
+  const toggle = document.getElementById("lang-toggle");
   if (toggle) {
-    toggle.addEventListener('click', (event) => {
+    toggle.addEventListener("click", (event) => {
       event.stopPropagation();
       toggleLangMenu();
     });
   }
 
-  document.addEventListener('click', (event) => {
-    const switcher = document.getElementById('lang-switcher');
+  document.addEventListener("click", (event) => {
+    const switcher = document.getElementById("lang-switcher");
     if (!switcher || !switcher.contains(event.target)) {
       closeLangMenu();
     }
@@ -182,7 +196,7 @@ function setupLanguageSwitcher() {
 }
 
 async function initI18n() {
-  const savedLang = safeGetLocalStorage('lang') || 'en';
+  const savedLang = safeGetLocalStorage("lang") || "en";
   await loadTranslations(savedLang);
   applyTranslations();
   reportMissingTranslations();
