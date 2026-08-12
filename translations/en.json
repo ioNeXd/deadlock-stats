@@ -9,5 +9,8 @@
   "footer_credit": "Data provided by deadlock-api.com",
   "loading": "Loading...",
   "last_updated_prefix": "Last updated:",
-  "lang_selector_label": "Select language"
+  "lang_selector_label": "Select language",
+  "error_fetching_data": "Failed to load data. Check your connection and try again.",
+  "retry_button": "Retry",
+  "no_data": "No data available"
 }

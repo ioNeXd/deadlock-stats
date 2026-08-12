@@ -22,7 +22,17 @@
   </nav>
 </header>
     <main>
-      <table id="stats-table">
+      <div id="error-banner" class="error-banner hidden" role="alert" aria-live="assertive" aria-atomic="true">
+        <span id="error-banner-message"></span>
+        <button id="error-retry" class="error-retry" data-i18n="retry_button">Retry</button>
+      </div>
+
+      <div id="loading-container" class="loading-container" role="status" aria-live="polite" aria-atomic="true">
+        <div class="spinner" aria-hidden="true"></div>
+        <span id="loading-text" class="loading-text" data-i18n="loading">Loading...</span>
+      </div>
+
+      <table id="stats-table" aria-describedby="loading-text error-banner-message" aria-busy="true" aria-label="Statistics table">
         <thead>
           <tr>
             <th></th>

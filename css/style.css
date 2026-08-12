@@ -149,3 +149,77 @@ footer {
   border-radius: 2px;
   flex-shrink: 0;
 }
+
+/* Loading / spinner styles */
+.loading-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  color: #cfcfcf;
+}
+
+/* Hidden state controlled via JS by toggling aria-hidden or adding .hidden */
+.loading-container[aria-hidden="true"],
+.loading-container.hidden {
+  display: none;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+.loading-text {
+  color: #bdbdbd;
+  font-size: 0.95em;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error banner styles */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, #401818 0%, #2b1414 100%);
+  color: #fff;
+  border-left: 4px solid #ff6b6b;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.error-banner.hidden {
+  display: none;
+}
+
+.error-banner #error-banner-message {
+  flex: 1 1 auto;
+}
+
+.error-retry {
+  background-color: #2a2a2a;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95em;
+}
+
+.error-retry:hover {
+  border-color: #888;
+}
+
+.error-retry:focus {
+  outline: 3px solid rgba(255,255,255,0.12);
+  outline-offset: 2px;
+}
