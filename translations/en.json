@@ -3,6 +3,11 @@
   "nav_heroes": "Heroes",
   "nav_items": "Items",
   "table_hero": "Hero",
+  "table_item": "Item",
   "table_winrate": "Win Rate",
-  "footer_credit": "Data provided by deadlock-api.com"
+  "table_pickrate": "Pick Rate",
+  "footer_credit": "Data provided by deadlock-api.com",
+  "loading": "Loading...",
+  "last_updated_prefix": "Last updated:",
+  "lang_selector_label": "Select language"
 }

@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!doctype html>
 <html lang="en">
   <head>
@@ -9,15 +8,19 @@
   </head>
   <body>
     <header>
-      <div class="title-row">
-        <h1 data-i18n="site_title">Deadlock Stats</h1>
-        <span id="last-updated" class="last-updated">Loading...</span>
-      </div>
-      <nav>
-        <a href="#" id="nav-heroes" data-i18n="nav_heroes">Heroes</a>
-        <a href="#" id="nav-items" data-i18n="nav_items">Items</a>
-      </nav>
-    </header>
+  <div class="title-row">
+    <h1 data-i18n="site_title">Deadlock Stats</h1>
+    <span id="last-updated" class="last-updated" data-i18n="loading">Loading...</span>
+    <div class="lang-switcher" id="lang-switcher">
+  <button id="lang-toggle" aria-haspopup="true" aria-expanded="false"></button>
+  <ul id="lang-menu" class="lang-menu hidden"></ul>
+</div>
+  </div>
+  <nav>
+    <a href="#" id="nav-heroes" data-i18n="nav_heroes">Heroes</a>
+    <a href="#" id="nav-items" data-i18n="nav_items">Items</a>
+  </nav>
+</header>
     <main>
       <table id="stats-table">
         <thead>

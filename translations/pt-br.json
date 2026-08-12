@@ -1,0 +1,13 @@
+{
+  "site_title": "Deadlock Stats",
+  "nav_heroes": "Heróis",
+  "nav_items": "Itens",
+  "table_hero": "Herói",
+  "table_item": "Item",
+  "table_winrate": "Taxa de Vitória",
+  "table_pickrate": "Taxa de Escolha",
+  "footer_credit": "Dados fornecidos por deadlock-api.com",
+  "loading": "Carregando...",
+  "last_updated_prefix": "Última atualização:",
+  "lang_selector_label": "Selecionar idioma"
+}

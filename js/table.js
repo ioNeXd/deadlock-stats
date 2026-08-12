@@ -1,27 +1,33 @@
-
 let currentRowsData = [];
-let currentSortColumn = null; 
+let currentSortColumn = null;
 let currentSortDirection = "desc";
+let currentType = "heroes";
 
 async function showLastUpdated() {
   const lastMatch = await getLastUpdated();
   const formatted = formatDate(lastMatch);
-  document.getElementById("last-updated").textContent = `Last updated: ${formatted}`;
+  document.getElementById("last-updated").textContent = `${t("last_updated_prefix")} ${formatted}`;
+}
+
+function onLanguageChange() {
+  showLastUpdated();
 }
 
 async function renderTable(type) {
+  currentType = type;
   const header = document.getElementById("table-name-header");
   let stats, entitiesById, idField;
 
   if (type === "heroes") {
-    header.textContent = "Hero";
+    header.setAttribute("data-i18n", "table_hero");
     idField = "hero_id";
     [stats, entitiesById] = await Promise.all([getHeroStats(), getHeroesById()]);
   } else if (type === "items") {
-    header.textContent = "Item";
+    header.setAttribute("data-i18n", "table_item");
     idField = "item_id";
     [stats, entitiesById] = await Promise.all([getItemStats(), getItemsById()]);
   }
+  applyTranslations();
 
   const gameStats = await getGameStats();
   const totalMatches = gameStats[0].total_matches;
@@ -37,7 +43,7 @@ async function renderTable(type) {
     return { name: entity.name, imageUrl, winRate, pickRate };
   });
 
-  currentSortColumn = null; 
+  currentSortColumn = null;
   renderRows();
 }
 
@@ -46,7 +52,7 @@ function renderRows() {
   tbody.innerHTML = "";
 
   let rows = [...currentRowsData];
-  
+
   if (currentSortColumn === null) {
     rows.sort((a, b) => a.name.localeCompare(b.name));
   } else {
@@ -93,6 +99,10 @@ bindClick("header-pickrate", () => handleSortClick("pickRate"));
 bindClick("nav-heroes", () => renderTable("heroes"));
 bindClick("nav-items", () => renderTable("items"));
 
-renderTable("heroes");
-showLastUpdated();
+async function init() {
+  await initI18n();
+  await renderTable("heroes");
+  showLastUpdated();
+}
 
+init();

@@ -10,7 +10,7 @@ async function getLastUpdated() {
   return date;
 }
 
-// Heros requests
+// Heroes requests
 async function getHeroStats() {
   const url = "https://api.deadlock-api.com/v1/analytics/hero-stats";
   const response = await fetch(url);
