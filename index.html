@@ -16,9 +16,9 @@
   <ul id="lang-menu" class="lang-menu hidden"></ul>
 </div>
   </div>
-  <nav>
-    <a href="#" id="nav-heroes" data-i18n="nav_heroes">Heroes</a>
-    <a href="#" id="nav-items" data-i18n="nav_items">Items</a>
+  <nav role="navigation" aria-label="Main navigation">
+    <a href="#" id="nav-heroes" data-i18n="nav_heroes" tabindex="0">Heroes</a>
+    <a href="#" id="nav-items" data-i18n="nav_items" tabindex="0">Items</a>
   </nav>
 </header>
     <main>
@@ -33,14 +33,18 @@
       </div>
 
       <table id="stats-table" aria-describedby="loading-text error-banner-message" aria-busy="true" aria-label="Statistics table">
+        <caption id="stats-caption" class="visually-hidden" data-i18n="table_caption">Hero and item statistics table</caption>
         <thead>
           <tr>
-            <th></th>
-            <th id="table-name-header" data-i18n="table_hero">Hero</th>
+            <th scope="col"></th>
+            <th id="table-name-header" data-i18n="table_hero" tabindex="0">Hero</th>
             <th
               id="header-winrate"
               data-i18n="table_winrate"
               style="cursor: pointer"
+              role="button"
+              tabindex="0"
+              aria-sort="none"
             >
               Win Rate
             </th>
@@ -48,6 +52,9 @@
               id="header-pickrate"
               data-i18n="table_pickrate"
               style="cursor: pointer"
+              role="button"
+              tabindex="0"
+              aria-sort="none"
             >
               Pick Rate
             </th>

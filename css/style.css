@@ -190,7 +190,7 @@ footer {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: linear-gradient(180deg, #401818 0%, #2b1414 100%);
+  background: linear-gradient(180deg, #501818 0%, #2b1414 100%);
   color: #fff;
   border-left: 4px solid #ff6b6b;
   border-radius: 6px;
@@ -206,9 +206,9 @@ footer {
 }
 
 .error-retry {
-  background-color: #2a2a2a;
+  background-color: #222;
   color: #fff;
-  border: 1px solid #555;
+  border: 1px solid #888;
   padding: 6px 10px;
   border-radius: 4px;
   cursor: pointer;
@@ -216,10 +216,45 @@ footer {
 }
 
 .error-retry:hover {
-  border-color: #888;
+  border-color: #bbb;
 }
 
 .error-retry:focus {
-  outline: 3px solid rgba(255,255,255,0.12);
+  outline: 3px solid #88b7ff;
   outline-offset: 2px;
+}
+
+/* Accessibility helpers */
+.visually-hidden {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+}
+
+/* Focus styles for keyboard users */
+a:focus, button:focus, [tabindex]:focus {
+  outline: 3px solid #88b7ff;
+  outline-offset: 2px;
+}
+
+/* Make focus visible only when using keyboard (prefers-focus-visible polyfill not used here) */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Improve contrast for table headers */
+th {
+  color: #d0d0d0;
+}
+
+/* Make interactive headers look clickable */
+th[role="button"] {
+  cursor: pointer;
+}
+
+/* Row hover and focus */
+tr:hover td, tr:focus-within td {
+  background: rgba(255,255,255,0.02);
 }

@@ -12,5 +12,6 @@
   "lang_selector_label": "Selecionar idioma",
   "error_fetching_data": "Falha ao carregar os dados. Verifique sua conexão e tente novamente.",
   "retry_button": "Tentar novamente",
-  "no_data": "Sem dados disponíveis"
+  "no_data": "Sem dados disponíveis",
+  "table_caption": "Tabela mostrando heróis ou itens com taxa de vitória e taxa de escolha"
 }

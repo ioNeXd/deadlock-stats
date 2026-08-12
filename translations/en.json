@@ -12,5 +12,6 @@
   "lang_selector_label": "Select language",
   "error_fetching_data": "Failed to load data. Check your connection and try again.",
   "retry_button": "Retry",
-  "no_data": "No data available"
+  "no_data": "No data available",
+  "table_caption": "Table showing heroes or items with win rate and pick rate"
 }

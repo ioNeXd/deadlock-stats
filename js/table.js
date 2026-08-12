@@ -165,6 +165,10 @@ const TableModule = (() => {
       updateAriaSort();
       renderRows();
 
+      // Move focus to the table header for keyboard users after content updates
+      const nameHeader = document.getElementById('table-name-header');
+      if (nameHeader) nameHeader.focus();
+
     } catch (err) {
       console.error('Failed to render table:', err);
       state.rows = [];
@@ -182,11 +186,25 @@ const TableModule = (() => {
     const navItems = document.getElementById('nav-items');
     const retryButton = document.getElementById('error-retry');
 
-    if (headerWin) headerWin.addEventListener('click', (e) => { e.preventDefault(); handleSortClick('winRate'); });
-    if (headerPick) headerPick.addEventListener('click', (e) => { e.preventDefault(); handleSortClick('pickRate'); });
-    if (navHeroes) navHeroes.addEventListener('click', (e) => { e.preventDefault(); renderTable('heroes'); });
-    if (navItems) navItems.addEventListener('click', (e) => { e.preventDefault(); renderTable('items'); });
+    if (headerWin) {
+      headerWin.addEventListener('click', (e) => { e.preventDefault(); handleSortClick('winRate'); });
+      headerWin.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSortClick('winRate'); } });
+    }
+    if (headerPick) {
+      headerPick.addEventListener('click', (e) => { e.preventDefault(); handleSortClick('pickRate'); });
+      headerPick.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSortClick('pickRate'); } });
+    }
+    if (navHeroes) {
+      navHeroes.addEventListener('click', (e) => { e.preventDefault(); renderTable('heroes'); });
+      navHeroes.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); renderTable('heroes'); } });
+    }
+    if (navItems) {
+      navItems.addEventListener('click', (e) => { e.preventDefault(); renderTable('items'); });
+      navItems.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); renderTable('items'); } });
+    }
     if (retryButton) retryButton.addEventListener('click', () => renderTable(state.type));
+    if (retryButton) retryButton.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); renderTable(state.type); } });
+
   }
 
   async function showLastUpdated() {
