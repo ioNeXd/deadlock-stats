@@ -7,10 +7,27 @@ const TableModule = (() => {
     type: 'heroes',
   };
 
+  function renderSkeletonRows() {
+    const tbody = document.getElementById('stats-table-body');
+    if (!tbody) return;
+
+    const rows = Array.from({ length: 6 }, () => `
+      <tr class="skeleton-row" aria-hidden="true">
+        <td><span class="skeleton-cell skeleton-avatar"></span></td>
+        <td><span class="skeleton-cell"></span></td>
+        <td><span class="skeleton-cell"></span></td>
+        <td><span class="skeleton-cell"></span></td>
+      </tr>
+    `).join('');
+
+    tbody.innerHTML = rows;
+  }
+
   function showLoader() {
     const container = document.getElementById('loading-container');
     const table = document.getElementById('stats-table');
     hideError();
+    renderSkeletonRows();
     if (container) {
       container.setAttribute('aria-hidden', 'false');
       container.classList.remove('hidden');
@@ -28,6 +45,12 @@ const TableModule = (() => {
     if (table) table.setAttribute('aria-busy', 'false');
   }
 
+  function announceStatus(message) {
+    const status = document.getElementById('sr-status');
+    if (!status) return;
+    status.textContent = message;
+  }
+
   function showError(message) {
     const banner = document.getElementById('error-banner');
     const msg = document.getElementById('error-banner-message');
@@ -36,6 +59,7 @@ const TableModule = (() => {
       banner.classList.remove('hidden');
       banner.setAttribute('aria-hidden', 'false');
       banner.focus && banner.focus();
+      announceStatus(message);
     }
   }
 
@@ -82,6 +106,7 @@ const TableModule = (() => {
 
     if (rows.length === 0) {
       const tr = document.createElement('tr');
+      tr.classList.add('empty-state');
       tr.innerHTML = `<td colspan="4">${t('no_data') || 'No data available'}</td>`;
       tbody.appendChild(tr);
       return;
@@ -122,6 +147,10 @@ const TableModule = (() => {
     }
 
     updateAriaSort();
+    const directionLabel = state.sortDirection === 'asc' ? 'ascending' : 'descending';
+    const columnLabel = state.sortColumn === 'winRate' ? 'Win Rate' : 'Pick Rate';
+    const message = state.sortColumn ? `Sorted by ${columnLabel}, ${directionLabel}` : 'Sorting cleared';
+    announceStatus(message);
     renderRows();
   }
 
@@ -163,6 +192,7 @@ const TableModule = (() => {
 
       state.sortColumn = null;
       updateAriaSort();
+      announceStatus('Table updated');
       renderRows();
 
       // Move focus to the table header for keyboard users after content updates

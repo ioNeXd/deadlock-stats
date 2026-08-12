@@ -224,6 +224,40 @@ footer {
   outline-offset: 2px;
 }
 
+/* Skeleton / loading rows */
+.skeleton-row td {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.skeleton-cell {
+  display: block;
+  height: 18px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite linear;
+}
+
+.skeleton-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.empty-state td {
+  text-align: center;
+  padding: 20px 12px;
+  color: #d0d0d0;
+  font-weight: 600;
+}
+
 /* Accessibility helpers */
 .visually-hidden {
   position: absolute !important;
@@ -234,13 +268,12 @@ footer {
 }
 
 /* Focus styles for keyboard users */
-a:focus, button:focus, [tabindex]:focus {
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
   outline: 3px solid #88b7ff;
   outline-offset: 2px;
 }
 
-/* Make focus visible only when using keyboard (prefers-focus-visible polyfill not used here) */
-:focus:not(:focus-visible) {
+a:focus, button:focus, [tabindex]:focus {
   outline: none;
 }
 
