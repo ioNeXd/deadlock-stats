@@ -1,5 +1,7 @@
 async function renderHeroDetail(heroId) {
   const container = document.getElementById("hero-detail-content");
+  if (!container) return;
+
   container.innerHTML = `<p>${t("loading")}</p>`;
 
   try {
@@ -40,6 +42,13 @@ async function renderHeroDetail(heroId) {
     renderBuildCards("build-list-popular", byPopularity);
     renderBuildCards("build-list-winrate", byWinRate);
     applyTranslations();
+
+    if (buildStats.length === 0) {
+      const popular = document.getElementById("build-list-popular");
+      const winrate = document.getElementById("build-list-winrate");
+      if (popular) popular.innerHTML = `<p>${t("build_data_unavailable")}</p>`;
+      if (winrate) winrate.innerHTML = `<p>${t("build_data_unavailable")}</p>`;
+    }
   } catch (err) {
     console.error("Failed to render hero detail:", err);
     container.innerHTML = `<p>${t("error_fetching_data")}</p>`;
@@ -51,7 +60,7 @@ function renderBuildCards(containerId, builds) {
   if (!container) return;
 
   if (builds.length === 0) {
-    container.innerHTML = `<p>${t("no_data")}</p>`;
+    container.innerHTML = `<p>${t("build_data_unavailable")}</p>`;
     return;
   }
 

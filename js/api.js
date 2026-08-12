@@ -108,11 +108,21 @@ async function getGameStats() {
 
 async function getHeroBuildStats(heroId, minMatches = 1) {
   const url = `${API_BASE}/analytics/hero-build-stats/${heroId}?min_matches=${minMatches}`;
-  const raw = await fetchJson(url);
-  return normalizeHeroBuildStats(raw);
+
+  try {
+    const raw = await fetchJson(url);
+    return normalizeHeroBuildStats(raw);
+  } catch (err) {
+    console.warn(`No build data available for hero ${heroId}:`, err);
+    return [];
+  }
 }
 
 function normalizeHeroBuildStats(rawStats) {
+  if (!rawStats || !Array.isArray(rawStats)) {
+    return [];
+  }
+
   const stats = validateArray(rawStats, "heroBuildStats");
   return stats.map((s) => {
     const matches = Number(s.matches) || 0;
