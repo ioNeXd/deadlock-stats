@@ -4,42 +4,95 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Deadlock Stats</title>
+    <meta
+      name="description"
+      content="Live hero and item win rates and pick rates for Deadlock, powered by the community Deadlock API."
+    />
+    <meta property="og:title" content="Deadlock Stats" />
+    <meta
+      property="og:description"
+      content="Live hero and item win rates and pick rates for Deadlock, powered by the community Deadlock API."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ionexd.github.io/deadlock-stats" />
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
     <header>
-  <div class="title-row">
-    <h1 data-i18n="site_title">Deadlock Stats</h1>
-    <span id="last-updated" class="last-updated" data-i18n="loading">Loading...</span>
-    <div class="lang-switcher" id="lang-switcher">
-  <button id="lang-toggle" aria-haspopup="true" aria-expanded="false"></button>
-  <ul id="lang-menu" class="lang-menu hidden"></ul>
-</div>
-  </div>
-  <nav role="navigation" aria-label="Main navigation">
-    <a href="#" id="nav-heroes" data-i18n="nav_heroes" tabindex="0">Heroes</a>
-    <a href="#" id="nav-items" data-i18n="nav_items" tabindex="0">Items</a>
-  </nav>
-</header>
+      <div class="title-row">
+        <h1 data-i18n="site_title">Deadlock Stats</h1>
+        <span id="last-updated" class="last-updated" data-i18n="loading"
+          >Loading...</span
+        >
+        <div class="lang-switcher" id="lang-switcher">
+          <button
+            id="lang-toggle"
+            aria-haspopup="true"
+            aria-expanded="false"
+          ></button>
+          <ul id="lang-menu" class="lang-menu hidden"></ul>
+        </div>
+      </div>
+      <nav role="navigation" aria-label="Main navigation">
+        <a href="#" id="nav-heroes" data-i18n="nav_heroes" tabindex="0"
+          >Heroes</a
+        >
+        <a href="#" id="nav-items" data-i18n="nav_items" tabindex="0">Items</a>
+      </nav>
+    </header>
     <main>
-      <div id="error-banner" class="error-banner hidden" role="alert" aria-live="assertive" aria-atomic="true">
+      <div
+        id="error-banner"
+        class="error-banner hidden"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
         <span id="error-banner-message"></span>
-        <button id="error-retry" class="error-retry" data-i18n="retry_button">Retry</button>
+        <button id="error-retry" class="error-retry" data-i18n="retry_button">
+          Retry
+        </button>
       </div>
 
-      <div id="loading-container" class="loading-container" role="status" aria-live="polite" aria-atomic="true">
+      <div
+        id="loading-container"
+        class="loading-container"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         <div class="spinner" aria-hidden="true"></div>
-        <span id="loading-text" class="loading-text" data-i18n="loading">Loading...</span>
+        <span id="loading-text" class="loading-text" data-i18n="loading"
+          >Loading...</span
+        >
       </div>
 
-      <div id="sr-status" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+      <div
+        id="sr-status"
+        class="visually-hidden"
+        aria-live="polite"
+        aria-atomic="true"
+      ></div>
 
-      <table id="stats-table" aria-describedby="loading-text error-banner-message" aria-busy="true" aria-label="Statistics table">
-        <caption id="stats-caption" class="visually-hidden" data-i18n="table_caption">Hero and item statistics table</caption>
+      <table
+        id="stats-table"
+        aria-describedby="loading-text error-banner-message"
+        aria-busy="true"
+        aria-label="Statistics table"
+      >
+        <caption
+          id="stats-caption"
+          class="visually-hidden"
+          data-i18n="table_caption"
+        >
+          Hero and item statistics table
+        </caption>
         <thead>
           <tr>
             <th scope="col"></th>
-            <th id="table-name-header" data-i18n="table_hero" tabindex="0">Hero</th>
+            <th id="table-name-header" data-i18n="table_hero" tabindex="0">
+              Hero
+            </th>
             <th
               id="header-winrate"
               data-i18n="table_winrate"

@@ -267,14 +267,13 @@ footer {
   white-space: nowrap;
 }
 
-/* Focus styles for keyboard users */
+a:focus, button:focus, [tabindex]:focus {
+  outline: none;
+}
+
 a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
   outline: 3px solid #88b7ff;
   outline-offset: 2px;
-}
-
-a:focus, button:focus, [tabindex]:focus {
-  outline: none;
 }
 
 /* Improve contrast for table headers */
