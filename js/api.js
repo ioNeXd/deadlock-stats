@@ -1,22 +1,54 @@
 const API_BASE = "https://api.deadlock-api.com/v1";
 
-async function fetchJson(url, options = {}, timeout = 10000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  try {
-    const res = await fetch(url, { signal: controller.signal, ...options });
-    clearTimeout(id);
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(
-        `Request failed: ${res.status} ${res.statusText} ${text}`,
-      );
+// Simple in-memory cache: URL -> { ts, data }
+const _cache = new Map();
+const DEFAULT_CACHE_TTL = 30 * 1000; // 30s
+
+async function fetchJson(url, options = {}, timeout = 10000, retries = 2, cacheTtl = DEFAULT_CACHE_TTL) {
+  // Read-through cache for GET requests without cache-busting
+  const method = (options.method || 'GET').toUpperCase();
+  const cacheKey = method === 'GET' ? url : null;
+
+  if (cacheKey) {
+    const entry = _cache.get(cacheKey);
+    if (entry && (Date.now() - entry.ts) < cacheTtl) {
+      return entry.data;
     }
-    return await res.json();
-  } catch (err) {
-    clearTimeout(id);
-    throw err;
   }
+
+  let attempt = 0;
+  let lastErr;
+  while (attempt <= retries) {
+    attempt += 1;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const res = await fetch(url, { signal: controller.signal, ...options });
+      clearTimeout(id);
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Request failed: ${res.status} ${res.statusText} ${text}`);
+      }
+      const json = await res.json();
+
+      if (cacheKey) {
+        try { _cache.set(cacheKey, { ts: Date.now(), data: json }); } catch (e) { /* ignore cache errors */ }
+      }
+
+      return json;
+    } catch (err) {
+      clearTimeout(id);
+      lastErr = err;
+      // If aborted or last attempt, break/throw after loop
+      if (attempt > retries) break;
+      // Exponential backoff before retrying
+      const backoff = 200 * Math.pow(2, attempt - 1);
+      await new Promise((r) => setTimeout(r, backoff));
+    }
+  }
+
+  throw lastErr;
 }
 
 // Utility: ensure value is an array
@@ -65,45 +97,74 @@ function normalizeEntitiesById(rawEntities, type = "entity") {
 // Updated request: last updated
 async function getLastUpdated() {
   const url = `${API_BASE}/matches/recently-fetched`;
-  const matches = await fetchJson(url);
-  validateArray(matches, "recently-fetched");
-  const latestTimestamp = Number(matches[0]?.start_time) || 0;
-  const date = new Date(latestTimestamp * 1000);
-  return date;
+  try {
+    const matches = await fetchJson(url).catch((e) => { throw e; });
+    if (!Array.isArray(matches) || matches.length === 0) return new Date(0);
+    const latestTimestamp = Number(matches[0]?.start_time) || 0;
+    return new Date(latestTimestamp * 1000);
+  } catch (err) {
+    console.warn('getLastUpdated failed:', err);
+    return new Date(0);
+  }
 }
 
 // Heroes requests (return normalized shapes)
 async function getHeroStats() {
   const url = `${API_BASE}/analytics/hero-stats`;
-  const raw = await fetchJson(url);
-  return normalizeHeroStats(raw);
+  try {
+    const raw = await fetchJson(url);
+    return normalizeHeroStats(raw);
+  } catch (err) {
+    console.warn('getHeroStats failed:', err);
+    return [];
+  }
 }
 
 async function getHeroesById() {
   const url = `${API_BASE}/assets/heroes`;
-  const raw = await fetchJson(url);
-  return normalizeEntitiesById(raw, "hero");
+  try {
+    const raw = await fetchJson(url);
+    return normalizeEntitiesById(raw, "hero");
+  } catch (err) {
+    console.warn('getHeroesById failed:', err);
+    return {};
+  }
 }
 
 // Items requests
 async function getItemStats() {
   const url = `${API_BASE}/analytics/item-stats`;
-  const raw = await fetchJson(url);
-  return normalizeItemStats(raw);
+  try {
+    const raw = await fetchJson(url);
+    return normalizeItemStats(raw);
+  } catch (err) {
+    console.warn('getItemStats failed:', err);
+    return [];
+  }
 }
 
 async function getItemsById() {
   const url = `${API_BASE}/assets/items`;
-  const raw = await fetchJson(url);
-  return normalizeEntitiesById(raw, "item");
+  try {
+    const raw = await fetchJson(url);
+    return normalizeEntitiesById(raw, "item");
+  } catch (err) {
+    console.warn('getItemsById failed:', err);
+    return {};
+  }
 }
 
 // Game stats request
 async function getGameStats() {
   const url = `${API_BASE}/analytics/game-stats`;
-  const raw = await fetchJson(url);
-  const arr = validateArray(raw, "gameStats");
-  return arr;
+  try {
+    const raw = await fetchJson(url);
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr;
+  } catch (err) {
+    console.warn('getGameStats failed:', err);
+    return [{ total_matches: 0 }];
+  }
 }
 
 async function getHeroBuildStats(heroId, minMatches = 1) {
