@@ -1,3 +1,47 @@
+function formatNetWorth(value) {
+  const num = Number(value) || 0;
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}k`;
+  return `${Math.round(num)}`;
+}
+
+function buildItemTimeline(itemFlow, itemMap) {
+  if (!itemFlow || !Array.isArray(itemFlow.nodes) || itemFlow.nodes.length === 0) {
+    return [];
+  }
+
+  return itemFlow.nodes
+    .map((node) => {
+      const itemId = Number(node.item_id);
+      const item = itemMap[itemId] || { name: `Item #${itemId}` };
+      return {
+        id: itemId,
+        name: item.name || `Item #${itemId}`,
+        column: Number(node.column) || 0,
+        matches: Number(node.matches) || 0,
+        avgNetWorthAtBuy: Number(node.avg_net_worth_at_buy) || 0,
+      };
+    })
+    .sort((a, b) => a.column - b.column || b.matches - a.matches);
+}
+
+function buildSkillTimeline(abilityOrderStats, itemMap) {
+  if (!Array.isArray(abilityOrderStats) || abilityOrderStats.length === 0) {
+    return [];
+  }
+
+  const best = [...abilityOrderStats].sort((a, b) => (Number(b.matches) || 0) - (Number(a.matches) || 0))[0];
+  const sequence = Array.isArray(best && best.abilities) ? best.abilities : [];
+
+  return sequence.map((abilityId, index) => {
+    const item = itemMap[Number(abilityId)] || { name: `Ability #${abilityId}` };
+    return {
+      id: Number(abilityId),
+      name: item.name || `Ability #${abilityId}`,
+      order: index + 1,
+    };
+  });
+}
+
 async function renderHeroDetail(heroId) {
   const container = document.getElementById("hero-detail-content");
   if (!container) return;
@@ -5,10 +49,14 @@ async function renderHeroDetail(heroId) {
   container.innerHTML = `<p>${t("loading")}</p>`;
 
   try {
-    const [heroesById, buildStats] = await Promise.all([
+    const [heroesById, buildStats, itemMap, popularBuild] = await Promise.all([
       getHeroesById(),
       getHeroBuildStats(heroId),
+      getItemsById(),
+      getMostPopularBuild(heroId),
     ]);
+
+    window.__itemMap = itemMap || {};
 
     const hero = heroesById[heroId];
     const heroName = hero ? hero.name : `Hero #${heroId}`;
@@ -17,9 +65,11 @@ async function renderHeroDetail(heroId) {
 
     const byPopularity = [...buildStats]
       .sort((a, b) => b.matches - a.matches)
+      .map((build) => ({ ...build, publishedBuild: popularBuild }))
       .slice(0, 3);
     const byWinRate = [...buildStats]
       .sort((a, b) => b.winRate - a.winRate)
+      .map((build) => ({ ...build, publishedBuild: popularBuild }))
       .slice(0, 3);
 
     container.innerHTML = `
@@ -45,15 +95,13 @@ async function renderHeroDetail(heroId) {
     renderBuildCards("build-list-winrate", byWinRate);
     applyTranslations();
 
-    // If there are no builds at all, show the 'unavailable' message in both lists.
-    if (buildStats.length === 0) {
+    if (buildStats.length === 0 && !popularBuild) {
       const popular = document.getElementById("build-list-popular");
       const winrate = document.getElementById("build-list-winrate");
-      if (popular) popular.innerHTML = `<p>${t("build_data_unavailable")}</p>`;
-      if (winrate) winrate.innerHTML = `<p>${t("build_data_unavailable")}</p>`;
+      if (popular) popular.innerHTML = `<p>${t("no_data")}</p>`;
+      if (winrate) winrate.innerHTML = `<p>${t("no_data")}</p>`;
     }
 
-    // Hook up retry buttons only where needed. If a section already has builds, hide its retry button.
     const retryPopular = document.getElementById('retry-builds-popular');
     const retryWin = document.getElementById('retry-builds-winrate');
 
@@ -63,7 +111,6 @@ async function renderHeroDetail(heroId) {
       if (retryPopular) retryPopular.addEventListener('click', async () => {
         const builds = await getHeroBuildStats(heroId);
         renderBuildCards('build-list-popular', builds.sort((a,b)=>b.matches-a.matches).slice(0,3));
-        // if builds received, remove the retry button
         const btn = document.getElementById('retry-builds-popular');
         if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
       });
@@ -129,23 +176,152 @@ function renderBuildCards(containerId, builds) {
   }
 }
 
-function renderBuildPath(build) {
-  const raw = build.raw || {};
-  const possiblePath =
-    raw.items ?? raw.item_ids ?? raw.build_items ?? raw.path ?? null;
+function resolveBuildDetailSource(build) {
+  if (!build) return { modCategories: [], skillChanges: [] };
 
-  if (Array.isArray(possiblePath) && possiblePath.length > 0) {
-    const itemsHtml = possiblePath
-      .map((itemId, i) => `<li>${i + 1}. Item #${itemId}</li>`)
-      .join("");
-    return `<ol class="build-path">${itemsHtml}</ol>`;
+  const source = build.publishedBuild || build.actualBuild || build;
+  const candidate = source.hero_build || source.build || (source.raw && source.raw.hero_build) || (source.raw && source.raw.build) || {};
+  const details = candidate.details || source.details || {};
+  const modCategories = Array.isArray(details.mod_categories)
+    ? details.mod_categories
+    : Array.isArray(source.mod_categories)
+      ? source.mod_categories
+      : [];
+
+  const detailSkillChanges = details && details.ability_order && Array.isArray(details.ability_order.currency_changes)
+    ? details.ability_order.currency_changes
+    : [];
+  const sourceSkillChanges = source && source.ability_order && Array.isArray(source.ability_order.currency_changes)
+    ? source.ability_order.currency_changes
+    : [];
+
+  return {
+    modCategories,
+    skillChanges: detailSkillChanges.length ? detailSkillChanges : sourceSkillChanges,
+    heroBuild: candidate,
+  };
+}
+
+function detailHasAbilityOrder(source) {
+  if (!source || typeof source !== "object") return false;
+  const details = source.details || (source.hero_build && source.hero_build.details) || {};
+  return !!(details.ability_order && Array.isArray(details.ability_order.currency_changes));
+}
+
+function buildBuildItemCategories(build, itemMap) {
+  const { modCategories } = resolveBuildDetailSource(build);
+  if (!modCategories.length) return [];
+
+  return modCategories.map((category) => {
+    const categoryName = category && (category.name || "Category");
+    const items = Array.isArray(category.mods) ? category.mods : [];
+    const itemRows = items.map((entry) => {
+      const itemId = Number((entry && (entry.ability_id ?? entry.item_id ?? entry.id)) ?? 0);
+      const item = itemMap[itemId] || {};
+      const name = item.name || `Item #${itemId}`;
+      const icon = item.images && (item.images.icon_image_small || item.images.icon || item.images.icon_image)
+        || item.shop_image
+        || "assets/placeholder.svg";
+      return {
+        id: itemId,
+        name,
+        icon,
+      };
+    }).filter((entry) => entry.id !== 0);
+
+    return {
+      name: categoryName,
+      items: itemRows,
+    };
+  });
+}
+
+function buildSkillSequence(build) {
+  const { skillChanges } = resolveBuildDetailSource(build);
+  if (!Array.isArray(skillChanges) || skillChanges.length === 0) return [];
+
+  return skillChanges.map((entry, index) => {
+    const abilityId = Number(entry && (entry.ability_id ?? entry.id ?? 0));
+    return {
+      id: abilityId,
+      order: index + 1,
+      name: `Ability #${abilityId}`,
+    };
+  });
+}
+
+function resolveItemName(itemId, itemMap) {
+  const entry = itemMap[Number(itemId)];
+  return entry && entry.name ? entry.name : `Item #${itemId}`;
+}
+
+function getLocalText(key, fallback) {
+  if (currentTranslations && Object.prototype.hasOwnProperty.call(currentTranslations, key)) {
+    return currentTranslations[key];
   }
+  if (baseTranslations && Object.prototype.hasOwnProperty.call(baseTranslations, key)) {
+    return baseTranslations[key];
+  }
+  return fallback;
+}
+
+function renderBuildPath(build) {
+  const itemMap = window.__itemMap || {};
+  const itemCategories = buildBuildItemCategories(build, itemMap);
+  const skillSequence = buildSkillSequence(build);
+
+  const itemSection = itemCategories.length
+    ? itemCategories.map((section) => `
+        <div class="build-item-category">
+          <div class="build-item-category-name">${section.name}</div>
+          <ul class="build-detail-list">
+            ${section.items.map((item) => `
+              <li class="build-detail-item build-item-row">
+                <span class="build-detail-icon-wrap">
+                  <img class="build-detail-icon" src="${item.icon || "assets/placeholder.svg"}" alt="${item.name}" loading="lazy" />
+                </span>
+                <span class="build-detail-name">${item.name}</span>
+              </li>
+            `).join("") || '<li class="build-detail-empty">' + t("no_data") + '</li>'}
+          </ul>
+        </div>
+      `).join("")
+    : `<p class="build-detail-empty">${t("no_data")}</p>`;
+
+  const skillSection = skillSequence.length
+    ? `<ol class="build-skill-list">${skillSequence.map((step) => `
+        <li class="build-skill-item">
+          <span class="build-detail-number">${step.order}</span>
+          <span class="build-detail-name">${resolveItemName(step.id, itemMap)}</span>
+        </li>
+      `).join("")}</ol>`
+    : `<p class="build-detail-empty">${t("no_data")}</p>`;
+
+  const hasRealBuildData = itemCategories.length > 0 || skillSequence.length > 0;
+  const rawDebug = !hasRealBuildData
+    ? `<details class="build-raw-debug"><summary>Debug</summary><pre>${escapeHtml(JSON.stringify(build, null, 2))}</pre></details>`
+    : "";
 
   return `
-    <p class="build-id-fallback">Build ID: ${build.buildId ?? "N/A"}</p>
-    <details class="build-raw-debug">
-      <summary>Raw data (debug)</summary>
-      <pre>${JSON.stringify(raw, null, 2)}</pre>
-    </details>
+    <div class="build-detail-groups">
+      <div class="build-detail-section">
+        <h4>${getLocalText("build_items_section", "Items")}</h4>
+        ${itemSection}
+      </div>
+      <div class="build-detail-section">
+        <h4>${getLocalText("build_skill_path", "Skill Path")}</h4>
+        ${skillSection}
+      </div>
+      ${rawDebug}
+    </div>
   `;
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }

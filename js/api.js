@@ -183,6 +183,40 @@ async function getGameStats(opts = {}) {
   }
 }
 
+async function getItemFlowStats(heroId, opts = {}) {
+  const params = new URLSearchParams({
+    hero_ids: String(heroId),
+    phase_count: '4',
+    phase_interval_s: '120',
+    min_matches: '10',
+  });
+  const url = `${API_BASE}/analytics/item-flow-stats?${params.toString()}`;
+
+  try {
+    const raw = await fetchJson(url, opts);
+    return raw && typeof raw === 'object' ? raw : { nodes: [], edges: [], summary: null };
+  } catch (err) {
+    console.warn(`No item flow data available for hero ${heroId}:`, err);
+    return { nodes: [], edges: [], summary: null };
+  }
+}
+
+async function getAbilityOrderStats(heroId, minMatches = 10, opts = {}) {
+  const params = new URLSearchParams({
+    hero_id: String(heroId),
+    min_matches: String(minMatches),
+  });
+  const url = `${API_BASE}/analytics/ability-order-stats?${params.toString()}`;
+
+  try {
+    const raw = await fetchJson(url, opts);
+    return Array.isArray(raw) ? raw : [];
+  } catch (err) {
+    console.warn(`No ability order data available for hero ${heroId}:`, err);
+    return [];
+  }
+}
+
 async function getHeroBuildStats(heroId, minMatches = 1, opts = {}) {
   const url = `${API_BASE}/analytics/hero-build-stats/${heroId}?min_matches=${minMatches}`;
 
@@ -192,6 +226,71 @@ async function getHeroBuildStats(heroId, minMatches = 1, opts = {}) {
   } catch (err) {
     console.warn(`No build data available for hero ${heroId}:`, err);
     return [];
+  }
+}
+
+function normalizeBuildPayload(rawBuild) {
+  if (!rawBuild || typeof rawBuild !== "object") return null;
+
+  const candidate = rawBuild.hero_build || rawBuild.build || rawBuild;
+  if (!candidate || typeof candidate !== "object") return null;
+
+  const details = candidate.details || rawBuild.details || {};
+  const modCategories = Array.isArray(details.mod_categories)
+    ? details.mod_categories
+    : Array.isArray(rawBuild.mod_categories)
+      ? rawBuild.mod_categories
+      : [];
+
+  const skillChanges = details.ability_order && Array.isArray(details.ability_order.currency_changes)
+    ? details.ability_order.currency_changes
+    : Array.isArray(rawBuild.ability_order && rawBuild.ability_order.currency_changes)
+      ? rawBuild.ability_order.currency_changes
+      : [];
+
+  return {
+    hero_build: candidate,
+    hero_build_id: candidate.hero_build_id ?? rawBuild.hero_build_id ?? rawBuild.id ?? null,
+    name: candidate.name || rawBuild.name || "",
+    version: candidate.version ?? rawBuild.version ?? null,
+    tags: Array.isArray(candidate.tags) ? candidate.tags : Array.isArray(rawBuild.tags) ? rawBuild.tags : [],
+    details: {
+      mod_categories: modCategories,
+      ability_order: {
+        currency_changes: skillChanges,
+      },
+    },
+    num_favorites: Number(rawBuild.num_favorites) || 0,
+    num_ignores: Number(rawBuild.num_ignores) || 0,
+    num_reports: Number(rawBuild.num_reports) || 0,
+    raw: rawBuild,
+  };
+}
+
+async function getMostPopularBuild(heroId, opts = {}) {
+  const params = new URLSearchParams({
+    hero_id: String(heroId),
+    sort_by: "favorites",
+    sort_direction: "desc",
+    only_latest: "true",
+    limit: "1",
+  });
+  const url = `${API_BASE}/builds?${params.toString()}`;
+
+  try {
+    const raw = await fetchJson(url, opts);
+    const list = Array.isArray(raw)
+      ? raw
+      : Array.isArray(raw && raw.value)
+        ? raw.value
+        : Array.isArray(raw && raw.data)
+          ? raw.data
+          : [];
+
+    return list.length > 0 ? normalizeBuildPayload(list[0]) : null;
+  } catch (err) {
+    console.warn(`No published build available for hero ${heroId}:`, err);
+    return null;
   }
 }
 

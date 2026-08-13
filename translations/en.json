@@ -19,6 +19,8 @@
   "search_items_placeholder": "Search items",
   "try_again": "Try again",
   "build_data_unavailable": "We don't have build details for this hero right now.",
+  "build_items_section": "Items",
+  "build_skill_path": "Skill Path",
   "table_caption": "Table showing heroes or items with win rate and pick rate",
   "back_to_table": "← Back to table",
   "builds_popular": "Most Popular Builds",
