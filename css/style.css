@@ -230,6 +230,7 @@ footer {
 .skeleton-row td {
   padding-top: 12px;
   padding-bottom: 12px;
+  vertical-align: middle;
 }
 
 .skeleton-cell {
@@ -245,6 +246,27 @@ footer {
   width: 32px;
   height: 32px;
   border-radius: 8px;
+}
+
+/* Image placeholder and transition */
+.lazy-img {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #2a2a2a;
+  display: inline-block;
+  transition: opacity 160ms ease-in;
+  opacity: 0;
+}
+
+.lazy-img[loading="lazy"] {
+  will-change: opacity;
+}
+
+/* When image already loaded or fallback, force visible */
+.lazy-img[src$="placeholder.svg"] {
+  opacity: 1;
 }
 
 @keyframes shimmer {

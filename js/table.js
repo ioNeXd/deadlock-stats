@@ -116,6 +116,46 @@ const TableModule = (() => {
     state.filteredRows = rows;
   }
 
+  // Lazy loader observer (module-level) — create once
+  let _lazyObserver;
+  function initLazyObserver() {
+    if (_lazyObserver) return;
+    if ('IntersectionObserver' in window) {
+      _lazyObserver = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const img = entry.target;
+          const src = img.getAttribute('data-src');
+          const srcset = img.getAttribute('data-srcset');
+          if (src) img.src = src;
+          if (srcset) img.srcset = srcset;
+          img.removeAttribute('data-src');
+          img.removeAttribute('data-srcset');
+          _lazyObserver.unobserve(img);
+        }
+      }, { rootMargin: '200px 0px', threshold: 0.01 });
+    }
+  }
+
+  function observeLazyImages() {
+    initLazyObserver();
+    if (!_lazyObserver) {
+      // fallback: load immediately
+      document.querySelectorAll('img.lazy-img').forEach((img) => {
+        const src = img.getAttribute('data-src');
+        const srcset = img.getAttribute('data-srcset');
+        if (src) img.src = src;
+        if (srcset) img.srcset = srcset;
+        img.removeAttribute('data-src');
+        img.removeAttribute('data-srcset');
+      });
+      return;
+    }
+    document.querySelectorAll('img.lazy-img[data-src]').forEach((img) => {
+      _lazyObserver.observe(img);
+    });
+  }
+
   function renderRows() {
     const tbody = document.getElementById("stats-table-body");
     if (!tbody) {
@@ -158,20 +198,38 @@ const TableModule = (() => {
       const imgSrc = row.imageUrl || "";
       const imgAlt = row.name || "";
 
+      // Build responsive image attributes: try webp variant when possible
+      const safeSrc = imgSrc || 'assets/placeholder.svg';
+      let webp = '';
+      try {
+        webp = safeSrc.replace(/\.(png|jpg|jpeg)$/i, '.webp');
+      } catch (e) {
+        webp = '';
+      }
+      const dataSrcset = webp && webp !== safeSrc ? `${webp} 1x, ${safeSrc} 2x` : safeSrc;
+
       tr.innerHTML = `
-        <td><img src="${imgSrc}" width="32" alt="${imgAlt}" loading="lazy"></td>
+        <td><img data-src="${safeSrc}" data-srcset="${dataSrcset}" class="lazy-img" src="assets/placeholder.svg" width="32" height="32" alt="${imgAlt}" loading="lazy"></td>
         <td>${row.name}</td>
         <td>${row.winRate.toFixed(1)}%</td>
         <td>${row.pickRate.toFixed(1)}%</td>
       `;
 
-      const imgEl = tr.querySelector("img");
+      const imgEl = tr.querySelector("img.lazy-img");
       if (imgEl) {
+        // on error, fallback to placeholder and remove data attributes
         imgEl.addEventListener("error", () => {
           imgEl.src = "assets/placeholder.svg";
+          imgEl.removeAttribute('data-src');
+          imgEl.removeAttribute('data-srcset');
           imgEl.alt = imgAlt
             ? `${imgAlt} (image unavailable)`
             : "Image unavailable";
+          imgEl.style.opacity = '1';
+        });
+        // on load fade in
+        imgEl.addEventListener('load', () => {
+          imgEl.style.opacity = '1';
         });
       }
 
