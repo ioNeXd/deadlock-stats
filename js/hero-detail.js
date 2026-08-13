@@ -30,11 +30,13 @@ async function renderHeroDetail(heroId) {
 
       <section class="build-section">
         <h3 data-i18n="builds_popular">Most Popular Builds</h3>
+        <button id="retry-builds-popular" class="error-retry" data-i18n="try_again">Try again</button>
         <div class="build-list" id="build-list-popular"></div>
       </section>
 
       <section class="build-section">
         <h3 data-i18n="builds_winrate">Highest Win Rate Builds</h3>
+        <button id="retry-builds-winrate" class="error-retry" data-i18n="try_again">Try again</button>
         <div class="build-list" id="build-list-winrate"></div>
       </section>
     `;
@@ -49,6 +51,18 @@ async function renderHeroDetail(heroId) {
       if (popular) popular.innerHTML = `<p>${t("build_data_unavailable")}</p>`;
       if (winrate) winrate.innerHTML = `<p>${t("build_data_unavailable")}</p>`;
     }
+
+    // hook up retry buttons
+    const retryPopular = document.getElementById('retry-builds-popular');
+    const retryWin = document.getElementById('retry-builds-winrate');
+    if (retryPopular) retryPopular.addEventListener('click', async () => {
+      const builds = await getHeroBuildStats(heroId);
+      renderBuildCards('build-list-popular', builds.sort((a,b)=>b.matches-a.matches).slice(0,3));
+    });
+    if (retryWin) retryWin.addEventListener('click', async () => {
+      const builds = await getHeroBuildStats(heroId);
+      renderBuildCards('build-list-winrate', builds.sort((a,b)=>b.winRate-a.winRate).slice(0,3));
+    });
   } catch (err) {
     console.error("Failed to render hero detail:", err);
     container.innerHTML = `<p>${t("error_fetching_data")}</p>`;

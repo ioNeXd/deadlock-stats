@@ -13,8 +13,16 @@
   "error_fetching_data": "Failed to load data. Check your connection and try again.",
   "retry_button": "Retry",
   "no_data": "No data available",
+  "filter_all": "All",
+  "filter_top_pick": "Top pick rate",
+  "filter_top_win": "Top win rate",
+  "refresh_button": "Refresh",
+  "auto_refresh_label": "Auto-refresh",
+  "api_status_link": "API docs / status",
+  "search_placeholder": "Search heroes or items",
+  "try_again": "Try again",
   "build_data_unavailable": "We don't have build details for this hero right now.",
-  "table_caption": "Table showing heroes or items with win rate and pick rate",
+  "table_caption": "Table showing heroes or items with win rate and pick rate",
   "back_to_table": "← Back to table",
   "builds_popular": "Most Popular Builds",
   "builds_winrate": "Highest Win Rate Builds"

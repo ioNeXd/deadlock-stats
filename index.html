@@ -42,6 +42,21 @@
     </header>
     <main>
       <div id="table-view">
+        <div class="table-controls">
+          <input id="search-input" type="search" placeholder="Search heroes or items" aria-label="Search" />
+          <label for="filter-select" class="visually-hidden">Filter</label>
+          <select id="filter-select">
+            <option value="all" data-i18n="filter_all">All</option>
+            <option value="top-pick" data-i18n="filter_top_pick">Top pick rate</option>
+            <option value="top-win" data-i18n="filter_top_win">Top win rate</option>
+          </select>
+          <button id="refresh-button" class="error-retry" data-i18n="refresh_button">Refresh</button>
+          <label>
+            <input id="auto-refresh" type="checkbox" /> <span data-i18n="auto_refresh_label">Auto-refresh</span>
+          </label>
+          <a id="api-status-link" href="https://api.deadlock-api.com/docs" target="_blank" rel="noopener" data-i18n="api_status_link">API status</a>
+        </div>
+
         <div
           id="error-banner"
           class="error-banner hidden"
@@ -114,6 +129,12 @@
           </thead>
           <tbody id="stats-table-body"></tbody>
         </table>
+
+        <div class="pagination-controls">
+          <button id="prev-page" aria-label="Previous page">&larr; Prev</button>
+          <span id="page-info">1</span>
+          <button id="next-page" aria-label="Next page">Next &rarr;</button>
+        </div>
       </div>
 
       <div id="hero-detail-view" class="hidden">

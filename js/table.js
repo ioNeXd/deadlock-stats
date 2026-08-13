@@ -1,10 +1,17 @@
 const TableModule = (() => {
   const state = {
     rows: [],
+    filteredRows: [],
     sortColumn: null,
     sortDirection: "desc",
     type: "heroes",
     gameStats: null,
+    searchQuery: "",
+    filter: "all",
+    page: 1,
+    pageSize: 20,
+    autoRefresh: false,
+    refreshIntervalId: null,
   };
 
   function renderSkeletonRows() {
@@ -95,6 +102,20 @@ const TableModule = (() => {
     }
   }
 
+  function applyFilters() {
+    let rows = [...state.rows];
+    const q = state.searchQuery.trim().toLowerCase();
+    if (q) rows = rows.filter(r => r.name.toLowerCase().includes(q));
+
+    if (state.filter === 'top-pick') {
+      rows = rows.sort((a,b) => b.pickRate - a.pickRate).slice(0, 50);
+    } else if (state.filter === 'top-win') {
+      rows = rows.sort((a,b) => b.winRate - a.winRate).slice(0, 50);
+    }
+
+    state.filteredRows = rows;
+  }
+
   function renderRows() {
     const tbody = document.getElementById("stats-table-body");
     if (!tbody) {
@@ -104,7 +125,8 @@ const TableModule = (() => {
 
     tbody.innerHTML = "";
 
-    let rows = [...state.rows];
+    applyFilters();
+    let rows = [...state.filteredRows];
 
     if (state.sortColumn === null) {
       rows.sort((a, b) => a.name.localeCompare(b.name));
@@ -115,7 +137,15 @@ const TableModule = (() => {
       });
     }
 
-    if (rows.length === 0) {
+    const totalPages = Math.max(1, Math.ceil(rows.length / state.pageSize));
+    if (state.page > totalPages) state.page = totalPages;
+    const start = (state.page - 1) * state.pageSize;
+    const pageRows = rows.slice(start, start + state.pageSize);
+
+    const pageInfo = document.getElementById('page-info');
+    if (pageInfo) pageInfo.textContent = `${state.page} / ${totalPages}`;
+
+    if (pageRows.length === 0) {
       const tr = document.createElement("tr");
       tr.classList.add("empty-state");
       tr.innerHTML = `<td colspan="4">${t("no_data") || "No data available"}</td>`;
@@ -123,7 +153,7 @@ const TableModule = (() => {
       return;
     }
 
-    for (const row of rows) {
+    for (const row of pageRows) {
       const tr = document.createElement("tr");
       const imgSrc = row.imageUrl || "";
       const imgAlt = row.name || "";
@@ -268,6 +298,12 @@ const TableModule = (() => {
     const navHeroes = document.getElementById("nav-heroes");
     const navItems = document.getElementById("nav-items");
     const retryButton = document.getElementById("error-retry");
+    const searchInput = document.getElementById('search-input');
+    const filterSelect = document.getElementById('filter-select');
+    const refreshButton = document.getElementById('refresh-button');
+    const autoRefreshCheckbox = document.getElementById('auto-refresh');
+    const prevPage = document.getElementById('prev-page');
+    const nextPage = document.getElementById('next-page');
 
     if (headerWin) {
       headerWin.addEventListener("click", (e) => {
@@ -326,6 +362,42 @@ const TableModule = (() => {
           renderTable(state.type);
         }
       });
+
+    if (searchInput) {
+      searchInput.setAttribute('placeholder', t('search_placeholder'));
+      searchInput.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value || '';
+        state.page = 1;
+        renderRows();
+      });
+    }
+
+    if (filterSelect) {
+      filterSelect.addEventListener('change', (e) => {
+        state.filter = e.target.value;
+        state.page = 1;
+        renderRows();
+      });
+    }
+
+    if (refreshButton) {
+      refreshButton.addEventListener('click', () => renderTable(state.type));
+    }
+
+    if (autoRefreshCheckbox) {
+      autoRefreshCheckbox.addEventListener('change', (e) => {
+        state.autoRefresh = e.target.checked;
+        if (state.autoRefresh) {
+          state.refreshIntervalId = setInterval(() => renderTable(state.type), 30 * 1000);
+        } else if (state.refreshIntervalId) {
+          clearInterval(state.refreshIntervalId);
+          state.refreshIntervalId = null;
+        }
+      });
+    }
+
+    if (prevPage) prevPage.addEventListener('click', () => { if (state.page > 1) { state.page--; renderRows(); } });
+    if (nextPage) nextPage.addEventListener('click', () => { state.page++; renderRows(); });
   }
 
   function onTableRouteActive() {
