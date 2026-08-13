@@ -7,11 +7,8 @@ const TableModule = (() => {
     type: "heroes",
     gameStats: null,
     searchQuery: "",
-    filter: "all",
     page: 1,
     pageSize: 20,
-    autoRefresh: false,
-    refreshIntervalId: null,
   };
 
   function renderSkeletonRows() {
@@ -107,17 +104,50 @@ const TableModule = (() => {
     const q = state.searchQuery.trim().toLowerCase();
     if (q) rows = rows.filter(r => r.name.toLowerCase().includes(q));
 
-    if (state.filter === 'top-pick') {
-      rows = rows.sort((a,b) => b.pickRate - a.pickRate).slice(0, 50);
-    } else if (state.filter === 'top-win') {
-      rows = rows.sort((a,b) => b.winRate - a.winRate).slice(0, 50);
-    }
-
+    // No more top-pick/top-win client-side filters — simple search only
     state.filteredRows = rows;
   }
 
   // Lazy loader observer (module-level) — create once
   let _lazyObserver;
+  // Small helper to check if a URL exists. Try HEAD, fallback to Image() load.
+  function checkImageExists(url, timeout = 3000) {
+    if (!url) return Promise.resolve(false);
+    // Try HEAD first (may fail due to CORS on some hosts)
+    return new Promise((resolve) => {
+      let resolved = false;
+      // Use fetch HEAD where allowed
+      try {
+        fetch(url, { method: 'HEAD', cache: 'no-store' }).then((res) => {
+          if (!resolved) {
+            resolved = true;
+            resolve(res.ok);
+          }
+        }).catch(() => {
+          // fallback to Image
+          const img = new Image();
+          const id = setTimeout(() => {
+            img.onload = img.onerror = null;
+            if (!resolved) { resolved = true; resolve(false); }
+          }, timeout);
+          img.onload = () => { clearTimeout(id); if (!resolved) { resolved = true; resolve(true); } };
+          img.onerror = () => { clearTimeout(id); if (!resolved) { resolved = true; resolve(false); } };
+          img.src = url;
+        });
+      } catch (e) {
+        // fallback to Image
+        const img = new Image();
+        const id = setTimeout(() => {
+          img.onload = img.onerror = null;
+          if (!resolved) { resolved = true; resolve(false); }
+        }, timeout);
+        img.onload = () => { clearTimeout(id); if (!resolved) { resolved = true; resolve(true); } };
+        img.onerror = () => { clearTimeout(id); if (!resolved) { resolved = true; resolve(false); } };
+        img.src = url;
+      }
+    });
+  }
+
   function initLazyObserver() {
     if (_lazyObserver) return;
     if ('IntersectionObserver' in window) {
@@ -126,12 +156,33 @@ const TableModule = (() => {
           if (!entry.isIntersecting) continue;
           const img = entry.target;
           const src = img.getAttribute('data-src');
-          const srcset = img.getAttribute('data-srcset');
-          if (src) img.src = src;
-          if (srcset) img.srcset = srcset;
-          img.removeAttribute('data-src');
-          img.removeAttribute('data-srcset');
-          _lazyObserver.unobserve(img);
+          const fallback = img.getAttribute('data-srcset') || src;
+
+          if (src) {
+            // attempt to prefer a webp sibling if available
+            const webp = src.replace(/\.(png|jpg|jpeg)$/i, '.webp');
+            checkImageExists(webp).then((exists) => {
+              try {
+                if (exists) {
+                  img.srcset = `${webp} 1x, ${src} 2x`;
+                } else if (fallback) {
+                  img.srcset = fallback;
+                }
+              } catch (e) {}
+              img.src = src;
+              img.removeAttribute('data-src');
+              img.removeAttribute('data-srcset');
+              try { _lazyObserver.unobserve(img); } catch (e) {}
+            }).catch(() => {
+              img.src = src;
+              img.removeAttribute('data-src');
+              img.removeAttribute('data-srcset');
+              try { _lazyObserver.unobserve(img); } catch (e) {}
+            });
+          } else {
+            // nothing to load
+            try { _lazyObserver.unobserve(img); } catch (e) {}
+          }
         }
       }, { rootMargin: '200px 0px', threshold: 0.01 });
     }
@@ -140,14 +191,25 @@ const TableModule = (() => {
   function observeLazyImages() {
     initLazyObserver();
     if (!_lazyObserver) {
-      // fallback: load immediately
+      // fallback: load immediately but probe for webp where possible
       document.querySelectorAll('img.lazy-img').forEach((img) => {
         const src = img.getAttribute('data-src');
-        const srcset = img.getAttribute('data-srcset');
-        if (src) img.src = src;
-        if (srcset) img.srcset = srcset;
-        img.removeAttribute('data-src');
-        img.removeAttribute('data-srcset');
+        const fallback = img.getAttribute('data-srcset') || src;
+        if (src) {
+          const webp = src.replace(/\.(png|jpg|jpeg)$/i, '.webp');
+          checkImageExists(webp).then((exists) => {
+            try {
+              if (exists) img.srcset = `${webp} 1x, ${src} 2x`;
+              else if (fallback) img.srcset = fallback;
+            } catch (e) {}
+            img.src = src;
+          }).catch(() => {
+            img.src = src;
+          }).finally(() => {
+            img.removeAttribute('data-src');
+            img.removeAttribute('data-srcset');
+          });
+        }
       });
       return;
     }
@@ -167,6 +229,19 @@ const TableModule = (() => {
 
     applyFilters();
     let rows = [...state.filteredRows];
+
+    // Update table aria-label dynamically so screen reader users know how many items are shown
+    try {
+      const table = document.getElementById('stats-table');
+      if (table) {
+        const count = rows.length || 0;
+        const labelKey = state.type === 'heroes' ? 'a11y_hero_list_label' : 'a11y_item_list_label';
+        const raw = t(labelKey) || (state.type === 'heroes' ? 'Heroes list, {count} items' : 'Items list, {count} items');
+        table.setAttribute('aria-label', raw.replace('{count}', count));
+      }
+    } catch (e) {
+      // no-op if translations missing
+    }
 
     if (state.sortColumn === null) {
       rows.sort((a, b) => a.name.localeCompare(b.name));
@@ -200,16 +275,12 @@ const TableModule = (() => {
 
       // Build responsive image attributes: try webp variant when possible
       const safeSrc = imgSrc || 'assets/placeholder.svg';
-      let webp = '';
-      try {
-        webp = safeSrc.replace(/\.(png|jpg|jpeg)$/i, '.webp');
-      } catch (e) {
-        webp = '';
-      }
-      const dataSrcset = webp && webp !== safeSrc ? `${webp} 1x, ${safeSrc} 2x` : safeSrc;
+      // Defer creating a webp srcset until the image is about to load (safer)
+      const dataSrc = safeSrc;
+      const dataSrcset = safeSrc; // fallback only; webp will be probed on demand
 
       tr.innerHTML = `
-        <td><img data-src="${safeSrc}" data-srcset="${dataSrcset}" class="lazy-img" src="assets/placeholder.svg" width="32" height="32" alt="${imgAlt}" loading="lazy"></td>
+        <td><img data-src="${dataSrc}" data-srcset="${dataSrcset}" class="lazy-img" src="assets/placeholder.svg" width="32" height="32" alt="${imgAlt}" loading="lazy"></td>
         <td>${row.name}</td>
         <td>${row.winRate.toFixed(1)}%</td>
         <td>${row.pickRate.toFixed(1)}%</td>
@@ -236,20 +307,37 @@ const TableModule = (() => {
       if (state.type === "heroes" && row.id != null) {
         tr.classList.add("clickable-row");
         tr.tabIndex = 0;
-        tr.setAttribute("role", "link");
+        // Use role=button for interactive rows and provide an accessible label
+        tr.setAttribute("role", "button");
         tr.setAttribute("aria-label", row.name);
         const goToHero = () => navigateToHero(row.id);
         tr.addEventListener("click", goToHero);
         tr.addEventListener("keydown", (e) => {
+          // Activate row with Enter or Space
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             goToHero();
+            return;
+          }
+
+          // Arrow key navigation between rows for keyboard users
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            const dir = e.key === "ArrowDown" ? 'next' : 'prev';
+            let sib = dir === 'next' ? tr.nextElementSibling : tr.previousElementSibling;
+            while (sib && sib.nodeType !== 1) sib = dir === 'next' ? sib.nextSibling : sib.previousSibling;
+            if (sib && typeof sib.focus === 'function') {
+              sib.focus();
+            }
           }
         });
       }
 
       tbody.appendChild(tr);
     }
+
+    // Start observing lazy images after rows are in the DOM
+    try { observeLazyImages(); } catch (e) { /* ignore */ }
   }
 
   function handleSortClick(column) {
@@ -276,6 +364,14 @@ const TableModule = (() => {
 
   async function renderTable(type) {
     state.type = type;
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      const labelKey = type === 'heroes' ? 'search_heroes_placeholder' : 'search_items_placeholder';
+      const label = t(labelKey) || (type === 'heroes' ? 'Search heroes' : 'Search items');
+      searchInput.setAttribute('placeholder', label);
+      searchInput.setAttribute('aria-label', label);
+    }
+
     const header = document.getElementById("table-name-header");
     if (!header) {
       console.warn("table-name-header not found; skipping renderTable.");
@@ -286,28 +382,44 @@ const TableModule = (() => {
 
     showLoader();
 
+    // Watchdog: abort all fetches if they don't complete within 3s
+    const watchdog = new AbortController();
+    let watchdogTimer = setTimeout(() => {
+      try {
+        watchdog.abort();
+      } catch (e) {}
+      console.warn('Render table watchdog triggered (3s)');
+      showError(t('error_fetching_data'));
+      hideLoader();
+    }, 3000);
+
     try {
       if (type === "heroes") {
         header.setAttribute("data-i18n", "table_hero");
         idField = "hero_id";
-        [stats, entitiesById] = await Promise.all([
-          getHeroStats(),
-          getHeroesById(),
-        ]);
+        const fetchPromise = Promise.all([getHeroStats({ signal: watchdog.signal }), getHeroesById({ signal: watchdog.signal })]);
+        [stats, entitiesById] = await fetchPromise;
       } else {
         header.setAttribute("data-i18n", "table_item");
         idField = "item_id";
-        [stats, entitiesById] = await Promise.all([
-          getItemStats(),
-          getItemsById(),
-        ]);
+        const fetchPromise = Promise.all([getItemStats({ signal: watchdog.signal }), getItemsById({ signal: watchdog.signal })]);
+        [stats, entitiesById] = await fetchPromise;
       }
 
       applyTranslations();
 
       if (!state.gameStats) {
-        state.gameStats = await getGameStats();
+        try {
+          state.gameStats = await getGameStats({ signal: watchdog.signal });
+        } catch (e) {
+          console.warn('getGameStats timed out or failed', e);
+          state.gameStats = [{ total_matches: 0 }];
+        }
       }
+
+      // clear watchdog on success
+      clearTimeout(watchdogTimer);
+
       const totalMatches = Number(state.gameStats[0]?.total_matches) || 0;
       const totalItemSlots = totalMatches * 12;
 
@@ -320,10 +432,22 @@ const TableModule = (() => {
           type === "heroes"
             ? (matchesCount / (totalMatches || 1)) * 100
             : (matchesCount / (totalItemSlots || 1)) * 100;
-        const imageUrl =
-          type === "heroes"
-            ? entity.images && entity.images.icon_image_small
-            : entity.shop_image;
+        // Robust image lookup with several fallbacks — some API responses vary
+        function pickImage(e) {
+          if (!e) return '';
+          // common locations
+          const imgs = e.images || (e.raw && e.raw.images) || {};
+          return (
+            imgs.icon_image_small || imgs.icon || imgs.icon_image ||
+            e.shop_image || e.icon_image_small || e.shop_image_small ||
+            (e.raw && e.raw.icon_image_small) || (e.raw && e.raw.shop_image) || ''
+          );
+        }
+        const imageUrl = type === "heroes" ? pickImage(entity) : pickImage(entity) || entity.shop_image;
+        if (!imageUrl) {
+          // log once per missing entity for debugging
+          if (entity && entity.name) console.debug(`No image for: ${entity.name} (id=${entity.id})`);
+        }
         return {
           id: stat[idField],
           name: entity.name || "Unknown",
@@ -345,8 +469,11 @@ const TableModule = (() => {
       state.rows = [];
       renderRows();
       showError(t("error_fetching_data"));
+      // ensure watchdog cleared
+      try { clearTimeout(watchdogTimer); } catch (e) {}
     } finally {
       hideLoader();
+      try { clearTimeout(watchdogTimer); } catch (e) {}
     }
   }
 
@@ -357,9 +484,7 @@ const TableModule = (() => {
     const navItems = document.getElementById("nav-items");
     const retryButton = document.getElementById("error-retry");
     const searchInput = document.getElementById('search-input');
-    const filterSelect = document.getElementById('filter-select');
     const refreshButton = document.getElementById('refresh-button');
-    const autoRefreshCheckbox = document.getElementById('auto-refresh');
     const prevPage = document.getElementById('prev-page');
     const nextPage = document.getElementById('next-page');
 
@@ -422,7 +547,14 @@ const TableModule = (() => {
       });
 
     if (searchInput) {
-      searchInput.setAttribute('placeholder', t('search_placeholder'));
+      const setSearchPlaceholder = () => {
+        const labelKey = state.type === 'heroes' ? 'search_heroes_placeholder' : 'search_items_placeholder';
+        const label = t(labelKey) || (state.type === 'heroes' ? 'Search heroes' : 'Search items');
+        searchInput.setAttribute('placeholder', label);
+        searchInput.setAttribute('aria-label', label);
+      };
+
+      setSearchPlaceholder();
       searchInput.addEventListener('input', (e) => {
         state.searchQuery = e.target.value || '';
         state.page = 1;
@@ -430,28 +562,8 @@ const TableModule = (() => {
       });
     }
 
-    if (filterSelect) {
-      filterSelect.addEventListener('change', (e) => {
-        state.filter = e.target.value;
-        state.page = 1;
-        renderRows();
-      });
-    }
-
     if (refreshButton) {
       refreshButton.addEventListener('click', () => renderTable(state.type));
-    }
-
-    if (autoRefreshCheckbox) {
-      autoRefreshCheckbox.addEventListener('change', (e) => {
-        state.autoRefresh = e.target.checked;
-        if (state.autoRefresh) {
-          state.refreshIntervalId = setInterval(() => renderTable(state.type), 30 * 1000);
-        } else if (state.refreshIntervalId) {
-          clearInterval(state.refreshIntervalId);
-          state.refreshIntervalId = null;
-        }
-      });
     }
 
     if (prevPage) prevPage.addEventListener('click', () => { if (state.page > 1) { state.page--; renderRows(); } });
@@ -469,11 +581,23 @@ const TableModule = (() => {
     const el = document.getElementById("last-updated");
     if (el) el.textContent = t("loading");
     try {
-      const lastMatch = await getLastUpdated();
+      // race the API call against a short timeout to avoid infinite spinner
+      const timeoutMs = 8000;
+      const lastMatch = await Promise.race([
+        getLastUpdated(),
+        new Promise((res) => setTimeout(() => res(null), timeoutMs)),
+      ]);
+
+      if (!lastMatch || !(lastMatch instanceof Date) || lastMatch.getTime() === 0) {
+        // show friendly fallback when we couldn't determine last update
+        if (el) el.textContent = `${t("last_updated_prefix")} ${t("last_updated_unavailable")}`;
+        return;
+      }
+
       const formatted = formatDate(lastMatch);
       if (el) el.textContent = `${t("last_updated_prefix")} ${formatted}`;
     } catch (err) {
-      if (el) el.textContent = t("loading");
+      if (el) el.textContent = `${t("last_updated_prefix")} ${t("last_updated_unavailable")}`;
       console.error("Failed to fetch last-updated:", err);
       showError(t("error_fetching_data"));
     }

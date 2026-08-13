@@ -45,6 +45,7 @@ async function renderHeroDetail(heroId) {
     renderBuildCards("build-list-winrate", byWinRate);
     applyTranslations();
 
+    // If there are no builds at all, show the 'unavailable' message in both lists.
     if (buildStats.length === 0) {
       const popular = document.getElementById("build-list-popular");
       const winrate = document.getElementById("build-list-winrate");
@@ -52,17 +53,32 @@ async function renderHeroDetail(heroId) {
       if (winrate) winrate.innerHTML = `<p>${t("build_data_unavailable")}</p>`;
     }
 
-    // hook up retry buttons
+    // Hook up retry buttons only where needed. If a section already has builds, hide its retry button.
     const retryPopular = document.getElementById('retry-builds-popular');
     const retryWin = document.getElementById('retry-builds-winrate');
-    if (retryPopular) retryPopular.addEventListener('click', async () => {
-      const builds = await getHeroBuildStats(heroId);
-      renderBuildCards('build-list-popular', builds.sort((a,b)=>b.matches-a.matches).slice(0,3));
-    });
-    if (retryWin) retryWin.addEventListener('click', async () => {
-      const builds = await getHeroBuildStats(heroId);
-      renderBuildCards('build-list-winrate', builds.sort((a,b)=>b.winRate-a.winRate).slice(0,3));
-    });
+
+    if (byPopularity && byPopularity.length > 0) {
+      if (retryPopular && retryPopular.parentNode) retryPopular.parentNode.removeChild(retryPopular);
+    } else {
+      if (retryPopular) retryPopular.addEventListener('click', async () => {
+        const builds = await getHeroBuildStats(heroId);
+        renderBuildCards('build-list-popular', builds.sort((a,b)=>b.matches-a.matches).slice(0,3));
+        // if builds received, remove the retry button
+        const btn = document.getElementById('retry-builds-popular');
+        if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
+      });
+    }
+
+    if (byWinRate && byWinRate.length > 0) {
+      if (retryWin && retryWin.parentNode) retryWin.parentNode.removeChild(retryWin);
+    } else {
+      if (retryWin) retryWin.addEventListener('click', async () => {
+        const builds = await getHeroBuildStats(heroId);
+        renderBuildCards('build-list-winrate', builds.sort((a,b)=>b.winRate-a.winRate).slice(0,3));
+        const btn = document.getElementById('retry-builds-winrate');
+        if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
+      });
+    }
   } catch (err) {
     console.error("Failed to render hero detail:", err);
     container.innerHTML = `<p>${t("error_fetching_data")}</p>`;

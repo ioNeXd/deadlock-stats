@@ -9,16 +9,29 @@ function loadJson(filePath) {
   return JSON.parse(raw);
 }
 
+function flattenKeys(obj, prefix = "") {
+  const keys = [];
+  for (const [k, v] of Object.entries(obj)) {
+    const full = prefix ? `${prefix}.${k}` : k;
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+      keys.push(...flattenKeys(v, full));
+    } else {
+      keys.push(full);
+    }
+  }
+  return keys;
+}
+
 function main() {
   const referencePath = path.join(TRANSLATIONS_DIR, REFERENCE_LANG);
 
   if (!fs.existsSync(referencePath)) {
-    console.error(`❌ Arquivo de referência não encontrado: ${referencePath}`);
+    console.error(`❌ Reference file not found: ${referencePath}`);
     process.exit(1);
   }
 
   const reference = loadJson(referencePath);
-  const referenceKeys = new Set(Object.keys(reference));
+  const referenceKeys = new Set(flattenKeys(reference));
 
   const files = fs
     .readdirSync(TRANSLATIONS_DIR)
@@ -33,18 +46,18 @@ function main() {
     try {
       translation = loadJson(filePath);
     } catch (err) {
-      console.error(`❌ ${file}: JSON inválido — ${err.message}`);
+      console.error(`❌ ${file}: invalid JSON — ${err.message}`);
       hasErrors = true;
       continue;
     }
 
-    const fileKeys = new Set(Object.keys(translation));
+    const fileKeys = new Set(flattenKeys(translation));
 
     const missingKeys = [...referenceKeys].filter((k) => !fileKeys.has(k));
     const extraKeys = [...fileKeys].filter((k) => !referenceKeys.has(k));
 
     if (missingKeys.length === 0 && extraKeys.length === 0) {
-      console.log(`✅ ${file}: OK (${fileKeys.size} chaves)`);
+      console.log(`✅ ${file}: OK (${fileKeys.size} keys)`);
       continue;
     }
 
@@ -52,24 +65,22 @@ function main() {
     console.error(`❌ ${file}:`);
 
     if (missingKeys.length > 0) {
-      console.error(`   Faltando (${missingKeys.length}):`);
+      console.error(`   Missing (${missingKeys.length}):`);
       for (const key of missingKeys) console.error(`     - ${key}`);
     }
 
     if (extraKeys.length > 0) {
-      console.error(
-        `   Chaves extras / possível erro de digitação (${extraKeys.length}):`,
-      );
+      console.error(`   Extra / possible typos (${extraKeys.length}):`);
       for (const key of extraKeys) console.error(`     - ${key}`);
     }
   }
 
   if (hasErrors) {
-    console.error("\nValidação de traduções falhou.");
+    console.error("\nTranslation validation failed.");
     process.exit(1);
   }
 
-  console.log("\nTodas as traduções estão sincronizadas com en.json.");
+  console.log("\nAll translations are synchronized with en.json.");
 }
 
 main();

@@ -16,16 +16,30 @@ async function fetchJson(url, options = {}, timeout = 10000, retries = 2, cacheT
     }
   }
 
+  // Support external AbortSignal passed via options.signal
+  const externalSignal = options.signal;
+
   let attempt = 0;
   let lastErr;
   while (attempt <= retries) {
     attempt += 1;
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
+    let controller = null;
+    let id = null;
+    let signal;
+
+    if (externalSignal) {
+      signal = externalSignal;
+    } else {
+      controller = new AbortController();
+      signal = controller.signal;
+      id = setTimeout(() => controller.abort(), timeout);
+    }
 
     try {
-      const res = await fetch(url, { signal: controller.signal, ...options });
-      clearTimeout(id);
+      const fetchOptions = { ...options, signal };
+      const res = await fetch(url, fetchOptions);
+      if (id) clearTimeout(id);
+
       if (!res.ok) {
         const text = await res.text().catch(() => "");
         throw new Error(`Request failed: ${res.status} ${res.statusText} ${text}`);
@@ -38,8 +52,10 @@ async function fetchJson(url, options = {}, timeout = 10000, retries = 2, cacheT
 
       return json;
     } catch (err) {
-      clearTimeout(id);
+      if (id) clearTimeout(id);
       lastErr = err;
+      // If aborted via external signal, stop retrying
+      if (externalSignal && externalSignal.aborted) break;
       // If aborted or last attempt, break/throw after loop
       if (attempt > retries) break;
       // Exponential backoff before retrying
@@ -95,10 +111,10 @@ function normalizeEntitiesById(rawEntities, type = "entity") {
 }
 
 // Updated request: last updated
-async function getLastUpdated() {
+async function getLastUpdated(opts = {}) {
   const url = `${API_BASE}/matches/recently-fetched`;
   try {
-    const matches = await fetchJson(url).catch((e) => { throw e; });
+    const matches = await fetchJson(url, opts).catch((e) => { throw e; });
     if (!Array.isArray(matches) || matches.length === 0) return new Date(0);
     const latestTimestamp = Number(matches[0]?.start_time) || 0;
     return new Date(latestTimestamp * 1000);
@@ -109,10 +125,10 @@ async function getLastUpdated() {
 }
 
 // Heroes requests (return normalized shapes)
-async function getHeroStats() {
+async function getHeroStats(opts = {}) {
   const url = `${API_BASE}/analytics/hero-stats`;
   try {
-    const raw = await fetchJson(url);
+    const raw = await fetchJson(url, opts);
     return normalizeHeroStats(raw);
   } catch (err) {
     console.warn('getHeroStats failed:', err);
@@ -120,10 +136,10 @@ async function getHeroStats() {
   }
 }
 
-async function getHeroesById() {
+async function getHeroesById(opts = {}) {
   const url = `${API_BASE}/assets/heroes`;
   try {
-    const raw = await fetchJson(url);
+    const raw = await fetchJson(url, opts);
     return normalizeEntitiesById(raw, "hero");
   } catch (err) {
     console.warn('getHeroesById failed:', err);
@@ -132,10 +148,10 @@ async function getHeroesById() {
 }
 
 // Items requests
-async function getItemStats() {
+async function getItemStats(opts = {}) {
   const url = `${API_BASE}/analytics/item-stats`;
   try {
-    const raw = await fetchJson(url);
+    const raw = await fetchJson(url, opts);
     return normalizeItemStats(raw);
   } catch (err) {
     console.warn('getItemStats failed:', err);
@@ -143,10 +159,10 @@ async function getItemStats() {
   }
 }
 
-async function getItemsById() {
+async function getItemsById(opts = {}) {
   const url = `${API_BASE}/assets/items`;
   try {
-    const raw = await fetchJson(url);
+    const raw = await fetchJson(url, opts);
     return normalizeEntitiesById(raw, "item");
   } catch (err) {
     console.warn('getItemsById failed:', err);
@@ -155,10 +171,10 @@ async function getItemsById() {
 }
 
 // Game stats request
-async function getGameStats() {
+async function getGameStats(opts = {}) {
   const url = `${API_BASE}/analytics/game-stats`;
   try {
-    const raw = await fetchJson(url);
+    const raw = await fetchJson(url, opts);
     const arr = Array.isArray(raw) ? raw : [];
     return arr;
   } catch (err) {
@@ -167,11 +183,11 @@ async function getGameStats() {
   }
 }
 
-async function getHeroBuildStats(heroId, minMatches = 1) {
+async function getHeroBuildStats(heroId, minMatches = 1, opts = {}) {
   const url = `${API_BASE}/analytics/hero-build-stats/${heroId}?min_matches=${minMatches}`;
 
   try {
-    const raw = await fetchJson(url);
+    const raw = await fetchJson(url, opts);
     return normalizeHeroBuildStats(raw);
   } catch (err) {
     console.warn(`No build data available for hero ${heroId}:`, err);
