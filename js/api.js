@@ -4,14 +4,20 @@ const API_BASE = "https://api.deadlock-api.com/v1";
 const _cache = new Map();
 const DEFAULT_CACHE_TTL = 30 * 1000; // 30s
 
-async function fetchJson(url, options = {}, timeout = 10000, retries = 2, cacheTtl = DEFAULT_CACHE_TTL) {
+async function fetchJson(
+  url,
+  options = {},
+  timeout = 10000,
+  retries = 2,
+  cacheTtl = DEFAULT_CACHE_TTL,
+) {
   // Read-through cache for GET requests without cache-busting
-  const method = (options.method || 'GET').toUpperCase();
-  const cacheKey = method === 'GET' ? url : null;
+  const method = (options.method || "GET").toUpperCase();
+  const cacheKey = method === "GET" ? url : null;
 
   if (cacheKey) {
     const entry = _cache.get(cacheKey);
-    if (entry && (Date.now() - entry.ts) < cacheTtl) {
+    if (entry && Date.now() - entry.ts < cacheTtl) {
       return entry.data;
     }
   }
@@ -42,12 +48,18 @@ async function fetchJson(url, options = {}, timeout = 10000, retries = 2, cacheT
 
       if (!res.ok) {
         const text = await res.text().catch(() => "");
-        throw new Error(`Request failed: ${res.status} ${res.statusText} ${text}`);
+        throw new Error(
+          `Request failed: ${res.status} ${res.statusText} ${text}`,
+        );
       }
       const json = await res.json();
 
       if (cacheKey) {
-        try { _cache.set(cacheKey, { ts: Date.now(), data: json }); } catch (e) { /* ignore cache errors */ }
+        try {
+          _cache.set(cacheKey, { ts: Date.now(), data: json });
+        } catch (e) {
+          /* ignore cache errors */
+        }
       }
 
       return json;
@@ -114,12 +126,14 @@ function normalizeEntitiesById(rawEntities, type = "entity") {
 async function getLastUpdated(opts = {}) {
   const url = `${API_BASE}/matches/recently-fetched`;
   try {
-    const matches = await fetchJson(url, opts).catch((e) => { throw e; });
+    const matches = await fetchJson(url, opts).catch((e) => {
+      throw e;
+    });
     if (!Array.isArray(matches) || matches.length === 0) return new Date(0);
     const latestTimestamp = Number(matches[0]?.start_time) || 0;
     return new Date(latestTimestamp * 1000);
   } catch (err) {
-    console.warn('getLastUpdated failed:', err);
+    console.warn("getLastUpdated failed:", err);
     return new Date(0);
   }
 }
@@ -131,7 +145,7 @@ async function getHeroStats(opts = {}) {
     const raw = await fetchJson(url, opts);
     return normalizeHeroStats(raw);
   } catch (err) {
-    console.warn('getHeroStats failed:', err);
+    console.warn("getHeroStats failed:", err);
     return [];
   }
 }
@@ -142,7 +156,7 @@ async function getHeroesById(opts = {}) {
     const raw = await fetchJson(url, opts);
     return normalizeEntitiesById(raw, "hero");
   } catch (err) {
-    console.warn('getHeroesById failed:', err);
+    console.warn("getHeroesById failed:", err);
     return {};
   }
 }
@@ -154,7 +168,7 @@ async function getItemStats(opts = {}) {
     const raw = await fetchJson(url, opts);
     return normalizeItemStats(raw);
   } catch (err) {
-    console.warn('getItemStats failed:', err);
+    console.warn("getItemStats failed:", err);
     return [];
   }
 }
@@ -165,7 +179,7 @@ async function getItemsById(opts = {}) {
     const raw = await fetchJson(url, opts);
     return normalizeEntitiesById(raw, "item");
   } catch (err) {
-    console.warn('getItemsById failed:', err);
+    console.warn("getItemsById failed:", err);
     return {};
   }
 }
@@ -178,7 +192,7 @@ async function getGameStats(opts = {}) {
     const arr = Array.isArray(raw) ? raw : [];
     return arr;
   } catch (err) {
-    console.warn('getGameStats failed:', err);
+    console.warn("getGameStats failed:", err);
     return [{ total_matches: 0 }];
   }
 }
@@ -186,15 +200,17 @@ async function getGameStats(opts = {}) {
 async function getItemFlowStats(heroId, opts = {}) {
   const params = new URLSearchParams({
     hero_ids: String(heroId),
-    phase_count: '4',
-    phase_interval_s: '120',
-    min_matches: '10',
+    phase_count: "4",
+    phase_interval_s: "120",
+    min_matches: "10",
   });
   const url = `${API_BASE}/analytics/item-flow-stats?${params.toString()}`;
 
   try {
     const raw = await fetchJson(url, opts);
-    return raw && typeof raw === 'object' ? raw : { nodes: [], edges: [], summary: null };
+    return raw && typeof raw === "object"
+      ? raw
+      : { nodes: [], edges: [], summary: null };
   } catch (err) {
     console.warn(`No item flow data available for hero ${heroId}:`, err);
     return { nodes: [], edges: [], summary: null };
@@ -242,18 +258,27 @@ function normalizeBuildPayload(rawBuild) {
       ? rawBuild.mod_categories
       : [];
 
-  const skillChanges = details.ability_order && Array.isArray(details.ability_order.currency_changes)
-    ? details.ability_order.currency_changes
-    : Array.isArray(rawBuild.ability_order && rawBuild.ability_order.currency_changes)
-      ? rawBuild.ability_order.currency_changes
-      : [];
+  const skillChanges =
+    details.ability_order &&
+    Array.isArray(details.ability_order.currency_changes)
+      ? details.ability_order.currency_changes
+      : Array.isArray(
+            rawBuild.ability_order && rawBuild.ability_order.currency_changes,
+          )
+        ? rawBuild.ability_order.currency_changes
+        : [];
 
   return {
     hero_build: candidate,
-    hero_build_id: candidate.hero_build_id ?? rawBuild.hero_build_id ?? rawBuild.id ?? null,
+    hero_build_id:
+      candidate.hero_build_id ?? rawBuild.hero_build_id ?? rawBuild.id ?? null,
     name: candidate.name || rawBuild.name || "",
     version: candidate.version ?? rawBuild.version ?? null,
-    tags: Array.isArray(candidate.tags) ? candidate.tags : Array.isArray(rawBuild.tags) ? rawBuild.tags : [],
+    tags: Array.isArray(candidate.tags)
+      ? candidate.tags
+      : Array.isArray(rawBuild.tags)
+        ? rawBuild.tags
+        : [],
     details: {
       mod_categories: modCategories,
       ability_order: {
@@ -293,7 +318,36 @@ async function getMostPopularBuild(heroId, opts = {}) {
     return null;
   }
 }
+async function getBuildById(buildId, heroId, opts = {}) {
+  if (buildId == null) return null;
 
+  const params = new URLSearchParams({
+    build_id: String(buildId),
+    hero_id: String(heroId),
+    only_latest: "true",
+    limit: "1",
+  });
+  const url = `${API_BASE}/builds?${params.toString()}`;
+
+  try {
+    const raw = await fetchJson(url, opts);
+    const list = Array.isArray(raw)
+      ? raw
+      : Array.isArray(raw && raw.value)
+        ? raw.value
+        : Array.isArray(raw && raw.data)
+          ? raw.data
+          : [];
+
+    return list.length > 0 ? normalizeBuildPayload(list[0]) : null;
+  } catch (err) {
+    console.warn(
+      `No build content available for build ${buildId} (hero ${heroId}):`,
+      err,
+    );
+    return null;
+  }
+}
 function normalizeHeroBuildStats(rawStats) {
   if (!rawStats || !Array.isArray(rawStats)) {
     return [];
