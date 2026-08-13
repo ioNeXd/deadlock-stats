@@ -413,9 +413,19 @@ tr:focus-within td {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+  grid-auto-rows: 1fr;
   gap: 8px;
+}
+
+:root {
+  --build-item-size: 85px;
+}
+
+.build-item-category .build-detail-list {
+  grid-template-columns: repeat(auto-fill, var(--build-item-size));
+  justify-content: start;
 }
 
 .build-item-category {
@@ -444,26 +454,48 @@ tr:focus-within td {
 }
 
 .build-item-row {
-  grid-template-columns: 32px 1fr;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  text-align: center;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 8px;
 }
 
 .build-detail-icon-wrap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   background: #1a1a1a;
-  border: 1px solid #333;
   overflow: hidden;
 }
 
 .build-detail-icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
+}
+
+.build-item-row .build-detail-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex: 1;
+  min-height: 36px;
+  padding: 4px 3px;
+  font-size: 0.68em;
+  font-weight: 500;
+  line-height: 1.15;
+  text-align: center;
+  word-break: break-word;
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-sizing: border-box;
 }
 
 .build-skill-list {
