@@ -1,58 +1,14 @@
-function formatNetWorth(value) {
-  const num = Number(value) || 0;
-  if (num >= 1000) return `${(num / 1000).toFixed(1)}k`;
-  return `${Math.round(num)}`;
-}
-
-function buildItemTimeline(itemFlow, itemMap) {
-  if (
-    !itemFlow ||
-    !Array.isArray(itemFlow.nodes) ||
-    itemFlow.nodes.length === 0
-  ) {
-    return [];
-  }
-
-  return itemFlow.nodes
-    .map((node) => {
-      const itemId = Number(node.item_id);
-      const item = itemMap[itemId] || { name: `Item #${itemId}` };
-      return {
-        id: itemId,
-        name: item.name || `Item #${itemId}`,
-        column: Number(node.column) || 0,
-        matches: Number(node.matches) || 0,
-        avgNetWorthAtBuy: Number(node.avg_net_worth_at_buy) || 0,
-      };
-    })
-    .sort((a, b) => a.column - b.column || b.matches - a.matches);
-}
-
-function buildSkillTimeline(abilityOrderStats, itemMap) {
-  if (!Array.isArray(abilityOrderStats) || abilityOrderStats.length === 0) {
-    return [];
-  }
-
-  const best = [...abilityOrderStats].sort(
-    (a, b) => (Number(b.matches) || 0) - (Number(a.matches) || 0),
-  )[0];
-  const sequence = Array.isArray(best && best.abilities) ? best.abilities : [];
-
-  return sequence.map((abilityId, index) => {
-    const item = itemMap[Number(abilityId)] || {
-      name: `Ability #${abilityId}`,
-    };
-    return {
-      id: Number(abilityId),
-      name: item.name || `Ability #${abilityId}`,
-      order: index + 1,
-    };
-  });
+// Retorna o mapa de itens de forma segura — nunca undefined/null.
+function safeGetItemMap(itemMap) {
+  return itemMap && typeof itemMap === "object" ? itemMap : {};
 }
 
 async function renderHeroDetail(heroId) {
   const container = document.getElementById("hero-detail-content");
   if (!container) return;
+
+  // Defesa em profundidade: herói inválido (NaN, negativo...) não chama a API.
+  if (!isValidHeroId(heroId)) return;
 
   container.innerHTML = `<p>${t("loading")}</p>`;
 
@@ -63,19 +19,22 @@ async function renderHeroDetail(heroId) {
       getItemsById(),
     ]);
 
-    window.__itemMap = itemMap || {};
+    window.__itemMap = safeGetItemMap(itemMap);
+    // Builds de outro herói ficam órfãos — limpa o cache ao trocar de herói.
+    buildCache.clear();
 
     const hero = heroesById[heroId];
     const heroName = hero ? hero.name : `Hero #${heroId}`;
     const heroIcon =
       (hero && hero.images && hero.images.icon_image_small) || "";
 
+    const maxBuilds = CONSTANTS.MAX_BUILDS_PER_LIST;
     const byPopularity = [...buildStats]
       .sort((a, b) => b.matches - a.matches)
-      .slice(0, 3);
+      .slice(0, maxBuilds);
     const byWinRate = [...buildStats]
       .sort((a, b) => b.winRate - a.winRate)
-      .slice(0, 3);
+      .slice(0, maxBuilds);
 
     container.innerHTML = `
       <div class="hero-detail-header">
@@ -119,7 +78,9 @@ async function renderHeroDetail(heroId) {
           const builds = await getHeroBuildStats(heroId);
           renderBuildCards(
             "build-list-popular",
-            builds.sort((a, b) => b.matches - a.matches).slice(0, 3),
+            builds
+              .sort((a, b) => b.matches - a.matches)
+              .slice(0, CONSTANTS.MAX_BUILDS_PER_LIST),
             heroId,
           );
           const btn = document.getElementById("retry-builds-popular");
@@ -136,7 +97,9 @@ async function renderHeroDetail(heroId) {
           const builds = await getHeroBuildStats(heroId);
           renderBuildCards(
             "build-list-winrate",
-            builds.sort((a, b) => b.winRate - a.winRate).slice(0, 3),
+            builds
+              .sort((a, b) => b.winRate - a.winRate)
+              .slice(0, CONSTANTS.MAX_BUILDS_PER_LIST),
             heroId,
           );
           const btn = document.getElementById("retry-builds-winrate");
@@ -177,7 +140,13 @@ function renderBuildCards(containerId, builds, heroId) {
       const details = card.querySelector(".build-card-details");
       if (details.classList.contains("hidden") && details.innerHTML === "") {
         details.innerHTML = `<p>${t("loading")}</p>`;
-        const actualBuild = await getBuildById(build.buildId, heroId);
+        const cacheKey = `${heroId}:${build.buildId}`;
+        // Cache com TTL — cada clique num build não refaz a requisição.
+        let actualBuild = buildCache.get(cacheKey);
+        if (actualBuild === undefined) {
+          actualBuild = await getBuildById(build.buildId, heroId);
+          if (actualBuild) buildCache.set(cacheKey, actualBuild);
+        }
         details.innerHTML = renderBuildPath({ ...build, actualBuild });
       }
       details.classList.toggle("hidden");
@@ -199,16 +168,24 @@ function renderBuildCards(containerId, builds, heroId) {
 }
 
 function resolveBuildDetailSource(build) {
-  if (!build) return { modCategories: [], skillChanges: [] };
+  const empty = { modCategories: [], skillChanges: [], heroBuild: {} };
+  if (!build || typeof build !== "object") return empty;
 
   const source = build.publishedBuild || build.actualBuild || build;
+  if (!source || typeof source !== "object") return empty;
+
+  const raw =
+    source.raw && typeof source.raw === "object" ? source.raw : {};
   const candidate =
     source.hero_build ||
     source.build ||
-    (source.raw && source.raw.hero_build) ||
-    (source.raw && source.raw.build) ||
+    raw.hero_build ||
+    raw.build ||
     {};
-  const details = candidate.details || source.details || {};
+  const details =
+    (candidate && typeof candidate === "object" ? candidate.details : null) ||
+    source.details ||
+    {};
   const modCategories = Array.isArray(details.mod_categories)
     ? details.mod_categories
     : Array.isArray(source.mod_categories)
@@ -216,13 +193,11 @@ function resolveBuildDetailSource(build) {
       : [];
 
   const detailSkillChanges =
-    details &&
     details.ability_order &&
     Array.isArray(details.ability_order.currency_changes)
       ? details.ability_order.currency_changes
       : [];
   const sourceSkillChanges =
-    source &&
     source.ability_order &&
     Array.isArray(source.ability_order.currency_changes)
       ? source.ability_order.currency_changes
@@ -247,8 +222,11 @@ function detailHasAbilityOrder(source) {
   );
 }
 
-const BUILD_ITEMS_PER_ROW = 11;
+const BUILD_ITEMS_PER_ROW = CONSTANTS.BUILD_ITEMS_PER_ROW;
 const ROMAN_TIERS = ["", "I", "II", "III", "IV"];
+
+// Cache de builds expandidos: buildId -> payload, com TTL de 5 min.
+const buildCache = new TTLCache(CONSTANTS.BUILD_CACHE_TTL_MS);
 
 function resolveBuildItemFromEntry(entry, itemMap) {
   const itemId = Number(
@@ -256,7 +234,8 @@ function resolveBuildItemFromEntry(entry, itemMap) {
   );
   if (!itemId) return null;
 
-  const item = itemMap[itemId] || {};
+  const map = safeGetItemMap(itemMap);
+  const item = map[itemId] || {};
   const raw = item.raw || item;
   const icon =
     raw.shop_image_webp ||
@@ -343,7 +322,7 @@ function buildSkillSequence(build) {
 }
 
 function resolveItemName(itemId, itemMap) {
-  const entry = itemMap[Number(itemId)];
+  const entry = safeGetItemMap(itemMap)[Number(itemId)];
   return entry && entry.name ? entry.name : `Item #${itemId}`;
 }
 
@@ -390,7 +369,7 @@ function renderBuildItemCard(item) {
     <li class="build-item-card ${slotTypeClass(item.slotType)}${tierClass}">
       ${tierLabel ? `<span class="build-item-tier"><span class="build-item-tier-num">${tierLabel}</span></span>` : ""}
       <span class="build-item-icon-wrap">
-        <img class="build-item-icon" src="${escapeHtml(item.icon)}" alt="${escapeHtml(item.name)}" loading="lazy" />
+        <img class="build-item-icon" src="${escapeHtml(item.icon)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" />
       </span>
       ${activeLabel}
       <span class="build-item-name">${escapeHtml(item.name)}</span>
@@ -432,27 +411,35 @@ function renderBuildCategoryBox(category) {
   `;
 }
 
+function renderBuildItemSection(itemCategories) {
+  return itemCategories.length
+    ? `<div class="build-categories-flow">${itemCategories.map((category) => renderBuildCategoryBox(category)).join("")}</div>`
+    : `<p class="build-detail-empty">${t("no_data")}</p>`;
+}
+
+function renderBuildSkillSection(skillSequence, itemMap) {
+  if (!skillSequence.length) {
+    return `<p class="build-detail-empty">${t("no_data")}</p>`;
+  }
+  return `<ol class="build-skill-list">${skillSequence
+    .map(
+      (step) => `
+    <li class="build-skill-item">
+      <span class="build-detail-number">${step.order}</span>
+      <span class="build-detail-name">${escapeHtml(resolveItemName(step.id, itemMap))}</span>
+    </li>
+  `,
+    )
+    .join("")}</ol>`;
+}
+
 function renderBuildPath(build) {
-  const itemMap = window.__itemMap || {};
+  const itemMap = safeGetItemMap(window.__itemMap);
   const itemCategories = buildBuildItemCategories(build, itemMap);
   const skillSequence = buildSkillSequence(build);
 
-  const itemSection = itemCategories.length
-    ? `<div class="build-categories-flow">${itemCategories.map((category) => renderBuildCategoryBox(category)).join("")}</div>`
-    : `<p class="build-detail-empty">${t("no_data")}</p>`;
-
-  const skillSection = skillSequence.length
-    ? `<ol class="build-skill-list">${skillSequence
-        .map(
-          (step) => `
-        <li class="build-skill-item">
-          <span class="build-detail-number">${step.order}</span>
-          <span class="build-detail-name">${escapeHtml(resolveItemName(step.id, itemMap))}</span>
-        </li>
-      `,
-        )
-        .join("")}</ol>`
-    : `<p class="build-detail-empty">${t("no_data")}</p>`;
+  const itemSection = renderBuildItemSection(itemCategories);
+  const skillSection = renderBuildSkillSection(skillSequence, itemMap);
 
   const hasRealBuildData =
     itemCategories.length > 0 || skillSequence.length > 0;

@@ -941,3 +941,32 @@ tr:focus-within td {
   min-width: 40px;
   text-align: center;
 }
+
+/* Responsividade: rolagem horizontal da tabela em telas estreitas */
+.table-scroll {
+  overflow-x: auto;
+}
+
+#stats-table {
+  min-width: 560px;
+}
+
+/* Responsividade: em telas estreitas, encolhe os cards de build para
+   caber mais itens por linha (o painel mantém scroll horizontal). */
+@media (max-width: 640px) {
+  :root {
+    --build-item-size: 56px;
+    --build-item-name-h: 24px;
+    --build-item-card-h: calc(
+      var(--build-item-size) + var(--build-item-name-h) + 2px
+    );
+  }
+
+  .build-category-name {
+    font-size: 0.85em;
+  }
+
+  .build-item-name {
+    font-size: 0.52em;
+  }
+}

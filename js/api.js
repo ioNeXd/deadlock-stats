@@ -2,13 +2,13 @@ const API_BASE = "https://api.deadlock-api.com/v1";
 
 // Simple in-memory cache: URL -> { ts, data }
 const _cache = new Map();
-const DEFAULT_CACHE_TTL = 30 * 1000; // 30s
+const DEFAULT_CACHE_TTL = CONSTANTS.API_CACHE_TTL_MS; // 30s
 
 async function fetchJson(
   url,
   options = {},
-  timeout = 10000,
-  retries = 2,
+  timeout = CONSTANTS.API_TIMEOUT_MS,
+  retries = CONSTANTS.API_RETRIES,
   cacheTtl = DEFAULT_CACHE_TTL,
 ) {
   // Read-through cache for GET requests without cache-busting
@@ -153,7 +153,14 @@ async function getHeroStats(opts = {}) {
 async function getHeroesById(opts = {}) {
   const url = `${API_BASE}/assets/heroes`;
   try {
-    const raw = await fetchJson(url, opts);
+    // Assets mudam raramente — TTL mais longo que os analytics.
+    const raw = await fetchJson(
+      url,
+      opts,
+      CONSTANTS.API_TIMEOUT_MS,
+      CONSTANTS.API_RETRIES,
+      CONSTANTS.API_ASSETS_CACHE_TTL_MS,
+    );
     return normalizeEntitiesById(raw, "hero");
   } catch (err) {
     console.warn("getHeroesById failed:", err);
@@ -176,7 +183,14 @@ async function getItemStats(opts = {}) {
 async function getItemsById(opts = {}) {
   const url = `${API_BASE}/assets/items`;
   try {
-    const raw = await fetchJson(url, opts);
+    // Assets mudam raramente — TTL mais longo que os analytics.
+    const raw = await fetchJson(
+      url,
+      opts,
+      CONSTANTS.API_TIMEOUT_MS,
+      CONSTANTS.API_RETRIES,
+      CONSTANTS.API_ASSETS_CACHE_TTL_MS,
+    );
     return normalizeEntitiesById(raw, "item");
   } catch (err) {
     console.warn("getItemsById failed:", err);
@@ -194,42 +208,6 @@ async function getGameStats(opts = {}) {
   } catch (err) {
     console.warn("getGameStats failed:", err);
     return [{ total_matches: 0 }];
-  }
-}
-
-async function getItemFlowStats(heroId, opts = {}) {
-  const params = new URLSearchParams({
-    hero_ids: String(heroId),
-    phase_count: "4",
-    phase_interval_s: "120",
-    min_matches: "10",
-  });
-  const url = `${API_BASE}/analytics/item-flow-stats?${params.toString()}`;
-
-  try {
-    const raw = await fetchJson(url, opts);
-    return raw && typeof raw === "object"
-      ? raw
-      : { nodes: [], edges: [], summary: null };
-  } catch (err) {
-    console.warn(`No item flow data available for hero ${heroId}:`, err);
-    return { nodes: [], edges: [], summary: null };
-  }
-}
-
-async function getAbilityOrderStats(heroId, minMatches = 10, opts = {}) {
-  const params = new URLSearchParams({
-    hero_id: String(heroId),
-    min_matches: String(minMatches),
-  });
-  const url = `${API_BASE}/analytics/ability-order-stats?${params.toString()}`;
-
-  try {
-    const raw = await fetchJson(url, opts);
-    return Array.isArray(raw) ? raw : [];
-  } catch (err) {
-    console.warn(`No ability order data available for hero ${heroId}:`, err);
-    return [];
   }
 }
 

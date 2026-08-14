@@ -8,8 +8,12 @@ const TableModule = (() => {
     gameStats: null,
     searchQuery: "",
     page: 1,
-    pageSize: 20,
+    pageSize: CONSTANTS.TABLE_PAGE_SIZE,
   };
+
+  // AbortController da renderização em andamento — abortado quando uma nova
+  // renderTable() é iniciada, para descartar respostas atrasadas.
+  let activeAbortController = null;
 
   function renderSkeletonRows() {
     const tbody = document.getElementById("stats-table-body");
@@ -108,116 +112,6 @@ const TableModule = (() => {
     state.filteredRows = rows;
   }
 
-  // Lazy loader observer (module-level) — create once
-  let _lazyObserver;
-  // Small helper to check if a URL exists. Try HEAD, fallback to Image() load.
-  function checkImageExists(url, timeout = 3000) {
-    if (!url) return Promise.resolve(false);
-    // Try HEAD first (may fail due to CORS on some hosts)
-    return new Promise((resolve) => {
-      let resolved = false;
-      // Use fetch HEAD where allowed
-      try {
-        fetch(url, { method: 'HEAD', cache: 'no-store' }).then((res) => {
-          if (!resolved) {
-            resolved = true;
-            resolve(res.ok);
-          }
-        }).catch(() => {
-          // fallback to Image
-          const img = new Image();
-          const id = setTimeout(() => {
-            img.onload = img.onerror = null;
-            if (!resolved) { resolved = true; resolve(false); }
-          }, timeout);
-          img.onload = () => { clearTimeout(id); if (!resolved) { resolved = true; resolve(true); } };
-          img.onerror = () => { clearTimeout(id); if (!resolved) { resolved = true; resolve(false); } };
-          img.src = url;
-        });
-      } catch (e) {
-        // fallback to Image
-        const img = new Image();
-        const id = setTimeout(() => {
-          img.onload = img.onerror = null;
-          if (!resolved) { resolved = true; resolve(false); }
-        }, timeout);
-        img.onload = () => { clearTimeout(id); if (!resolved) { resolved = true; resolve(true); } };
-        img.onerror = () => { clearTimeout(id); if (!resolved) { resolved = true; resolve(false); } };
-        img.src = url;
-      }
-    });
-  }
-
-  function initLazyObserver() {
-    if (_lazyObserver) return;
-    if ('IntersectionObserver' in window) {
-      _lazyObserver = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const img = entry.target;
-          const src = img.getAttribute('data-src');
-          const fallback = img.getAttribute('data-srcset') || src;
-
-          if (src) {
-            // attempt to prefer a webp sibling if available
-            const webp = src.replace(/\.(png|jpg|jpeg)$/i, '.webp');
-            checkImageExists(webp).then((exists) => {
-              try {
-                if (exists) {
-                  img.srcset = `${webp} 1x, ${src} 2x`;
-                } else if (fallback) {
-                  img.srcset = fallback;
-                }
-              } catch (e) {}
-              img.src = src;
-              img.removeAttribute('data-src');
-              img.removeAttribute('data-srcset');
-              try { _lazyObserver.unobserve(img); } catch (e) {}
-            }).catch(() => {
-              img.src = src;
-              img.removeAttribute('data-src');
-              img.removeAttribute('data-srcset');
-              try { _lazyObserver.unobserve(img); } catch (e) {}
-            });
-          } else {
-            // nothing to load
-            try { _lazyObserver.unobserve(img); } catch (e) {}
-          }
-        }
-      }, { rootMargin: '200px 0px', threshold: 0.01 });
-    }
-  }
-
-  function observeLazyImages() {
-    initLazyObserver();
-    if (!_lazyObserver) {
-      // fallback: load immediately but probe for webp where possible
-      document.querySelectorAll('img.lazy-img').forEach((img) => {
-        const src = img.getAttribute('data-src');
-        const fallback = img.getAttribute('data-srcset') || src;
-        if (src) {
-          const webp = src.replace(/\.(png|jpg|jpeg)$/i, '.webp');
-          checkImageExists(webp).then((exists) => {
-            try {
-              if (exists) img.srcset = `${webp} 1x, ${src} 2x`;
-              else if (fallback) img.srcset = fallback;
-            } catch (e) {}
-            img.src = src;
-          }).catch(() => {
-            img.src = src;
-          }).finally(() => {
-            img.removeAttribute('data-src');
-            img.removeAttribute('data-srcset');
-          });
-        }
-      });
-      return;
-    }
-    document.querySelectorAll('img.lazy-img[data-src]').forEach((img) => {
-      _lazyObserver.observe(img);
-    });
-  }
-
   function renderRows() {
     const tbody = document.getElementById("stats-table-body");
     if (!tbody) {
@@ -268,19 +162,16 @@ const TableModule = (() => {
       return;
     }
 
+    const fragment = document.createDocumentFragment();
     for (const row of pageRows) {
       const tr = document.createElement("tr");
       const imgSrc = row.imageUrl || "";
       const imgAlt = row.name || "";
 
-      // Build responsive image attributes: try webp variant when possible
       const safeSrc = imgSrc || 'assets/placeholder.svg';
-      // Defer creating a webp srcset until the image is about to load (safer)
-      const dataSrc = safeSrc;
-      const dataSrcset = safeSrc; // fallback only; webp will be probed on demand
 
       tr.innerHTML = `
-        <td><img data-src="${dataSrc}" data-srcset="${dataSrcset}" class="lazy-img" src="assets/placeholder.svg" width="32" height="32" alt="${imgAlt}" loading="lazy"></td>
+        <td><img class="lazy-img" src="${safeSrc}" width="32" height="32" alt="${imgAlt}" loading="lazy" decoding="async"></td>
         <td>${row.name}</td>
         <td>${row.winRate.toFixed(1)}%</td>
         <td>${row.pickRate.toFixed(1)}%</td>
@@ -288,11 +179,9 @@ const TableModule = (() => {
 
       const imgEl = tr.querySelector("img.lazy-img");
       if (imgEl) {
-        // on error, fallback to placeholder and remove data attributes
+        // on error, fallback to placeholder
         imgEl.addEventListener("error", () => {
           imgEl.src = "assets/placeholder.svg";
-          imgEl.removeAttribute('data-src');
-          imgEl.removeAttribute('data-srcset');
           imgEl.alt = imgAlt
             ? `${imgAlt} (image unavailable)`
             : "Image unavailable";
@@ -327,17 +216,19 @@ const TableModule = (() => {
             let sib = dir === 'next' ? tr.nextElementSibling : tr.previousElementSibling;
             while (sib && sib.nodeType !== 1) sib = dir === 'next' ? sib.nextSibling : sib.previousSibling;
             if (sib && typeof sib.focus === 'function') {
+              // marca a linha ativa para leitores de tela
+              tr.removeAttribute('aria-current');
+              sib.setAttribute('aria-current', 'true');
               sib.focus();
             }
           }
         });
       }
 
-      tbody.appendChild(tr);
+      fragment.appendChild(tr);
     }
 
-    // Start observing lazy images after rows are in the DOM
-    try { observeLazyImages(); } catch (e) { /* ignore */ }
+    tbody.appendChild(fragment);
   }
 
   function handleSortClick(column) {
@@ -382,16 +273,26 @@ const TableModule = (() => {
 
     showLoader();
 
-    // Watchdog: abort all fetches if they don't complete within 3s
+    // Aborta qualquer render anterior ainda em voo (evita erro fantasma de
+    // uma resposta atrasada quando o usuário navegou de novo).
+    if (activeAbortController) {
+      try {
+        activeAbortController.abort();
+      } catch (e) { /* ignore */ }
+    }
+
+    // Watchdog: aborta as fetches se não completarem no prazo. O banner de
+    // erro NÃO é mostrado aqui — isso ficava com o catch() e causava falso
+    // "error_fetching_data" quando uma requisição secundária (ex.: game
+    // stats) estourava o prazo logo antes da tabela renderizar com sucesso.
     const watchdog = new AbortController();
+    activeAbortController = watchdog;
     let watchdogTimer = setTimeout(() => {
       try {
         watchdog.abort();
-      } catch (e) {}
-      console.warn('Render table watchdog triggered (3s)');
-      showError(t('error_fetching_data'));
-      hideLoader();
-    }, 3000);
+      } catch (e) { /* ignore */ }
+      console.warn(`Render table watchdog triggered (${CONSTANTS.TABLE_WATCHDOG_MS}ms)`);
+    }, CONSTANTS.TABLE_WATCHDOG_MS);
 
     try {
       if (type === "heroes") {
@@ -417,45 +318,7 @@ const TableModule = (() => {
         }
       }
 
-      // clear watchdog on success
-      clearTimeout(watchdogTimer);
-
-      const totalMatches = Number(state.gameStats[0]?.total_matches) || 0;
-      const totalItemSlots = totalMatches * 12;
-
-      state.rows = stats.map((stat) => {
-        const entity = entitiesById[stat[idField]] || {};
-        const wins = Number(stat.wins) || 0;
-        const matchesCount = Number(stat.matches) || 0;
-        const winRate = matchesCount > 0 ? (wins / matchesCount) * 100 : 0;
-        const pickRate =
-          type === "heroes"
-            ? (matchesCount / (totalMatches || 1)) * 100
-            : (matchesCount / (totalItemSlots || 1)) * 100;
-        // Robust image lookup with several fallbacks — some API responses vary
-        function pickImage(e) {
-          if (!e) return '';
-          // common locations
-          const imgs = e.images || (e.raw && e.raw.images) || {};
-          return (
-            imgs.icon_image_small || imgs.icon || imgs.icon_image ||
-            e.shop_image || e.icon_image_small || e.shop_image_small ||
-            (e.raw && e.raw.icon_image_small) || (e.raw && e.raw.shop_image) || ''
-          );
-        }
-        const imageUrl = type === "heroes" ? pickImage(entity) : pickImage(entity) || entity.shop_image;
-        if (!imageUrl) {
-          // log once per missing entity for debugging
-          if (entity && entity.name) console.debug(`No image for: ${entity.name} (id=${entity.id})`);
-        }
-        return {
-          id: stat[idField],
-          name: entity.name || "Unknown",
-          imageUrl: imageUrl || "",
-          winRate,
-          pickRate,
-        };
-      });
+      state.rows = mapStatsToRows(stats, entitiesById, idField, type);
 
       state.sortColumn = null;
       updateAriaSort();
@@ -465,16 +328,71 @@ const TableModule = (() => {
       const nameHeader = document.getElementById("table-name-header");
       if (nameHeader) nameHeader.focus();
     } catch (err) {
+      // Renderização superada por uma chamada mais nova — fica em silêncio.
+      if (activeAbortController !== watchdog) return;
+
+      const timedOut = err && err.name === "AbortError";
       console.error("Failed to render table:", err);
-      state.rows = [];
-      renderRows();
+
+      if (timedOut && state.rows.length > 0) {
+        // Refresh estourou o prazo, mas já há dados em tela: mantém as linhas
+        // e apenas sinaliza que a atualização falhou.
+        console.warn("Table refresh timed out; keeping previous rows.");
+      } else {
+        state.rows = [];
+        renderRows();
+      }
       showError(t("error_fetching_data"));
-      // ensure watchdog cleared
-      try { clearTimeout(watchdogTimer); } catch (e) {}
     } finally {
+      if (activeAbortController === watchdog) activeAbortController = null;
       hideLoader();
       try { clearTimeout(watchdogTimer); } catch (e) {}
     }
+  }
+
+  // Normaliza stats + entidades em linhas prontas para a tabela.
+  function mapStatsToRows(stats, entitiesById, idField, type) {
+    const totalMatches = Number(state.gameStats[0]?.total_matches) || 0;
+    const totalItemSlots = totalMatches * 12;
+
+    return stats.map((stat) => {
+      const entity = entitiesById[stat[idField]] || {};
+      const wins = Number(stat.wins) || 0;
+      const matchesCount = Number(stat.matches) || 0;
+      const winRate = matchesCount > 0 ? (wins / matchesCount) * 100 : 0;
+      const pickRate =
+        type === "heroes"
+          ? (matchesCount / (totalMatches || 1)) * 100
+          : (matchesCount / (totalItemSlots || 1)) * 100;
+      const imageUrl = pickImage(entity);
+      if (!imageUrl && entity && entity.name) {
+        console.debug(`No image for: ${entity.name} (id=${entity.id})`);
+      }
+      return {
+        id: stat[idField],
+        name: entity.name || "Unknown",
+        imageUrl: imageUrl || "",
+        winRate,
+        pickRate,
+      };
+    });
+  }
+
+  // Robust image lookup with several fallbacks — some API responses vary
+  function pickImage(e) {
+    if (!e) return "";
+    const imgs = e.images || (e.raw && e.raw.images) || {};
+    return (
+      imgs.icon_image_small ||
+      imgs.icon ||
+      imgs.icon_image ||
+      e.shop_image ||
+      e.icon_image_small ||
+      e.shop_image_small ||
+      (e.raw && e.raw.icon_image_small) ||
+      (e.raw && e.raw.shop_image) ||
+      ""
+    );
   }
 
   function bindEvents() {
@@ -555,10 +473,15 @@ const TableModule = (() => {
       };
 
       setSearchPlaceholder();
-      searchInput.addEventListener('input', (e) => {
-        state.searchQuery = e.target.value || '';
+      // Debounce de 300ms: a busca só re-renderiza depois que o usuário
+      // para de digitar, evitando repaint a cada keypress.
+      const onSearchInput = debounce(() => {
         state.page = 1;
         renderRows();
+      }, CONSTANTS.SEARCH_DEBOUNCE_MS);
+      searchInput.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value || '';
+        onSearchInput();
       });
     }
 
@@ -576,6 +499,12 @@ const TableModule = (() => {
 
   window.onTableRouteActive = onTableRouteActive;
   window.renderTable = renderTable;
+
+  // Troca de idioma: re-renderiza a tabela para aplicar os novos textos
+  // (placeholder, headers e aria-labels). Os dados vêm do cache da API.
+  window.onLanguageChange = () => {
+    if (typeof renderTable === "function") renderTable(state.type);
+  };
 
   async function showLastUpdated() {
     const el = document.getElementById("last-updated");

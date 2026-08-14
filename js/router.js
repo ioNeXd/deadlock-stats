@@ -1,9 +1,13 @@
 function parseHash() {
   const hash = window.location.hash.replace(/^#/, "");
   const params = new URLSearchParams(hash);
-  const heroId = params.get("hero");
-  if (heroId !== null && heroId !== "") {
-    return { view: "hero", heroId: Number(heroId) };
+  const rawHeroId = params.get("hero");
+  if (rawHeroId !== null && rawHeroId !== "") {
+    const heroId = Number(rawHeroId);
+    // Valida: só aceita inteiro positivo (NaN, negativo, decimal → tabela).
+    if (Number.isInteger(heroId) && heroId > 0) {
+      return { view: "hero", heroId };
+    }
   }
   return { view: "table" };
 }
@@ -28,6 +32,12 @@ async function handleRouteChange() {
   } else if (typeof onTableRouteActive === "function") {
     onTableRouteActive();
   }
+}
+
+// Guarda defensiva para chamadas diretas a renderHeroDetail.
+function isValidHeroId(heroId) {
+  const num = Number(heroId);
+  return Number.isInteger(num) && num > 0;
 }
 
 function initRouter() {

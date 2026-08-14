@@ -8,6 +8,18 @@ let currentTranslations = {};
 let baseTranslations = {}; // English fallback
 const missingKeys = new Set();
 
+// Cache dos JSONs baixados por idioma — evita refetch ao trocar de idioma.
+const translationCache = new Map();
+
+async function fetchTranslations(lang) {
+  if (translationCache.has(lang)) return translationCache.get(lang);
+  const res = await fetch(`translations/${lang}.json`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  translationCache.set(lang, data);
+  return data;
+}
+
 // Safe localStorage helpers
 function safeGetLocalStorage(key) {
   try {
@@ -31,8 +43,7 @@ async function loadTranslations(lang) {
   // Ensure base (en) is loaded first for fallback
   if (!Object.keys(baseTranslations).length) {
     try {
-      const res = await fetch(`translations/en.json`);
-      baseTranslations = await res.json();
+      baseTranslations = await fetchTranslations("en");
     } catch (err) {
       console.warn("Failed to load base English translations:", err);
       baseTranslations = {};
@@ -47,9 +58,7 @@ async function loadTranslations(lang) {
   }
 
   try {
-    const res = await fetch(`translations/${lang}.json`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const loaded = await res.json();
+    const loaded = await fetchTranslations(lang);
     // overlay: keys in loaded override base
     currentTranslations = { ...baseTranslations, ...loaded };
     currentLang = lang;
