@@ -181,6 +181,9 @@ function renderBuildCards(containerId, builds, heroId) {
         details.innerHTML = renderBuildPath({ ...build, actualBuild });
       }
       details.classList.toggle("hidden");
+      if (!details.classList.contains("hidden")) {
+        equalizeCategoryHeights(details);
+      }
     };
 
     card.addEventListener("click", toggle);
@@ -284,7 +287,7 @@ function buildBuildItemCategories(build, itemMap) {
   const { modCategories } = resolveBuildDetailSource(build);
   if (!modCategories.length) return [];
 
-  return modCategories.map((category) => {
+  const categories = modCategories.map((category) => {
     const categoryName = category && (category.name || "Category");
     const items = Array.isArray(category.mods) ? category.mods : [];
     const itemRows = items
@@ -296,9 +299,33 @@ function buildBuildItemCategories(build, itemMap) {
       description: (category && category.description) || "",
       optional: isCategoryOptional(category, categoryName),
       items: itemRows,
-      columnCount: Math.min(Math.max(itemRows.length, 1), BUILD_ITEMS_PER_ROW),
     };
   });
+
+  // Todas as categorias com a mesma largura (mesmo número de colunas)
+  const uniformCols = Math.min(
+    Math.max(...categories.map((c) => c.items.length), 1),
+    BUILD_ITEMS_PER_ROW,
+  );
+  // ... e a mesma altura (mesmo número de linhas para todas)
+  const uniformRows = Math.max(
+    ...categories.map((c) => Math.ceil(c.items.length / uniformCols)),
+    1,
+  );
+  categories.forEach((c) => {
+    c.columnCount = uniformCols;
+    c.rowCount = uniformRows;
+  });
+
+  return categories;
+}
+
+function equalizeCategoryHeights(root) {
+  const cats = Array.from(root.querySelectorAll(".build-item-category"));
+  if (!cats.length) return;
+  let max = 0;
+  for (const c of cats) max = Math.max(max, c.offsetHeight);
+  for (const c of cats) c.style.height = `${max}px`;
 }
 
 function buildSkillSequence(build) {
@@ -351,12 +378,16 @@ function renderBuildItemCard(item) {
     item.tier > 0 && item.tier < ROMAN_TIERS.length
       ? ROMAN_TIERS[item.tier]
       : "";
+  const tierClass =
+    item.tier > 0 && item.tier < ROMAN_TIERS.length
+      ? ` build-item-card--tier-${item.tier}`
+      : "";
   const activeLabel = item.isActive
     ? `<span class="build-item-active">${getLocalText("build_item_active", "ATIVO")}</span>`
     : "";
 
   return `
-    <li class="build-item-card ${slotTypeClass(item.slotType)}">
+    <li class="build-item-card ${slotTypeClass(item.slotType)}${tierClass}">
       ${tierLabel ? `<span class="build-item-tier"><span class="build-item-tier-num">${tierLabel}</span></span>` : ""}
       <span class="build-item-icon-wrap">
         <img class="build-item-icon" src="${escapeHtml(item.icon)}" alt="${escapeHtml(item.name)}" loading="lazy" />
@@ -368,6 +399,8 @@ function renderBuildItemCard(item) {
 }
 
 function renderBuildCategoryBox(category) {
+  const rawName = String(category.name || "").trim();
+  const showName = rawName !== "" && rawName.toLowerCase() !== "category";
   const optionalBadge = category.optional
     ? `<span class="build-category-optional">${getLocalText("build_category_optional", "OPCIONAL")}</span>`
     : "";
@@ -379,16 +412,20 @@ function renderBuildCategoryBox(category) {
     ? category.items.map((item) => renderBuildItemCard(item)).join("")
     : `<li class="build-detail-empty">${t("no_data")}</li>`;
 
+  const listLabel = showName
+    ? category.name
+    : category.description || "items";
+
   return `
-    <div class="build-item-category${category.optional ? " build-item-category--optional" : ""}" style="--category-cols: ${category.columnCount}">
+    <div class="build-item-category${category.optional ? " build-item-category--optional" : ""}" style="--category-cols: ${category.columnCount}; --category-rows: ${category.rowCount || 1}">
       <div class="build-category-header">
         <div class="build-category-title-row">
-          <span class="build-category-name">${escapeHtml(category.name)}</span>
           ${optionalBadge}
+          ${showName ? `<span class="build-category-name">${escapeHtml(category.name)}</span>` : ""}
         </div>
         ${description}
       </div>
-      <ul class="build-category-items" aria-label="${escapeHtml(category.name)}">
+      <ul class="build-category-items" aria-label="${escapeHtml(listLabel)}">
         ${itemsHtml}
       </ul>
     </div>

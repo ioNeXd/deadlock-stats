@@ -4,6 +4,38 @@
   padding: 0;
 }
 
+@font-face {
+  font-family: "Radiance";
+  font-style: normal;
+  font-weight: 400;
+  src: url("../assets/fonts/radiance-regular.otf") format("opentype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Radiance";
+  font-style: normal;
+  font-weight: 600;
+  src: url("../assets/fonts/radiance-semibold.otf") format("opentype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Radiance";
+  font-style: normal;
+  font-weight: 700;
+  src: url("../assets/fonts/radiance-bold.otf") format("opentype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Radiance";
+  font-style: normal;
+  font-weight: 800;
+  src: url("../assets/fonts/radiance-bold.otf") format("opentype");
+  font-display: swap;
+}
+
 body {
   font-family: Arial, sans-serif;
   background-color: #1a1a1a;
@@ -360,6 +392,8 @@ tr:focus-within td {
   --shop-text-dark: #1a1208;
   --shop-text-light: #ece6dc;
   --build-item-size: 72px;
+  --build-item-name-h: 28px;
+  --build-item-card-h: calc(var(--build-item-size) + var(--build-item-name-h) + 2px);
 }
 
 .build-card {
@@ -369,6 +403,7 @@ tr:focus-within td {
   padding: 10px 14px;
   cursor: pointer;
   color: var(--shop-text-dark);
+  font-family: "Radiance", Arial, sans-serif;
 }
 
 .build-card:hover {
@@ -492,12 +527,18 @@ tr:focus-within td {
   display: inline-block;
   padding: 1px 6px;
   border-radius: 2px;
-  background: #3d3f48;
-  color: #d1c4ae;
+  background: #44454b;
+  color: #6f91cb;
   font-size: 0.62em;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.build-item-category--optional .build-category-description {
+  background: #44454b;
+  padding: 2px 6px;
+  border-radius: 2px;
 }
 
 .build-category-description {
@@ -514,9 +555,12 @@ tr:focus-within td {
   padding: 6px;
   display: grid;
   grid-template-columns: repeat(var(--category-cols), var(--build-item-size));
-  grid-auto-rows: auto;
+  grid-template-rows: repeat(var(--category-rows), var(--build-item-card-h));
+  grid-auto-rows: var(--build-item-card-h);
   gap: 4px;
   justify-content: start;
+  align-content: start;
+  flex: 1;
   background: var(--shop-bg);
 }
 
@@ -525,7 +569,7 @@ tr:focus-within td {
   display: flex;
   flex-direction: column;
   width: var(--build-item-size);
-  min-height: calc(var(--build-item-size) + 28px);
+  height: calc(var(--build-item-size) + var(--build-item-name-h) + 2px);
   border-radius: 4px;
   overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.35);
@@ -623,15 +667,83 @@ tr:focus-within td {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 26px;
+  height: var(--build-item-name-h);
+  min-height: 0;
   padding: 3px 2px;
+  overflow: hidden;
   background: rgba(0, 0, 0, 0.55);
   color: #f5f5f5;
+  font-family: "Radiance", Arial, sans-serif;
   font-size: 0.58em;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.15;
   text-align: center;
   word-break: break-word;
+}
+
+/* Nome do item: fundo por tipo + tier (estilo loja in-game) */
+/* Texto #4c4545 em todos os tiers 1–3; tier 4 usa texto claro por tipo com brilho */
+.build-item-card--weapon.build-item-card--tier-1 .build-item-name {
+  background: #e8cf9c;
+  color: #4c4545;
+}
+
+.build-item-card--weapon.build-item-card--tier-2 .build-item-name {
+  background: #c3a069;
+  color: #4c4545;
+}
+
+.build-item-card--weapon.build-item-card--tier-3 .build-item-name {
+  background: #a97a48;
+  color: #4c4545;
+}
+
+.build-item-card--weapon.build-item-card--tier-4 .build-item-name {
+  background: #a97a48;
+  color: #e2c3a0;
+  text-shadow: 0 0 4px rgba(226, 195, 160, 0.6);
+}
+
+.build-item-card--vitality.build-item-card--tier-1 .build-item-name {
+  background: #c4cc8e;
+  color: #4c4545;
+}
+
+.build-item-card--vitality.build-item-card--tier-2 .build-item-name {
+  background: #a1ac7c;
+  color: #4c4545;
+}
+
+.build-item-card--vitality.build-item-card--tier-3 .build-item-name {
+  background: #707f4d;
+  color: #4c4545;
+}
+
+.build-item-card--vitality.build-item-card--tier-4 .build-item-name {
+  background: #46463e;
+  color: #b2d3bb;
+  text-shadow: 0 0 4px rgba(178, 211, 187, 0.6);
+}
+
+.build-item-card--spirit.build-item-card--tier-1 .build-item-name {
+  background: #dac0e3;
+  color: #4c4545;
+}
+
+.build-item-card--spirit.build-item-card--tier-2 .build-item-name {
+  background: #ab98bc;
+  color: #4c4545;
+}
+
+.build-item-card--spirit.build-item-card--tier-3 .build-item-name {
+  background: #7c77a4;
+  color: #4c4545;
+}
+
+.build-item-card--spirit.build-item-card--tier-4 .build-item-name {
+  background: #4c4545;
+  color: #dcceeb;
+  text-shadow: 0 0 4px rgba(220, 206, 235, 0.6);
 }
 
 .build-detail-list {
