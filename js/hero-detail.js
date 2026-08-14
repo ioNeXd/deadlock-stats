@@ -244,6 +244,42 @@ function detailHasAbilityOrder(source) {
   );
 }
 
+const BUILD_ITEMS_PER_ROW = 11;
+const ROMAN_TIERS = ["", "I", "II", "III", "IV"];
+
+function resolveBuildItemFromEntry(entry, itemMap) {
+  const itemId = Number(
+    (entry && (entry.ability_id ?? entry.item_id ?? entry.id)) ?? 0,
+  );
+  if (!itemId) return null;
+
+  const item = itemMap[itemId] || {};
+  const raw = item.raw || item;
+  const icon =
+    raw.shop_image_webp ||
+    raw.shop_image ||
+    item.shop_image ||
+    (item.images &&
+      (item.images.icon_image_small ||
+        item.images.icon ||
+        item.images.icon_image)) ||
+    "assets/placeholder.svg";
+
+  return {
+    id: itemId,
+    name: item.name || raw.name || `Item #${itemId}`,
+    icon,
+    tier: Number(raw.item_tier) || 0,
+    slotType: raw.item_slot_type || "unknown",
+    isActive: raw.is_active_item === true || raw.activation === "active",
+  };
+}
+
+function isCategoryOptional(category, categoryName) {
+  if (category && category.optional === true) return true;
+  return /optional|op[cç]ional/i.test(categoryName || "");
+}
+
 function buildBuildItemCategories(build, itemMap) {
   const { modCategories } = resolveBuildDetailSource(build);
   if (!modCategories.length) return [];
@@ -252,30 +288,15 @@ function buildBuildItemCategories(build, itemMap) {
     const categoryName = category && (category.name || "Category");
     const items = Array.isArray(category.mods) ? category.mods : [];
     const itemRows = items
-      .map((entry) => {
-        const itemId = Number(
-          (entry && (entry.ability_id ?? entry.item_id ?? entry.id)) ?? 0,
-        );
-        const item = itemMap[itemId] || {};
-        const name = item.name || `Item #${itemId}`;
-        const icon =
-          (item.images &&
-            (item.images.icon_image_small ||
-              item.images.icon ||
-              item.images.icon_image)) ||
-          item.shop_image ||
-          "assets/placeholder.svg";
-        return {
-          id: itemId,
-          name,
-          icon,
-        };
-      })
-      .filter((entry) => entry.id !== 0);
+      .map((entry) => resolveBuildItemFromEntry(entry, itemMap))
+      .filter(Boolean);
 
     return {
       name: categoryName,
+      description: (category && category.description) || "",
+      optional: isCategoryOptional(category, categoryName),
       items: itemRows,
+      columnCount: Math.min(Math.max(itemRows.length, 1), BUILD_ITEMS_PER_ROW),
     };
   });
 }
@@ -315,38 +336,72 @@ function getLocalText(key, fallback) {
   return fallback;
 }
 
+function slotTypeClass(slotType) {
+  const normalized = String(slotType || "unknown").toLowerCase();
+  if (normalized.includes("weapon")) return "build-item-card--weapon";
+  if (normalized.includes("vitality") || normalized.includes("armor"))
+    return "build-item-card--vitality";
+  if (normalized.includes("spirit")) return "build-item-card--spirit";
+  if (normalized.includes("utility")) return "build-item-card--utility";
+  return "build-item-card--unknown";
+}
+
+function renderBuildItemCard(item) {
+  const tierLabel =
+    item.tier > 0 && item.tier < ROMAN_TIERS.length
+      ? ROMAN_TIERS[item.tier]
+      : "";
+  const activeLabel = item.isActive
+    ? `<span class="build-item-active">${getLocalText("build_item_active", "ATIVO")}</span>`
+    : "";
+
+  return `
+    <li class="build-item-card ${slotTypeClass(item.slotType)}">
+      ${tierLabel ? `<span class="build-item-tier"><span class="build-item-tier-num">${tierLabel}</span></span>` : ""}
+      <span class="build-item-icon-wrap">
+        <img class="build-item-icon" src="${escapeHtml(item.icon)}" alt="${escapeHtml(item.name)}" loading="lazy" />
+      </span>
+      ${activeLabel}
+      <span class="build-item-name">${escapeHtml(item.name)}</span>
+    </li>
+  `;
+}
+
+function renderBuildCategoryBox(category) {
+  const optionalBadge = category.optional
+    ? `<span class="build-category-optional">${getLocalText("build_category_optional", "OPCIONAL")}</span>`
+    : "";
+  const description = category.description
+    ? `<p class="build-category-description">${escapeHtml(category.description)}</p>`
+    : "";
+
+  const itemsHtml = category.items.length
+    ? category.items.map((item) => renderBuildItemCard(item)).join("")
+    : `<li class="build-detail-empty">${t("no_data")}</li>`;
+
+  return `
+    <div class="build-item-category${category.optional ? " build-item-category--optional" : ""}" style="--category-cols: ${category.columnCount}">
+      <div class="build-category-header">
+        <div class="build-category-title-row">
+          <span class="build-category-name">${escapeHtml(category.name)}</span>
+          ${optionalBadge}
+        </div>
+        ${description}
+      </div>
+      <ul class="build-category-items" aria-label="${escapeHtml(category.name)}">
+        ${itemsHtml}
+      </ul>
+    </div>
+  `;
+}
+
 function renderBuildPath(build) {
   const itemMap = window.__itemMap || {};
   const itemCategories = buildBuildItemCategories(build, itemMap);
   const skillSequence = buildSkillSequence(build);
 
   const itemSection = itemCategories.length
-    ? itemCategories
-        .map(
-          (section) => `
-        <div class="build-item-category">
-          <div class="build-item-category-name">${section.name}</div>
-          <ul class="build-detail-list">
-            ${
-              section.items
-                .map(
-                  (item) => `
-              <li class="build-detail-item build-item-row">
-                <span class="build-detail-icon-wrap">
-                  <img class="build-detail-icon" src="${item.icon || "assets/placeholder.svg"}" alt="${item.name}" loading="lazy" />
-                </span>
-                <span class="build-detail-name">${item.name}</span>
-              </li>
-            `,
-                )
-                .join("") ||
-              '<li class="build-detail-empty">' + t("no_data") + "</li>"
-            }
-          </ul>
-        </div>
-      `,
-        )
-        .join("")
+    ? `<div class="build-categories-flow">${itemCategories.map((category) => renderBuildCategoryBox(category)).join("")}</div>`
     : `<p class="build-detail-empty">${t("no_data")}</p>`;
 
   const skillSection = skillSequence.length
@@ -355,7 +410,7 @@ function renderBuildPath(build) {
           (step) => `
         <li class="build-skill-item">
           <span class="build-detail-number">${step.order}</span>
-          <span class="build-detail-name">${resolveItemName(step.id, itemMap)}</span>
+          <span class="build-detail-name">${escapeHtml(resolveItemName(step.id, itemMap))}</span>
         </li>
       `,
         )
@@ -370,7 +425,7 @@ function renderBuildPath(build) {
 
   return `
     <div class="build-detail-groups">
-      <div class="build-detail-section">
+      <div class="build-detail-section build-items-panel">
         <h4>${getLocalText("build_items_section", "Items")}</h4>
         ${itemSection}
       </div>

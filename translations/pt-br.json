@@ -25,6 +25,8 @@
   "back_to_table": "← Voltar para a tabela",
   "builds_popular": "Builds Mais Populares",
   "builds_winrate": "Builds com Maior Taxa de Vitória",
+  "build_category_optional": "OPCIONAL",
+  "build_item_active": "ATIVO",
   "a11y_hero_list_label": "Lista de heróis, {count} itens",
   "a11y_item_list_label": "Lista de itens, {count} itens",
   "last_updated_unavailable": "indisponível"

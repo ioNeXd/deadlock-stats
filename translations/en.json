@@ -25,6 +25,8 @@
   "back_to_table": "← Back to table",
   "builds_popular": "Most Popular Builds",
   "builds_winrate": "Highest Win Rate Builds",
+  "build_category_optional": "OPTIONAL",
+  "build_item_active": "ACTIVE",
   "a11y_hero_list_label": "Heroes list, {count} items",
   "a11y_item_list_label": "Items list, {count} items",
   "last_updated_unavailable": "unavailable"
