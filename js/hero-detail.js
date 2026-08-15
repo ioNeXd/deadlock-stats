@@ -127,11 +127,29 @@ function renderBuildCards(containerId, builds, heroId) {
     card.className = "build-card";
     card.tabIndex = 0;
     card.setAttribute("role", "button");
+    const winRateHtml =
+      build.winRate != null
+        ? `<span class="build-winrate">${build.winRate.toFixed(1)}%</span>`
+        : "";
+    const matchesHtml =
+      build.matches != null
+        ? `<span class="build-matches">${build.matches} matches</span>`
+        : "";
+    // Build vinda do fallback (mais favoritadas): selo no lado direito do
+    // card sinalizando que veio de outra busca, sem stats analíticos.
+    const sourceBadge = build.fromFallback
+      ? `<span class="build-fav-badge">${getLocalText(
+          "build_favorites_source",
+          "TOP FAVORITOS",
+        )}</span>`
+      : "";
+
     card.innerHTML = `
       <div class="build-card-summary">
         <span class="build-id">Build #${build.buildId ?? "?"}</span>
-        <span class="build-winrate">${build.winRate.toFixed(1)}%</span>
-        <span class="build-matches">${build.matches} matches</span>
+        ${winRateHtml}
+        ${matchesHtml}
+        ${sourceBadge}
       </div>
       <div class="build-card-details hidden"></div>
     `;
@@ -262,17 +280,27 @@ function isCategoryOptional(category, categoryName) {
   return /optional|op[cç]ional/i.test(categoryName || "");
 }
 
+// Medidas de card/categoria lidas das variáveis CSS — o CSS calcula o visual,
+// o JS só replica a aritmética para definir a largura da caixa (assim a
+// largura da categoria é exatamente a dos itens dela, sem duplicar valores).
+function getBuildItemMetrics() {
+  const read = (name, fallback) =>
+    parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue(name).trim(),
+    ) || fallback;
+  return {
+    size: read("--build-item-size", 72),
+    gap: read("--build-item-gap", 4),
+    pad: read("--build-category-pad", 6),
+    border: read("--build-category-border-w", 2),
+  };
+}
+
 // Quantos itens cabem por linha no painel de builds (responsivo).
 // `container` = o .build-card-details do build (pode ainda estar oculto no
 // primeiro render — por isso mede o .build-list, que já está visível).
 function getBuildItemsPerRow(container) {
-  const size =
-    parseFloat(
-      getComputedStyle(document.documentElement)
-        .getPropertyValue("--build-item-size")
-        .trim(),
-    ) || 72;
-  const gap = 4;
+  const { size, gap } = getBuildItemMetrics();
   const list = container
     ? container.closest(".build-list")
     : document.querySelector(".build-list");
@@ -410,12 +438,18 @@ function renderBuildCategoryBox(category) {
         </div>`
       : "";
 
-  // Header fora do grid (bloco) + grid com tracks de tamanho fixo: os itens
-  // ficam sempre juntos, e a caixa cresce até o maior entre o cabeçalho e a
-  // largura dos itens. Quando os itens definem uma caixa mais estreita que o
-  // texto, o header trunca com "...". Ordem (mesma linha): Nome → OPCIONAL → descrição.
+  // Largura da caixa = exatamente a dos itens (colunas × card + gaps + os
+  // paddings simétricos + bordas). Assim a distância da borda ao primeiro
+  // item é igual à do último item à borda, e o header trunca com "..."
+  // quando o texto passa da largura dos itens. Header fica fora do grid
+  // (bloco) com tracks de tamanho fixo — os itens sempre juntos.
+  const { size, gap, pad, border } = getBuildItemMetrics();
+  const cols = Math.max(category.columnCount || 1, 1);
+  const boxWidth =
+    cols * size + (cols - 1) * gap + 2 * pad + 2 * border;
+
   return `
-    <div class="build-item-category${category.optional ? " build-item-category--optional" : ""}${category.items.length === 0 ? " build-item-category--empty" : ""}" style="--category-cols: ${category.columnCount || 1}">
+    <div class="build-item-category${category.optional ? " build-item-category--optional" : ""}${category.items.length === 0 ? " build-item-category--empty" : ""}" style="--category-cols: ${cols}; width: ${boxWidth}px">
       ${headerHtml}
       <ul class="build-category-items" aria-label="${escapeHtml(listLabel)}">
         ${itemsHtml}

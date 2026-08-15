@@ -29,5 +29,6 @@
   "build_item_active": "ACTIVE",
   "a11y_hero_list_label": "Heroes list, {count} items",
   "a11y_item_list_label": "Items list, {count} items",
+  "build_favorites_source": "Top favorites",
   "last_updated_unavailable": "unavailable"
 }

@@ -216,10 +216,16 @@ async function getHeroBuildStats(heroId, minMatches = 1, opts = {}) {
 
   try {
     const raw = await fetchJson(url, opts);
-    return normalizeHeroBuildStats(raw);
+    const stats = normalizeHeroBuildStats(raw);
+    if (stats.length > 0) return stats;
+    // Stats vazios (ou endpoint fora do ar): cai para o fallback por favoritos.
+    return getBuildsByFavorites(heroId, CONSTANTS.MAX_BUILDS_PER_LIST, opts);
   } catch (err) {
-    console.warn(`No build data available for hero ${heroId}:`, err);
-    return [];
+    console.warn(
+      `No build data available for hero ${heroId}, trying favorites:`,
+      err,
+    );
+    return getBuildsByFavorites(heroId, CONSTANTS.MAX_BUILDS_PER_LIST, opts);
   }
 }
 
@@ -270,13 +276,16 @@ function normalizeBuildPayload(rawBuild) {
   };
 }
 
-async function getMostPopularBuild(heroId, opts = {}) {
+// Fallback quando os stats analíticos de builds do herói não estão
+// disponíveis (ex.: erro no servidor): busca as builds mais favoritadas de
+// todos os tempos. Sem matches/wins — os cards sinalizam a origem.
+async function getBuildsByFavorites(heroId, limit = 3, opts = {}) {
   const params = new URLSearchParams({
     hero_id: String(heroId),
     sort_by: "favorites",
     sort_direction: "desc",
     only_latest: "true",
-    limit: "1",
+    limit: String(limit),
   });
   const url = `${API_BASE}/builds?${params.toString()}`;
 
@@ -290,10 +299,23 @@ async function getMostPopularBuild(heroId, opts = {}) {
           ? raw.data
           : [];
 
-    return list.length > 0 ? normalizeBuildPayload(list[0]) : null;
+    return list
+      .map((entry) => {
+        const payload = normalizeBuildPayload(entry);
+        if (!payload) return null;
+        return {
+          buildId: payload.hero_build_id ?? payload.id ?? null,
+          matches: null,
+          wins: null,
+          winRate: null,
+          fromFallback: true,
+          publishedBuild: payload,
+        };
+      })
+      .filter(Boolean);
   } catch (err) {
-    console.warn(`No published build available for hero ${heroId}:`, err);
-    return null;
+    console.warn(`No favorite builds available for hero ${heroId}:`, err);
+    return [];
   }
 }
 async function getBuildById(buildId, heroId, opts = {}) {
