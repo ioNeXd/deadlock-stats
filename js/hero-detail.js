@@ -24,6 +24,7 @@ async function renderHeroDetail(heroId) {
     buildCache.clear();
 
     const hero = heroesById[heroId];
+    window.__abilityMap = buildAbilityMap(hero);
     const heroName = hero ? hero.name : `Hero #${heroId}`;
     const heroIcon =
       (hero && hero.images && hero.images.icon_image_small) || "";
@@ -322,8 +323,54 @@ function buildSkillSequence(build) {
 }
 
 function resolveItemName(itemId, itemMap) {
-  const entry = safeGetItemMap(itemMap)[Number(itemId)];
-  return entry && entry.name ? entry.name : `Item #${itemId}`;
+  const id = Number(itemId);
+
+  // 1) IDs de item de loja (build de itens)
+  const itemEntry = safeGetItemMap(itemMap)[id];
+  if (itemEntry && itemEntry.name) return itemEntry.name;
+
+  // 2) IDs de habilidade do herói (skill path) — vêm de um asset separado
+  // do endpoint de heróis, não do endpoint de itens.
+  const abilityMap =
+    window.__abilityMap && typeof window.__abilityMap === "object"
+      ? window.__abilityMap
+      : {};
+  const abilityEntry = abilityMap[id];
+  if (abilityEntry && abilityEntry.name) return abilityEntry.name;
+
+  // 3) Sem correspondência em nenhum dos dois — nome genérico, mas
+  // identificado como habilidade (é o único chamador deste caminho).
+  return `Ability #${id}`;
+}
+
+// Extrai um mapa {abilityId: {id, name}} a partir dos dados do herói já
+// carregados via getHeroesById(). A API pode expor as habilidades sob
+// diferentes nomes de campo dependendo da versão; tentamos os mais
+// prováveis e ignoramos silenciosamente se nenhum existir.
+function buildAbilityMap(hero) {
+  const map = {};
+  if (!hero || typeof hero !== "object") return map;
+  const raw = hero.raw && typeof hero.raw === "object" ? hero.raw : hero;
+
+  const candidateLists = [
+    raw.abilities,
+    raw.standard_abilities,
+    raw.hero_abilities,
+    raw.item_abilities,
+  ];
+  const abilities = candidateLists.find((v) => Array.isArray(v));
+  if (!abilities) return map;
+
+  for (const a of abilities) {
+    if (!a) continue;
+    const id = Number(a.ability_id ?? a.id ?? 0);
+    if (!id) continue;
+    map[id] = {
+      id,
+      name: a.name || a.class_name || `Ability #${id}`,
+    };
+  }
+  return map;
 }
 
 function getLocalText(key, fallback) {
