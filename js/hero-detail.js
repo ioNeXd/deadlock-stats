@@ -24,7 +24,6 @@ async function renderHeroDetail(heroId) {
     buildCache.clear();
 
     const hero = heroesById[heroId];
-    window.__abilityMap = buildAbilityMap(hero);
     const heroName = hero ? hero.name : `Hero #${heroId}`;
     const heroIcon =
       (hero && hero.images && hero.images.icon_image_small) || "";
@@ -148,12 +147,11 @@ function renderBuildCards(containerId, builds, heroId) {
           actualBuild = await getBuildById(build.buildId, heroId);
           if (actualBuild) buildCache.set(cacheKey, actualBuild);
         }
-        details.innerHTML = renderBuildPath({ ...build, actualBuild });
+        // Guarda o build para re-render responsivo (resize recalcula colunas).
+        details.__build = { ...build, actualBuild };
+        details.innerHTML = renderBuildPath(details.__build, details);
       }
       details.classList.toggle("hidden");
-      if (!details.classList.contains("hidden")) {
-        equalizeCategoryHeights(details);
-      }
     };
 
     card.addEventListener("click", toggle);
@@ -223,7 +221,6 @@ function detailHasAbilityOrder(source) {
   );
 }
 
-const BUILD_ITEMS_PER_ROW = CONSTANTS.BUILD_ITEMS_PER_ROW;
 const ROMAN_TIERS = ["", "I", "II", "III", "IV"];
 
 // Cache de builds expandidos: buildId -> payload, com TTL de 5 min.
@@ -259,15 +256,43 @@ function resolveBuildItemFromEntry(entry, itemMap) {
 }
 
 function isCategoryOptional(category, categoryName) {
-  if (category && category.optional === true) return true;
+  const flag = category && category.optional;
+  // Aceita true, 1 ou "1" (a API às vezes devolve o flag como número/string).
+  if (flag === true || flag === 1 || flag === "1") return true;
   return /optional|op[cç]ional/i.test(categoryName || "");
 }
 
-function buildBuildItemCategories(build, itemMap) {
+// Quantos itens cabem por linha no painel de builds (responsivo).
+// `container` = o .build-card-details do build (pode ainda estar oculto no
+// primeiro render — por isso mede o .build-list, que já está visível).
+function getBuildItemsPerRow(container) {
+  const size =
+    parseFloat(
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--build-item-size")
+        .trim(),
+    ) || 72;
+  const gap = 4;
+  const list = container
+    ? container.closest(".build-list")
+    : document.querySelector(".build-list");
+  const listWidth = list ? list.clientWidth : 800;
+  // Painel ≈ lista − padding do card (28px) − bordas (2px) − padding da
+  // lista de itens (12px).
+  const available = listWidth - 30 - 12;
+  return Math.max(1, Math.floor((available + gap) / (size + gap)));
+}
+
+function buildBuildItemCategories(build, itemMap, container) {
   const { modCategories } = resolveBuildDetailSource(build);
   if (!modCategories.length) return [];
 
-  const categories = modCategories.map((category) => {
+  // A largura de cada categoria é definida pelos itens dela: calcula quantas
+  // colunas cabem na largura do painel; itens excedentes quebram para a
+  // próxima linha (a altura da categoria cresce). Ao encolher a tela,
+  // o re-render no resize reduz as colunas e os itens acompanham.
+  const perRow = getBuildItemsPerRow(container);
+  return modCategories.map((category) => {
     const categoryName = category && (category.name || "Category");
     const items = Array.isArray(category.mods) ? category.mods : [];
     const itemRows = items
@@ -279,33 +304,9 @@ function buildBuildItemCategories(build, itemMap) {
       description: (category && category.description) || "",
       optional: isCategoryOptional(category, categoryName),
       items: itemRows,
+      columnCount: Math.min(Math.max(itemRows.length, 1), perRow),
     };
   });
-
-  // Todas as categorias com a mesma largura (mesmo número de colunas)
-  const uniformCols = Math.min(
-    Math.max(...categories.map((c) => c.items.length), 1),
-    BUILD_ITEMS_PER_ROW,
-  );
-  // ... e a mesma altura (mesmo número de linhas para todas)
-  const uniformRows = Math.max(
-    ...categories.map((c) => Math.ceil(c.items.length / uniformCols)),
-    1,
-  );
-  categories.forEach((c) => {
-    c.columnCount = uniformCols;
-    c.rowCount = uniformRows;
-  });
-
-  return categories;
-}
-
-function equalizeCategoryHeights(root) {
-  const cats = Array.from(root.querySelectorAll(".build-item-category"));
-  if (!cats.length) return;
-  let max = 0;
-  for (const c of cats) max = Math.max(max, c.offsetHeight);
-  for (const c of cats) c.style.height = `${max}px`;
 }
 
 function buildSkillSequence(build) {
@@ -323,54 +324,8 @@ function buildSkillSequence(build) {
 }
 
 function resolveItemName(itemId, itemMap) {
-  const id = Number(itemId);
-
-  // 1) IDs de item de loja (build de itens)
-  const itemEntry = safeGetItemMap(itemMap)[id];
-  if (itemEntry && itemEntry.name) return itemEntry.name;
-
-  // 2) IDs de habilidade do herói (skill path) — vêm de um asset separado
-  // do endpoint de heróis, não do endpoint de itens.
-  const abilityMap =
-    window.__abilityMap && typeof window.__abilityMap === "object"
-      ? window.__abilityMap
-      : {};
-  const abilityEntry = abilityMap[id];
-  if (abilityEntry && abilityEntry.name) return abilityEntry.name;
-
-  // 3) Sem correspondência em nenhum dos dois — nome genérico, mas
-  // identificado como habilidade (é o único chamador deste caminho).
-  return `Ability #${id}`;
-}
-
-// Extrai um mapa {abilityId: {id, name}} a partir dos dados do herói já
-// carregados via getHeroesById(). A API pode expor as habilidades sob
-// diferentes nomes de campo dependendo da versão; tentamos os mais
-// prováveis e ignoramos silenciosamente se nenhum existir.
-function buildAbilityMap(hero) {
-  const map = {};
-  if (!hero || typeof hero !== "object") return map;
-  const raw = hero.raw && typeof hero.raw === "object" ? hero.raw : hero;
-
-  const candidateLists = [
-    raw.abilities,
-    raw.standard_abilities,
-    raw.hero_abilities,
-    raw.item_abilities,
-  ];
-  const abilities = candidateLists.find((v) => Array.isArray(v));
-  if (!abilities) return map;
-
-  for (const a of abilities) {
-    if (!a) continue;
-    const id = Number(a.ability_id ?? a.id ?? 0);
-    if (!id) continue;
-    map[id] = {
-      id,
-      name: a.name || a.class_name || `Ability #${id}`,
-    };
-  }
-  return map;
+  const entry = safeGetItemMap(itemMap)[Number(itemId)];
+  return entry && entry.name ? entry.name : `Item #${itemId}`;
 }
 
 function getLocalText(key, fallback) {
@@ -431,26 +386,37 @@ function renderBuildCategoryBox(category) {
     ? `<span class="build-category-optional">${getLocalText("build_category_optional", "OPCIONAL")}</span>`
     : "";
   const description = category.description
-    ? `<p class="build-category-description">${escapeHtml(category.description)}</p>`
+    ? `<p class="build-category-description" title="${escapeHtml(category.description)}">${escapeHtml(category.description)}</p>`
     : "";
 
   const itemsHtml = category.items.length
     ? category.items.map((item) => renderBuildItemCard(item)).join("")
-    : `<li class="build-detail-empty">${t("no_data")}</li>`;
+    : `<li class="build-detail-empty" role="img" aria-label="${escapeHtml(t("no_data"))}">${t("no_data")}</li>`;
 
   const listLabel = showName
     ? category.name
     : category.description || "items";
 
+  // Sem título, o cabeçalho só é renderizado se houver conteúdo (descrição)
+  // — evita barra vazia, mas não esconde a descrição de categorias sem nome.
+  const headerHtml =
+    showName || description
+      ? `<div class="build-category-header">
+          <div class="build-category-title-row">
+            ${showName ? `<span class="build-category-name">${escapeHtml(category.name)}</span>` : ""}
+            ${optionalBadge}
+            ${description}
+          </div>
+        </div>`
+      : "";
+
+  // Header fora do grid (bloco) + grid com tracks de tamanho fixo: os itens
+  // ficam sempre juntos, e a caixa cresce até o maior entre o cabeçalho e a
+  // largura dos itens. Quando os itens definem uma caixa mais estreita que o
+  // texto, o header trunca com "...". Ordem (mesma linha): Nome → OPCIONAL → descrição.
   return `
-    <div class="build-item-category${category.optional ? " build-item-category--optional" : ""}" style="--category-cols: ${category.columnCount}; --category-rows: ${category.rowCount || 1}">
-      <div class="build-category-header">
-        <div class="build-category-title-row">
-          ${optionalBadge}
-          ${showName ? `<span class="build-category-name">${escapeHtml(category.name)}</span>` : ""}
-        </div>
-        ${description}
-      </div>
+    <div class="build-item-category${category.optional ? " build-item-category--optional" : ""}${category.items.length === 0 ? " build-item-category--empty" : ""}" style="--category-cols: ${category.columnCount || 1}">
+      ${headerHtml}
       <ul class="build-category-items" aria-label="${escapeHtml(listLabel)}">
         ${itemsHtml}
       </ul>
@@ -480,9 +446,21 @@ function renderBuildSkillSection(skillSequence, itemMap) {
     .join("")}</ol>`;
 }
 
-function renderBuildPath(build) {
+// Re-renderiza os builds abertos quando a janela muda de tamanho — o
+// número de colunas por categoria é recalculado e os itens refluem.
+function rerenderOpenBuilds() {
+  document.querySelectorAll(".build-card-details:not(.hidden)").forEach((details) => {
+    if (details.__build) {
+      details.innerHTML = renderBuildPath(details.__build, details);
+    }
+  });
+}
+
+window.addEventListener("resize", debounce(rerenderOpenBuilds, 150));
+
+function renderBuildPath(build, container) {
   const itemMap = safeGetItemMap(window.__itemMap);
-  const itemCategories = buildBuildItemCategories(build, itemMap);
+  const itemCategories = buildBuildItemCategories(build, itemMap, container);
   const skillSequence = buildSkillSequence(build);
 
   const itemSection = renderBuildItemSection(itemCategories);
