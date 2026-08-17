@@ -30,5 +30,14 @@
   "a11y_hero_list_label": "Heroes list, {count} items",
   "a11y_item_list_label": "Items list, {count} items",
   "build_favorites_source": "Top favorites",
+  "skill_tooltip_range": "Range",
+  "skill_tooltip_cast": "Casting",
+  "skill_tooltip_damage": "Damage",
+  "skill_tooltip_duration": "Duration",
+  "skill_tooltip_weapon": "Weapon",
+  "skill_tooltip_move": "Movement",
+  "skill_tooltip_vitality": "Health & Healing",
+  "skill_tooltip_resist": "Resistances",
+  "skill_tooltip_extra": "Other",
   "last_updated_unavailable": "unavailable"
 }

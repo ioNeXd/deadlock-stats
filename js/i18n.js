@@ -128,7 +128,7 @@ function buildLanguageMenu() {
     button.textContent = lang.label;
     button.style.setProperty(
       "--flag-url",
-      `url(https://flagcdn.com/w40/${lang.flag}.png)`,
+      `url(https://flagcdn.com/32x24/${lang.flag}.png)`,
     );
     button.classList.add("lang-option");
     button.addEventListener("click", async () => {
@@ -146,7 +146,7 @@ function updateLangToggle() {
   const toggle = document.getElementById("lang-toggle");
   if (!toggle) return;
   if (current) {
-    toggle.style.backgroundImage = `url(https://flagcdn.com/w80/${current.flag}.png)`;
+    toggle.style.backgroundImage = `url(https://flagcdn.com/32x24/${current.flag}.png)`;
   }
   toggle.setAttribute("aria-label", t("lang_selector_label"));
 }

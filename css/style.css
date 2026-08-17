@@ -67,6 +67,14 @@
   --border-hover: #666;
   --focus-color: #88b7ff;
 
+  /* Overlays translúcidos reutilizados (hover, bordas, sombras) */
+  --white-faint: rgba(255, 255, 255, 0.05);
+  --white-edge: rgba(255, 255, 255, 0.08);
+  --black-strong: rgba(0, 0, 0, 0.55);
+
+  /* Destaque dourado (slots do skill path e selo de favoritos) */
+  --gold: #e8c04a;
+
   /* Estados: erro */
   --error-bg-top: #501818;
   --error-bg-bottom: #2b1414;
@@ -93,7 +101,25 @@
   --shop-optional-badge-bg: #44454b;
   --shop-optional-badge-text: #6f91cb;
   --shop-fav-badge-bg: #3d3f48; /* selo de build vinda do fallback por favoritos */
-  --shop-fav-badge-text: #e8c04a;
+  --shop-fav-badge-text: var(--gold);
+
+  /* Skill path — ordem de habilidades (estilo do editor in-game) */
+  --skill-path-bg: #171b26;
+  --skill-path-border: #2a3040;
+  --skill-path-badge-bg: var(--shop-fav-badge-bg);
+  --skill-path-badge-text: #f2f2f2;
+  /* Slots 1-4: mesmo dourado (o número 1 acompanha os demais). */
+  --skill-path-slot-bg: var(--gold);
+  --skill-path-slot-text: #3a2c10;
+  --skill-path-icon-bg: #23272f;
+  --skill-path-name: var(--shop-text-light);
+  --skill-tip-grad-1: #26262e;
+  --skill-tip-grad-2: #4a3470;
+  --skill-tip-border: #5a4486;
+  --skill-tip-badge-bg: rgba(0, 0, 0, 0.32);
+  --skill-tip-badge-text: #f0e9ff;
+  --skill-tip-block-bg: rgba(0, 0, 0, 0.28);
+  --skill-tip-section-text: #cbb9f0;
 
   /* Cores das categorias de item (tipos de slot) e seus degradês */
   --weapon-gradient: linear-gradient(180deg, #c8843a 0%, #8f5520 100%);
@@ -337,7 +363,7 @@ th[role="button"] {
 
 tr:hover td,
 tr:focus-within td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-faint);
 }
 
 .clickable-row {
@@ -345,7 +371,7 @@ tr:focus-within td {
 }
 
 .clickable-row:hover td {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-faint);
 }
 
 .table-controls {
@@ -567,7 +593,6 @@ tr:focus-within td {
   border: 1px solid var(--shop-category-border);
   border-radius: 4px;
   padding: 10px 14px;
-  cursor: pointer;
   color: var(--shop-text-dark);
   font-family: var(--font-shop);
 }
@@ -577,10 +602,17 @@ tr:focus-within td {
   filter: brightness(0.97);
 }
 
+/* Cabeçalho clicável (nome, winrate, partidas) — expande/colapsa o build.
+   Estica sobre o padding do card (margens negativas) nos DOIS estados,
+   para a zona de clique ter o mesmo tamanho colapsado e expandido. */
 .build-card-summary {
   display: flex;
   gap: 16px;
   align-items: center;
+  cursor: pointer;
+  user-select: none;
+  margin: -10px -14px;
+  padding: 10px 14px;
 }
 
 .build-id {
@@ -784,7 +816,10 @@ tr:focus-within td {
   border-radius: 4px;
   overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.35);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px var(--white-edge);
+  /* Cor padrão do selo de tier (weapon/utility); vitality/spirit
+     sobrescrevem com as suas cores. */
+  --tier-badge: #e59400;
 }
 
 /* Tipo do slot: degradê do card, cor do selo de tier e fundo do nome
@@ -796,7 +831,6 @@ tr:focus-within td {
   --name-bg-4: #a97a48;
   --name-color-4: #e2c3a0;
   --name-glow-4: rgba(226, 195, 160, 0.6);
-  --tier-badge: #e59400;
   background: var(--weapon-gradient);
 }
 
@@ -824,7 +858,6 @@ tr:focus-within td {
 
 .build-item-card--utility,
 .build-item-card--unknown {
-  --tier-badge: #e59400;
   background: var(--utility-gradient);
 }
 
@@ -846,7 +879,7 @@ tr:focus-within td {
   background: var(--tier-badge);
   clip-path: polygon(0 0, 100% 0, 100% 100%);
   border-radius: 0 4px 0 0;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px var(--white-edge);
 }
 
 .build-item-tier-num {
@@ -883,7 +916,7 @@ tr:focus-within td {
   padding: 1px 5px;
   border-radius: 2px;
   background: rgba(0, 0, 0, 0.75);
-  color: #fff;
+  color: var(--text-inverse);
   font-size: 0.55em;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -900,7 +933,7 @@ tr:focus-within td {
   padding: 3px 2px;
   overflow: hidden;
   /* Halftone sutil + fundo escuro (os tiers só sobrescrevem a cor). */
-  background: var(--name-texture) rgba(0, 0, 0, 0.55);
+  background: var(--name-texture) var(--black-strong);
   color: #f5f5f5;
   font-family: var(--font-shop);
   font-size: 0.58em;
@@ -935,7 +968,265 @@ tr:focus-within td {
   text-shadow: 0 0 4px var(--name-glow-4);
 }
 
-/* Sequência de habilidades */
+/* Painel de ordem de habilidades — timeline por habilidade (1-4), estilo
+   do editor in-game: cada linha é uma habilidade com os níveis upados
+   (selos de diamante) posicionados na ordem em que os pontos foram gastos. */
+.skill-path-panel {
+  background: var(--skill-path-bg);
+  border: 1px solid var(--skill-path-border);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skill-path-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skill-path-ability {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 180px;
+  min-width: 0;
+}
+
+.skill-path-slot {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+  font-weight: 700;
+  /* Slots 1-4: mesmo dourado (o número 1 acompanha os demais). */
+  background: var(--skill-path-slot-bg);
+  color: var(--skill-path-slot-text);
+}
+
+/* Ícone da habilidade (imagem oficial da API) ao lado do nome. */
+.skill-path-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--skill-path-icon-bg);
+}
+
+.skill-path-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--skill-path-name);
+  font-size: 0.82em;
+  font-weight: 600;
+}
+
+.skill-path-track {
+  position: relative;
+  flex: 1;
+  height: 26px;
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  grid-auto-rows: minmax(0, 1fr); /* linha = altura exata do track — permite % no marcador */
+  border-bottom: 1px solid var(--skill-path-border);
+  /* 16 colunas — uma por ponto de habilidade (timeline do level-up) */
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent calc(6.25% - 1px),
+    var(--white-faint) calc(6.25% - 1px),
+    var(--white-faint) 6.25%
+  );
+}
+
+.skill-path-marker {
+  justify-self: center;
+  align-self: center;
+  /* Dimensão relativa: ocupa 80% da coluna (largura) e 80% da altura da
+     linha do track, centralizado com folga de cada lado — nunca sai da
+     coluna e acompanha o tamanho do timeline. */
+  width: 80%;
+  height: 80%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+
+.skill-path-marker-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0 2px; /* sem padding vertical: o ícone (80%) ocupa a caixa inteira */
+  background: var(--skill-path-badge-bg);
+  color: var(--skill-path-badge-text);
+  border-radius: 3px;
+  font-size: 0.62em;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.skill-path-marker-num {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ícones dos marcadores: levelup_ap_icon (evoluir) e levelup_unlock_icon
+   (desbloquear) — baixados da loja para assets/images/hud/. Altura relativa:
+   80% da caixa, centralizado. */
+.skill-path-marker-icon {
+  display: block;
+  flex-shrink: 0;
+  height: 80%;
+  width: auto;
+}
+
+/* Tooltip da habilidade (descrição + propriedades) — elemento único no body,
+   position: fixed, segue o mouse. Quadrado responsivo com fundo em gradiente
+   (preto acinzentado → roxo, de cima para baixo); largura acompanha o
+   conteúdo (max-content) e quebra para caber na viewport. */
+.skill-tooltip {
+  position: fixed;
+  z-index: 1000;
+  max-width: 320px;
+  width: max-content;
+  padding: 10px 12px;
+  background: linear-gradient(
+    180deg,
+    var(--skill-tip-grad-1) 0%,
+    var(--skill-tip-grad-2) 100%
+  );
+  border: 1px solid var(--skill-tip-border);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px var(--black-strong);
+  color: var(--skill-path-name);
+  font-size: 0.78em;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.skill-tooltip-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skill-tooltip-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--skill-path-icon-bg);
+}
+
+.skill-tooltip-name {
+  font-weight: 700;
+  font-size: 1.05em;
+  color: var(--text-inverse);
+}
+
+/* Selos ao lado do nome (cargas, cooldown entre cargas, cooldown), na mesma
+   linha — empurrados para a direita; cada um com o ícone em SVG. */
+.skill-tooltip-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.skill-tooltip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--skill-tip-badge-bg);
+  color: var(--skill-tip-badge-text);
+  font-weight: 700;
+  font-size: 0.92em;
+  white-space: nowrap;
+}
+
+.skill-tooltip-badge .skill-tooltip-stat-icon {
+  width: 12px;
+  height: 12px;
+}
+
+/* Bloco da descrição da habilidade. */
+.skill-tooltip-desc {
+  margin: 8px 0 0;
+  padding: 8px 9px;
+  border-radius: 5px;
+  background: var(--skill-tip-block-bg);
+  color: var(--skill-path-name);
+}
+
+/* Seções de propriedades (Alcance / Dano / Duração / Cura). */
+.skill-tooltip-section {
+  margin-top: 8px;
+}
+
+.skill-tooltip-section-title {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--skill-tip-section-text);
+}
+
+.skill-tooltip-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 9px;
+  border-radius: 5px;
+  background: var(--skill-tip-block-bg);
+}
+
+.skill-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.skill-tooltip-stat-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.skill-tooltip-stat-label {
+  color: var(--skill-path-name);
+  opacity: 0.9;
+}
+
+.skill-tooltip-stat-value {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--text-inverse);
+}
+
+/* Sequência de habilidades (fallback: lista simples) */
 .build-skill-list {
   list-style: none;
   margin: 0;
@@ -1034,5 +1325,27 @@ tr:focus-within td {
 
   .build-item-name {
     font-size: 0.52em;
+  }
+
+  /* Skill path: habilidade em cima, timeline embaixo (rola horizontalmente
+     se faltar espaço — as 16 colunas seguem legíveis). */
+  .skill-path-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .skill-path-ability {
+    flex: none;
+    width: 100%;
+  }
+
+  .skill-path-track {
+    width: 100%;
+    min-width: 440px;
+  }
+
+  .skill-path-panel {
+    overflow-x: auto;
   }
 }

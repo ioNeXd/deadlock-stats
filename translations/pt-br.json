@@ -30,5 +30,14 @@
   "a11y_hero_list_label": "Lista de heróis, {count} itens",
   "a11y_item_list_label": "Lista de itens, {count} itens",
   "build_favorites_source": "Top favoritos",
+  "skill_tooltip_range": "Alcance",
+  "skill_tooltip_cast": "Conjuração",
+  "skill_tooltip_damage": "Dano",
+  "skill_tooltip_duration": "Duração",
+  "skill_tooltip_weapon": "Arma",
+  "skill_tooltip_move": "Movimento",
+  "skill_tooltip_vitality": "Vida & Cura",
+  "skill_tooltip_resist": "Resistências",
+  "skill_tooltip_extra": "Extras",
   "last_updated_unavailable": "indisponível"
 }

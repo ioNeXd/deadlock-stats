@@ -1,5 +1,28 @@
 const API_BASE = "https://api.deadlock-api.com/v1";
 
+// ---------------------------------------------------------------------------
+// Assets locais: apenas SVGs (ícones de stats e HUD) ficam baixados no
+// projeto. As demais imagens (heróis, habilidades, itens — PNG/WebP) são
+// servidas diretamente pelo CDN da API (assets-bucket.deadlock-api.com),
+// que é quem entrega esses arquivos. Este mapeador converte só os SVGs de
+// /icons/*.svg para os arquivos locais; o resto mantém a URL original do CDN.
+// ---------------------------------------------------------------------------
+const CDN_BASE = "https://assets-bucket.deadlock-api.com/assets-api-res";
+const CDN_ICONS = `${CDN_BASE}/icons`;
+
+// Converte URL do CDN de assets para o caminho local baixado no projeto.
+// Apenas SVGs de stats têm versão local; tudo mais (PNG/WebP) vem do CDN.
+function localAssetUrl(url) {
+  if (!url || typeof url !== "string") return url;
+  // Ícones de stats em /icons/*.svg -> assets/icons/stats/*.svg (locais).
+  if (url.startsWith(`${CDN_ICONS}/`)) {
+    return `assets/icons/stats/${url.slice(CDN_ICONS.length + 1)}`;
+  }
+  // Demais imagens (heróis, habilidades, itens, upgrades, npcs) ficam no
+  // CDN — a API entrega: https://assets-bucket.deadlock-api.com/...
+  return url;
+}
+
 // Simple in-memory cache: URL -> { ts, data }
 const _cache = new Map();
 const DEFAULT_CACHE_TTL = CONSTANTS.API_CACHE_TTL_MS; // 30s
@@ -111,11 +134,16 @@ function normalizeEntitiesById(rawEntities, type = "entity") {
   const map = {};
   for (const e of entities) {
     if (!e || e.id == null) continue;
+    const rawImages = e.images || {};
+    const images = {};
+    for (const k of Object.keys(rawImages)) {
+      images[k] = localAssetUrl(rawImages[k]);
+    }
     map[e.id] = {
       id: e.id,
       name: e.name || e.display_name || `Unknown ${type}`,
-      images: e.images || {},
-      shop_image: e.shop_image || "",
+      images,
+      shop_image: localAssetUrl(e.shop_image || ""),
       raw: e,
     };
   }
@@ -194,6 +222,115 @@ async function getItemsById(opts = {}) {
     return normalizeEntitiesById(raw, "item");
   } catch (err) {
     console.warn("getItemsById failed:", err);
+    return {};
+  }
+}
+
+// Converte a descrição HTML da habilidade (com SVGs/Panels embutidos) em
+// texto puro legível, preservando quebras de linha do <br>.
+function sanitizeAbilityDescription(html) {
+  if (!html) return "";
+  let text = String(html);
+  // Remove blocos SVG e Panel inteiros (ícones/dados de dano embutidos).
+  text = text.replace(/<svg[\s\S]*?<\/svg>/gi, "");
+  text = text.replace(/<Panel[\s\S]*?<\/Panel>/gi, "");
+  // Quebras de linha dos blocos HTML.
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  text = text.replace(/<\/(?:p|div|li|h[1-6])>/gi, "\n");
+  // Remove as tags restantes, mantendo o texto.
+  text = text.replace(/<[^>]+>/g, "");
+  // Limpa espaços duplicados e quebras consecutivas.
+  text = text.replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
+  return text;
+}
+
+// Ordem de exibição das propriedades no tooltip (cooldown, dano, alcance...).
+const ABILITY_STAT_PRIORITY = [
+  "cooldown",
+  "tech_damage",
+  "bullet_damage",
+  "damage",
+  "range",
+  "duration",
+  "slow",
+  "cast",
+  "healing",
+  "move_speed",
+  "charge_cooldown",
+];
+
+// Extrai as propriedades úteis da habilidade (label + valor + postfix),
+// ignorando valores zerados e sem label.
+function extractAbilityStats(properties) {
+  if (!properties || typeof properties !== "object") return [];
+  const stats = [];
+  for (const key of Object.keys(properties)) {
+    const p = properties[key] || {};
+    const label = String(p.label || "").trim();
+    const rawValue = String(p.value ?? "").trim();
+    if (!label || label === "None" || rawValue === "" || rawValue === "0") {
+      continue;
+    }
+    const postfix = String(p.postfix || "").trim();
+    // Evita duplicar o postfix quando o valor já o inclui (ex.: "20m" + "m").
+    const value = postfix && !rawValue.endsWith(postfix) ? `${rawValue}${postfix}` : rawValue;
+    const cssClass = String(p.css_class || "").toLowerCase();
+    const priority = ABILITY_STAT_PRIORITY.indexOf(cssClass);
+    stats.push({
+      key,
+      label,
+      value,
+      icon: localAssetUrl(p.icon || ""),
+      cssClass,
+      priority: priority === -1 ? 99 : priority,
+    });
+  }
+  stats.sort((a, b) => a.priority - b.priority || a.label.localeCompare(b.label));
+  return stats;
+}
+
+// Habilidades dos heróis (itens do tipo "ability"): class_name ->
+// { id, name, image, description, stats }.
+// Usado para mapear os ability_id do build para o slot (1-4) do herói,
+// cruzando com items.signature1..4 do asset do herói, e para o tooltip
+// com descrição e propriedades (cooldown, dano, alcance...).
+async function getAbilitiesByClass(opts = {}) {
+  const url = `${API_BASE}/assets/items/by-type/ability`;
+  try {
+    const raw = await fetchJson(
+      url,
+      opts,
+      CONSTANTS.API_TIMEOUT_MS,
+      CONSTANTS.API_RETRIES,
+      CONSTANTS.API_ASSETS_CACHE_TTL_MS,
+    );
+    const list = Array.isArray(raw)
+      ? raw
+      : Array.isArray(raw && raw.data)
+        ? raw.data
+        : [];
+    const byClass = {};
+    for (const item of list) {
+      if (item && item.class_name && item.id != null) {
+        const descObj = item.description;
+        byClass[item.class_name] = {
+          id: item.id,
+          name: item.name || item.class_name,
+          // Ícone da habilidade (WebP mais leve; fallback PNG).
+          // Baixados para assets/images/abilities/.
+          image: localAssetUrl(item.image_webp || item.image || ""),
+          // Descrição em texto puro (a API devolve HTML com SVGs embutidos).
+          description: sanitizeAbilityDescription(
+            descObj && typeof descObj === "object" ? descObj.desc : descObj,
+          ),
+          // Propriedades úteis (cooldown, dano, alcance...) para o tooltip.
+          stats: extractAbilityStats(item.properties),
+        };
+      }
+    }
+    return byClass;
+  } catch (err) {
+    console.warn("getAbilitiesByClass failed:", err);
     return {};
   }
 }

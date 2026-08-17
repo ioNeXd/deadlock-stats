@@ -382,16 +382,16 @@ const TableModule = (() => {
   function pickImage(e) {
     if (!e) return "";
     const imgs = e.images || (e.raw && e.raw.images) || {};
-    return (
+    return localAssetUrl(
       imgs.icon_image_small ||
-      imgs.icon ||
-      imgs.icon_image ||
-      e.shop_image ||
-      e.icon_image_small ||
-      e.shop_image_small ||
-      (e.raw && e.raw.icon_image_small) ||
-      (e.raw && e.raw.shop_image) ||
-      ""
+        imgs.icon ||
+        imgs.icon_image ||
+        e.shop_image ||
+        e.icon_image_small ||
+        e.shop_image_small ||
+        (e.raw && e.raw.icon_image_small) ||
+        (e.raw && e.raw.shop_image) ||
+        "",
     );
   }
 
