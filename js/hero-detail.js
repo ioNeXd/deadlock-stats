@@ -225,19 +225,32 @@ function isCategoryOptional(category, categoryName) {
 /**
  * Reads build item metrics (size, gap, padding, border) from CSS variables.
  *
+ * Cached briefly so getComputedStyle is not hit on every call within a render
+ * burst. The short TTL keeps responsive media-query changes picked up.
+ *
  * @returns {{size: number, gap: number, pad: number, border: number}} The metrics.
  */
+let cachedItemMetrics = null;
+let cachedItemMetricsAt = 0;
+const ITEM_METRICS_CACHE_MS = 250;
+
 function getBuildItemMetrics() {
+  const now = Date.now();
+  if (cachedItemMetrics && now - cachedItemMetricsAt < ITEM_METRICS_CACHE_MS) {
+    return cachedItemMetrics;
+  }
   const read = (name, fallback) =>
     parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue(name).trim(),
     ) || fallback;
-  return {
+  cachedItemMetrics = {
     size: read("--build-item-size", 72),
     gap: read("--build-item-gap", 4),
     pad: read("--build-category-pad", 6),
     border: read("--build-category-border-w", 2),
   };
+  cachedItemMetricsAt = now;
+  return cachedItemMetrics;
 }
 
 /**

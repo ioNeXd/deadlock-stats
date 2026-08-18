@@ -100,8 +100,11 @@ async function fetchJson(
 
   if (cacheKey) {
     const entry = _cache.get(cacheKey);
-    if (entry && Date.now() - entry.ts < cacheTtl) {
-      return entry.data;
+    if (entry) {
+      if (Date.now() - entry.ts < cacheTtl) {
+        return entry.data;
+      }
+      _cache.delete(cacheKey);
     }
   }
 
@@ -139,6 +142,12 @@ async function fetchJson(
       if (cacheKey) {
         try {
           _cache.set(cacheKey, { ts: Date.now(), data: json });
+          // Keep the cache bounded: evict the oldest entry when over the limit.
+          while (_cache.size > CONSTANTS.API_CACHE_MAX_ENTRIES) {
+            const oldestKey = _cache.keys().next().value;
+            if (oldestKey === undefined) break;
+            _cache.delete(oldestKey);
+          }
         } catch (e) {
           /* ignore cache errors */
         }

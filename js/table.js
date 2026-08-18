@@ -39,6 +39,7 @@ import { handleRouteChange, initRouter, navigateToHero } from "./router.js";
   // AbortController for ongoing rendering – aborted when a new renderTable()
   // is started to discard stale responses.
   let activeAbortController = null;
+  let renderRequestSeq = 0;
 
   // ===========================================================================
   // UI HELPERS (Loader, Error, Accessibility)
@@ -393,6 +394,7 @@ import { handleRouteChange, initRouter, navigateToHero } from "./router.js";
 
     const watchdog = new AbortController();
     activeAbortController = watchdog;
+    const requestId = ++renderRequestSeq;
     let watchdogTimer = setTimeout(() => {
       try {
         watchdog.abort();
@@ -429,7 +431,7 @@ import { handleRouteChange, initRouter, navigateToHero } from "./router.js";
       const nameHeader = document.getElementById("table-name-header");
       if (nameHeader) nameHeader.focus();
     } catch (err) {
-      if (activeAbortController !== watchdog) return;
+      if (requestId !== renderRequestSeq) return;
 
       const timedOut = err && err.name === "AbortError";
       console.error("Failed to render table:", err);
@@ -442,7 +444,7 @@ import { handleRouteChange, initRouter, navigateToHero } from "./router.js";
       }
       showError(t("error_fetching_data"));
     } finally {
-      if (activeAbortController === watchdog) activeAbortController = null;
+      if (requestId === renderRequestSeq) activeAbortController = null;
       hideLoader();
       try { clearTimeout(watchdogTimer); } catch (e) {}
     }
