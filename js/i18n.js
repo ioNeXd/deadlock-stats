@@ -1,3 +1,11 @@
+// =============================================================================
+// CONSTANTS & CONFIGURATION
+// =============================================================================
+
+/**
+ * List of supported languages with their labels and flag codes.
+ * @type {Array<{code: string, label: string, flag: string}>}
+ */
 const availableLanguages = [
   { code: "en", label: "English", flag: "us" },
   { code: "pt-br", label: "Português (BR)", flag: "br" },
@@ -5,22 +13,21 @@ const availableLanguages = [
 
 let currentLang = "en";
 let currentTranslations = {};
-let baseTranslations = {}; // English fallback
+let baseTranslations = {};
 const missingKeys = new Set();
-
-// Cache dos JSONs baixados por idioma — evita refetch ao trocar de idioma.
 const translationCache = new Map();
+let languageChangeHandler = null;
 
-async function fetchTranslations(lang) {
-  if (translationCache.has(lang)) return translationCache.get(lang);
-  const res = await fetch(`translations/${lang}.json`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  translationCache.set(lang, data);
-  return data;
-}
+// =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
 
-// Safe localStorage helpers
+/**
+ * Safely reads a value from localStorage without throwing.
+ *
+ * @param {string} key - The storage key.
+ * @returns {string|null} The stored value or null if access fails.
+ */
 function safeGetLocalStorage(key) {
   try {
     return localStorage.getItem(key);
@@ -30,6 +37,12 @@ function safeGetLocalStorage(key) {
   }
 }
 
+/**
+ * Safely writes a value to localStorage without throwing.
+ *
+ * @param {string} key - The storage key.
+ * @param {*} value - The value to store.
+ */
 function safeSetLocalStorage(key, value) {
   try {
     localStorage.setItem(key, value);
@@ -38,9 +51,33 @@ function safeSetLocalStorage(key, value) {
   }
 }
 
-// Load translations with fallback to English and merge
+/**
+ * Fetches and caches translation JSON for a given language.
+ *
+ * @param {string} lang - The language code (e.g., "en", "pt-br").
+ * @returns {Promise<Object>} The translation object.
+ * @throws {Error} If the fetch fails.
+ */
+async function fetchTranslations(lang) {
+  if (translationCache.has(lang)) return translationCache.get(lang);
+  const res = await fetch(`translations/${lang}.json`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  translationCache.set(lang, data);
+  return data;
+}
+
+// =============================================================================
+// CORE TRANSLATION FUNCTIONS
+// =============================================================================
+
+/**
+ * Loads the base (English) translations and then overlays the selected language.
+ *
+ * @param {string} lang - The language code to load.
+ * @returns {Promise<void>}
+ */
 async function loadTranslations(lang) {
-  // Ensure base (en) is loaded first for fallback
   if (!Object.keys(baseTranslations).length) {
     try {
       baseTranslations = await fetchTranslations("en");
@@ -59,7 +96,6 @@ async function loadTranslations(lang) {
 
   try {
     const loaded = await fetchTranslations(lang);
-    // overlay: keys in loaded override base
     currentTranslations = { ...baseTranslations, ...loaded };
     currentLang = lang;
     document.documentElement.lang = lang;
@@ -68,22 +104,19 @@ async function loadTranslations(lang) {
       `Failed to load translations for ${lang}, falling back to English:`,
       err,
     );
-    // fallback to base
     currentTranslations = { ...baseTranslations };
     currentLang = "en";
     document.documentElement.lang = "en";
   }
 }
 
-function applyTranslations() {
-  const elements = document.querySelectorAll("[data-i18n]");
-  for (const el of elements) {
-    const key = el.getAttribute("data-i18n");
-    el.textContent = t(key);
-  }
-}
-
-function t(key) {
+/**
+ * Translates a key using the current language, falling back to English.
+ *
+ * @param {string} key - The translation key.
+ * @returns {string} The translated text or the key if missing.
+ */
+export function t(key) {
   if (key == null) return "";
   if (
     currentTranslations &&
@@ -91,7 +124,6 @@ function t(key) {
   ) {
     return currentTranslations[key];
   }
-  // fallback to base
   if (
     baseTranslations &&
     Object.prototype.hasOwnProperty.call(baseTranslations, key)
@@ -99,7 +131,6 @@ function t(key) {
     missingKeys.add(`${currentLang}:${key}`);
     return baseTranslations[key];
   }
-  // last resort: warn once and return the key
   const missingId = `${currentLang}:${key}`;
   if (!missingKeys.has(missingId)) {
     console.warn(`Missing translation for key: ${missingId}`);
@@ -108,6 +139,52 @@ function t(key) {
   return key;
 }
 
+/**
+ * Retrieves a localized text string by key, falling back to a default.
+ *
+ * @param {string} key - The translation key.
+ * @param {string} fallback - Fallback text if key is not found.
+ * @returns {string} The localized or fallback text.
+ */
+export function getLocalText(key, fallback) {
+  if (
+    currentTranslations &&
+    Object.prototype.hasOwnProperty.call(currentTranslations, key)
+  ) {
+    return currentTranslations[key];
+  }
+  if (
+    baseTranslations &&
+    Object.prototype.hasOwnProperty.call(baseTranslations, key)
+  ) {
+    return baseTranslations[key];
+  }
+  return fallback;
+}
+
+/**
+ * Registers a callback invoked whenever the active language changes.
+ *
+ * @param {Function} fn - The handler to call on language change.
+ */
+export function setLanguageChangeHandler(fn) {
+  languageChangeHandler = fn;
+}
+
+/**
+ * Applies all data-i18n attributes to DOM elements by replacing their text content.
+ */
+export function applyTranslations() {
+  const elements = document.querySelectorAll("[data-i18n]");
+  for (const el of elements) {
+    const key = el.getAttribute("data-i18n");
+    el.textContent = t(key);
+  }
+}
+
+/**
+ * Logs a summary of all missing translation keys to the console.
+ */
 function reportMissingTranslations() {
   if (missingKeys.size === 0) return;
   const summary = {};
@@ -117,6 +194,13 @@ function reportMissingTranslations() {
   console.table(summary);
 }
 
+// =============================================================================
+// LANGUAGE SWITCHER UI
+// =============================================================================
+
+/**
+ * Builds the language dropdown menu from the availableLanguages list.
+ */
 function buildLanguageMenu() {
   const menu = document.getElementById("lang-menu");
   if (!menu) return;
@@ -139,6 +223,9 @@ function buildLanguageMenu() {
   }
 }
 
+/**
+ * Updates the language toggle button with the flag of the current language.
+ */
 function updateLangToggle() {
   const current =
     availableLanguages.find((lang) => lang.code === currentLang) ||
@@ -151,6 +238,9 @@ function updateLangToggle() {
   toggle.setAttribute("aria-label", t("lang_selector_label"));
 }
 
+/**
+ * Closes the language dropdown menu.
+ */
 function closeLangMenu() {
   const menu = document.getElementById("lang-menu");
   const toggle = document.getElementById("lang-toggle");
@@ -158,6 +248,9 @@ function closeLangMenu() {
   if (toggle) toggle.setAttribute("aria-expanded", "false");
 }
 
+/**
+ * Toggles the open/closed state of the language dropdown menu.
+ */
 function toggleLangMenu() {
   const menu = document.getElementById("lang-menu");
   if (!menu) return;
@@ -167,7 +260,13 @@ function toggleLangMenu() {
   if (toggle) toggle.setAttribute("aria-expanded", String(!isOpen));
 }
 
-async function selectLanguage(lang) {
+/**
+ * Switches the active language, updates the UI, and stores the preference.
+ *
+ * @param {string} lang - The language code to select.
+ * @returns {Promise<void>}
+ */
+export async function selectLanguage(lang) {
   try {
     await loadTranslations(lang);
     applyTranslations();
@@ -175,15 +274,17 @@ async function selectLanguage(lang) {
     safeSetLocalStorage("lang", lang);
     closeLangMenu();
 
-    if (typeof onLanguageChange === "function") onLanguageChange();
+    if (typeof languageChangeHandler === "function") languageChangeHandler();
   } catch (err) {
     console.error("selectLanguage failed", err);
-    // show a minimal user-facing fallback
     applyTranslations();
     updateLangToggle();
   }
 }
 
+/**
+ * Sets up event listeners for the language switcher and click-outside behavior.
+ */
 function setupLanguageSwitcher() {
   buildLanguageMenu();
   updateLangToggle();
@@ -204,7 +305,17 @@ function setupLanguageSwitcher() {
   });
 }
 
-async function initI18n() {
+// =============================================================================
+// INITIALIZATION
+// =============================================================================
+
+/**
+ * Initializes the i18n system: loads saved language, applies translations,
+ * reports missing keys, and sets up the language switcher.
+ *
+ * @returns {Promise<void>}
+ */
+export async function initI18n() {
   const savedLang = safeGetLocalStorage("lang") || "en";
   await loadTranslations(savedLang);
   applyTranslations();

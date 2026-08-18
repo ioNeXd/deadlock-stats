@@ -16,6 +16,7 @@ Built with plain **HTML, CSS, and JavaScript** — no frameworks, no build step.
 - **Tab navigation** — switch between Heroes and Items without reloading the page.
 - **Hero detail page** — opens at `#hero=<id>` and shows:
   - **Most popular and highest win rate builds**, falling back to all-time favorite builds (clearly badged) when analytics are unavailable;
+  - **Build cards** — author name, build ID (with a one-click copy button and toast feedback), win rate, and total matches, with a tooltip when the name is truncated;
   - **Build breakdown** — items grouped by category (weapon / vitality / spirit / utility) with tier-colored cards and optional/active badges;
   - **Skill path** — a 16-column timeline showing when each ability was unlocked (1–4) and leveled up, with per-level markers;
   - **Ability tooltips** — hover any skill to see its icon, name, key cooldowns, description, and stats organized into property sections (range, casting, damage, duration, weapon, movement, health & healing, resistances).
@@ -31,6 +32,41 @@ Built with plain **HTML, CSS, and JavaScript** — no frameworks, no build step.
 
 > Opening `index.html` directly via `file://` will **not** work: browsers block local `fetch` requests in that mode.
 
+## Setting up the development environment
+
+The website itself is plain static HTML/CSS/JS — it only needs a static server and **does not require Node.js**. The Node toolchain is an optional safety net that powers the automated checks (syntax, translations, unit tests).
+
+1. **Install Node.js** (v20 or newer — LTS recommended) from [nodejs.org](https://nodejs.org). `npm` is bundled with it.
+2. **Verify the install**:
+   ```bash
+   node --version
+   npm --version
+   ```
+3. **Clone the repository**:
+   ```bash
+   git clone https://github.com/ionexd/deadlock-stats.git
+   cd deadlock-stats
+   ```
+4. **Skip `npm install`** — the project has zero dependencies; every check uses Node's built-in tooling (`node:test`, `node --check`).
+5. **Run the full check suite** to confirm the codebase is healthy:
+   ```bash
+   npm run check
+   ```
+   This validates the syntax of every JS module, keeps translation files in sync with `en.json`, and runs the unit tests. Use `npm test` to run only the tests.
+6. **Serve the site** with any static server (e.g. the VS Code Live Server extension) and open it in your browser.
+
+## Development & checks
+
+The project ships a small Node-based toolchain (no dependencies, built-in `node:test`) to keep the codebase healthy:
+
+- `npm run check` — runs everything below in one pass.
+- `npm run check:syntax` — `node --check` on every module in `js/`.
+- `npm run validate:translations` — ensures all translation files stay in sync with `en.json`.
+- `npm test` — unit tests for the pure logic (utils, API normalization, i18n, skill-section data).
+
+A GitHub Actions workflow (`.github/workflows/ci.yml`) runs these three checks automatically on every push and pull request, so translation drift or a broken test never reaches `main` unnoticed.
+
+
 ## Project structure
 
 | Path | Purpose |
@@ -43,8 +79,13 @@ Built with plain **HTML, CSS, and JavaScript** — no frameworks, no build step.
 | `js/i18n.js` | Translation loader and `data-i18n` binding |
 | `js/utils.js` | Shared helpers (formatting, safe access, caching) |
 | `js/constants.js` | Shared constants |
+| `js/skill-sections-data.js` | Skill tooltip data: property sections and manual key overrides |
 | `translations/` | JSON translation files (`en.json`, `pt-br.json`) |
 | `scripts/validate-translations.js` | Checks translation keys stay in sync |
+| `scripts/check-syntax.js` | Runs `node --check` on every module in `js/` |
+| `tests/` | Unit tests (`node:test`, no dependencies) |
+| `package.json` | npm scripts for checks and tests (`npm run check`) |
+| `.github/workflows/ci.yml` | CI: syntax + translations + tests on every push/PR |
 | `assets/` | Local SVGs and fonts (rest is served by the API CDN) |
 | `css/style.css` | Dark theme, responsive layout, shop/build styling |
 
@@ -61,6 +102,7 @@ Built with plain **HTML, CSS, and JavaScript** — no frameworks, no build step.
 - Vanilla HTML / CSS / JavaScript (no frameworks, no build tools)
 - [Deadlock API](https://api.deadlock-api.com) (community-run, open source) — see its [docs](https://api.deadlock-api.com/docs)
 - Hosted on GitHub Pages
+- Zero-dependency Node toolchain (`node:test`) for syntax checks, translation validation, and unit tests — CI runs it automatically
 
 ## License
 

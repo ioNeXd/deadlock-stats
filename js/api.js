@@ -1,32 +1,93 @@
+// =============================================================================
+// CONSTANTS & CONFIGURATION
+// =============================================================================
+
+import { CONSTANTS } from "./constants.js";
+
 const API_BASE = "https://api.deadlock-api.com/v1";
 
-// ---------------------------------------------------------------------------
-// Assets locais: apenas SVGs (ícones de stats e HUD) ficam baixados no
-// projeto. As demais imagens (heróis, habilidades, itens — PNG/WebP) são
-// servidas diretamente pelo CDN da API (assets-bucket.deadlock-api.com),
-// que é quem entrega esses arquivos. Este mapeador converte só os SVGs de
-// /icons/*.svg para os arquivos locais; o resto mantém a URL original do CDN.
-// ---------------------------------------------------------------------------
 const CDN_BASE = "https://assets-bucket.deadlock-api.com/assets-api-res";
 const CDN_ICONS = `${CDN_BASE}/icons`;
 
-// Converte URL do CDN de assets para o caminho local baixado no projeto.
-// Apenas SVGs de stats têm versão local; tudo mais (PNG/WebP) vem do CDN.
-function localAssetUrl(url) {
-  if (!url || typeof url !== "string") return url;
-  // Ícones de stats em /icons/*.svg -> assets/icons/stats/*.svg (locais).
-  if (url.startsWith(`${CDN_ICONS}/`)) {
-    return `assets/icons/stats/${url.slice(CDN_ICONS.length + 1)}`;
-  }
-  // Demais imagens (heróis, habilidades, itens, upgrades, npcs) ficam no
-  // CDN — a API entrega: https://assets-bucket.deadlock-api.com/...
-  return url;
-}
-
-// Simple in-memory cache: URL -> { ts, data }
 const _cache = new Map();
 const DEFAULT_CACHE_TTL = CONSTANTS.API_CACHE_TTL_MS; // 30s
 
+// =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
+
+/**
+ * Converts an asset URL returned by the API into a local project URL when it
+ * points to a stat icon SVG, otherwise leaves the original CDN URL unchanged.
+ * This directly influences which image resources the UI loads – local SVGs for
+ * styling icons or remote CDN assets for larger images.
+ *
+ * @param {string} url - The original asset URL from the API.
+ * @returns {string} The final URL to be used by the UI.
+ */
+export function localAssetUrl(url) {
+  if (!url || typeof url !== "string") return url;
+  if (url.startsWith(`${CDN_ICONS}/`)) {
+    return `assets/icons/stats/${url.slice(CDN_ICONS.length + 1)}`;
+  }
+  return url;
+}
+
+/**
+ * Resolves the best available image URL for an entity, applying a single
+ * fallback chain shared by the table and build-item rendering.
+ *
+ * @param {object} entity - The entity (may expose .raw / .images).
+ * @param {string} [fallback=""] - URL returned when nothing is found.
+ * @returns {string} The resolved image URL.
+ */
+export function resolveEntityImage(entity, fallback = "") {
+  if (!entity) return fallback;
+  const imgs = entity.images || (entity.raw && entity.raw.images) || {};
+  const raw = entity.raw || {};
+  return localAssetUrl(
+    raw.shop_image_webp ||
+      raw.shop_image ||
+      imgs.icon_image_small ||
+      imgs.icon ||
+      imgs.icon_image ||
+      entity.shop_image ||
+      entity.icon_image_small ||
+      entity.shop_image_small ||
+      raw.icon_image_small ||
+      raw.shop_image_small ||
+      fallback,
+  );
+}
+
+/**
+ * Coerces an API response into an array, handling the common wrapper
+ * shapes (plain array, { value: [...] }, { data: [...] }).
+ *
+ * @param {*} raw - The raw API response.
+ * @returns {Array} The extracted array (empty when none found).
+ */
+export function extractList(raw) {
+  return Array.isArray(raw)
+    ? raw
+    : Array.isArray(raw && raw.value)
+      ? raw.value
+      : Array.isArray(raw && raw.data)
+        ? raw.data
+        : [];
+}
+
+/**
+ * Fetches JSON from the Deadlock API with retry logic and a local read-through
+ * cache for GET requests. Supports external AbortSignal and exponential backoff.
+ *
+ * @param {string} url - The endpoint URL.
+ * @param {object} options - Fetch options (method, headers, etc.).
+ * @param {number} timeout - Request timeout in milliseconds.
+ * @param {number} retries - Maximum number of retry attempts.
+ * @param {number} cacheTtl - Cache time-to-live in milliseconds.
+ * @returns {Promise<object>} The parsed JSON response.
+ */
 async function fetchJson(
   url,
   options = {},
@@ -34,7 +95,6 @@ async function fetchJson(
   retries = CONSTANTS.API_RETRIES,
   cacheTtl = DEFAULT_CACHE_TTL,
 ) {
-  // Read-through cache for GET requests without cache-busting
   const method = (options.method || "GET").toUpperCase();
   const cacheKey = method === "GET" ? url : null;
 
@@ -45,7 +105,6 @@ async function fetchJson(
     }
   }
 
-  // Support external AbortSignal passed via options.signal
   const externalSignal = options.signal;
 
   let attempt = 0;
@@ -89,11 +148,8 @@ async function fetchJson(
     } catch (err) {
       if (id) clearTimeout(id);
       lastErr = err;
-      // If aborted via external signal, stop retrying
       if (externalSignal && externalSignal.aborted) break;
-      // If aborted or last attempt, break/throw after loop
       if (attempt > retries) break;
-      // Exponential backoff before retrying
       const backoff = 200 * Math.pow(2, attempt - 1);
       await new Promise((r) => setTimeout(r, backoff));
     }
@@ -102,7 +158,14 @@ async function fetchJson(
   throw lastErr;
 }
 
-// Utility: ensure value is an array
+/**
+ * Validates that a given value is an array and throws a descriptive error if not.
+ *
+ * @param {*} value - The value to check.
+ * @param {string} name - A descriptive name for the array (used in error message).
+ * @returns {Array} The original array if validation passes.
+ * @throws {Error} When the value is not an array.
+ */
 function validateArray(value, name) {
   if (!Array.isArray(value)) {
     throw new Error(`${name} expected to be an array`);
@@ -110,7 +173,16 @@ function validateArray(value, name) {
   return value;
 }
 
-// Normalize hero/item stat shapes to predictable objects
+// =============================================================================
+// NORMALIZATION UTILITIES
+// =============================================================================
+
+/**
+ * Normalizes raw hero stats into a predictable array with wins and matches counts.
+ *
+ * @param {Array} rawStats - Raw hero stats from the API.
+ * @returns {Array<{hero_id: *, wins: number, matches: number}>} Normalized list.
+ */
 function normalizeHeroStats(rawStats) {
   const stats = validateArray(rawStats, "heroStats");
   return stats.map((s) => ({
@@ -120,6 +192,12 @@ function normalizeHeroStats(rawStats) {
   }));
 }
 
+/**
+ * Normalizes raw item stats into a consistent shape with id, wins, and matches.
+ *
+ * @param {Array} rawStats - Raw item stats from the API.
+ * @returns {Array<{item_id: *, wins: number, matches: number}>} Normalized list.
+ */
 function normalizeItemStats(rawStats) {
   const stats = validateArray(rawStats, "itemStats");
   return stats.map((s) => ({
@@ -129,6 +207,14 @@ function normalizeItemStats(rawStats) {
   }));
 }
 
+/**
+ * Builds a map of entities keyed by ID, normalizing image URLs via localAssetUrl
+ * and standardizing metadata.
+ *
+ * @param {Array} rawEntities - Raw entity list from the API.
+ * @param {string} type - Entity type label (e.g., "hero", "item").
+ * @returns {Object.<string|number, {id: *, name: string, images: object, shop_image: string, raw: object}>}
+ */
 function normalizeEntitiesById(rawEntities, type = "entity") {
   const entities = validateArray(rawEntities, `${type}s`);
   const map = {};
@@ -150,223 +236,14 @@ function normalizeEntitiesById(rawEntities, type = "entity") {
   return map;
 }
 
-// Updated request: last updated
-async function getLastUpdated(opts = {}) {
-  const url = `${API_BASE}/matches/recently-fetched`;
-  try {
-    const matches = await fetchJson(url, opts).catch((e) => {
-      throw e;
-    });
-    if (!Array.isArray(matches) || matches.length === 0) return new Date(0);
-    const latestTimestamp = Number(matches[0]?.start_time) || 0;
-    return new Date(latestTimestamp * 1000);
-  } catch (err) {
-    console.warn("getLastUpdated failed:", err);
-    return new Date(0);
-  }
-}
-
-// Heroes requests (return normalized shapes)
-async function getHeroStats(opts = {}) {
-  const url = `${API_BASE}/analytics/hero-stats`;
-  try {
-    const raw = await fetchJson(url, opts);
-    return normalizeHeroStats(raw);
-  } catch (err) {
-    console.warn("getHeroStats failed:", err);
-    return [];
-  }
-}
-
-async function getHeroesById(opts = {}) {
-  const url = `${API_BASE}/assets/heroes`;
-  try {
-    // Assets mudam raramente — TTL mais longo que os analytics.
-    const raw = await fetchJson(
-      url,
-      opts,
-      CONSTANTS.API_TIMEOUT_MS,
-      CONSTANTS.API_RETRIES,
-      CONSTANTS.API_ASSETS_CACHE_TTL_MS,
-    );
-    return normalizeEntitiesById(raw, "hero");
-  } catch (err) {
-    console.warn("getHeroesById failed:", err);
-    return {};
-  }
-}
-
-// Items requests
-async function getItemStats(opts = {}) {
-  const url = `${API_BASE}/analytics/item-stats`;
-  try {
-    const raw = await fetchJson(url, opts);
-    return normalizeItemStats(raw);
-  } catch (err) {
-    console.warn("getItemStats failed:", err);
-    return [];
-  }
-}
-
-async function getItemsById(opts = {}) {
-  const url = `${API_BASE}/assets/items`;
-  try {
-    // Assets mudam raramente — TTL mais longo que os analytics.
-    const raw = await fetchJson(
-      url,
-      opts,
-      CONSTANTS.API_TIMEOUT_MS,
-      CONSTANTS.API_RETRIES,
-      CONSTANTS.API_ASSETS_CACHE_TTL_MS,
-    );
-    return normalizeEntitiesById(raw, "item");
-  } catch (err) {
-    console.warn("getItemsById failed:", err);
-    return {};
-  }
-}
-
-// Converte a descrição HTML da habilidade (com SVGs/Panels embutidos) em
-// texto puro legível, preservando quebras de linha do <br>.
-function sanitizeAbilityDescription(html) {
-  if (!html) return "";
-  let text = String(html);
-  // Remove blocos SVG e Panel inteiros (ícones/dados de dano embutidos).
-  text = text.replace(/<svg[\s\S]*?<\/svg>/gi, "");
-  text = text.replace(/<Panel[\s\S]*?<\/Panel>/gi, "");
-  // Quebras de linha dos blocos HTML.
-  text = text.replace(/<br\s*\/?>/gi, "\n");
-  text = text.replace(/<\/(?:p|div|li|h[1-6])>/gi, "\n");
-  // Remove as tags restantes, mantendo o texto.
-  text = text.replace(/<[^>]+>/g, "");
-  // Limpa espaços duplicados e quebras consecutivas.
-  text = text.replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
-  return text;
-}
-
-// Ordem de exibição das propriedades no tooltip (cooldown, dano, alcance...).
-const ABILITY_STAT_PRIORITY = [
-  "cooldown",
-  "tech_damage",
-  "bullet_damage",
-  "damage",
-  "range",
-  "duration",
-  "slow",
-  "cast",
-  "healing",
-  "move_speed",
-  "charge_cooldown",
-];
-
-// Extrai as propriedades úteis da habilidade (label + valor + postfix),
-// ignorando valores zerados e sem label.
-function extractAbilityStats(properties) {
-  if (!properties || typeof properties !== "object") return [];
-  const stats = [];
-  for (const key of Object.keys(properties)) {
-    const p = properties[key] || {};
-    const label = String(p.label || "").trim();
-    const rawValue = String(p.value ?? "").trim();
-    if (!label || label === "None" || rawValue === "" || rawValue === "0") {
-      continue;
-    }
-    const postfix = String(p.postfix || "").trim();
-    // Evita duplicar o postfix quando o valor já o inclui (ex.: "20m" + "m").
-    const value = postfix && !rawValue.endsWith(postfix) ? `${rawValue}${postfix}` : rawValue;
-    const cssClass = String(p.css_class || "").toLowerCase();
-    const priority = ABILITY_STAT_PRIORITY.indexOf(cssClass);
-    stats.push({
-      key,
-      label,
-      value,
-      icon: localAssetUrl(p.icon || ""),
-      cssClass,
-      priority: priority === -1 ? 99 : priority,
-    });
-  }
-  stats.sort((a, b) => a.priority - b.priority || a.label.localeCompare(b.label));
-  return stats;
-}
-
-// Habilidades dos heróis (itens do tipo "ability"): class_name ->
-// { id, name, image, description, stats }.
-// Usado para mapear os ability_id do build para o slot (1-4) do herói,
-// cruzando com items.signature1..4 do asset do herói, e para o tooltip
-// com descrição e propriedades (cooldown, dano, alcance...).
-async function getAbilitiesByClass(opts = {}) {
-  const url = `${API_BASE}/assets/items/by-type/ability`;
-  try {
-    const raw = await fetchJson(
-      url,
-      opts,
-      CONSTANTS.API_TIMEOUT_MS,
-      CONSTANTS.API_RETRIES,
-      CONSTANTS.API_ASSETS_CACHE_TTL_MS,
-    );
-    const list = Array.isArray(raw)
-      ? raw
-      : Array.isArray(raw && raw.data)
-        ? raw.data
-        : [];
-    const byClass = {};
-    for (const item of list) {
-      if (item && item.class_name && item.id != null) {
-        const descObj = item.description;
-        byClass[item.class_name] = {
-          id: item.id,
-          name: item.name || item.class_name,
-          // Ícone da habilidade (WebP mais leve; fallback PNG).
-          // Baixados para assets/images/abilities/.
-          image: localAssetUrl(item.image_webp || item.image || ""),
-          // Descrição em texto puro (a API devolve HTML com SVGs embutidos).
-          description: sanitizeAbilityDescription(
-            descObj && typeof descObj === "object" ? descObj.desc : descObj,
-          ),
-          // Propriedades úteis (cooldown, dano, alcance...) para o tooltip.
-          stats: extractAbilityStats(item.properties),
-        };
-      }
-    }
-    return byClass;
-  } catch (err) {
-    console.warn("getAbilitiesByClass failed:", err);
-    return {};
-  }
-}
-
-// Game stats request
-async function getGameStats(opts = {}) {
-  const url = `${API_BASE}/analytics/game-stats`;
-  try {
-    const raw = await fetchJson(url, opts);
-    const arr = Array.isArray(raw) ? raw : [];
-    return arr;
-  } catch (err) {
-    console.warn("getGameStats failed:", err);
-    return [{ total_matches: 0 }];
-  }
-}
-
-async function getHeroBuildStats(heroId, minMatches = 1, opts = {}) {
-  const url = `${API_BASE}/analytics/hero-build-stats/${heroId}?min_matches=${minMatches}`;
-
-  try {
-    const raw = await fetchJson(url, opts);
-    const stats = normalizeHeroBuildStats(raw);
-    if (stats.length > 0) return stats;
-    // Stats vazios (ou endpoint fora do ar): cai para o fallback por favoritos.
-    return getBuildsByFavorites(heroId, CONSTANTS.MAX_BUILDS_PER_LIST, opts);
-  } catch (err) {
-    console.warn(
-      `No build data available for hero ${heroId}, trying favorites:`,
-      err,
-    );
-    return getBuildsByFavorites(heroId, CONSTANTS.MAX_BUILDS_PER_LIST, opts);
-  }
-}
-
-function normalizeBuildPayload(rawBuild) {
+/**
+ * Normalizes a raw build payload into a consistent structure with categories,
+ * skill changes, and metadata.
+ *
+ * @param {object} rawBuild - Raw build object from the API.
+ * @returns {object|null} Normalized build payload or null if invalid.
+ */
+export function normalizeBuildPayload(rawBuild) {
   if (!rawBuild || typeof rawBuild !== "object") return null;
 
   const candidate = rawBuild.hero_build || rawBuild.build || rawBuild;
@@ -413,10 +290,309 @@ function normalizeBuildPayload(rawBuild) {
   };
 }
 
-// Fallback quando os stats analíticos de builds do herói não estão
-// disponíveis (ex.: erro no servidor): busca as builds mais favoritadas de
-// todos os tempos. Sem matches/wins — os cards sinalizam a origem.
-async function getBuildsByFavorites(heroId, limit = 3, opts = {}) {
+/**
+ * Normalizes raw hero build stats, computing win rate and standardizing fields.
+ *
+ * @param {Array} rawStats - Raw build stats from the API.
+ * @returns {Array<{buildId: *, matches: number, wins: number, winRate: number, raw: object}>}
+ */
+export function normalizeHeroBuildStats(rawStats) {
+  if (!rawStats || !Array.isArray(rawStats)) {
+    return [];
+  }
+
+  const stats = validateArray(rawStats, "heroBuildStats");
+  return stats.map((s) => {
+    const matches = Number(s.matches) || 0;
+    const wins = Number(s.wins) || 0;
+    return {
+      buildId: s.hero_build_id ?? s.build_id ?? s.id ?? null,
+      name: s.name || null,
+      matches,
+      wins,
+      winRate: matches > 0 ? (wins / matches) * 100 : 0,
+      raw: s,
+    };
+  });
+}
+
+// =============================================================================
+// API FUNCTIONS
+// =============================================================================
+
+/**
+ * Fetches the most recent match timestamp and returns it as a Date.
+ *
+ * @param {object} opts - Fetch options (e.g., signal).
+ * @returns {Promise<Date>} The latest update time, or epoch if request fails.
+ */
+export async function getLastUpdated(opts = {}) {
+  const url = `${API_BASE}/matches/recently-fetched`;
+  try {
+    const matches = await fetchJson(url, opts).catch((e) => {
+      throw e;
+    });
+    if (!Array.isArray(matches) || matches.length === 0) return new Date(0);
+    const latestTimestamp = Number(matches[0]?.start_time) || 0;
+    return new Date(latestTimestamp * 1000);
+  } catch (err) {
+    console.warn("getLastUpdated failed:", err);
+    return new Date(0);
+  }
+}
+
+/**
+ * Retrieves hero analytics stats and normalizes them.
+ *
+ * @param {object} opts - Fetch options.
+ * @returns {Promise<Array>} Normalized hero stats list.
+ */
+export async function getHeroStats(opts = {}) {
+  const url = `${API_BASE}/analytics/hero-stats`;
+  try {
+    const raw = await fetchJson(url, opts);
+    return normalizeHeroStats(raw);
+  } catch (err) {
+    console.warn("getHeroStats failed:", err);
+    return [];
+  }
+}
+
+/**
+ * Fetches hero asset metadata and returns a map keyed by hero ID.
+ * Assets change rarely, so a longer cache TTL is used.
+ *
+ * @param {object} opts - Fetch options.
+ * @returns {Promise<Object>} Map of hero entities.
+ */
+export async function getHeroesById(opts = {}) {
+  const url = `${API_BASE}/assets/heroes`;
+  try {
+    const raw = await fetchJson(
+      url,
+      opts,
+      CONSTANTS.API_TIMEOUT_MS,
+      CONSTANTS.API_RETRIES,
+      CONSTANTS.API_ASSETS_CACHE_TTL_MS,
+    );
+    return normalizeEntitiesById(raw, "hero");
+  } catch (err) {
+    console.warn("getHeroesById failed:", err);
+    return {};
+  }
+}
+
+/**
+ * Retrieves item analytics stats and normalizes them.
+ *
+ * @param {object} opts - Fetch options.
+ * @returns {Promise<Array>} Normalized item stats list.
+ */
+export async function getItemStats(opts = {}) {
+  const url = `${API_BASE}/analytics/item-stats`;
+  try {
+    const raw = await fetchJson(url, opts);
+    return normalizeItemStats(raw);
+  } catch (err) {
+    console.warn("getItemStats failed:", err);
+    return [];
+  }
+}
+
+/**
+ * Fetches item asset metadata and returns a map keyed by item ID.
+ * Assets change rarely, so a longer cache TTL is used.
+ *
+ * @param {object} opts - Fetch options.
+ * @returns {Promise<Object>} Map of item entities.
+ */
+export async function getItemsById(opts = {}) {
+  const url = `${API_BASE}/assets/items`;
+  try {
+    const raw = await fetchJson(
+      url,
+      opts,
+      CONSTANTS.API_TIMEOUT_MS,
+      CONSTANTS.API_RETRIES,
+      CONSTANTS.API_ASSETS_CACHE_TTL_MS,
+    );
+    return normalizeEntitiesById(raw, "item");
+  } catch (err) {
+    console.warn("getItemsById failed:", err);
+    return {};
+  }
+}
+
+/**
+ * Fetches global game stats from the analytics endpoint.
+ *
+ * @param {object} opts - Fetch options.
+ * @returns {Promise<Array>} Array of game stats objects.
+ */
+export async function getGameStats(opts = {}) {
+  const url = `${API_BASE}/analytics/game-stats`;
+  try {
+    const raw = await fetchJson(url, opts);
+    const arr = extractList(raw);
+    return arr;
+  } catch (err) {
+    console.warn("getGameStats failed:", err);
+    throw err;
+  }
+}
+
+// =============================================================================
+// ABILITY HELPERS
+// =============================================================================
+
+const ABILITY_STAT_PRIORITY = [
+  "cooldown",
+  "tech_damage",
+  "bullet_damage",
+  "damage",
+  "range",
+  "duration",
+  "slow",
+  "cast",
+  "healing",
+  "move_speed",
+  "charge_cooldown",
+];
+
+/**
+ * Strips embedded SVGs, panels, and HTML tags from an ability description,
+ * returning clean plain text for tooltips.
+ *
+ * @param {string} html - Raw HTML description from the API.
+ * @returns {string} Sanitized plain text.
+ */
+export function sanitizeAbilityDescription(html) {
+  if (!html) return "";
+  let text = String(html);
+  text = text.replace(/<svg[\s\S]*?<\/svg>/gi, "");
+  text = text.replace(/<Panel[\s\S]*?<\/Panel>/gi, "");
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  text = text.replace(/<\/(?:p|div|li|h[1-6])>/gi, "\n");
+  text = text.replace(/<[^>]+>/g, "");
+  text = text.replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
+  return text;
+}
+
+/**
+ * Extracts and sorts ability property stats (cooldown, damage, range, etc.)
+ * from the raw properties object, filtering empty values and assigning display
+ * priority based on cssClass.
+ *
+ * @param {object} properties - Raw ability properties from the API.
+ * @returns {Array<{key: string, label: string, value: string, icon: string, cssClass: string, priority: number}>}
+ */
+export function extractAbilityStats(properties) {
+  if (!properties || typeof properties !== "object") return [];
+  const stats = [];
+  for (const key of Object.keys(properties)) {
+    const p = properties[key] || {};
+    const label = String(p.label || "").trim();
+    const rawValue = String(p.value ?? "").trim();
+    if (!label || label === "None" || rawValue === "" || rawValue === "0") {
+      continue;
+    }
+    const postfix = String(p.postfix || "").trim();
+    const value = postfix && !rawValue.endsWith(postfix) ? `${rawValue}${postfix}` : rawValue;
+    const cssClass = String(p.css_class || "").toLowerCase();
+    const priority = ABILITY_STAT_PRIORITY.indexOf(cssClass);
+    stats.push({
+      key,
+      label,
+      value,
+      icon: localAssetUrl(p.icon || ""),
+      cssClass,
+      priority: priority === -1 ? 99 : priority,
+    });
+  }
+  stats.sort((a, b) => a.priority - b.priority || a.label.localeCompare(b.label));
+  return stats;
+}
+
+/**
+ * Fetches ability data by class name, normalizes descriptions and stats,
+ * and returns a map keyed by ability class name.
+ *
+ * @param {object} opts - Fetch options.
+ * @returns {Promise<Object>} Map of ability metadata.
+ */
+export async function getAbilitiesByClass(opts = {}) {
+  const url = `${API_BASE}/assets/items/by-type/ability`;
+  try {
+    const raw = await fetchJson(
+      url,
+      opts,
+      CONSTANTS.API_TIMEOUT_MS,
+      CONSTANTS.API_RETRIES,
+      CONSTANTS.API_ASSETS_CACHE_TTL_MS,
+    );
+    const list = extractList(raw);
+    const byClass = {};
+    for (const item of list) {
+      if (item && item.class_name && item.id != null) {
+        const descObj = item.description;
+        byClass[item.class_name] = {
+          id: item.id,
+          name: item.name || item.class_name,
+          image: localAssetUrl(item.image_webp || item.image || ""),
+          description: sanitizeAbilityDescription(
+            descObj && typeof descObj === "object" ? descObj.desc : descObj,
+          ),
+          stats: extractAbilityStats(item.properties),
+        };
+      }
+    }
+    return byClass;
+  } catch (err) {
+    console.warn("getAbilitiesByClass failed:", err);
+    return {};
+  }
+}
+
+// =============================================================================
+// BUILD-SPECIFIC API FUNCTIONS
+// =============================================================================
+
+/**
+ * Fetches hero build analytics for a given hero ID, falling back to favorite
+ * builds if the analytics endpoint returns no data or fails.
+ *
+ * @param {string|number} heroId - The hero ID.
+ * @param {number} minMatches - Minimum matches required for a build to be considered.
+ * @param {object} opts - Fetch options.
+ * @returns {Promise<Array>} List of build stats.
+ */
+export async function getHeroBuildStats(heroId, minMatches = 1, opts = {}) {
+  const url = `${API_BASE}/analytics/hero-build-stats/${heroId}?min_matches=${minMatches}`;
+
+  try {
+    const raw = await fetchJson(url, opts);
+    const stats = normalizeHeroBuildStats(raw);
+    if (stats.length > 0) return stats;
+    return getBuildsByFavorites(heroId, CONSTANTS.MAX_BUILDS_PER_LIST, opts);
+  } catch (err) {
+    console.warn(
+      `No build data available for hero ${heroId}, trying favorites:`,
+      err,
+    );
+    return getBuildsByFavorites(heroId, CONSTANTS.MAX_BUILDS_PER_LIST, opts);
+  }
+}
+
+/**
+ * Fallback when analytical build stats are unavailable: fetches the most
+ * favorited builds for a hero.
+ *
+ * @param {string|number} heroId - The hero ID.
+ * @param {number} limit - Maximum number of builds to return.
+ * @param {object} opts - Fetch options.
+ * @returns {Promise<Array>} List of build objects with a `fromFallback` flag.
+ */
+export async function getBuildsByFavorites(heroId, limit = 3, opts = {}) {
   const params = new URLSearchParams({
     hero_id: String(heroId),
     sort_by: "favorites",
@@ -428,13 +604,7 @@ async function getBuildsByFavorites(heroId, limit = 3, opts = {}) {
 
   try {
     const raw = await fetchJson(url, opts);
-    const list = Array.isArray(raw)
-      ? raw
-      : Array.isArray(raw && raw.value)
-        ? raw.value
-        : Array.isArray(raw && raw.data)
-          ? raw.data
-          : [];
+    const list = extractList(raw);
 
     return list
       .map((entry) => {
@@ -442,6 +612,7 @@ async function getBuildsByFavorites(heroId, limit = 3, opts = {}) {
         if (!payload) return null;
         return {
           buildId: payload.hero_build_id ?? payload.id ?? null,
+          name: payload.name || null,
           matches: null,
           wins: null,
           winRate: null,
@@ -455,7 +626,16 @@ async function getBuildsByFavorites(heroId, limit = 3, opts = {}) {
     return [];
   }
 }
-async function getBuildById(buildId, heroId, opts = {}) {
+
+/**
+ * Fetches a specific build by its ID and hero ID, returning the normalized payload.
+ *
+ * @param {string|number} buildId - The build ID.
+ * @param {string|number} heroId - The hero ID.
+ * @param {object} opts - Fetch options.
+ * @returns {Promise<object|null>} Normalized build payload or null if not found.
+ */
+export async function getBuildById(buildId, heroId, opts = {}) {
   if (buildId == null) return null;
 
   const params = new URLSearchParams({
@@ -468,13 +648,7 @@ async function getBuildById(buildId, heroId, opts = {}) {
 
   try {
     const raw = await fetchJson(url, opts);
-    const list = Array.isArray(raw)
-      ? raw
-      : Array.isArray(raw && raw.value)
-        ? raw.value
-        : Array.isArray(raw && raw.data)
-          ? raw.data
-          : [];
+    const list = extractList(raw);
 
     return list.length > 0 ? normalizeBuildPayload(list[0]) : null;
   } catch (err) {
@@ -484,22 +658,4 @@ async function getBuildById(buildId, heroId, opts = {}) {
     );
     return null;
   }
-}
-function normalizeHeroBuildStats(rawStats) {
-  if (!rawStats || !Array.isArray(rawStats)) {
-    return [];
-  }
-
-  const stats = validateArray(rawStats, "heroBuildStats");
-  return stats.map((s) => {
-    const matches = Number(s.matches) || 0;
-    const wins = Number(s.wins) || 0;
-    return {
-      buildId: s.hero_build_id ?? s.build_id ?? s.id ?? null,
-      matches,
-      wins,
-      winRate: matches > 0 ? (wins / matches) * 100 : 0,
-      raw: s,
-    };
-  });
 }

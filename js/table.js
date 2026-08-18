@@ -1,4 +1,29 @@
-const TableModule = (() => {
+import { CONSTANTS } from "./constants.js";
+import {
+  applyTranslations,
+  initI18n,
+  setLanguageChangeHandler,
+  t,
+} from "./i18n.js";
+import {
+  getGameStats,
+  getHeroStats,
+  getHeroesById,
+  getItemStats,
+  getItemsById,
+  getLastUpdated,
+  resolveEntityImage,
+} from "./api.js";
+import { debounce, escapeHtml, formatDate } from "./utils.js";
+import { handleRouteChange, initRouter, navigateToHero } from "./router.js";
+
+// =============================================================================
+// TABLE MODULE
+// =============================================================================
+  // ===========================================================================
+  // STATE
+  // ===========================================================================
+
   const state = {
     rows: [],
     filteredRows: [],
@@ -11,10 +36,17 @@ const TableModule = (() => {
     pageSize: CONSTANTS.TABLE_PAGE_SIZE,
   };
 
-  // AbortController da renderização em andamento — abortado quando uma nova
-  // renderTable() é iniciada, para descartar respostas atrasadas.
+  // AbortController for ongoing rendering – aborted when a new renderTable()
+  // is started to discard stale responses.
   let activeAbortController = null;
 
+  // ===========================================================================
+  // UI HELPERS (Loader, Error, Accessibility)
+  // ===========================================================================
+
+  /**
+   * Renders skeleton placeholder rows in the table body.
+   */
   function renderSkeletonRows() {
     const tbody = document.getElementById("stats-table-body");
     if (!tbody) return;
@@ -34,6 +66,9 @@ const TableModule = (() => {
     tbody.innerHTML = rows;
   }
 
+  /**
+   * Shows the loading state: skeleton rows, hides error, sets aria attributes.
+   */
   function showLoader() {
     const container = document.getElementById("loading-container");
     const table = document.getElementById("stats-table");
@@ -46,6 +81,9 @@ const TableModule = (() => {
     if (table) table.setAttribute("aria-busy", "true");
   }
 
+  /**
+   * Hides the loading state.
+   */
   function hideLoader() {
     const container = document.getElementById("loading-container");
     const table = document.getElementById("stats-table");
@@ -56,12 +94,22 @@ const TableModule = (() => {
     if (table) table.setAttribute("aria-busy", "false");
   }
 
+  /**
+   * Announces a status message to screen readers.
+   *
+   * @param {string} message - The message to announce.
+   */
   function announceStatus(message) {
     const status = document.getElementById("sr-status");
     if (!status) return;
     status.textContent = message;
   }
 
+  /**
+   * Displays an error banner with the given message.
+   *
+   * @param {string} message - The error message.
+   */
   function showError(message) {
     const banner = document.getElementById("error-banner");
     const msg = document.getElementById("error-banner-message");
@@ -74,6 +122,9 @@ const TableModule = (() => {
     }
   }
 
+  /**
+   * Hides the error banner.
+   */
   function hideError() {
     const banner = document.getElementById("error-banner");
     const msg = document.getElementById("error-banner-message");
@@ -84,6 +135,9 @@ const TableModule = (() => {
     }
   }
 
+  /**
+   * Updates the aria-sort attributes on sortable column headers.
+   */
   function updateAriaSort() {
     const headers = {
       winRate: document.getElementById("header-winrate"),
@@ -103,15 +157,23 @@ const TableModule = (() => {
     }
   }
 
+  // ===========================================================================
+  // DATA FILTERING & RENDERING
+  // ===========================================================================
+
+  /**
+   * Applies search filter to the rows.
+   */
   function applyFilters() {
     let rows = [...state.rows];
     const q = state.searchQuery.trim().toLowerCase();
     if (q) rows = rows.filter(r => r.name.toLowerCase().includes(q));
-
-    // No more top-pick/top-win client-side filters — simple search only
     state.filteredRows = rows;
   }
 
+  /**
+   * Renders the table body rows based on current state (filtered, sorted, paginated).
+   */
   function renderRows() {
     const tbody = document.getElementById("stats-table-body");
     if (!tbody) {
@@ -124,7 +186,7 @@ const TableModule = (() => {
     applyFilters();
     let rows = [...state.filteredRows];
 
-    // Update table aria-label dynamically so screen reader users know how many items are shown
+    // Update table aria-label dynamically
     try {
       const table = document.getElementById('stats-table');
       if (table) {
@@ -168,18 +230,18 @@ const TableModule = (() => {
       const imgSrc = row.imageUrl || "";
       const imgAlt = row.name || "";
 
-      const safeSrc = imgSrc || 'assets/placeholder.svg';
+      const safeSrc = escapeHtml(imgSrc || 'assets/placeholder.svg');
+      const safeAlt = escapeHtml(imgAlt);
 
       tr.innerHTML = `
-        <td><img class="lazy-img" src="${safeSrc}" width="32" height="32" alt="${imgAlt}" loading="lazy" decoding="async"></td>
-        <td>${row.name}</td>
+        <td><img class="lazy-img" src="${safeSrc}" width="32" height="32" alt="${safeAlt}" loading="lazy" decoding="async"></td>
+        <td>${escapeHtml(row.name)}</td>
         <td>${row.winRate.toFixed(1)}%</td>
         <td>${row.pickRate.toFixed(1)}%</td>
       `;
 
       const imgEl = tr.querySelector("img.lazy-img");
       if (imgEl) {
-        // on error, fallback to placeholder
         imgEl.addEventListener("error", () => {
           imgEl.src = "assets/placeholder.svg";
           imgEl.alt = imgAlt
@@ -187,7 +249,6 @@ const TableModule = (() => {
             : "Image unavailable";
           imgEl.style.opacity = '1';
         });
-        // on load fade in
         imgEl.addEventListener('load', () => {
           imgEl.style.opacity = '1';
         });
@@ -196,27 +257,23 @@ const TableModule = (() => {
       if (state.type === "heroes" && row.id != null) {
         tr.classList.add("clickable-row");
         tr.tabIndex = 0;
-        // Use role=button for interactive rows and provide an accessible label
         tr.setAttribute("role", "button");
         tr.setAttribute("aria-label", row.name);
         const goToHero = () => navigateToHero(row.id);
         tr.addEventListener("click", goToHero);
         tr.addEventListener("keydown", (e) => {
-          // Activate row with Enter or Space
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             goToHero();
             return;
           }
 
-          // Arrow key navigation between rows for keyboard users
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault();
             const dir = e.key === "ArrowDown" ? 'next' : 'prev';
             let sib = dir === 'next' ? tr.nextElementSibling : tr.previousElementSibling;
             while (sib && sib.nodeType !== 1) sib = dir === 'next' ? sib.nextSibling : sib.previousSibling;
             if (sib && typeof sib.focus === 'function') {
-              // marca a linha ativa para leitores de tela
               tr.removeAttribute('aria-current');
               sib.setAttribute('aria-current', 'true');
               sib.focus();
@@ -231,6 +288,11 @@ const TableModule = (() => {
     tbody.appendChild(fragment);
   }
 
+  /**
+   * Handles sorting when a column header is clicked.
+   *
+   * @param {string} column - The column identifier ("winRate" or "pickRate").
+   */
   function handleSortClick(column) {
     if (state.sortColumn !== column) {
       state.sortColumn = column;
@@ -253,6 +315,56 @@ const TableModule = (() => {
     renderRows();
   }
 
+  // ===========================================================================
+  // DATA MAPPING
+  // ===========================================================================
+
+  /**
+   * Maps raw stats and entity data into table row objects.
+   *
+   * @param {Array} stats - The stats array (hero or item).
+   * @param {Object} entitiesById - Map of entity data keyed by ID.
+   * @param {string} idField - The field name used as ID in stats (e.g., "hero_id").
+   * @param {string} type - "heroes" or "items".
+   * @returns {Array} Array of row objects with id, name, imageUrl, winRate, pickRate.
+   */
+  function mapStatsToRows(stats, entitiesById, idField, type) {
+    const totalMatches = Number(state.gameStats[0]?.total_matches) || 0;
+    const totalItemSlots = totalMatches * 12;
+
+    return stats.map((stat) => {
+      const entity = entitiesById[stat[idField]] || {};
+      const wins = Number(stat.wins) || 0;
+      const matchesCount = Number(stat.matches) || 0;
+      const winRate = matchesCount > 0 ? (wins / matchesCount) * 100 : 0;
+      const pickRate =
+        type === "heroes"
+          ? (matchesCount / (totalMatches || 1)) * 100
+          : (matchesCount / (totalItemSlots || 1)) * 100;
+      const imageUrl = resolveEntityImage(entity);
+      if (!imageUrl && entity && entity.name) {
+        console.debug(`No image for: ${entity.name} (id=${entity.id})`);
+      }
+      return {
+        id: stat[idField],
+        name: entity.name || "Unknown",
+        imageUrl: imageUrl || "",
+        winRate,
+        pickRate,
+      };
+    });
+  }
+
+  // ===========================================================================
+  // MAIN RENDER FUNCTION
+  // ===========================================================================
+
+  /**
+   * Renders the table (heroes or items) by fetching data and populating rows.
+   *
+   * @param {string} type - "heroes" or "items".
+   * @returns {Promise<void>}
+   */
   async function renderTable(type) {
     state.type = type;
     const searchInput = document.getElementById('search-input');
@@ -273,18 +385,12 @@ const TableModule = (() => {
 
     showLoader();
 
-    // Aborta qualquer render anterior ainda em voo (evita erro fantasma de
-    // uma resposta atrasada quando o usuário navegou de novo).
     if (activeAbortController) {
       try {
         activeAbortController.abort();
       } catch (e) { /* ignore */ }
     }
 
-    // Watchdog: aborta as fetches se não completarem no prazo. O banner de
-    // erro NÃO é mostrado aqui — isso ficava com o catch() e causava falso
-    // "error_fetching_data" quando uma requisição secundária (ex.: game
-    // stats) estourava o prazo logo antes da tabela renderizar com sucesso.
     const watchdog = new AbortController();
     activeAbortController = watchdog;
     let watchdogTimer = setTimeout(() => {
@@ -310,12 +416,7 @@ const TableModule = (() => {
       applyTranslations();
 
       if (!state.gameStats) {
-        try {
-          state.gameStats = await getGameStats({ signal: watchdog.signal });
-        } catch (e) {
-          console.warn('getGameStats timed out or failed', e);
-          state.gameStats = [{ total_matches: 0 }];
-        }
+        state.gameStats = await getGameStats({ signal: watchdog.signal });
       }
 
       state.rows = mapStatsToRows(stats, entitiesById, idField, type);
@@ -328,15 +429,12 @@ const TableModule = (() => {
       const nameHeader = document.getElementById("table-name-header");
       if (nameHeader) nameHeader.focus();
     } catch (err) {
-      // Renderização superada por uma chamada mais nova — fica em silêncio.
       if (activeAbortController !== watchdog) return;
 
       const timedOut = err && err.name === "AbortError";
       console.error("Failed to render table:", err);
 
       if (timedOut && state.rows.length > 0) {
-        // Refresh estourou o prazo, mas já há dados em tela: mantém as linhas
-        // e apenas sinaliza que a atualização falhou.
         console.warn("Table refresh timed out; keeping previous rows.");
       } else {
         state.rows = [];
@@ -350,51 +448,33 @@ const TableModule = (() => {
     }
   }
 
-  // Normaliza stats + entidades em linhas prontas para a tabela.
-  function mapStatsToRows(stats, entitiesById, idField, type) {
-    const totalMatches = Number(state.gameStats[0]?.total_matches) || 0;
-    const totalItemSlots = totalMatches * 12;
+  // ===========================================================================
+  // EVENT BINDING
+  // ===========================================================================
 
-    return stats.map((stat) => {
-      const entity = entitiesById[stat[idField]] || {};
-      const wins = Number(stat.wins) || 0;
-      const matchesCount = Number(stat.matches) || 0;
-      const winRate = matchesCount > 0 ? (wins / matchesCount) * 100 : 0;
-      const pickRate =
-        type === "heroes"
-          ? (matchesCount / (totalMatches || 1)) * 100
-          : (matchesCount / (totalItemSlots || 1)) * 100;
-      const imageUrl = pickImage(entity);
-      if (!imageUrl && entity && entity.name) {
-        console.debug(`No image for: ${entity.name} (id=${entity.id})`);
+  /**
+   * Binds a button-like element to an action via click or Enter/Space keypress.
+   *
+   * @param {HTMLElement} el - The element to bind.
+   * @param {Function} fn - The action to run on activation.
+   */
+  function bindActivate(el, fn) {
+    if (!el) return;
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      fn();
+    });
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        fn();
       }
-      return {
-        id: stat[idField],
-        name: entity.name || "Unknown",
-        imageUrl: imageUrl || "",
-        winRate,
-        pickRate,
-      };
     });
   }
 
-  // Robust image lookup with several fallbacks — some API responses vary
-  function pickImage(e) {
-    if (!e) return "";
-    const imgs = e.images || (e.raw && e.raw.images) || {};
-    return localAssetUrl(
-      imgs.icon_image_small ||
-        imgs.icon ||
-        imgs.icon_image ||
-        e.shop_image ||
-        e.icon_image_small ||
-        e.shop_image_small ||
-        (e.raw && e.raw.icon_image_small) ||
-        (e.raw && e.raw.shop_image) ||
-        "",
-    );
-  }
-
+  /**
+   * Sets up all DOM event listeners for the table UI.
+   */
   function bindEvents() {
     const headerWin = document.getElementById("header-winrate");
     const headerPick = document.getElementById("header-pickrate");
@@ -406,63 +486,11 @@ const TableModule = (() => {
     const prevPage = document.getElementById('prev-page');
     const nextPage = document.getElementById('next-page');
 
-    if (headerWin) {
-      headerWin.addEventListener("click", (e) => {
-        e.preventDefault();
-        handleSortClick("winRate");
-      });
-      headerWin.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleSortClick("winRate");
-        }
-      });
-    }
-    if (headerPick) {
-      headerPick.addEventListener("click", (e) => {
-        e.preventDefault();
-        handleSortClick("pickRate");
-      });
-      headerPick.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleSortClick("pickRate");
-        }
-      });
-    }
-    if (navHeroes) {
-      navHeroes.addEventListener("click", (e) => {
-        e.preventDefault();
-        renderTable("heroes");
-      });
-      navHeroes.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          renderTable("heroes");
-        }
-      });
-    }
-    if (navItems) {
-      navItems.addEventListener("click", (e) => {
-        e.preventDefault();
-        renderTable("items");
-      });
-      navItems.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          renderTable("items");
-        }
-      });
-    }
-    if (retryButton)
-      retryButton.addEventListener("click", () => renderTable(state.type));
-    if (retryButton)
-      retryButton.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          renderTable(state.type);
-        }
-      });
+    bindActivate(headerWin, () => handleSortClick("winRate"));
+    bindActivate(headerPick, () => handleSortClick("pickRate"));
+    bindActivate(navHeroes, () => renderTable("heroes"));
+    bindActivate(navItems, () => renderTable("items"));
+    bindActivate(retryButton, () => renderTable(state.type));
 
     if (searchInput) {
       const setSearchPlaceholder = () => {
@@ -473,8 +501,6 @@ const TableModule = (() => {
       };
 
       setSearchPlaceholder();
-      // Debounce de 300ms: a busca só re-renderiza depois que o usuário
-      // para de digitar, evitando repaint a cada keypress.
       const onSearchInput = debounce(() => {
         state.page = 1;
         renderRows();
@@ -493,32 +519,40 @@ const TableModule = (() => {
     if (nextPage) nextPage.addEventListener('click', () => { state.page++; renderRows(); });
   }
 
+  /**
+   * Called when the table route is active (e.g., after hash change).
+   */
   function onTableRouteActive() {
     renderTable(state.type);
   }
 
-  window.onTableRouteActive = onTableRouteActive;
-  window.renderTable = renderTable;
+  /**
+   * Handler for language change – re-renders the table with new translations.
+   */
+  setLanguageChangeHandler(() => {
+    renderTable(state.type);
+  });
 
-  // Troca de idioma: re-renderiza a tabela para aplicar os novos textos
-  // (placeholder, headers e aria-labels). Os dados vêm do cache da API.
-  window.onLanguageChange = () => {
-    if (typeof renderTable === "function") renderTable(state.type);
-  };
+  // ===========================================================================
+  // LAST UPDATED DISPLAY
+  // ===========================================================================
 
+  /**
+   * Fetches and displays the last updated timestamp.
+   *
+   * @returns {Promise<void>}
+   */
   async function showLastUpdated() {
     const el = document.getElementById("last-updated");
     if (el) el.textContent = t("loading");
     try {
-      // race the API call against a short timeout to avoid infinite spinner
-      const timeoutMs = 8000;
+      const timeoutMs = CONSTANTS.LAST_UPDATED_TIMEOUT_MS;
       const lastMatch = await Promise.race([
         getLastUpdated(),
         new Promise((res) => setTimeout(() => res(null), timeoutMs)),
       ]);
 
       if (!lastMatch || !(lastMatch instanceof Date) || lastMatch.getTime() === 0) {
-        // show friendly fallback when we couldn't determine last update
         if (el) el.textContent = `${t("last_updated_prefix")} ${t("last_updated_unavailable")}`;
         return;
       }
@@ -532,6 +566,15 @@ const TableModule = (() => {
     }
   }
 
+  // ===========================================================================
+  // INITIALIZATION
+  // ===========================================================================
+
+  /**
+   * Initializes the table module: i18n, event bindings, router, and initial render.
+   *
+   * @returns {Promise<void>}
+   */
   async function init() {
     await initI18n();
     bindEvents();
@@ -549,7 +592,7 @@ const TableModule = (() => {
     showLastUpdated();
   }
 
-  return { init, renderTable };
-})();
+// Start the module
+init();
 
-TableModule.init();
+export { init, onTableRouteActive, renderTable };

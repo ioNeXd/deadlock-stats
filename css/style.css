@@ -1,5 +1,7 @@
 /* ==========================================================================
-   1. Reset / Box-sizing
+   1. Reset and base box sizing
+   This section removes default browser spacing and ensures every element uses
+   the same box model so the entire layout is stable and easier to maintain.
    ========================================================================== */
 
 * {
@@ -9,7 +11,9 @@
 }
 
 /* ==========================================================================
-   2. Font-face (tipografia)
+   2. Typography setup
+   This section loads the custom game-style font files used across the app so
+   the UI matches the Deadlock visual language consistently.
    ========================================================================== */
 
 @font-face {
@@ -45,7 +49,9 @@
 }
 
 /* ==========================================================================
-   3. Variáveis Globais (:root)
+   3. Global variables (:root)
+   This section centralizes the design tokens for colors, shadows, gradients,
+   spacing, and app themes so future styling changes remain consistent.
    ========================================================================== */
 
 :root {
@@ -607,7 +613,9 @@ tr:focus-within td {
    para a zona de clique ter o mesmo tamanho colapsado e expandido. */
 .build-card-summary {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  column-gap: 10px;
+  row-gap: 4px;
   align-items: center;
   cursor: pointer;
   user-select: none;
@@ -615,19 +623,94 @@ tr:focus-within td {
   padding: 10px 14px;
 }
 
-.build-id {
+.build-name {
   font-weight: bold;
   color: var(--shop-text-dark);
+  font-size: 0.92em;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.build-name--placeholder {
+  color: var(--shop-text-dark-muted);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.build-id {
+  color: var(--shop-text-dark-muted);
+  font-size: 0.8em;
+  white-space: nowrap;
 }
 
 .build-winrate {
   color: var(--shop-winrate);
   font-weight: 700;
+  font-size: 0.85em;
+  white-space: nowrap;
 }
 
 .build-matches {
   color: var(--shop-text-dark-muted);
-  font-size: 0.85em;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+/* Botão que copia o ID da build para a área de transferência. */
+.build-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--shop-category-border);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--shop-text-dark);
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.build-copy-btn:hover,
+.build-copy-btn:focus-visible {
+  opacity: 1;
+  background: rgba(26, 18, 8, 0.12);
+}
+
+.build-copy-btn--copied {
+  opacity: 1;
+  color: var(--shop-winrate);
+  border-color: currentColor;
+}
+
+/* Toast de feedback ao copiar o ID da build. */
+.build-copy-toast {
+  position: fixed;
+  z-index: 1200;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: var(--shop-fav-badge-bg);
+  color: var(--gold);
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -100%) translateY(6px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.build-copy-toast--show {
+  opacity: 1;
+  transform: translate(-50%, -100%);
 }
 
 /* Selo de build vinda do fallback (mais favoritadas de todos os tempos). */
@@ -1287,6 +1370,18 @@ tr:focus-within td {
   font-size: 0.6em;
   line-height: 1.2;
   word-break: break-word;
+}
+
+/* Falha ao carregar/renderizar uma build expandida */
+.build-detail-error {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px dashed rgba(255, 107, 107, 0.4);
+  border-radius: 6px;
+  background: rgba(255, 107, 107, 0.07);
+  color: var(--danger, #ff6b6b);
+  font-size: 0.85em;
+  line-height: 1.4;
 }
 
 /* Debug colapsável (renderizado condicionalmente pelo JS) */

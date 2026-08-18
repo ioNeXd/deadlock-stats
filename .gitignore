@@ -1,4 +1,4 @@
 raw/
-ROADMAP.md
-COMMIT_NOTES.md
+/ROADMAP.md
 .freebuff/
+node_modules/

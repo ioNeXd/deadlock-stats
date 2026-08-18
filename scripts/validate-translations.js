@@ -1,14 +1,42 @@
-const fs = require("fs");
-const path = require("path");
+// =============================================================================
+// TRANSLATION VALIDATOR
+// =============================================================================
 
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+// =============================================================================
+// CONSTANTS & CONFIGURATION
+// =============================================================================
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TRANSLATIONS_DIR = path.join(__dirname, "..", "translations");
 const REFERENCE_LANG = "en.json";
 
+// =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
+
+/**
+ * Loads and parses a JSON file from the given path.
+ *
+ * @param {string} filePath - Absolute path to the JSON file.
+ * @returns {Object} The parsed JSON object.
+ * @throws {Error} If the file cannot be read or parsed.
+ */
 function loadJson(filePath) {
   const raw = fs.readFileSync(filePath, "utf-8");
   return JSON.parse(raw);
 }
 
+/**
+ * Recursively flattens nested object keys into dot‑separated strings.
+ *
+ * @param {Object} obj - The object to flatten.
+ * @param {string} [prefix=""] - Current key prefix for nested paths.
+ * @returns {Array<string>} An array of flattened key strings.
+ */
 function flattenKeys(obj, prefix = "") {
   const keys = [];
   for (const [k, v] of Object.entries(obj)) {
@@ -22,6 +50,15 @@ function flattenKeys(obj, prefix = "") {
   return keys;
 }
 
+// =============================================================================
+// MAIN VALIDATION LOGIC
+// =============================================================================
+
+/**
+ * Validates all translation files against the reference (en.json).
+ * Checks for missing keys, extra keys, and invalid JSON.
+ * Exits with code 1 if any issues are found.
+ */
 function main() {
   const referencePath = path.join(TRANSLATIONS_DIR, REFERENCE_LANG);
 
@@ -82,5 +119,9 @@ function main() {
 
   console.log("\nAll translations are synchronized with en.json.");
 }
+
+// =============================================================================
+// EXECUTION
+// =============================================================================
 
 main();
