@@ -90,35 +90,40 @@
   --skeleton-mid: #3a3a3a;
 
   /* Paleta estilo loja in-game */
-  --shop-bg: #a09071;
-  --shop-category-header: #766a53;
-  --shop-category-header-optional: #5f6273; /* fundo das categorias opcionais */
-  --shop-category-border: #84765d;
-  --shop-category-border-optional: #5f5e65;
-  --shop-text-dark: #1a1208;
-  --shop-text-dark-muted: rgba(26, 18, 8, 0.72);
-  --shop-text-dark-soft: rgba(26, 18, 8, 0.75);
-  --shop-text-dark-faint: rgba(26, 18, 8, 0.55);
-  --shop-text-light: #ece6dc;
-  --shop-card-hover-border: #6a5e48;
-  --shop-winrate: #2d5a2d;
-  --shop-category-name: #ffefd7;
-  --shop-category-desc: #d1c4ae;
-  --shop-optional-badge-bg: #44454b;
-  --shop-optional-badge-text: #6f91cb;
-  --shop-fav-badge-bg: #3d3f48; /* selo de build vinda do fallback por favoritos */
-  --shop-fav-badge-text: var(--gold);
+  --build-bg: #9b8b6f;
+  --build-category-header-bg: #706550;
+  --build-category-header-bg-optional: #484b55; /* header das categorias opcionais */
+  --build-category-items-bg-optional: #5e6173; /* fundo do conteúdo das categorias opcionais */
+  --build-category-border: #86785f;
+  --build-category-border-optional: #585861;
+  --build-text-dark: #1a1208;
+  --build-text-muted: rgba(26, 18, 8, 0.72);
+  --build-text-soft: rgba(26, 18, 8, 0.75);
+  --build-text-faint: rgba(26, 18, 8, 0.55);
+  --build-text-light: #ece6dc;
+  --build-card-hover-border: #6a5e48;
+  --build-winrate: #2d5a2d;
+  --build-category-name-color: #ffefd7;
+  --build-category-desc-color: #d1c4ae;
+  --build-optional-badge-bg: #48484d;
+  --build-optional-badge-text: #6b89bb;
+  --build-fav-badge-bg: #3d3f48; /* selo de build vinda do fallback por favoritos */
+  --build-fav-badge-text: var(--gold);
+  /* Build card — summary & name */
+  --build-summary-bg: #5da8b7;
+  --build-name-color: #d9ddcf;
+  --build-id-matches-color: #363c39;
 
   /* Skill path — ordem de habilidades (estilo do editor in-game) */
   --skill-path-bg: #171b26;
   --skill-path-border: #2a3040;
-  --skill-path-badge-bg: var(--shop-fav-badge-bg);
+  --skill-path-badge-bg: var(--build-fav-badge-bg);
   --skill-path-badge-text: #f2f2f2;
   /* Slots 1-4: mesmo dourado (o número 1 acompanha os demais). */
   --skill-path-slot-bg: var(--gold);
   --skill-path-slot-text: #3a2c10;
   --skill-path-icon-bg: #23272f;
-  --skill-path-name: var(--shop-text-light);
+  --skill-path-name: var(--build-text-light);
   --skill-tip-grad-1: #26262e;
   --skill-tip-grad-2: #4a3470;
   --skill-tip-border: #5a4486;
@@ -587,16 +592,16 @@ tr:focus-within td {
 }
 
 .build-card {
-  background: var(--shop-bg);
-  border: 1px solid var(--shop-category-border);
+  background: var(--build-bg);
+  border: 1px solid var(--build-category-border);
   border-radius: 4px;
   padding: 10px 14px;
-  color: var(--shop-text-dark);
+  color: var(--build-text-dark);
   font-family: var(--font-shop);
 }
 
 .build-card:hover {
-  border-color: var(--shop-card-hover-border);
+  border-color: var(--build-card-hover-border);
   filter: brightness(0.97);
 }
 
@@ -605,6 +610,7 @@ tr:focus-within td {
    para a zona de clique ter o mesmo tamanho colapsado e expandido. */
 .build-card-summary {
   display: flex;
+  background: var(--build-summary-bg);
   flex-wrap: wrap;
   column-gap: 10px;
   row-gap: 4px;
@@ -617,7 +623,7 @@ tr:focus-within td {
 
 .build-name {
   font-weight: bold;
-  color: var(--shop-text-dark);
+  color: var(--build-name-color);
   font-size: 0.92em;
   white-space: nowrap;
   max-width: 100%;
@@ -626,26 +632,26 @@ tr:focus-within td {
 }
 
 .build-name--placeholder {
-  color: var(--shop-text-dark-muted);
+  color: var(--build-text-muted);
   font-style: italic;
   font-weight: 400;
 }
 
 .build-id {
-  color: var(--shop-text-dark-muted);
+  color: var(--build-id-matches-color);
   font-size: 0.8em;
   white-space: nowrap;
 }
 
 .build-winrate {
-  color: var(--shop-winrate);
+  color: var(--build-winrate);
   font-weight: 700;
   font-size: 0.85em;
   white-space: nowrap;
 }
 
 .build-matches {
-  color: var(--shop-text-dark-muted);
+  color: var(--build-id-matches-color);
   font-size: 0.8em;
   white-space: nowrap;
 }
@@ -660,10 +666,10 @@ tr:focus-within td {
   height: 20px;
   margin: 0;
   padding: 0;
-  border: 1px solid var(--shop-category-border);
+  border: 1px solid var(--build-category-border);
   border-radius: 3px;
   background: transparent;
-  color: var(--shop-text-dark);
+  color: var(--build-text-dark);
   cursor: pointer;
   opacity: 0.55;
   transition:
@@ -680,7 +686,7 @@ tr:focus-within td {
 
 .build-copy-btn--copied {
   opacity: 1;
-  color: var(--shop-winrate);
+  color: var(--build-winrate);
   border-color: currentColor;
 }
 
@@ -690,7 +696,7 @@ tr:focus-within td {
   z-index: 1200;
   padding: 4px 10px;
   border-radius: 4px;
-  background: var(--shop-fav-badge-bg);
+  background: var(--build-fav-badge-bg);
   color: var(--gold);
   font-size: 0.72em;
   font-weight: 700;
@@ -715,8 +721,8 @@ tr:focus-within td {
   margin-left: auto;
   padding: 2px 8px;
   border-radius: 3px;
-  background: var(--shop-fav-badge-bg);
-  color: var(--shop-fav-badge-text);
+  background: var(--build-fav-badge-bg);
+  color: var(--build-fav-badge-text);
   font-size: 0.72em;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -731,13 +737,13 @@ tr:focus-within td {
 .build-categories-flow,
 .build-items-panel,
 .build-item-category {
-  background: var(--shop-bg);
+  background: var(--build-bg);
 }
 
 .build-card-details {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid var(--shop-category-border);
+  border-top: 1px solid var(--build-category-border);
 }
 
 .build-card-details.hidden {
@@ -770,7 +776,7 @@ tr:focus-within td {
 
 .build-detail-section h4 {
   margin: 0;
-  color: var(--shop-text-dark);
+  color: var(--build-text-dark);
   font-size: 0.92em;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -782,7 +788,7 @@ tr:focus-within td {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  border: var(--build-category-border-w) solid var(--shop-category-border);
+  border: var(--build-category-border-w) solid var(--build-category-border);
   border-radius: 2px;
   overflow: hidden;
   max-width: 100%;
@@ -790,13 +796,16 @@ tr:focus-within td {
 }
 
 .build-item-category--optional {
-  border-color: var(--shop-category-border-optional);
-  background: var(--shop-category-header-optional);
+  border-color: var(--build-category-border-optional);
+  background: var(--build-category-header-bg-optional);
 }
 
-.build-item-category--optional .build-category-header,
+.build-item-category--optional .build-category-header {
+  background: var(--build-category-header-bg-optional);
+}
+
 .build-item-category--optional .build-category-items {
-  background: var(--shop-category-header-optional);
+  background: var(--build-category-items-bg-optional);
 }
 
 /* Categoria sem itens: caixa no tamanho de um item (descrição trunca "..."
@@ -813,8 +822,8 @@ tr:focus-within td {
   min-width: 0;
   width: 100%;
   padding: 6px 10px;
-  background: var(--shop-category-header);
-  color: var(--shop-text-light);
+  background: var(--build-category-header-bg);
+  color: var(--build-text-light);
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 
@@ -836,7 +845,7 @@ tr:focus-within td {
   font-weight: 800;
   text-transform: none;
   letter-spacing: 0.01em;
-  color: var(--shop-category-name);
+  color: var(--build-category-name-color);
 }
 
 .build-category-optional {
@@ -850,8 +859,8 @@ tr:focus-within td {
   display: inline-block;
   padding: 1px 6px;
   border-radius: 2px;
-  background: var(--shop-optional-badge-bg);
-  color: var(--shop-optional-badge-text);
+  background: var(--build-optional-badge-bg);
+  color: var(--build-optional-badge-text);
   font-size: 0.62em;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -868,7 +877,7 @@ tr:focus-within td {
   font-size: 0.72em;
   font-weight: 500;
   line-height: 1.35;
-  color: var(--shop-category-desc);
+  color: var(--build-category-desc-color);
 }
 
 .build-category-items {
@@ -1322,10 +1331,10 @@ tr:focus-within td {
   gap: 8px;
   align-items: center;
   background: rgba(0, 0, 0, 0.12);
-  border: 1px solid var(--shop-category-border);
+  border: 1px solid var(--build-category-border);
   border-radius: 4px;
   padding: 7px 10px;
-  color: var(--shop-text-dark);
+  color: var(--build-text-dark);
 }
 
 .build-detail-number {
@@ -1335,20 +1344,20 @@ tr:focus-within td {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--shop-category-header);
-  color: var(--shop-text-light);
+  background: var(--build-category-header-bg);
+  color: var(--build-text-light);
   font-size: 0.8em;
   font-weight: 700;
 }
 
 .build-detail-name {
   font-weight: 600;
-  color: var(--shop-text-dark);
+  color: var(--build-text-dark);
 }
 
 /* Estado vazio dentro de builds */
 .build-detail-empty {
-  color: var(--shop-text-dark-soft);
+  color: var(--build-text-soft);
   margin: 0;
 }
 
@@ -1363,7 +1372,7 @@ tr:focus-within td {
   padding: 4px;
   border-radius: 4px;
   border: 1px dashed rgba(0, 0, 0, 0.3);
-  color: var(--shop-text-dark-faint);
+  color: var(--build-text-faint);
   font-size: 0.6em;
   line-height: 1.2;
   word-break: break-word;
