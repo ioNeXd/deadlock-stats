@@ -92,8 +92,8 @@
   /* Paleta estilo loja in-game */
   --build-bg: #9b8b6f;
   --build-category-header-bg: #706550;
-  --build-category-header-bg-optional: #484b55; /* header das categorias opcionais */
-  --build-category-items-bg-optional: #5e6173; /* fundo do conteúdo das categorias opcionais */
+  --build-category-header-bg-optional: #4f4f59; /* header das categorias opcionais */
+  --build-category-items-bg-optional: #696a79; /* fundo do conteúdo das categorias opcionais */
   --build-category-border: #86785f;
   --build-category-border-optional: #585861;
   --build-text-dark: #1a1208;
@@ -105,8 +105,8 @@
   --build-winrate: #2d5a2d;
   --build-category-name-color: #ffefd7;
   --build-category-desc-color: #d1c4ae;
-  --build-optional-badge-bg: #48484d;
-  --build-optional-badge-text: #6b89bb;
+  --build-optional-badge-bg: #41414a;
+  --build-optional-badge-text: #6d8fc7;
   --build-fav-badge-bg: #3d3f48; /* selo de build vinda do fallback por favoritos */
   --build-fav-badge-text: var(--gold);
   /* Build card — summary & name */
@@ -115,15 +115,15 @@
   --build-id-matches-color: #363c39;
 
   /* Skill path — ordem de habilidades (estilo do editor in-game) */
-  --skill-path-bg: #171b26;
-  --skill-path-border: #2a3040;
-  --skill-path-badge-bg: var(--build-fav-badge-bg);
-  --skill-path-badge-text: #f2f2f2;
+  --skill-path-bg: #0f0800;
+  --skill-path-border: #a65a0a;
+  --skill-path-badge-bg: #130e08;
+  --skill-path-badge-text: #77b880;
   /* Slots 1-4: mesmo dourado (o número 1 acompanha os demais). */
   --skill-path-slot-bg: var(--gold);
   --skill-path-slot-text: #3a2c10;
   --skill-path-icon-bg: #23272f;
-  --skill-path-name: var(--build-text-light);
+  --skill-path-name: #9c8d6f;
   --skill-tip-grad-1: #26262e;
   --skill-tip-grad-2: #4a3470;
   --skill-tip-border: #5a4486;
@@ -170,6 +170,17 @@
 body {
   font-family: Arial, sans-serif;
   background-color: var(--bg-primary);
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(26, 26, 26, 0.97) 0%,
+      rgba(26, 26, 26, 0.99) 100%
+    ),
+    url("../assets/images/branding/page-bg.jpg");
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center top;
+  background-size: cover;
   color: var(--text-primary);
   line-height: 1.5;
 }
@@ -208,12 +219,34 @@ button:focus-visible,
    ========================================================================== */
 
 header {
+  position: relative;
   padding: 20px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-strong);
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(10, 8, 6, 0.88) 0%,
+      rgba(10, 8, 6, 0.94) 60%,
+      rgba(10, 8, 6, 1) 100%
+    ),
+    url("../assets/images/branding/header-bg.jpg");
+  background-size: cover;
+  background-position: center 30%;
 }
 
 header h1 {
   margin-bottom: 10px;
+}
+
+.site-logo {
+  margin-bottom: 10px;
+  line-height: 0;
+}
+
+.site-logo img {
+  display: block;
+  height: 64px;
+  width: auto;
 }
 
 nav a {
@@ -547,10 +580,18 @@ tr:focus-within td {
   height: 32px;
   object-fit: cover;
   border-radius: 8px;
+  border: 1px solid var(--border-strong);
   background: var(--bg-raised);
   display: inline-block;
-  transition: opacity 160ms ease-in;
+  transition:
+    opacity 160ms ease-in,
+    border-color 160ms ease;
   opacity: 0;
+}
+
+tr:hover .lazy-img,
+.clickable-row:hover .lazy-img {
+  border-color: var(--gold);
 }
 
 .lazy-img[loading="lazy"] {
@@ -1058,8 +1099,8 @@ tr:focus-within td {
    do editor in-game: cada linha é uma habilidade com os níveis upados
    (selos de diamante) posicionados na ordem em que os pontos foram gastos. */
 .skill-path-panel {
-  background: var(--skill-path-bg);
-  border: 1px solid var(--skill-path-border);
+  background: var(--build-category-header-bg);
+  border: 2px solid var(--build-category-border);
   border-radius: 6px;
   padding: 12px;
   display: flex;
@@ -1111,7 +1152,7 @@ tr:focus-within td {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--skill-path-name);
+  color: var(--build-category-name-color);
   font-size: 0.82em;
   font-weight: 600;
 }
@@ -1126,15 +1167,16 @@ tr:focus-within td {
     0,
     1fr
   ); /* linha = altura exata do track — permite % no marcador */
-  border-bottom: 1px solid var(--skill-path-border);
+  border: 1px solid var(--build-category-border);
   /* 16 colunas — uma por ponto de habilidade (timeline do level-up) */
   background-image: repeating-linear-gradient(
     to right,
     transparent 0,
-    transparent calc(6.25% - 1px),
-    var(--white-faint) calc(6.25% - 1px),
-    var(--white-faint) 6.25%
+    transparent calc(6.25% - 2px),
+    var(--build-category-border) calc(6.25% - 2px),
+    var(--build-category-border) 6.25%
   );
+  background-color: var(--build-bg);
 }
 
 .skill-path-marker {
@@ -1184,6 +1226,8 @@ tr:focus-within td {
   flex-shrink: 0;
   height: 80%;
   width: auto;
+  fill: #fd0000;
+  stroke: red;
 }
 
 /* Tooltip da habilidade (descrição + propriedades) — elemento único no body,
@@ -1449,4 +1493,22 @@ tr:focus-within td {
   .skill-path-panel {
     overflow-x: auto;
   }
+}
+
+/* ==========================================================================
+   X. Badges de papel/categoria (estilo tela de seleção de personagem)
+   ========================================================================== */
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  color: var(--gold);
+  font-size: 0.72em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(232, 192, 74, 0.08);
 }
