@@ -66,28 +66,27 @@ The project ships a small Node-based toolchain (no dependencies, built-in `node:
 
 A GitHub Actions workflow (`.github/workflows/ci.yml`) runs these three checks automatically on every push and pull request, so translation drift or a broken test never reaches `main` unnoticed.
 
-
 ## Project structure
 
-| Path | Purpose |
-|---|---|
-| `index.html` | Single-page shell (hash routing) |
-| `js/api.js` | API client — caching, retries, normalization, asset URL mapping |
-| `js/table.js` | Main table: heroes/items, search, sort, pagination, tabs |
-| `js/hero-detail.js` | Hero detail: builds, item categories, skill path, ability tooltips |
-| `js/router.js` | Hash routing (`#hero=<id>` / `#table`) |
-| `js/i18n.js` | Translation loader and `data-i18n` binding |
-| `js/utils.js` | Shared helpers (formatting, safe access, caching) |
-| `js/constants.js` | Shared constants |
-| `js/skill-sections-data.js` | Skill tooltip data: property sections and manual key overrides |
-| `translations/` | JSON translation files (`en.json`, `pt-br.json`) |
-| `scripts/validate-translations.js` | Checks translation keys stay in sync |
-| `scripts/check-syntax.js` | Runs `node --check` on every module in `js/` |
-| `tests/` | Unit tests (`node:test`, no dependencies) |
-| `package.json` | npm scripts for checks and tests (`npm run check`) |
-| `.github/workflows/ci.yml` | CI: syntax + translations + tests on every push/PR |
-| `assets/` | Local SVGs and fonts (rest is served by the API CDN) |
-| `css/style.css` | Dark theme, responsive layout, shop/build styling |
+| Path                               | Purpose                                                            |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `index.html`                       | Single-page shell (hash routing)                                   |
+| `js/api.js`                        | API client — caching, retries, normalization, asset URL mapping    |
+| `js/table.js`                      | Main table: heroes/items, search, sort, pagination, tabs           |
+| `js/hero-detail.js`                | Hero detail: builds, item categories, skill path, ability tooltips |
+| `js/router.js`                     | Hash routing (`#hero=<id>` / `#table`)                             |
+| `js/i18n.js`                       | Translation loader and `data-i18n` binding                         |
+| `js/utils.js`                      | Shared helpers (formatting, safe access, caching)                  |
+| `js/constants.js`                  | Shared constants                                                   |
+| `js/skill-sections-data.js`        | Skill tooltip data: property sections and manual key overrides     |
+| `translations/`                    | JSON translation files (`en.json`, `pt-br.json`)                   |
+| `scripts/validate-translations.js` | Checks translation keys stay in sync                               |
+| `scripts/check-syntax.js`          | Runs `node --check` on every module in `js/`                       |
+| `tests/`                           | Unit tests (`node:test`, no dependencies)                          |
+| `package.json`                     | npm scripts for checks and tests (`npm run check`)                 |
+| `.github/workflows/ci.yml`         | CI: syntax + translations + tests on every push/PR                 |
+| `assets/`                          | Local SVGs and fonts (rest is served by the API CDN)               |
+| `css/style.css`                    | Dark theme, responsive layout, shop/build styling                  |
 
 ## Contributing a translation
 

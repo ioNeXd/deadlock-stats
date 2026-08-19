@@ -135,11 +135,15 @@ test("normalizeHeroBuildStats computes win rate and standardizes ids", () => {
 // -----------------------------------------------------------------------------
 
 test("sanitizeAbilityDescription strips SVG/panels/tags and normalizes breaks", () => {
-  const svgAndBr = '<svg><path/></svg><Panel>x</Panel><b>Napalm</b><br/>ignites enemies';
+  const svgAndBr =
+    "<svg><path/></svg><Panel>x</Panel><b>Napalm</b><br/>ignites enemies";
   assert.equal(sanitizeAbilityDescription(svgAndBr), "Napalm\nignites enemies");
 
-  const paragraphs = '<p>First paragraph.</p><p>Second.</p>';
-  assert.equal(sanitizeAbilityDescription(paragraphs), "First paragraph.\nSecond.");
+  const paragraphs = "<p>First paragraph.</p><p>Second.</p>";
+  assert.equal(
+    sanitizeAbilityDescription(paragraphs),
+    "First paragraph.\nSecond.",
+  );
 
   assert.equal(sanitizeAbilityDescription(""), "");
   assert.equal(sanitizeAbilityDescription(null), "");
@@ -151,7 +155,12 @@ test("sanitizeAbilityDescription strips SVG/panels/tags and normalizes breaks", 
 
 test("extractAbilityStats filters empties, appends postfix and sorts by priority", () => {
   const properties = {
-    AbilityCooldown: { label: "Cooldown", value: "28.0", postfix: "s", css_class: "cooldown" },
+    AbilityCooldown: {
+      label: "Cooldown",
+      value: "28.0",
+      postfix: "s",
+      css_class: "cooldown",
+    },
     Damage: { label: "Damage", value: "40", css_class: "tech_damage" },
     Empty: { label: "None", value: "x", css_class: "" },
     Zero: { label: "Zero", value: "0", css_class: "" },

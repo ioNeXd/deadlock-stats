@@ -25,5 +25,11 @@ jobs:
       - name: Validate translations
         run: node scripts/validate-translations.js
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
       - name: Unit tests
         run: npm test

@@ -183,6 +183,15 @@ function validateArray(value, name) {
 }
 
 // =============================================================================
+// ERROR-HANDLING CONVENTION
+// Functions that back a required page state (a table that must show something,
+// e.g. getGameStats) rethrow on failure so callers can show an error banner.
+// Functions that back optional/secondary data (entity metadata, ability
+// details, favorites fallback) swallow the error, log a console.warn, and
+// return an empty {} / [] so the UI can still render with partial data.
+// =============================================================================
+
+// =============================================================================
 // NORMALIZATION UTILITIES
 // =============================================================================
 
@@ -483,7 +492,10 @@ export function sanitizeAbilityDescription(html) {
   text = text.replace(/<br\s*\/?>/gi, "\n");
   text = text.replace(/<\/(?:p|div|li|h[1-6])>/gi, "\n");
   text = text.replace(/<[^>]+>/g, "");
-  text = text.replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
+  text = text
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s*\n+/g, "\n")
+    .trim();
   return text;
 }
 
@@ -506,7 +518,10 @@ export function extractAbilityStats(properties) {
       continue;
     }
     const postfix = String(p.postfix || "").trim();
-    const value = postfix && !rawValue.endsWith(postfix) ? `${rawValue}${postfix}` : rawValue;
+    const value =
+      postfix && !rawValue.endsWith(postfix)
+        ? `${rawValue}${postfix}`
+        : rawValue;
     const cssClass = String(p.css_class || "").toLowerCase();
     const priority = ABILITY_STAT_PRIORITY.indexOf(cssClass);
     stats.push({
@@ -518,7 +533,9 @@ export function extractAbilityStats(properties) {
       priority: priority === -1 ? 99 : priority,
     });
   }
-  stats.sort((a, b) => a.priority - b.priority || a.label.localeCompare(b.label));
+  stats.sort(
+    (a, b) => a.priority - b.priority || a.label.localeCompare(b.label),
+  );
   return stats;
 }
 

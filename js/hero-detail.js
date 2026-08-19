@@ -28,8 +28,6 @@ const COPY_ICON_SVG = `<svg viewBox="0 0 24 24" width="14" height="14" aria-hidd
 // Build cache: expanded build payloads with TTL (5 min by default)
 const buildCache = new TTLCache(CONSTANTS.BUILD_CACHE_TTL_MS);
 
-
-
 // =============================================================================
 // UTILITY FUNCTIONS
 // =============================================================================
@@ -84,10 +82,10 @@ async function copyTextToClipboard(text, btn) {
       ta.style.opacity = "0";
       document.body.appendChild(ta);
       ta.select();
-      ok = document.execCommand("copy");
+      document.execCommand("copy");
       document.body.removeChild(ta);
-    } catch (e) {
-      ok = false;
+    } catch (_e) {
+      /* fallback failed */
     }
   }
   const copiedLabel = t("build_copied");
@@ -310,14 +308,9 @@ function resolveBuildDetailSource(build) {
   const source = build.publishedBuild || build.actualBuild || build;
   if (!source || typeof source !== "object") return empty;
 
-  const raw =
-    source.raw && typeof source.raw === "object" ? source.raw : {};
+  const raw = source.raw && typeof source.raw === "object" ? source.raw : {};
   const candidate =
-    source.hero_build ||
-    source.build ||
-    raw.hero_build ||
-    raw.build ||
-    {};
+    source.hero_build || source.build || raw.hero_build || raw.build || {};
   const details =
     (candidate && typeof candidate === "object" ? candidate.details : null) ||
     source.details ||
@@ -334,8 +327,7 @@ function resolveBuildDetailSource(build) {
       ? details.ability_order.currency_changes
       : [];
   const sourceSkillChanges =
-    source.ability_order &&
-    Array.isArray(source.ability_order.currency_changes)
+    source.ability_order && Array.isArray(source.ability_order.currency_changes)
       ? source.ability_order.currency_changes
       : [];
 
@@ -354,12 +346,14 @@ function resolveBuildDetailSource(build) {
  * @param {object} source - The build source.
  * @returns {boolean} True if ability order exists.
  */
-function detailHasAbilityOrder(source) {
+function _detailHasAbilityOrder(source) {
   if (!source || typeof source !== "object") return false;
   const details =
     source.details || (source.hero_build && source.hero_build.details) || {};
-  return !!(details.ability_order &&
-    Array.isArray(details.ability_order.currency_changes));
+  return !!(
+    details.ability_order &&
+    Array.isArray(details.ability_order.currency_changes)
+  );
 }
 
 /**
@@ -411,21 +405,19 @@ function buildSkillSequence(build, heroAsset) {
       ? heroAsset.raw.items
       : {};
   const idToSlot = {};
-  ["signature1", "signature2", "signature3", "signature4"].forEach(
-    (key, i) => {
-      const cls = heroItems[key];
-      const entry = cls && abilityMap[cls];
-      if (entry && entry.id != null) {
-        idToSlot[entry.id] = {
-          slot: i + 1,
-          name: entry.name || cls,
-          image: entry.image || "",
-          description: entry.description || "",
-          stats: Array.isArray(entry.stats) ? entry.stats : [],
-        };
-      }
-    },
-  );
+  ["signature1", "signature2", "signature3", "signature4"].forEach((key, i) => {
+    const cls = heroItems[key];
+    const entry = cls && abilityMap[cls];
+    if (entry && entry.id != null) {
+      idToSlot[entry.id] = {
+        slot: i + 1,
+        name: entry.name || cls,
+        image: entry.image || "",
+        description: entry.description || "",
+        stats: Array.isArray(entry.stats) ? entry.stats : [],
+      };
+    }
+  });
 
   return points.map((entry, index) => {
     const abilityId = Number(entry && (entry.ability_id ?? entry.id ?? 0));
@@ -535,9 +527,7 @@ function renderBuildCategoryBox(category) {
     ? category.items.map((item) => renderBuildItemCard(item)).join("")
     : `<li class="build-detail-empty" role="img" aria-label="${escapeHtml(t("no_data"))}">${t("no_data")}</li>`;
 
-  const listLabel = showName
-    ? category.name
-    : category.description || "items";
+  const listLabel = showName ? category.name : category.description || "items";
 
   const headerHtml =
     showName || description
@@ -552,8 +542,7 @@ function renderBuildCategoryBox(category) {
 
   const { size, gap, pad, border } = getBuildItemMetrics();
   const cols = Math.max(category.columnCount || 1, 1);
-  const boxWidth =
-    cols * size + (cols - 1) * gap + 2 * pad + 2 * border;
+  const boxWidth = cols * size + (cols - 1) * gap + 2 * pad + 2 * border;
 
   return `
     <div class="build-item-category${category.optional ? " build-item-category--optional" : ""}${category.items.length === 0 ? " build-item-category--empty" : ""}" style="--category-cols: ${cols}; width: ${boxWidth}px">
@@ -681,8 +670,7 @@ function ensureSkillTooltip() {
   document.addEventListener("mouseover", (e) => {
     const el = e.target.closest && e.target.closest("[data-skill-tooltip]");
     if (!el) return;
-    const html =
-      skillTooltips && skillTooltips[el.dataset.skillTooltip];
+    const html = skillTooltips && skillTooltips[el.dataset.skillTooltip];
     if (!html) return;
     tip.innerHTML = html;
     tip.hidden = false;
@@ -829,19 +817,29 @@ function renderBuildPath(build, container, heroAsset) {
  * Re-renders all open build details on window resize to recalculate column layout.
  */
 function rerenderOpenBuilds() {
-  document.querySelectorAll(".build-card-details:not(.hidden)").forEach((details) => {
-    if (details.__build) {
-      details.innerHTML = renderBuildPath(
-        details.__build,
-        details,
-        details.__build.heroAsset,
-      );
-    }
-  });
+  document
+    .querySelectorAll(".build-card-details:not(.hidden)")
+    .forEach((details) => {
+      if (details.__build) {
+        details.innerHTML = renderBuildPath(
+          details.__build,
+          details,
+          details.__build.heroAsset,
+        );
+      }
+    });
 }
 
-window.addEventListener("resize", debounce(rerenderOpenBuilds, 150));
-window.addEventListener("resize", debounce(refreshBuildNameTooltips, 150));
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "resize",
+    debounce(rerenderOpenBuilds, CONSTANTS.RESIZE_DEBOUNCE_MS),
+  );
+  window.addEventListener(
+    "resize",
+    debounce(refreshBuildNameTooltips, CONSTANTS.RESIZE_DEBOUNCE_MS),
+  );
+}
 
 // =============================================================================
 // MAIN RENDER FUNCTIONS
@@ -895,13 +893,13 @@ export async function renderHeroDetail(heroId) {
 
       <section class="build-section">
         <h3 data-i18n="builds_popular">Most Popular Builds</h3>
-        <button id="retry-builds-popular" class="error-retry" data-i18n="try_again">Try again</button>
+        <button id="retry-builds-popular" class="btn-action" data-i18n="try_again">Try again</button>
         <div class="build-list" id="build-list-popular"></div>
       </section>
 
       <section class="build-section">
         <h3 data-i18n="builds_winrate">Highest Win Rate Builds</h3>
-        <button id="retry-builds-winrate" class="error-retry" data-i18n="try_again">Try again</button>
+        <button id="retry-builds-winrate" class="btn-action" data-i18n="try_again">Try again</button>
         <div class="build-list" id="build-list-winrate"></div>
       </section>
     `;
@@ -1060,14 +1058,21 @@ function renderBuildCards(containerId, builds, heroId, heroAsset) {
             updateBuildNameTooltip(nameEl);
           }
           details.__build = { ...build, actualBuild, heroAsset };
-          details.innerHTML = renderBuildPath(details.__build, details, heroAsset);
+          details.innerHTML = renderBuildPath(
+            details.__build,
+            details,
+            heroAsset,
+          );
         } catch (err) {
           console.warn(`Failed to render build ${build.buildId}:`, err);
           details.innerHTML = `<p class="build-detail-error" role="alert">${escapeHtml(t("build_load_error"))}</p>`;
         }
       }
       details.classList.toggle("hidden");
-      summary.setAttribute("aria-expanded", String(!details.classList.contains("hidden")));
+      summary.setAttribute(
+        "aria-expanded",
+        String(!details.classList.contains("hidden")),
+      );
       // If loading failed, clear the error so reopening retries.
       if (
         details.classList.contains("hidden") &&

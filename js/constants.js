@@ -26,4 +26,7 @@ export const CONSTANTS = {
   // Builds
   BUILD_CACHE_TTL_MS: 5 * 60 * 1000,
   MAX_BUILDS_PER_LIST: 3,
+
+  // UI
+  RESIZE_DEBOUNCE_MS: 150,
 };

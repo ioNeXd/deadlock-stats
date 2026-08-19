@@ -139,17 +139,9 @@
      dos itens: duas grades de pontos deslocadas — ajuste a opacidade
      (números de cada rgba) ou o tamanho (8px) para intensificar. */
   --name-texture:
-    radial-gradient(
-        circle at 50% 50%,
-        rgb(0, 0, 0, 0.50) 0 20%,
-        transparent 40%
-      )
+    radial-gradient(circle at 50% 50%, rgb(0, 0, 0, 0.5) 0 20%, transparent 40%)
       3px 3px / 2px 2px,
-    radial-gradient(
-        circle at 50% 50%,
-        rgb(0, 0, 0, 0.50) 0 20%,
-        transparent 40%
-      )
+    radial-gradient(circle at 50% 50%, rgb(0, 0, 0, 0.5) 0 20%, transparent 40%)
       0px 0px / 2px 2px;
 
   /* Tamanhos dos cards de build (lógica de cálculo preservada) */
@@ -201,7 +193,7 @@ button:focus,
 a:focus-visible,
 button:focus-visible,
 [tabindex]:focus-visible,
-.error-retry:focus {
+.btn-action:focus {
   outline: 3px solid var(--focus-color);
   outline-offset: 2px;
 }
@@ -497,7 +489,7 @@ tr:focus-within td {
   flex: 1 1 auto;
 }
 
-.error-retry {
+.btn-action {
   background-color: var(--bg-retry);
   color: var(--text-inverse);
   border: 1px solid var(--text-muted);
@@ -507,7 +499,7 @@ tr:focus-within td {
   font-size: 0.95em;
 }
 
-.error-retry:hover {
+.btn-action:hover {
   border-color: #bbb;
 }
 
@@ -674,7 +666,10 @@ tr:focus-within td {
   color: var(--shop-text-dark);
   cursor: pointer;
   opacity: 0.55;
-  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .build-copy-btn:hover,
@@ -705,7 +700,9 @@ tr:focus-within td {
   pointer-events: none;
   opacity: 0;
   transform: translate(-50%, -100%) translateY(6px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 
 .build-copy-toast--show {
@@ -807,8 +804,8 @@ tr:focus-within td {
 .build-item-category--empty {
   /* Caixa com exatamente o tamanho de um card: card + paddings + bordas. */
   max-width: calc(
-    var(--build-item-size) + 2 * var(--build-category-pad) +
-      2 * var(--build-category-border-w)
+    var(--build-item-size) + 2 * var(--build-category-pad) + 2 *
+      var(--build-category-border-w)
   );
 }
 
@@ -879,10 +876,7 @@ tr:focus-within td {
   margin: 0;
   padding: var(--build-category-pad);
   display: grid;
-  grid-template-columns: repeat(
-    var(--category-cols),
-    var(--build-item-size)
-  );
+  grid-template-columns: repeat(var(--category-cols), var(--build-item-size));
   grid-auto-rows: var(--build-item-card-h);
   gap: var(--build-item-gap);
   justify-content: start;
@@ -1119,7 +1113,10 @@ tr:focus-within td {
   height: 26px;
   display: grid;
   grid-template-columns: repeat(16, 1fr);
-  grid-auto-rows: minmax(0, 1fr); /* linha = altura exata do track — permite % no marcador */
+  grid-auto-rows: minmax(
+    0,
+    1fr
+  ); /* linha = altura exata do track — permite % no marcador */
   border-bottom: 1px solid var(--skill-path-border);
   /* 16 colunas — uma por ponto de habilidade (timeline do level-up) */
   background-image: repeating-linear-gradient(

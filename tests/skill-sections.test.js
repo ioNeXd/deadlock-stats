@@ -7,7 +7,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { SKILL_KEY_OVERRIDES, SKILL_SECTIONS } from "../js/skill-sections-data.js";
+import {
+  SKILL_KEY_OVERRIDES,
+  SKILL_SECTIONS,
+} from "../js/skill-sections-data.js";
 
 const sectionIds = new Set(SKILL_SECTIONS.map((s) => s.id));
 
@@ -30,7 +33,9 @@ test("SKILL_SECTIONS keys are not duplicated across sections", () => {
   for (const section of SKILL_SECTIONS) {
     for (const key of section.keys) {
       if (seen.has(key)) {
-        assert.fail(`key "${key}" appears in both "${seen.get(key)}" and "${section.id}"`);
+        assert.fail(
+          `key "${key}" appears in both "${seen.get(key)}" and "${section.id}"`,
+        );
       }
       seen.set(key, section.id);
     }
@@ -39,7 +44,10 @@ test("SKILL_SECTIONS keys are not duplicated across sections", () => {
 
 test("SKILL_KEY_OVERRIDES still covers the full manual table", () => {
   const entries = Object.entries(SKILL_KEY_OVERRIDES);
-  assert.ok(entries.length >= 100, `expected >=100 overrides, got ${entries.length}`);
+  assert.ok(
+    entries.length >= 100,
+    `expected >=100 overrides, got ${entries.length}`,
+  );
 
   for (const [key, sectionId] of entries) {
     assert.ok(key.length > 0, "empty override key");
@@ -53,7 +61,11 @@ test("SKILL_KEY_OVERRIDES still covers the full manual table", () => {
 test("every css class referenced by sections is lowercase", () => {
   for (const section of SKILL_SECTIONS) {
     for (const css of section.css) {
-      assert.equal(css, css.toLowerCase(), `css class "${css}" must be lowercase`);
+      assert.equal(
+        css,
+        css.toLowerCase(),
+        `css class "${css}" must be lowercase`,
+      );
     }
   }
 });

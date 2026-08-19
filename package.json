@@ -4,10 +4,34 @@
   "description": "Static dashboard for Deadlock hero/item statistics, powered by the community Deadlock API.",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "test": "node --test \"tests/*.test.js\"",
     "check:syntax": "node scripts/check-syntax.js",
     "validate:translations": "node scripts/validate-translations.js",
-    "check": "npm run check:syntax && npm run validate:translations && npm test"
+    "lint": "eslint js scripts tests",
+    "format": "prettier --write \"**/*.{js,css,html,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,css,html,json,md}\"",
+    "check": "npm run check:syntax && npm run validate:translations && npm run lint && npm run format:check && npm test",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "js/**/*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,html,json,md}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
+    "prettier": "^3.9.6"
   }
 }

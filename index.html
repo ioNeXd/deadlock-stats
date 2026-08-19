@@ -43,8 +43,19 @@
     <main>
       <div id="table-view">
         <div class="table-controls">
-          <input id="search-input" type="search" placeholder="Search heroes or items" aria-label="Search" />
-          <button id="refresh-button" class="error-retry" data-i18n="refresh_button">Refresh</button>
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Search heroes or items"
+            aria-label="Search"
+          />
+          <button
+            id="refresh-button"
+            class="btn-action"
+            data-i18n="refresh_button"
+          >
+            Refresh
+          </button>
         </div>
 
         <div
@@ -55,7 +66,7 @@
           aria-atomic="true"
         >
           <span id="error-banner-message"></span>
-          <button id="error-retry" class="error-retry" data-i18n="retry_button">
+          <button id="error-retry" class="btn-action" data-i18n="retry_button">
             Retry
           </button>
         </div>
@@ -81,45 +92,47 @@
         ></div>
 
         <div class="table-scroll">
-        <table
-          id="stats-table"
-          aria-describedby="loading-text error-banner-message"
-          aria-busy="true"
-          aria-label="Statistics table"
-        >
-          <caption id="stats-caption" class="visually-hidden" data-i18n="table_caption">
-            Hero and item statistics table
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col"></th>
-              <th id="table-name-header" data-i18n="table_hero" tabindex="0">
-                Hero
-              </th>
-              <th
-                id="header-winrate"
-                data-i18n="table_winrate"
-                style="cursor: pointer"
-                role="button"
-                tabindex="0"
-                aria-sort="none"
-              >
-                Win Rate
-              </th>
-              <th
-                id="header-pickrate"
-                data-i18n="table_pickrate"
-                style="cursor: pointer"
-                role="button"
-                tabindex="0"
-                aria-sort="none"
-              >
-                Pick Rate
-              </th>
-            </tr>
-          </thead>
-          <tbody id="stats-table-body"></tbody>
-        </table>
+          <table
+            id="stats-table"
+            aria-describedby="loading-text error-banner-message"
+            aria-busy="true"
+            aria-label="Statistics table"
+          >
+            <caption
+              id="stats-caption"
+              class="visually-hidden"
+              data-i18n="table_caption"
+            >
+              Hero and item statistics table
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col"></th>
+                <th id="table-name-header" data-i18n="table_hero" tabindex="0">
+                  Hero
+                </th>
+                <th
+                  id="header-winrate"
+                  data-i18n="table_winrate"
+                  role="button"
+                  tabindex="0"
+                  aria-sort="none"
+                >
+                  Win Rate
+                </th>
+                <th
+                  id="header-pickrate"
+                  data-i18n="table_pickrate"
+                  role="button"
+                  tabindex="0"
+                  aria-sort="none"
+                >
+                  Pick Rate
+                </th>
+              </tr>
+            </thead>
+            <tbody id="stats-table-body"></tbody>
+          </table>
         </div>
 
         <div class="pagination-controls">
@@ -141,12 +154,6 @@
       <p data-i18n="footer_credit">Data provided by deadlock-api.com</p>
     </footer>
 
-    <script type="module" src="js/i18n.js"></script>
-    <script type="module" src="js/utils.js"></script>
-    <script type="module" src="js/constants.js"></script>
-    <script type="module" src="js/api.js"></script>
-    <script type="module" src="js/router.js"></script>
-    <script type="module" src="js/hero-detail.js"></script>
     <script type="module" src="js/table.js"></script>
   </body>
 </html>

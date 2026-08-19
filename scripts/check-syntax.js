@@ -9,7 +9,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const JS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "js");
+const JS_DIR = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "js",
+);
 const files = fs
   .readdirSync(JS_DIR)
   .filter((f) => f.endsWith(".js"))

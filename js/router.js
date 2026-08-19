@@ -11,15 +11,31 @@ import { onTableRouteActive } from "./table.js";
  * @param {string} [hash] - Optional hash string; defaults to window.location.hash.
  * @returns {{view: string, heroId?: number}} The view mode ("table" or "hero") and optional hero ID.
  */
-function parseHash() {
-  const hash = window.location.hash.replace(/^#/, "");
-  const params = new URLSearchParams(hash);
+/**
+ * Extracts and validates a hero ID from a URL hash string.
+ * Accepts formats like "#hero=123" or "hero=123".
+ *
+ * @param {string} hash - The hash string to parse.
+ * @returns {number|null} The hero ID if valid, or null.
+ */
+export function parseHeroIdFromHash(hash) {
+  if (!hash || typeof hash !== "string") return null;
+  const cleaned = hash.replace(/^#/, "");
+  const params = new URLSearchParams(cleaned);
   const rawHeroId = params.get("hero");
   if (rawHeroId !== null && rawHeroId !== "") {
     const heroId = Number(rawHeroId);
     if (Number.isInteger(heroId) && heroId > 0) {
-      return { view: "hero", heroId };
+      return heroId;
     }
+  }
+  return null;
+}
+
+function parseHash() {
+  const heroId = parseHeroIdFromHash(window.location.hash);
+  if (heroId !== null) {
+    return { view: "hero", heroId };
   }
   return { view: "table" };
 }
