@@ -148,7 +148,7 @@ async function fetchJson(
             if (oldestKey === undefined) break;
             _cache.delete(oldestKey);
           }
-        } catch (e) {
+        } catch (_e) {
           /* ignore cache errors */
         }
       }

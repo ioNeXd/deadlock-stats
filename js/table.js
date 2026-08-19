@@ -203,7 +203,7 @@ function renderRows() {
           : "Items list, {count} items");
       table.setAttribute("aria-label", raw.replace("{count}", count));
     }
-  } catch (e) {
+  } catch (_e) {
     // no-op if translations missing
   }
 
@@ -406,7 +406,7 @@ async function renderTable(type) {
   if (activeAbortController) {
     try {
       activeAbortController.abort();
-    } catch (e) {
+    } catch (_e) {
       /* ignore */
     }
   }
@@ -417,7 +417,7 @@ async function renderTable(type) {
   let watchdogTimer = setTimeout(() => {
     try {
       watchdog.abort();
-    } catch (e) {
+    } catch (_e) {
       /* ignore */
     }
     console.warn(

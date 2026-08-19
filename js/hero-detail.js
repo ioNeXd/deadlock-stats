@@ -70,7 +70,7 @@ async function copyTextToClipboard(text, btn) {
       await navigator.clipboard.writeText(text);
       ok = true;
     }
-  } catch (e) {
+  } catch (_e) {
     ok = false;
   }
   if (!ok) {
@@ -174,7 +174,7 @@ async function fillBuildName(build, card, heroId) {
   if (actualBuild === undefined) {
     try {
       actualBuild = await getBuildById(build.buildId, heroId);
-    } catch (e) {
+    } catch (_e) {
       actualBuild = null;
     }
     if (actualBuild) buildCache.set(cacheKey, actualBuild);
@@ -338,22 +338,6 @@ function resolveBuildDetailSource(build) {
       : sourceSkillChanges,
     heroBuild: candidate,
   };
-}
-
-/**
- * Checks if a build source contains an ability order.
- *
- * @param {object} source - The build source.
- * @returns {boolean} True if ability order exists.
- */
-function _detailHasAbilityOrder(source) {
-  if (!source || typeof source !== "object") return false;
-  const details =
-    source.details || (source.hero_build && source.hero_build.details) || {};
-  return !!(
-    details.ability_order &&
-    Array.isArray(details.ability_order.currency_changes)
-  );
 }
 
 /**
