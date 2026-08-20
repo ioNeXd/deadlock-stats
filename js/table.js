@@ -391,6 +391,11 @@ function updateSearchPlaceholder() {
  */
 async function renderTable(type) {
   state.type = type;
+
+  /* Toggle body background class based on active tab */
+  document.body.classList.toggle("body--items", type === "items");
+  document.body.classList.toggle("body--heroes", type === "heroes");
+
   updateSearchPlaceholder();
 
   const header = document.getElementById("table-name-header");

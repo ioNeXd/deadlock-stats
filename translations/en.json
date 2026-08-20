@@ -27,6 +27,7 @@
   "builds_winrate": "Highest Win Rate Builds",
   "build_category_optional": "OPTIONAL",
   "build_item_active": "ACTIVE",
+  "build_item_infuse": "INFUSE",
   "a11y_hero_list_label": "Heroes list, {count} items",
   "a11y_item_list_label": "Items list, {count} items",
   "build_favorites_source": "Top favorites",

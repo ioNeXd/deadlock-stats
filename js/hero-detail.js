@@ -292,6 +292,7 @@ function resolveBuildItemFromEntry(entry, itemMap) {
     tier: Number(raw.item_tier) || 0,
     slotType: raw.item_slot_type || "unknown",
     isActive: raw.is_active_item === true || raw.activation === "active",
+    canInfuse: raw.can_be_infused === true || raw.infusable === true,
   };
 }
 
@@ -478,6 +479,10 @@ function renderBuildItemCard(item) {
   const activeLabel = item.isActive
     ? `<span class="build-item-active">${getLocalText("build_item_active", "ATIVO")}</span>`
     : "";
+  /* Pill de infusão (quando a API fornecer o dado) */
+  const infuseLabel = item.canInfuse
+    ? `<span class="build-item-pill build-item-pill--infuse">${getLocalText("build_item_infuse", "INFUNDIR")}</span>`
+    : "";
 
   return `
     <li class="build-item-card ${slotTypeClass(item.slotType)}${tierClass}">
@@ -485,7 +490,7 @@ function renderBuildItemCard(item) {
       <span class="build-item-icon-wrap">
         <img class="build-item-icon" src="${escapeHtml(item.icon)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" />
       </span>
-      ${activeLabel}
+      ${activeLabel}${infuseLabel}
       <span class="build-item-name">${escapeHtml(item.name)}</span>
     </li>
   `;
@@ -507,6 +512,11 @@ function renderBuildCategoryBox(category) {
     ? `<p class="build-category-description" title="${escapeHtml(category.description)}">${escapeHtml(category.description)}</p>`
     : "";
 
+  /* Slogan decorativo (se a categoria tiver um, estilo carimbo da loja) */
+  const slogan = category.slogan
+    ? `<span class="build-category-slogan">${escapeHtml(category.slogan)}</span>`
+    : "";
+
   const itemsHtml = category.items.length
     ? category.items.map((item) => renderBuildItemCard(item)).join("")
     : `<li class="build-detail-empty" role="img" aria-label="${escapeHtml(t("no_data"))}">${t("no_data")}</li>`;
@@ -520,6 +530,7 @@ function renderBuildCategoryBox(category) {
             ${showName ? `<span class="build-category-name">${escapeHtml(category.name)}</span>` : ""}
             ${optionalBadge}
             ${description}
+            ${slogan}
           </div>
         </div>`
       : "";
@@ -728,15 +739,23 @@ function renderBuildSkillSection(skillSequence) {
     .map((row) => {
       skillTooltips[row.slot] = buildSkillTooltipHtml(row);
 
-      const markers = row.markers
-        .map((m) => {
-          const col = Math.min(Math.max(m.order || 1, 1), 16);
-          if (m.bonus) {
-            return `<span class="skill-path-marker skill-path-marker--bonus" style="grid-column: ${col}"><span class="skill-path-marker-badge"><img class="skill-path-marker-icon skill-path-marker-icon--unlock" src="assets/images/hud/levelup_unlock_icon.svg" alt="" decoding="async"></span></span>`;
-          }
-          return `<span class="skill-path-marker" style="grid-column: ${col}"><span class="skill-path-marker-badge"><img class="skill-path-marker-icon" src="assets/images/hud/levelup_ap_icon.svg" alt="" decoding="async"><span class="skill-path-marker-num">${m.level || ""}</span></span></span>`;
-        })
-        .join("");
+      const markersByCol = {};
+      for (const m of row.markers) {
+        const col = Math.min(Math.max(m.order || 1, 1), 16);
+        markersByCol[col] = m;
+      }
+      const markers = Array.from({ length: 16 }, (_, i) => {
+        const col = i + 1;
+        const m = markersByCol[col];
+        const last = col === 16 ? " skill-path-col--last" : "";
+        if (!m) {
+          return `<div class="skill-path-col${last}" style="grid-column:${col}"></div>`;
+        }
+        if (m.bonus) {
+          return `<div class="skill-path-col${last}" style="grid-column:${col}"><span class="skill-path-marker skill-path-marker--bonus"><span class="skill-path-marker-badge"><img class="skill-path-marker-icon skill-path-marker-icon--unlock" src="assets/images/hud/levelup_unlock_icon.svg" alt="" decoding="async"></span></span></div>`;
+        }
+        return `<div class="skill-path-col${last}" style="grid-column:${col}"><span class="skill-path-marker"><span class="skill-path-marker-badge"><img class="skill-path-marker-icon" src="assets/images/hud/levelup_ap_icon.svg" alt="" decoding="async"><span class="skill-path-marker-num">${m.level || ""}</span></span></span></div>`;
+      }).join("");
       const icon = row.image
         ? `<img class="skill-path-icon" src="${escapeHtml(row.image)}" alt="" loading="lazy" decoding="async">`
         : "";
@@ -757,7 +776,9 @@ function renderBuildSkillSection(skillSequence) {
 
   ensureSkillTooltip();
 
-  return `<div class="skill-path-panel">${rowsHtml}</div>`;
+  return `<div class="skill-path-panel">
+      <div class="skill-path-body">${rowsHtml}</div>
+    </div>`;
 }
 
 /**
@@ -1022,7 +1043,9 @@ function renderBuildCards(containerId, builds, heroId, heroAsset) {
 
     const toggle = async () => {
       const details = card.querySelector(".build-card-details");
-      if (details.classList.contains("hidden") && details.innerHTML === "") {
+      const isOpening = details.classList.contains("hidden");
+
+      if (isOpening && details.innerHTML === "") {
         details.innerHTML = `<p>${t("loading")}</p>`;
         try {
           const cacheKey = `${heroId}:${build.buildId}`;
@@ -1052,16 +1075,37 @@ function renderBuildCards(containerId, builds, heroId, heroAsset) {
           details.innerHTML = `<p class="build-detail-error" role="alert">${escapeHtml(t("build_load_error"))}</p>`;
         }
       }
-      details.classList.toggle("hidden");
-      summary.setAttribute(
-        "aria-expanded",
-        String(!details.classList.contains("hidden")),
-      );
+
+      if (isOpening) {
+        /* Abertura: mede a altura real e anima de 0 → scrollHeight. */
+        details.classList.remove("hidden");
+        const targetH = details.scrollHeight;
+        details.style.maxHeight = "0px";
+        details.style.opacity = "0";
+        /* Reflow para garantir que o navegador registre o 0px. */
+        void details.offsetHeight;
+        details.style.maxHeight = `${targetH}px`;
+        details.style.opacity = "1";
+        /* Após a transição, remove o max-height fixo para permitir
+           redimensionamento livre (ex: resize da janela). */
+        const onEnd = () => {
+          details.style.maxHeight = "none";
+          details.removeEventListener("transitionend", onEnd);
+        };
+        details.addEventListener("transitionend", onEnd);
+      } else {
+        /* Fechamento: mede a altura atual, fixa, depois anima para 0. */
+        const currentH = details.scrollHeight;
+        details.style.maxHeight = `${currentH}px`;
+        void details.offsetHeight;
+        details.style.maxHeight = "0px";
+        details.style.opacity = "0";
+        details.classList.add("hidden");
+      }
+
+      summary.setAttribute("aria-expanded", String(isOpening));
       // If loading failed, clear the error so reopening retries.
-      if (
-        details.classList.contains("hidden") &&
-        details.querySelector(".build-detail-error")
-      ) {
+      if (!isOpening && details.querySelector(".build-detail-error")) {
         details.innerHTML = "";
       }
     };
