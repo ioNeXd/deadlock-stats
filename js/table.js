@@ -237,13 +237,19 @@ function renderRows() {
     const tr = document.createElement("tr");
     const imgSrc = row.imageUrl || "";
     const imgAlt = row.name || "";
+    const nameImgSrc = row.nameImageUrl || "";
 
     const safeSrc = escapeHtml(imgSrc || "assets/placeholder.svg");
     const safeAlt = escapeHtml(imgAlt);
+    const safeNameSrc = escapeHtml(nameImgSrc);
+
+    const nameCellHtml = nameImgSrc
+      ? `<img class="name-plate" src="${safeNameSrc}" alt="${safeAlt}" loading="lazy" decoding="async">`
+      : escapeHtml(row.name);
 
     tr.innerHTML = `
         <td><img class="lazy-img" src="${safeSrc}" width="32" height="32" alt="${safeAlt}" loading="lazy" decoding="async"></td>
-        <td>${escapeHtml(row.name)}</td>
+        <td>${nameCellHtml}</td>
         <td>${row.winRate.toFixed(1)}%</td>
         <td>${row.pickRate.toFixed(1)}%</td>
       `;
@@ -259,6 +265,15 @@ function renderRows() {
       });
       imgEl.addEventListener("load", () => {
         imgEl.style.opacity = "1";
+      });
+    }
+
+    const nameImgEl = tr.querySelector("img.name-plate");
+    if (nameImgEl) {
+      // Se o SVG do nome falhar ao carregar, cai pro texto normal sem
+      // perder a linha (busca/ordenação continuam sobre row.name, intacto).
+      nameImgEl.addEventListener("error", () => {
+        nameImgEl.replaceWith(document.createTextNode(row.name));
       });
     }
 
@@ -353,10 +368,19 @@ function mapStatsToRows(stats, entitiesById, idField, type, totalMatches = 0) {
     if (!imageUrl && entity && entity.name) {
       console.debug(`No image for: ${entity.name} (id=${entity.id})`);
     }
+    // Wordmark SVG do nome do herói (só existe pra heroes na API; usa a URL
+    // crua de entity.raw, sem passar por localAssetUrl, já que essa função
+    // reescreve URLs de /icons/ para um caminho local que não existe pra isso).
+    const nameImageUrl =
+      type === "heroes"
+        ? (entity.raw && entity.raw.images && entity.raw.images.name_image) ||
+          ""
+        : "";
     return {
       id: stat[idField],
       name: entity.name || "Unknown",
       imageUrl: imageUrl || "",
+      nameImageUrl,
       winRate,
       pickRate,
     };

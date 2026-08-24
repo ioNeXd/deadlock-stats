@@ -34,7 +34,7 @@ Built with plain **HTML, CSS, and JavaScript** — no frameworks, no build step.
 
 ## Setting up the development environment
 
-The website itself is plain static HTML/CSS/JS — it only needs a static server and **does not require Node.js**. The Node toolchain is an optional safety net that powers the automated checks (syntax, translations, unit tests).
+The website itself is plain static HTML/CSS/JS — it only needs a static server and **does not require Node.js**. The Node toolchain is an optional safety net that powers the automated checks (syntax, translations, lint, formatting, unit tests).
 
 1. **Install Node.js** (v20 or newer — LTS recommended) from [nodejs.org](https://nodejs.org). `npm` is bundled with it.
 2. **Verify the install**:
@@ -47,24 +47,30 @@ The website itself is plain static HTML/CSS/JS — it only needs a static server
    git clone https://github.com/ionexd/deadlock-stats.git
    cd deadlock-stats
    ```
-4. **Skip `npm install`** — the project has zero dependencies; every check uses Node's built-in tooling (`node:test`, `node --check`).
+4. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+   This pulls in the dev-only tooling (ESLint, Prettier, Husky) that powers linting, formatting, and the pre-commit hook — the site itself still ships with zero runtime dependencies.
 5. **Run the full check suite** to confirm the codebase is healthy:
    ```bash
    npm run check
    ```
-   This validates the syntax of every JS module, keeps translation files in sync with `en.json`, and runs the unit tests. Use `npm test` to run only the tests.
+   This validates the syntax of every JS module, keeps translation files in sync with `en.json`, lints and checks formatting, and runs the unit tests. Use `npm test` to run only the tests.
 6. **Serve the site** with any static server (e.g. the VS Code Live Server extension) and open it in your browser.
 
 ## Development & checks
 
-The project ships a small Node-based toolchain (no dependencies, built-in `node:test`) to keep the codebase healthy:
+The project ships a small Node-based toolchain (`node:test` for tests, plus ESLint/Prettier for lint and formatting) to keep the codebase healthy:
 
 - `npm run check` — runs everything below in one pass.
 - `npm run check:syntax` — `node --check` on every module in `js/`.
 - `npm run validate:translations` — ensures all translation files stay in sync with `en.json`.
+- `npm run lint` — ESLint over `js/`, `scripts/`, and `tests/`.
+- `npm run format:check` — Prettier formatting check over the whole repo.
 - `npm test` — unit tests for the pure logic (utils, API normalization, i18n, skill-section data).
 
-A GitHub Actions workflow (`.github/workflows/ci.yml`) runs these three checks automatically on every push and pull request, so translation drift or a broken test never reaches `main` unnoticed.
+A GitHub Actions workflow (`.github/workflows/ci.yml`) runs the full check suite (syntax, translations, lint, format, tests) automatically on every push and pull request, so translation drift, style drift, or a broken test never reaches `main` unnoticed.
 
 ## Project structure
 

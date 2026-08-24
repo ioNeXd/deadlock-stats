@@ -90,8 +90,9 @@
   --error-bg-bottom: #2b1414;
   --error-color: #ff6b6b;
 
-  /* Estados: skeleton */
-  --skeleton-mid: #3a3a3a;
+  /* Estados: skeleton (tom levemente quente, coerente com a paleta noir/dourada,
+     em vez de um cinza neutro genérico) */
+  --skeleton-mid: #453d2e;
 
   /* Paleta estilo loja in-game */
   --build-bg: #7e5f29;
@@ -315,10 +316,12 @@ main {
 }
 
 footer {
-  padding: 20px;
+  padding: 24px 20px 20px;
   text-align: center;
   color: var(--text-tertiary);
   font-size: 0.85em;
+  border-top: 1px solid var(--border-strong);
+  letter-spacing: 0.03em;
 }
 
 .title-row {
@@ -369,7 +372,7 @@ footer {
   background: var(--bg-raised);
   border: 1px solid var(--border-strong);
   border-top: 2px solid var(--gold);
-  border-radius: 2px;
+  border-radius: 4px;
   list-style: none;
   min-width: 160px;
   overflow: hidden;
@@ -393,6 +396,7 @@ footer {
 
 .lang-menu button:hover {
   background: var(--bg-hover);
+  color: var(--gold);
 }
 
 .lang-option {
@@ -458,8 +462,17 @@ tr:focus-within td {
   cursor: pointer;
 }
 
+.clickable-row:hover {
+  background: linear-gradient(
+    90deg,
+    var(--white-faint) 0%,
+    rgba(255, 255, 255, 0.03) 55%,
+    transparent 100%
+  );
+}
+
 .clickable-row:hover td {
-  background: var(--white-faint);
+  background: transparent;
 }
 
 .table-controls {
@@ -506,7 +519,7 @@ tr:focus-within td {
 
 #back-to-table:hover,
 .pagination-controls button:hover {
-  border-color: var(--border-hover);
+  border-color: var(--gold);
 }
 
 .pagination-controls #page-info {
@@ -537,7 +550,7 @@ tr:focus-within td {
   width: 24px;
   height: 24px;
   border: 3px solid rgba(255, 255, 255, 0.12);
-  border-top-color: var(--text-inverse);
+  border-top-color: var(--gold);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   flex-shrink: 0;
@@ -567,7 +580,7 @@ tr:focus-within td {
   );
   color: var(--text-inverse);
   border-left: 4px solid var(--error-color);
-  border-radius: 6px;
+  border-radius: 4px;
   margin-bottom: 12px;
 }
 
@@ -587,10 +600,11 @@ tr:focus-within td {
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.95em;
+  transition: border-color 0.2s ease;
 }
 
 .btn-action:hover {
-  border-color: #bbb;
+  border-color: var(--gold);
 }
 
 /* Skeleton / linhas de carregamento */
@@ -603,7 +617,7 @@ tr:focus-within td {
 .skeleton-cell {
   display: block;
   height: 18px;
-  border-radius: 6px;
+  border-radius: 4px;
   background: linear-gradient(
     90deg,
     var(--bg-raised) 25%,
@@ -617,7 +631,7 @@ tr:focus-within td {
 .skeleton-avatar {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 @keyframes shimmer {
@@ -631,7 +645,7 @@ tr:focus-within td {
   width: 32px;
   height: 32px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 4px;
   border: 1px solid var(--border-strong);
   background: var(--bg-raised);
   display: inline-block;
@@ -655,6 +669,23 @@ tr:hover .lazy-img,
   opacity: 1;
 }
 
+/* Wordmark SVG do nome do herói (substitui o texto puro na tabela e no
+   detalhe do herói). O filtro força branco independente da cor original
+   do traço no SVG de origem — alguns vêm em preto, ilegíveis no fundo escuro. */
+.name-plate {
+  display: block;
+  height: 26px;
+  width: 120px;
+  object-fit: contain;
+  object-position: left center;
+  filter: brightness(0) invert(1);
+}
+
+.name-plate--detail {
+  height: 47px;
+  width: 200px;
+}
+
 /* Estado vazio */
 .empty-state td {
   text-align: center;
@@ -676,6 +707,16 @@ tr:hover .lazy-img,
 
 .build-section {
   margin-bottom: 24px;
+}
+
+.build-section h3 {
+  color: var(--text-primary);
+  font-size: 1.05em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .build-list {
@@ -803,8 +844,8 @@ tr:hover .lazy-img,
 
 .build-copy-btn--copied {
   opacity: 1;
-  color: gold;
-  border-color: gold;
+  color: var(--gold);
+  border-color: var(--gold);
 }
 
 /* Toast de feedback ao copiar o ID da build. */
@@ -892,6 +933,31 @@ tr:hover .lazy-img,
 
 .build-items-panel {
   overflow-x: auto;
+}
+
+/* Scrollbar customizada (painéis de item da build e skill path em telas
+   estreitas) — troca a barra cinza padrão do navegador por uma discreta,
+   coerente com a paleta do site. */
+.build-items-panel,
+.skill-path-panel {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) var(--bg-primary);
+}
+
+.build-items-panel::-webkit-scrollbar,
+.skill-path-panel::-webkit-scrollbar {
+  height: 8px;
+}
+
+.build-items-panel::-webkit-scrollbar-track,
+.skill-path-panel::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+.build-items-panel::-webkit-scrollbar-thumb,
+.skill-path-panel::-webkit-scrollbar-thumb {
+  background-color: var(--gold);
+  border-radius: 4px;
 }
 
 .build-categories-flow {
@@ -1353,7 +1419,7 @@ tr:hover .lazy-img,
     var(--skill-tip-grad-2) 100%
   );
   border: 1px solid var(--skill-tip-border);
-  border-radius: 8px;
+  border-radius: 4px;
   box-shadow: 0 6px 18px var(--black-strong);
   color: var(--skill-path-name);
   font-size: 0.78em;
@@ -1412,7 +1478,7 @@ tr:hover .lazy-img,
 .skill-tooltip-desc {
   margin: 8px 0 0;
   padding: 8px 9px;
-  border-radius: 5px;
+  border-radius: 4px;
   background: var(--skill-tip-block-bg);
   color: var(--skill-path-name);
 }
@@ -1437,7 +1503,7 @@ tr:hover .lazy-img,
   flex-direction: column;
   gap: 3px;
   padding: 6px 9px;
-  border-radius: 5px;
+  border-radius: 4px;
   background: var(--skill-tip-block-bg);
 }
 
@@ -1534,7 +1600,7 @@ tr:hover .lazy-img,
   margin: 0;
   padding: 14px 16px;
   border: 1px dashed rgba(255, 107, 107, 0.4);
-  border-radius: 6px;
+  border-radius: 4px;
   background: rgba(255, 107, 107, 0.07);
   color: var(--danger, #ff6b6b);
   font-size: 0.85em;

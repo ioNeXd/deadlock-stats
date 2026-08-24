@@ -881,6 +881,9 @@ export async function renderHeroDetail(heroId) {
     const heroName = hero ? hero.name : `Hero #${heroId}`;
     const heroIcon =
       (hero && hero.images && hero.images.icon_image_small) || "";
+    // Wordmark SVG do nome (mesma fonte/campo usado na tabela: entity.raw.images.name_image)
+    const heroNameImage =
+      (hero && hero.raw && hero.raw.images && hero.raw.images.name_image) || "";
 
     const maxBuilds = CONSTANTS.MAX_BUILDS_PER_LIST;
     const byPopularity = [...buildStats]
@@ -893,7 +896,11 @@ export async function renderHeroDetail(heroId) {
     container.innerHTML = `
       <div class="hero-detail-header">
         <img src="${escapeHtml(heroIcon)}" width="64" alt="${escapeHtml(heroName)}">
-        <h2>${escapeHtml(heroName)}</h2>
+        ${
+          heroNameImage
+            ? `<img class="name-plate name-plate--detail" src="${escapeHtml(heroNameImage)}" alt="${escapeHtml(heroName)}">`
+            : `<h2>${escapeHtml(heroName)}</h2>`
+        }
       </div>
 
       <section class="build-section">
@@ -912,6 +919,20 @@ export async function renderHeroDetail(heroId) {
     renderBuildCards("build-list-popular", byPopularity, heroId, hero);
     renderBuildCards("build-list-winrate", byWinRate, heroId, hero);
     applyTranslations();
+
+    if (heroNameImage) {
+      const namePlateEl = container.querySelector(
+        ".hero-detail-header .name-plate",
+      );
+      if (namePlateEl) {
+        // Se o SVG do nome falhar, cai pro <h2> de texto normal.
+        namePlateEl.addEventListener("error", () => {
+          const h2 = document.createElement("h2");
+          h2.textContent = heroName;
+          namePlateEl.replaceWith(h2);
+        });
+      }
+    }
 
     if (buildStats.length === 0) {
       const popular = document.getElementById("build-list-popular");
