@@ -1737,3 +1737,170 @@ tr:hover .lazy-img,
   letter-spacing: 0.04em;
   background: rgba(232, 192, 74, 0.08);
 }
+
+/* ==========================================================================
+   Lobby (tela inicial do site)
+   ========================================================================== */
+
+body.lobby-active header,
+body.lobby-active main {
+  display: none;
+}
+
+.lobby-view {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-primary);
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(26, 26, 26, 0.75) 0%,
+      rgba(26, 26, 26, 0.96) 100%
+    ),
+    url("../assets/images/branding/header-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.lobby-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.lobby-logo {
+  width: min(420px, 80vw);
+  height: auto;
+}
+
+.lobby-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(280px, 90vw);
+}
+
+.lobby-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 62px;
+  padding: 10px 20px;
+  font-size: 1em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-align: center;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  color: var(--gold);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.lobby-btn:hover {
+  background-color: var(--gold);
+  color: var(--bg-primary);
+}
+
+.lobby-btn--primary {
+  background-color: var(--gold);
+  color: var(--bg-primary);
+}
+
+.lobby-btn--primary:hover {
+  background-color: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--bg-primary);
+}
+
+.lobby-btn--disabled,
+.lobby-btn--disabled:hover {
+  border-color: var(--border-strong);
+  color: var(--text-muted);
+  background: transparent;
+  cursor: not-allowed;
+}
+
+.lobby-btn-tag {
+  display: block;
+  font-size: 0.65em;
+  font-weight: normal;
+  letter-spacing: 0.05em;
+  text-transform: none;
+  margin-top: 2px;
+  color: var(--text-tertiary);
+}
+
+/* ==========================================================================
+   Site nav (barra de abas no topo, tipo navegador � vis�vel dentro de
+   qualquer p�gina, some junto com o resto do header quando o lobby ativo)
+   ========================================================================== */
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: -20px -20px 16px;
+  padding: 8px 20px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.site-nav-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  font-size: 0.8em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+.site-nav-item--active {
+  color: var(--gold);
+  border-color: var(--gold);
+  cursor: pointer;
+}
+
+.site-nav-item--active:hover {
+  background: rgba(232, 192, 74, 0.08);
+}
+
+.site-nav-item--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.site-nav-item--home {
+  padding: 6px 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.site-nav-item--home:hover {
+  color: var(--gold);
+}
+
+.site-nav-item--home svg {
+  display: block;
+}

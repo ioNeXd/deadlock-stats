@@ -19,8 +19,87 @@
     <meta name="theme-color" content="#1a1a1a" />
     <link rel="stylesheet" href="css/style.css" />
   </head>
-  <body>
+  <body class="lobby-active">
+    <div id="lobby-view" class="lobby-view">
+      <div class="lobby-content">
+        <img
+          src="assets/images/branding/logo.png"
+          alt="Deadlock Stats"
+          class="lobby-logo"
+        />
+        <nav class="lobby-nav" aria-label="Main menu">
+          <a
+            href="#tierlist"
+            id="lobby-tierlist"
+            class="lobby-btn lobby-btn--primary"
+            data-i18n="lobby_tierlist"
+            >Tierlist</a
+          >
+          <button type="button" class="lobby-btn lobby-btn--disabled" disabled>
+            <span data-i18n="lobby_leaderboard">Leaderboard</span>
+            <span class="lobby-btn-tag" data-i18n="lobby_coming_soon"
+              >Coming soon</span
+            >
+          </button>
+          <button type="button" class="lobby-btn lobby-btn--disabled" disabled>
+            <span data-i18n="lobby_lore">Lore</span>
+            <span class="lobby-btn-tag" data-i18n="lobby_coming_soon"
+              >Coming soon</span
+            >
+          </button>
+          <button type="button" class="lobby-btn lobby-btn--disabled" disabled>
+            <span data-i18n="nav_heroes">Heroes</span>
+            <span class="lobby-btn-tag" data-i18n="lobby_coming_soon"
+              >Coming soon</span
+            >
+          </button>
+          <button type="button" class="lobby-btn lobby-btn--disabled" disabled>
+            <span data-i18n="lobby_tutorials">Tutorials</span>
+            <span class="lobby-btn-tag" data-i18n="lobby_coming_soon"
+              >Coming soon</span
+            >
+          </button>
+        </nav>
+      </div>
+    </div>
+
     <header>
+      <nav class="site-nav" aria-label="Site sections">
+        <a href="#" class="site-nav-item site-nav-item--home" aria-label="Home">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 10.5 12 3l9 7.5" />
+            <path d="M5 9.5V21h14V9.5" />
+          </svg>
+        </a>
+        <a
+          href="#tierlist"
+          class="site-nav-item site-nav-item--active"
+          data-i18n="lobby_tierlist"
+          >Tierlist</a
+        >
+        <span class="site-nav-item site-nav-item--disabled">
+          <span data-i18n="lobby_leaderboard">Leaderboard</span>
+        </span>
+        <span class="site-nav-item site-nav-item--disabled">
+          <span data-i18n="lobby_lore">Lore</span>
+        </span>
+        <span class="site-nav-item site-nav-item--disabled">
+          <span data-i18n="nav_heroes">Heroes</span>
+        </span>
+        <span class="site-nav-item site-nav-item--disabled">
+          <span data-i18n="lobby_tutorials">Tutorials</span>
+        </span>
+      </nav>
       <div class="title-row">
         <h1 class="site-logo">
           <img
@@ -50,7 +129,7 @@
       </nav>
     </header>
     <main>
-      <div id="table-view">
+      <div id="table-view" class="hidden">
         <div class="table-controls">
           <input
             id="search-input"

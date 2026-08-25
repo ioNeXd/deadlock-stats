@@ -47,5 +47,10 @@
   "skill_tooltip_vitality": "Health & Healing",
   "skill_tooltip_resist": "Resistances",
   "skill_tooltip_extra": "Other",
-  "last_updated_unavailable": "unavailable"
+  "last_updated_unavailable": "unavailable",
+  "lobby_tierlist": "Tierlist",
+  "lobby_leaderboard": "Leaderboard",
+  "lobby_lore": "Lore",
+  "lobby_tutorials": "Tutorials",
+  "lobby_coming_soon": "Coming soon"
 }

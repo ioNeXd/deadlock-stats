@@ -47,5 +47,10 @@
   "skill_tooltip_vitality": "Vida & Cura",
   "skill_tooltip_resist": "Resistências",
   "skill_tooltip_extra": "Extras",
-  "last_updated_unavailable": "indisponível"
+  "last_updated_unavailable": "indisponível",
+  "lobby_tierlist": "Tierlist",
+  "lobby_leaderboard": "Ranking",
+  "lobby_lore": "História",
+  "lobby_tutorials": "Tutoriais",
+  "lobby_coming_soon": "Em breve"
 }

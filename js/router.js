@@ -1,16 +1,10 @@
 import { renderHeroDetail } from "./hero-detail.js";
-import { onTableRouteActive } from "./table.js";
+import { onTableRouteActive, showLastUpdated } from "./table.js";
 
 // =============================================================================
 // ROUTER MODULE
 // =============================================================================
 
-/**
- * Parses the current URL hash and extracts the view type and hero ID.
- *
- * @param {string} [hash] - Optional hash string; defaults to window.location.hash.
- * @returns {{view: string, heroId?: number}} The view mode ("table" or "hero") and optional hero ID.
- */
 /**
  * Extracts and validates a hero ID from a URL hash string.
  * Accepts formats like "#hero=123" or "hero=123".
@@ -32,32 +26,54 @@ export function parseHeroIdFromHash(hash) {
   return null;
 }
 
+/**
+ * Parses the current URL hash and returns the view mode.
+ *
+ * Routes:
+ * - "#hero=ID" -> hero detail view
+ * - "#tierlist" -> table (heroes/items) view
+ * - anything else (including empty hash) -> lobby view (site landing screen)
+ *
+ * @returns {{view: string, heroId?: number}} The view mode and optional hero ID.
+ */
 function parseHash() {
   const heroId = parseHeroIdFromHash(window.location.hash);
   if (heroId !== null) {
     return { view: "hero", heroId };
   }
-  return { view: "table" };
+  const cleaned = window.location.hash.replace(/^#/, "");
+  if (cleaned === "tierlist") {
+    return { view: "table" };
+  }
+  return { view: "lobby" };
 }
 
 // =============================================================================
 // VIEW MANAGEMENT
 // =============================================================================
 
+let lastUpdatedTriggered = false;
+
 /**
- * Shows the specified view by toggling visibility of the table and hero detail containers.
+ * Shows the specified view by toggling visibility of the lobby, table, and
+ * hero detail containers, and whether the site chrome (header/main) is shown.
  *
- * @param {string} view - The view name ("table" or "hero").
+ * @param {string} view - The view name ("lobby", "table", or "hero").
  */
 function showView(view) {
+  const lobbyView = document.getElementById("lobby-view");
   const tableView = document.getElementById("table-view");
   const heroView = document.getElementById("hero-detail-view");
+
+  document.body.classList.toggle("lobby-active", view === "lobby");
+  if (lobbyView) lobbyView.classList.toggle("hidden", view !== "lobby");
+
   if (view === "hero") {
     tableView.classList.add("hidden");
     heroView.classList.remove("hidden");
   } else {
     heroView.classList.add("hidden");
-    tableView.classList.remove("hidden");
+    tableView.classList.toggle("hidden", view === "lobby");
   }
 }
 
@@ -71,8 +87,22 @@ export async function handleRouteChange() {
   showView(route.view);
   if (route.view === "hero") {
     await renderHeroDetail(route.heroId);
-  } else if (typeof onTableRouteActive === "function") {
+  } else if (
+    route.view === "table" &&
+    typeof onTableRouteActive === "function"
+  ) {
     onTableRouteActive();
+  }
+
+  // "Last updated" lives in the header, which is hidden on the lobby — only
+  // fetch it once, the first time the site chrome actually becomes visible.
+  if (
+    route.view !== "lobby" &&
+    !lastUpdatedTriggered &&
+    typeof showLastUpdated === "function"
+  ) {
+    lastUpdatedTriggered = true;
+    showLastUpdated();
   }
 }
 
@@ -101,8 +131,15 @@ export function navigateToHero(heroId) {
 }
 
 /**
- * Navigates back to the table view by clearing the URL hash.
+ * Navigates to the table (tierlist) view.
  */
 export function navigateToTable() {
+  window.location.hash = "tierlist";
+}
+
+/**
+ * Navigates back to the lobby (site landing screen).
+ */
+export function navigateToLobby() {
   window.location.hash = "";
 }

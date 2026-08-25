@@ -668,8 +668,6 @@ async function init() {
   } else {
     await renderTable("heroes");
   }
-
-  showLastUpdated();
 }
 
 // Start the module (guarded for Node.js test environment)
@@ -677,4 +675,10 @@ if (typeof document !== "undefined") {
   init();
 }
 
-export { init, onTableRouteActive, renderTable, mapStatsToRows };
+export {
+  init,
+  onTableRouteActive,
+  renderTable,
+  mapStatsToRows,
+  showLastUpdated,
+};
