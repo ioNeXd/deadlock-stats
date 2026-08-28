@@ -12,7 +12,6 @@ import {
   formatDate,
   isValidHeroId,
   safeGet,
-  throttle,
   TTLCache,
 } from "../js/utils.js";
 
@@ -93,27 +92,6 @@ test("debounce fires once after a burst of calls with the last arguments", async
   await wait(90);
   assert.equal(calls.length, 1);
   assert.deepEqual(calls[0], [3]);
-});
-
-// -----------------------------------------------------------------------------
-// throttle
-// -----------------------------------------------------------------------------
-
-test("throttle fires immediately, then at most once per interval", async () => {
-  let count = 0;
-  const throttled = throttle(() => {
-    count += 1;
-  }, 30);
-
-  throttled(); // immediate
-  assert.equal(count, 1);
-
-  for (let i = 0; i < 5; i++) throttled(); // suppressed, schedules trailing
-  await wait(80); // trailing call fires
-  assert.equal(count, 2);
-
-  throttled(); // new window, immediate again
-  assert.equal(count, 3);
 });
 
 // -----------------------------------------------------------------------------

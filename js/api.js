@@ -142,7 +142,9 @@ async function fetchJson(
       if (cacheKey) {
         try {
           _cache.set(cacheKey, { ts: Date.now(), data: json });
-          // Keep the cache bounded: evict the oldest entry when over the limit.
+          // Keep the cache bounded: evict the oldest entry when over the
+          // limit. Eviction is insertion-order (FIFO), not true LRU — good
+          // enough for this small, stable set of endpoint URLs.
           while (_cache.size > CONSTANTS.API_CACHE_MAX_ENTRIES) {
             const oldestKey = _cache.keys().next().value;
             if (oldestKey === undefined) break;
@@ -599,14 +601,13 @@ export async function getHeroBuildStats(heroId, minMatches = 1, opts = {}) {
     const raw = await fetchJson(url, opts);
     const stats = normalizeHeroBuildStats(raw);
     if (stats.length > 0) return stats;
-    return getBuildsByFavorites(heroId, CONSTANTS.MAX_BUILDS_PER_LIST, opts);
-  } catch (err) {
-    console.warn(
-      `No build data available for hero ${heroId}, trying favorites:`,
-      err,
-    );
-    return getBuildsByFavorites(heroId, CONSTANTS.MAX_BUILDS_PER_LIST, opts);
+    // Fallthrough to favorites — single place, no duplicate getBuildsByFavorites.
+  } catch (_err) {
+    // Error path also falls through to the same favorites logic below
   }
+
+  // Unified fallback: only one place to maintain
+  return getBuildsByFavorites(heroId, CONSTANTS.MAX_BUILDS_PER_LIST, opts);
 }
 
 /**

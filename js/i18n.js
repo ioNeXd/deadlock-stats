@@ -273,6 +273,9 @@ export async function selectLanguage(lang) {
     updateLangToggle();
     safeSetLocalStorage("lang", lang);
     closeLangMenu();
+    // Report then clear so the set does not grow unbounded across switches
+    reportMissingTranslations();
+    missingKeys.clear();
 
     if (typeof languageChangeHandler === "function") languageChangeHandler();
   } catch (err) {

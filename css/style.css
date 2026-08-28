@@ -55,7 +55,7 @@
    ========================================================================== */
 
 :root {
-  /* Cores base do app (tema escuro) */
+  /* Base app colors (dark theme) */
   --bg-primary: #1a1a1a;
   --bg-raised: #2a2a2a;
   --bg-retry: #222;
@@ -73,16 +73,16 @@
   --border-hover: #666;
   --focus-color: var(--gold);
 
-  /* Overlays translúcidos reutilizados (hover, bordas, sombras) */
+  /* Reusable translucent overlays (hover, borders, shadows) */
   --white-faint: rgba(255, 255, 255, 0.05);
   --white-edge: rgba(255, 255, 255, 0.08);
   --black-strong: rgba(0, 0, 0, 0.55);
 
-  /* Destaque dourado (slots do skill path e selo de favoritos) */
+  /* Gold highlight (skill path slots and favorites badge) */
   --gold: #e8c04a;
 
-  /* Acento teal — reservado para estados informativos pontuais (ex. indicador
-     de dado atualizado); nunca usado para ação/interação, essa é sempre o dourado */
+  /* Teal accent — reserved for occasional informational states (e.g. the
+     "data refreshed" indicator); never used for actions/interactions — gold owns those */
   --accent-info: #5da8b7;
 
   /* Estados: erro */
@@ -90,16 +90,16 @@
   --error-bg-bottom: #2b1414;
   --error-color: #ff6b6b;
 
-  /* Estados: skeleton (tom levemente quente, coerente com a paleta noir/dourada,
-     em vez de um cinza neutro genérico) */
+  /* States: skeleton (slightly warm tone, consistent with the noir/gold palette,
+     instead of a generic neutral gray) */
   --skeleton-mid: #453d2e;
 
-  /* Paleta estilo loja in-game */
+  /* In-game shop-style palette */
   --build-bg: #7e5f29;
   --skill-path-bg-fixed: #9b8b6f;
   --build-category-header-bg: #706550;
-  --build-category-header-bg-optional: #4f4f59; /* header das categorias opcionais */
-  --build-category-items-bg-optional: #696a79; /* fundo do conteúdo das categorias opcionais */
+  --build-category-header-bg-optional: #4f4f59; /* header of optional categories */
+  --build-category-items-bg-optional: #696a79; /* background of optional category contents */
   --build-category-border: #86785f;
   --build-category-border-optional: #585861;
   --build-text-dark: #1a1208;
@@ -113,19 +113,19 @@
   --build-category-desc-color: #d1c4ae;
   --build-optional-badge-bg: #41414a;
   --build-optional-badge-text: #6d8fc7;
-  --build-fav-badge-bg: #3d3f48; /* selo de build vinda do fallback por favoritos */
+  --build-fav-badge-bg: #3d3f48; /* badge for builds from the favorites fallback */
   --build-fav-badge-text: var(--gold);
   /* Build card — summary & name */
   --build-summary-bg: #5da8b7;
   --build-name-color: #d9ddcf;
   --build-id-matches-color: #363c39;
 
-  /* Skill path — ordem de habilidades (estilo do editor in-game) */
+  /* Skill path — ability order (in-game editor style) */
   --skill-path-bg: #0f0800;
   --skill-path-border: #a65a0a;
   --skill-path-badge-bg: #130e08;
   --skill-path-badge-text: #77b880;
-  /* Slots 1-4: mesmo dourado (o número 1 acompanha os demais). */
+  /* Slots 1-4: same gold (slot 1 matches the others). */
   --skill-path-slot-bg: var(--gold);
   --skill-path-slot-text: #3a2c10;
   --skill-path-icon-bg: #23272f;
@@ -138,43 +138,43 @@
   --skill-tip-block-bg: rgba(0, 0, 0, 0.28);
   --skill-tip-section-text: #cbb9f0;
 
-  /* Cores das categorias de item (tipos de slot) e seus degradês */
+  /* Item category colors (slot types) and their gradients */
   --weapon-gradient: linear-gradient(180deg, #c8843a 0%, #8f5520 100%);
   --vitality-gradient: linear-gradient(180deg, #5a9a42 0%, #2f6622 100%);
   --spirit-gradient: linear-gradient(180deg, #8b5fbf 0%, #553080 100%);
   --utility-gradient: linear-gradient(180deg, #4a8fa8 0%, #2a5f78 100%);
 
-  /* Nome dos itens: texto padrão dos tiers 1–3 (igual em todos os tipos) */
+  /* Item names: default text for tiers 1–3 (same across slot types) */
   --name-color: #4c4545;
-  /* Textura halftone (pontos de impressão, bem leve) sobre o fundo do nome
-     dos itens: duas grades de pontos deslocadas — ajuste a opacidade
-     (números de cada rgba) ou o tamanho (8px) para intensificar. */
+  /* Halftone texture (subtle print dots) over the item-name background:
+     two offset dot grids — tweak the opacity
+     (the rgba numbers) or the dot size (8px) to intensify it. */
   --name-texture:
     radial-gradient(circle at 50% 50%, rgb(0, 0, 0, 0.5) 0 20%, transparent 40%)
       3px 3px / 2px 2px,
     radial-gradient(circle at 50% 50%, rgb(0, 0, 0, 0.5) 0 20%, transparent 40%)
       0px 0px / 2px 2px;
 
-  /* Tamanhos dos cards de build (lógica de cálculo preservada) */
+  /* Build card sizes (calculation logic preserved) */
   --build-item-size: 72px;
   --build-item-name-h: 28px;
   --build-item-card-h: calc(
     var(--build-item-size) + var(--build-item-name-h) + 2px
   );
-  --build-item-gap: 4px; /* distância entre cards de item */
-  --build-category-pad: 6px; /* distância borda ↔ primeiro/último item */
+  --build-item-gap: 4px; /* gap between item cards */
+  --build-category-pad: 6px; /* border-to-first/last-item distance */
   --build-category-border-w: 2px;
 
-  /* Tipografia geral do site + tipografia da loja (mesma fonte, contextos distintos) */
+  /* General site typography + shop typography (same font, different contexts) */
   --font-body: "Radiance", Arial, sans-serif;
   --font-shop: "Radiance", Arial, sans-serif;
 
-  /* Textura de papel envelhecido (SVG) usada em .build-card::before */
+  /* Aged paper texture (SVG) used in .build-card::before */
   --paper-grain: url("../assets/images/branding/paper-grain.svg");
 }
 
 /* ==========================================================================
-   4. Estilos Gerais (body, links)
+   4. General styles (body, links)
    ========================================================================== */
 
 body {
@@ -196,7 +196,7 @@ body {
   transition: background-color 0.4s ease;
 }
 
-/* Fundo dinâmico por tab — itens usam atmosfera da loja in-game */
+/* Per-tab dynamic background — items use the in-game shop atmosphere */
 body.body--items {
   background-color: #1e1b16;
   background-image:
@@ -219,7 +219,7 @@ body.body--heroes {
     url("../assets/images/branding/page-bg.jpg");
 }
 
-/* Utilitários */
+/* Utilities */
 .hidden {
   display: none !important;
 }
@@ -303,8 +303,8 @@ nav a:hover {
   color: var(--gold);
 }
 
-/* Aba ativa (heroes/items) — indicado só via CSS a partir da classe já
-   aplicada no body por renderTable(), sem precisar de JS adicional. */
+/* Active tab (heroes/items) — indicated purely via CSS from the class already
+   applied to the body by renderTable(), no extra JS needed. */
 body.body--heroes #nav-heroes,
 body.body--items #nav-items {
   color: var(--gold);
@@ -418,10 +418,10 @@ footer {
 }
 
 /* ==========================================================================
-   6. Tabela e controles
+   6. Table & controls
    ========================================================================== */
 
-/* Responsividade: rolagem horizontal da tabela em telas estreitas */
+/* Responsiveness: horizontal table scrolling on narrow screens */
 .table-scroll {
   overflow-x: auto;
 }
@@ -442,7 +442,7 @@ td {
   border-bottom: 1px solid var(--border-color);
 }
 
-/* Contraste melhorado para os headers da tabela */
+/* Improved contrast for the table headers */
 th {
   color: var(--text-secondary);
   font-size: 0.9em;
@@ -498,7 +498,7 @@ tr:focus-within td {
   margin-top: 12px;
 }
 
-/* Botões de navegação compartilham a mesma base */
+/* Nav buttons share the same base styling */
 #back-to-table,
 .pagination-controls button {
   background: none;
@@ -527,8 +527,14 @@ tr:focus-within td {
   text-align: center;
 }
 
+/* Out-of-range pagination buttons are natively disabled by the JS */
+.pagination-controls button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* ==========================================================================
-   7. Componentes de estado (loading, error, skeleton)
+   7. State components (loading, error, skeleton)
    ========================================================================== */
 
 /* Loading */
@@ -540,7 +546,7 @@ tr:focus-within td {
   color: var(--text-loading);
 }
 
-/* Estado oculto controlado via JS (aria-hidden ou classe .hidden) */
+/* Hidden state controlled via JS (aria-hidden or the .hidden class) */
 .loading-container[aria-hidden="true"],
 .loading-container.hidden {
   display: none;
@@ -607,7 +613,7 @@ tr:focus-within td {
   border-color: var(--gold);
 }
 
-/* Skeleton / linhas de carregamento */
+/* Skeleton / loading rows */
 .skeleton-row td {
   padding-top: 12px;
   padding-bottom: 12px;
@@ -640,7 +646,7 @@ tr:focus-within td {
   }
 }
 
-/* Placeholder e transição de imagens */
+/* Image placeholder and transition */
 .lazy-img {
   width: 32px;
   height: 32px;
@@ -664,14 +670,14 @@ tr:hover .lazy-img,
   will-change: opacity;
 }
 
-/* Quando a imagem já carregou ou caiu no placeholder, força visível */
+/* Once the image has loaded or fallen back to the placeholder, force it visible */
 .lazy-img[src$="placeholder.svg"] {
   opacity: 1;
 }
 
-/* Wordmark SVG do nome do herói (substitui o texto puro na tabela e no
-   detalhe do herói). O filtro força branco independente da cor original
-   do traço no SVG de origem — alguns vêm em preto, ilegíveis no fundo escuro. */
+/* Hero name wordmark SVG (replaces plain text in the table and in the
+   hero detail header). The filter forces white regardless of the original
+   stroke color of the source SVG — some come in black, unreadable on dark. */
 .name-plate {
   display: block;
   height: 26px;
@@ -695,7 +701,7 @@ tr:hover .lazy-img,
 }
 
 /* ==========================================================================
-   8. Detalhes do Herói e Cards de Build (shop styles)
+   8. Hero detail & build cards (shop styles)
    ========================================================================== */
 
 .hero-detail-header {
@@ -746,8 +752,8 @@ tr:hover .lazy-img,
   filter: brightness(0.97);
 }
 
-/* Cabeçalho clicável (nome, winrate, partidas) — expande/colapsa o build.
-   Divisão 1: assume 100% da largura do card, com fundo próprio. */
+/* Clickable header (name, winrate, matches) — expands/collapses the build.
+   Row 1: takes 100% of the card width, with its own background. */
 .build-card-summary {
   position: relative;
   z-index: 1;
@@ -764,7 +770,7 @@ tr:hover .lazy-img,
   padding: 10px 14px;
 }
 
-/* Seta de expandir/colapsar no canto direito */
+/* Expand/collapse arrow in the right corner */
 .build-card-summary::after {
   content: "\25BC";
   margin-left: auto;
@@ -813,7 +819,7 @@ tr:hover .lazy-img,
   white-space: nowrap;
 }
 
-/* Botão que copia o ID da build para a área de transferência. */
+/* Button that copies the build ID to the clipboard. */
 .build-copy-btn {
   display: inline-flex;
   align-items: center;
@@ -848,7 +854,7 @@ tr:hover .lazy-img,
   border-color: var(--gold);
 }
 
-/* Toast de feedback ao copiar o ID da build. */
+/* Toast feedback when copying the build ID. */
 .build-copy-toast {
   position: fixed;
   z-index: 1200;
@@ -875,7 +881,7 @@ tr:hover .lazy-img,
   transform: translate(-50%, -100%);
 }
 
-/* Selo de build vinda do fallback (mais favoritadas de todos os tempos). */
+/* Badge for builds from the fallback (all-time most favorited). */
 .build-fav-badge {
   margin-left: auto;
   padding: 2px 8px;
@@ -903,14 +909,14 @@ tr:hover .lazy-img,
   padding: 0 14px;
 }
 
-/* Estado aberto — padding visível. max-height é controlado pelo JS. */
+/* Open state — visible padding. max-height is controlled by JS. */
 .build-card-details:not(.hidden) {
   width: 100%;
   box-sizing: border-box;
   padding: 12px 14px;
 }
 
-/* Textura de papel envelhecido sobre o fundo do build card details */
+/* Aged paper texture over the build card details background */
 .build-card-details::before {
   content: "";
   position: absolute;
@@ -935,8 +941,8 @@ tr:hover .lazy-img,
   overflow-x: auto;
 }
 
-/* Scrollbar customizada (painéis de item da build e skill path em telas
-   estreitas) — troca a barra cinza padrão do navegador por uma discreta,
+/* Custom scrollbar (build item panels and skill path on narrow screens)
+   — replaces the browser's default gray bar with a discreet one,
    coerente com a paleta do site. */
 .build-items-panel,
 .skill-path-panel {
@@ -982,7 +988,7 @@ tr:hover .lazy-img,
   letter-spacing: 0.04em;
 }
 
-/* Categorias de itens do build */
+/* Build item categories */
 .build-item-category {
   --category-cols: 1;
   flex: 0 0 auto;
@@ -1008,10 +1014,10 @@ tr:hover .lazy-img,
   background: var(--build-category-items-bg-optional);
 }
 
-/* Categoria sem itens: caixa no tamanho de um item (descrição trunca "..."
+/* Empty category: box sized like a single item (description truncates to "..."
    e o texto completo fica no tooltip via title). */
 .build-item-category--empty {
-  /* Caixa com exatamente o tamanho de um card: card + paddings + bordas. */
+  /* Box sized exactly like one card: card + paddings + borders. */
   max-width: calc(
     var(--build-item-size) + 2 * var(--build-category-pad) + 2 *
       var(--build-category-border-w)
@@ -1027,7 +1033,7 @@ tr:hover .lazy-img,
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 
-/* Cabeçalho em uma única linha: Nome → OPCIONAL → descrição. */
+/* Single-line header: Name → OPTIONAL → description. */
 .build-category-title-row {
   display: flex;
   align-items: center;
@@ -1049,8 +1055,8 @@ tr:hover .lazy-img,
 }
 
 .build-category-optional {
-  /* Pode encolher: se a categoria for estreita demais, trunca com "..."
-     em vez de cortar na borda (nome e descrição já faziam isso). */
+  /* Can shrink: if the category is too narrow, truncates with "..."
+     instead of clipping at the edge (name and description already did). */
   flex-shrink: 1;
   min-width: 0;
   overflow: hidden;
@@ -1092,7 +1098,7 @@ tr:hover .lazy-img,
   align-content: start;
 }
 
-/* Cards de item */
+/* Item cards */
 .build-item-card {
   position: relative;
   display: flex;
@@ -1103,13 +1109,13 @@ tr:hover .lazy-img,
   overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.35);
   box-shadow: inset 0 0 0 1px var(--white-edge);
-  /* Cor padrão do selo de tier (weapon/utility); vitality/spirit
-     sobrescrevem com as suas cores. */
+  /* Default tier badge color (weapon/utility); vitality/spirit
+     override with their own colors. */
   --tier-badge: #e59400;
 }
 
-/* Tipo do slot: degradê do card, cor do selo de tier e fundo do nome
-   por tier são definidos por variáveis específicas de cada tipo. */
+/* Slot type: card gradient, tier badge color and per-tier name background
+   are defined by type-specific variables. */
 .build-item-card--weapon {
   --name-bg-1: #e8cf9c;
   --name-bg-2: #c3a069;
@@ -1147,7 +1153,7 @@ tr:hover .lazy-img,
   background: var(--utility-gradient);
 }
 
-/* Selo de tier (canto superior direito, cortado na diagonal) */
+/* Tier badge (top-right corner, diagonally clipped) */
 .build-item-tier {
   position: absolute;
   top: 0;
@@ -1218,7 +1224,7 @@ tr:hover .lazy-img,
   min-height: 0;
   padding: 3px 2px;
   overflow: hidden;
-  /* Halftone sutil + fundo escuro (os tiers só sobrescrevem a cor). */
+  /* Subtle halftone + dark background (tiers only override the color). */
   background: var(--name-texture) var(--black-strong);
   color: #f5f5f5;
   font-family: var(--font-shop);
@@ -1229,9 +1235,9 @@ tr:hover .lazy-img,
   word-break: break-word;
 }
 
-/* Fundo do nome por tipo + tier (estilo loja in-game):
-   tiers 1–3 usam --name-color (texto escuro); o tier 4 usa texto claro
-   por tipo com brilho. As cores de fundo vêm das variáveis --name-bg-N
+/* Name background per slot type + tier (in-game shop style):
+   tiers 1–3 use --name-color (dark text); tier 4 uses light text
+   per type with glow. Background colors come from the --name-bg-N variables
    definidas em cada tipo de card. */
 .build-item-card--tier-1 .build-item-name {
   background-color: var(--name-bg-1);
@@ -1254,8 +1260,8 @@ tr:hover .lazy-img,
   text-shadow: 0 0 4px var(--name-glow-4);
 }
 
-/* Painel de ordem de habilidades — timeline por habilidade (1-4), estilo
-   do editor in-game: cada linha é uma habilidade com os níveis upados
+/* Skill order panel — per-ability timeline (1-4), styled after the
+   in-game editor: each row is one ability with its leveled-up marks
    (selos de diamante) posicionados na ordem em que os pontos foram gastos. */
 .skill-path-panel {
   background: var(--skill-path-bg-fixed);
@@ -1267,7 +1273,7 @@ tr:hover .lazy-img,
   min-width: 0;
 }
 
-/* Corpo do skill path — espelha .build-category-items */
+/* Skill path body — mirrors .build-category-items */
 .skill-path-body {
   padding: var(--build-category-pad);
   display: flex;
@@ -1303,12 +1309,12 @@ tr:hover .lazy-img,
   justify-content: center;
   font-size: 0.8em;
   font-weight: 700;
-  /* Slots 1-4: mesmo dourado (o número 1 acompanha os demais). */
+  /* Slots 1-4: same gold (slot 1 matches the others). */
   background: var(--skill-path-slot-bg);
   color: var(--skill-path-slot-text);
 }
 
-/* Ícone da habilidade (imagem oficial da API) ao lado do nome. */
+/* Ability icon (official API image) beside the name. */
 .skill-path-icon {
   flex-shrink: 0;
   width: 24px;
@@ -1333,11 +1339,11 @@ tr:hover .lazy-img,
   flex: 1;
   height: clamp(24px, 4vw, 32px);
   display: grid;
-  grid-template-columns: repeat(16, 1fr);
+  grid-template-columns: repeat(var(--skill-path-columns, 16), 1fr);
   grid-auto-rows: minmax(
     0,
     1fr
-  ); /* linha = altura exata do track — permite % no marcador */
+  ); /* line = exact track height — enables % positioning on markers */
   border: 1px solid var(--build-category-border);
   background: none;
 }
@@ -1355,8 +1361,8 @@ tr:hover .lazy-img,
 .skill-path-marker {
   justify-self: center;
   align-self: center;
-  /* Dimensão relativa: ocupa 80% da coluna (largura) e 80% da altura da
-     linha do track, centralizado com folga de cada lado — nunca sai da
+  /* Relative sizing: takes 80% of the column (width) and 80% of the track
+     row height, centered with breathing room on each side — never leaves
      coluna e acompanha o tamanho do timeline. */
   width: 80%;
   height: 80%;
@@ -1376,7 +1382,7 @@ tr:hover .lazy-img,
   height: 100%;
   min-width: 0;
   box-sizing: border-box;
-  padding: 0 2px; /* sem padding vertical: o ícone (80%) ocupa a caixa inteira */
+  padding: 0 2px; /* no vertical padding: the icon (80%) fills the whole box */
   background: var(--skill-path-badge-bg);
   color: var(--skill-path-badge-text);
   border-radius: 3px;
@@ -1391,8 +1397,8 @@ tr:hover .lazy-img,
   text-overflow: ellipsis;
 }
 
-/* Ícones dos marcadores: levelup_ap_icon (evoluir) e levelup_unlock_icon
-   (desbloquear) — baixados da loja para assets/images/hud/. Altura relativa:
+/* Marker icons: levelup_ap_icon (level up) and levelup_unlock_icon
+   (unlock) — taken from the shop into assets/images/hud/. Relative height:
    80% da caixa, centralizado. */
 .skill-path-marker-icon {
   display: block;
@@ -1403,10 +1409,10 @@ tr:hover .lazy-img,
   stroke: #77b880;
 }
 
-/* Tooltip da habilidade (descrição + propriedades) — elemento único no body,
-   position: fixed, segue o mouse. Quadrado responsivo com fundo em gradiente
-   (preto acinzentado → roxo, de cima para baixo); largura acompanha o
-   conteúdo (max-content) e quebra para caber na viewport. */
+/* Ability tooltip (description + properties) — a single element on the body,
+   position: fixed, follows the mouse. Responsive box with gradient background
+   (grayish black → purple, top to bottom); width follows the
+   content (max-content) and wraps to fit the viewport. */
 .skill-tooltip {
   position: fixed;
   z-index: 1000;
@@ -1447,8 +1453,8 @@ tr:hover .lazy-img,
   color: var(--text-inverse);
 }
 
-/* Selos ao lado do nome (cargas, cooldown entre cargas, cooldown), na mesma
-   linha — empurrados para a direita; cada um com o ícone em SVG. */
+/* Badges beside the name (charges, cooldown between charges, cooldown), on the same
+   row — pushed to the right; each one with its SVG icon. */
 .skill-tooltip-badges {
   display: flex;
   align-items: center;
@@ -1474,7 +1480,7 @@ tr:hover .lazy-img,
   height: 12px;
 }
 
-/* Bloco da descrição da habilidade. */
+/* Ability description block. */
 .skill-tooltip-desc {
   margin: 8px 0 0;
   padding: 8px 9px;
@@ -1483,7 +1489,7 @@ tr:hover .lazy-img,
   color: var(--skill-path-name);
 }
 
-/* Seções de propriedades (Alcance / Dano / Duração / Cura). */
+/* Property sections (Range / Damage / Duration / Healing). */
 .skill-tooltip-section {
   margin-top: 8px;
 }
@@ -1532,7 +1538,7 @@ tr:hover .lazy-img,
   color: var(--text-inverse);
 }
 
-/* Sequência de habilidades (fallback: lista simples) */
+/* Skill sequence (fallback: simple list) */
 .build-skill-list {
   list-style: none;
   margin: 0;
@@ -1572,13 +1578,13 @@ tr:hover .lazy-img,
   color: var(--build-text-dark);
 }
 
-/* Estado vazio dentro de builds */
+/* Empty state inside builds */
 .build-detail-empty {
   color: var(--build-text-soft);
   margin: 0;
 }
 
-/* Categoria sem itens: ocupa exatamente o tamanho de um card de item. */
+/* Category without items: takes exactly the size of an item card. */
 .build-category-items .build-detail-empty {
   display: flex;
   align-items: center;
@@ -1595,7 +1601,7 @@ tr:hover .lazy-img,
   word-break: break-word;
 }
 
-/* Falha ao carregar/renderizar uma build expandida */
+/* Failure while loading/rendering an expanded build */
 .build-detail-error {
   margin: 0;
   padding: 14px 16px;
@@ -1607,7 +1613,7 @@ tr:hover .lazy-img,
   line-height: 1.4;
 }
 
-/* Debug colapsável (renderizado condicionalmente pelo JS) */
+/* Collapsible debug block (conditionally rendered by JS) */
 .build-raw-debug summary {
   cursor: pointer;
   color: var(--text-muted);
@@ -1623,10 +1629,10 @@ tr:hover .lazy-img,
 }
 
 /* ==========================================================================
-   9. Responsividade
+   9. Responsiveness
    ========================================================================== */
 
-/* Tablet: reduz tamanhos do skill path sem quebrar layout */
+/* Tablet: shrinks skill path sizes without breaking the layout */
 @media (max-width: 768px) {
   .skill-path-ability {
     flex: 0 1 140px;
@@ -1645,8 +1651,8 @@ tr:hover .lazy-img,
   }
 }
 
-/* Em telas estreitas, encolhe os cards de build para caber mais itens por
-   linha (o painel mantém scroll horizontal). */
+/* On narrow screens, shrinks build cards to fit more items per
+   row (panel keeps horizontal scrolling). */
 @media (max-width: 640px) {
   :root {
     --build-item-size: 56px;
@@ -1664,8 +1670,8 @@ tr:hover .lazy-img,
     font-size: 0.52em;
   }
 
-  /* Skill path: habilidade em cima, timeline embaixo (rola horizontalmente
-     se faltar espaço — as 16 colunas seguem legíveis). */
+  /* Skill path: ability on top, timeline below (scrolls horizontally
+     when space runs out — the 16 columns remain readable). */
   .skill-path-row {
     flex-direction: column;
     align-items: flex-start;
@@ -1702,7 +1708,7 @@ tr:hover .lazy-img,
   }
 }
 
-/* Telas muito estreitas (< 400px): compacta ao máximo */
+/* Very narrow screens (< 400px): compact as much as possible */
 @media (max-width: 400px) {
   .skill-path-track {
     min-width: 320px;
@@ -1721,7 +1727,7 @@ tr:hover .lazy-img,
 }
 
 /* ==========================================================================
-   X. Badges de papel/categoria (estilo tela de seleção de personagem)
+   10. Role/category badges (character-select style)
    ========================================================================== */
 
 .role-badge {
@@ -1739,7 +1745,7 @@ tr:hover .lazy-img,
 }
 
 /* ==========================================================================
-   Lobby (tela inicial do site)
+   11. Lobby (site landing screen)
    ========================================================================== */
 
 body.lobby-active header,
@@ -1847,8 +1853,8 @@ body.lobby-active main {
 }
 
 /* ==========================================================================
-   Site nav (barra de abas no topo, tipo navegador � vis�vel dentro de
-   qualquer p�gina, some junto com o resto do header quando o lobby ativo)
+   12. Site nav (browser-style tab bar at the top; visible on inner pages,
+   hidden together with the rest of the header while the lobby is active)
    ========================================================================== */
 
 .site-nav {

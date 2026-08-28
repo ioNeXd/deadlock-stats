@@ -152,6 +152,7 @@
           role="alert"
           aria-live="assertive"
           aria-atomic="true"
+          tabindex="-1"
         >
           <span id="error-banner-message"></span>
           <button id="error-retry" class="btn-action" data-i18n="retry_button">
@@ -224,9 +225,21 @@
         </div>
 
         <div class="pagination-controls">
-          <button id="prev-page" aria-label="Previous page">&larr; Prev</button>
+          <button
+            id="prev-page"
+            aria-label="Previous page"
+            data-i18n="pagination_prev"
+          >
+            ← Prev
+          </button>
           <span id="page-info">1</span>
-          <button id="next-page" aria-label="Next page">Next &rarr;</button>
+          <button
+            id="next-page"
+            aria-label="Next page"
+            data-i18n="pagination_next"
+          >
+            Next →
+          </button>
         </div>
       </div>
 

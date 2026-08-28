@@ -93,37 +93,6 @@ export function debounce(fn, wait = 300) {
   };
 }
 
-/**
- * Creates a throttled function that invokes the callback at most once per
- * specified interval.
- *
- * @param {Function} fn - The function to throttle.
- * @param {number} [wait=300] - Throttle interval in milliseconds.
- * @returns {Function} The throttled function.
- */
-export function throttle(fn, wait = 300) {
-  let last = 0;
-  let timer = null;
-  return function throttled(...args) {
-    const now = Date.now();
-    const remaining = wait - (now - last);
-    if (remaining <= 0) {
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
-      last = now;
-      fn.apply(this, args);
-    } else if (!timer) {
-      timer = setTimeout(() => {
-        timer = null;
-        last = Date.now();
-        fn.apply(this, args);
-      }, remaining);
-    }
-  };
-}
-
 // =============================================================================
 // TTL CACHE
 // =============================================================================

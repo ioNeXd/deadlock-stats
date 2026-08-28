@@ -30,7 +30,7 @@ const state = {
   sortColumn: null,
   sortDirection: "desc",
   type: "heroes",
-  gameStats: null,
+  gameStats: [],
   searchQuery: "",
   page: 1,
   pageSize: CONSTANTS.TABLE_PAGE_SIZE,
@@ -75,6 +75,7 @@ function showLoader() {
   const table = document.getElementById("stats-table");
   hideError();
   renderSkeletonRows();
+  updatePaginationControls(1);
   if (container) {
     container.setAttribute("aria-hidden", "false");
     container.classList.remove("hidden");
@@ -93,6 +94,25 @@ function hideLoader() {
     container.classList.add("hidden");
   }
   if (table) table.setAttribute("aria-busy", "false");
+}
+
+/**
+ * Enables/disables the pagination buttons according to the current page
+ * bounds so out-of-range clicks are prevented natively.
+ *
+ * @param {number} totalPages - Total number of pages available.
+ */
+function updatePaginationControls(totalPages) {
+  const prevPage = document.getElementById("prev-page");
+  const nextPage = document.getElementById("next-page");
+  if (prevPage) {
+    prevPage.disabled = state.page <= 1;
+    prevPage.setAttribute("aria-disabled", String(prevPage.disabled));
+  }
+  if (nextPage) {
+    nextPage.disabled = state.page >= totalPages;
+    nextPage.setAttribute("aria-disabled", String(nextPage.disabled));
+  }
 }
 
 /**
@@ -118,7 +138,7 @@ function showError(message) {
   if (banner) {
     banner.classList.remove("hidden");
     banner.setAttribute("aria-hidden", "false");
-    banner.focus && banner.focus();
+    if (typeof banner.focus === "function") banner.focus();
     announceStatus(message);
   }
 }
@@ -221,6 +241,7 @@ function renderRows() {
   const start = (state.page - 1) * state.pageSize;
   const pageRows = rows.slice(start, start + state.pageSize);
 
+  updatePaginationControls(totalPages);
   const pageInfo = document.getElementById("page-info");
   if (pageInfo) pageInfo.textContent = `${state.page} / ${totalPages}`;
 
@@ -257,10 +278,9 @@ function renderRows() {
     const imgEl = tr.querySelector("img.lazy-img");
     if (imgEl) {
       imgEl.addEventListener("error", () => {
+        const unavailable = t("a11y_image_unavailable");
         imgEl.src = "assets/placeholder.svg";
-        imgEl.alt = imgAlt
-          ? `${imgAlt} (image unavailable)`
-          : "Image unavailable";
+        imgEl.alt = imgAlt ? `${imgAlt} (${unavailable})` : unavailable;
         imgEl.style.opacity = "1";
       });
       imgEl.addEventListener("load", () => {
@@ -270,8 +290,8 @@ function renderRows() {
 
     const nameImgEl = tr.querySelector("img.name-plate");
     if (nameImgEl) {
-      // Se o SVG do nome falhar ao carregar, cai pro texto normal sem
-      // perder a linha (busca/ordenação continuam sobre row.name, intacto).
+      // If the name SVG fails to load, fall back to plain text without
+      // losing the row (search/sorting keep operating on row.name).
       nameImgEl.addEventListener("error", () => {
         nameImgEl.replaceWith(document.createTextNode(row.name));
       });
@@ -293,11 +313,10 @@ function renderRows() {
 
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();
-          const dir = e.key === "ArrowDown" ? "next" : "prev";
-          let sib =
-            dir === "next" ? tr.nextElementSibling : tr.previousElementSibling;
-          while (sib && sib.nodeType !== 1)
-            sib = dir === "next" ? sib.nextSibling : sib.previousSibling;
+          const sib =
+            e.key === "ArrowDown"
+              ? tr.nextElementSibling
+              : tr.previousElementSibling;
           if (sib && typeof sib.focus === "function") {
             tr.removeAttribute("aria-current");
             sib.setAttribute("aria-current", "true");
@@ -329,12 +348,18 @@ function handleSortClick(column) {
   }
 
   updateAriaSort();
-  const directionLabel =
-    state.sortDirection === "asc" ? "ascending" : "descending";
-  const columnLabel = state.sortColumn === "winRate" ? "Win Rate" : "Pick Rate";
+  const directionLabel = t(
+    state.sortDirection === "asc"
+      ? "a11y_sort_direction_ascending"
+      : "a11y_sort_direction_descending",
+  );
+  const columnLabel =
+    state.sortColumn === "winRate"
+      ? t("sort_column_winrate")
+      : t("sort_column_pickrate");
   const message = state.sortColumn
-    ? `Sorted by ${columnLabel}, ${directionLabel}`
-    : "Sorting cleared";
+    ? `${t("a11y_sorted_by")} ${columnLabel}, ${directionLabel}`
+    : t("a11y_sorting_cleared");
   announceStatus(message);
   renderRows();
 }
@@ -353,7 +378,7 @@ function handleSortClick(column) {
  * @returns {Array} Array of row objects with id, name, imageUrl, winRate, pickRate.
  */
 function mapStatsToRows(stats, entitiesById, idField, type, totalMatches = 0) {
-  const totalItemSlots = totalMatches * 12;
+  const totalItemSlots = totalMatches * CONSTANTS.ITEM_SLOTS_PER_MATCH;
 
   return stats.map((stat) => {
     const entity = entitiesById[stat[idField]] || {};
@@ -368,9 +393,9 @@ function mapStatsToRows(stats, entitiesById, idField, type, totalMatches = 0) {
     if (!imageUrl && entity && entity.name) {
       console.debug(`No image for: ${entity.name} (id=${entity.id})`);
     }
-    // Wordmark SVG do nome do herói (só existe pra heroes na API; usa a URL
-    // crua de entity.raw, sem passar por localAssetUrl, já que essa função
-    // reescreve URLs de /icons/ para um caminho local que não existe pra isso).
+    // Hero name wordmark SVG (heroes only in the API; uses the raw URL from
+    // entity.raw directly, bypassing localAssetUrl since that helper rewrites
+    // /icons/ URLs to a local path that does not exist for this asset type).
     const nameImageUrl =
       type === "heroes"
         ? (entity.raw && entity.raw.images && entity.raw.images.name_image) ||
@@ -475,8 +500,14 @@ async function renderTable(type) {
 
     applyTranslations();
 
-    if (!state.gameStats) {
-      state.gameStats = await getGameStats({ signal: watchdog.signal });
+    // Sempre atualiza gameStats para refletir partidas recentes no pick rate
+    try {
+      const freshGameStats = await getGameStats({ signal: watchdog.signal });
+      if (freshGameStats && freshGameStats.length > 0) {
+        state.gameStats = freshGameStats;
+      }
+    } catch (_e) {
+      // Se falhar, mantém o anterior; não bloqueia a renderização
     }
 
     const totalMatches = Number(state.gameStats[0]?.total_matches) || 0;
@@ -490,7 +521,7 @@ async function renderTable(type) {
 
     state.sortColumn = null;
     updateAriaSort();
-    announceStatus("Table updated");
+    announceStatus(t("a11y_table_updated"));
     renderRows();
 
     const nameHeader = document.getElementById("table-name-header");
@@ -588,6 +619,7 @@ function bindEvents() {
     });
   if (nextPage)
     nextPage.addEventListener("click", () => {
+      if (nextPage.disabled) return;
       state.page++;
       renderRows();
     });

@@ -70,29 +70,31 @@ The project ships a small Node-based toolchain (`node:test` for tests, plus ESLi
 - `npm run format:check` — Prettier formatting check over the whole repo.
 - `npm test` — unit tests for the pure logic (utils, API normalization, i18n, skill-section data).
 
-A GitHub Actions workflow (`.github/workflows/ci.yml`) runs the full check suite (syntax, translations, lint, format, tests) automatically on every push and pull request, so translation drift, style drift, or a broken test never reaches `main` unnoticed.
+A GitHub Actions workflow (`.github/workflows/ci.yml`) runs the full check suite (syntax, translations, lint, format, tests) on Node 20 and 22 automatically on every push and pull request, so translation drift, style drift, or a broken test never reaches `main` unnoticed.
 
 ## Project structure
 
-| Path                               | Purpose                                                            |
-| ---------------------------------- | ------------------------------------------------------------------ |
-| `index.html`                       | Single-page shell (hash routing)                                   |
-| `js/api.js`                        | API client — caching, retries, normalization, asset URL mapping    |
-| `js/table.js`                      | Main table: heroes/items, search, sort, pagination, tabs           |
-| `js/hero-detail.js`                | Hero detail: builds, item categories, skill path, ability tooltips |
-| `js/router.js`                     | Hash routing (`#hero=<id>` / `#table`)                             |
-| `js/i18n.js`                       | Translation loader and `data-i18n` binding                         |
-| `js/utils.js`                      | Shared helpers (formatting, safe access, caching)                  |
-| `js/constants.js`                  | Shared constants                                                   |
-| `js/skill-sections-data.js`        | Skill tooltip data: property sections and manual key overrides     |
-| `translations/`                    | JSON translation files (`en.json`, `pt-br.json`)                   |
-| `scripts/validate-translations.js` | Checks translation keys stay in sync                               |
-| `scripts/check-syntax.js`          | Runs `node --check` on every module in `js/`                       |
-| `tests/`                           | Unit tests (`node:test`, no dependencies)                          |
-| `package.json`                     | npm scripts for checks and tests (`npm run check`)                 |
-| `.github/workflows/ci.yml`         | CI: syntax + translations + tests on every push/PR                 |
-| `assets/`                          | Local SVGs and fonts (rest is served by the API CDN)               |
-| `css/style.css`                    | Dark theme, responsive layout, shop/build styling                  |
+| Path                               | Purpose                                                           |
+| ---------------------------------- | ----------------------------------------------------------------- |
+| `index.html`                       | Single-page shell (hash routing)                                  |
+| `js/api.js`                        | API client — caching, retries, normalization, asset URL mapping   |
+| `js/table.js`                      | Main table: heroes/items, search, sort, pagination, tabs          |
+| `js/hero-detail.js`                | Hero detail page orchestrator (header + build list sections)      |
+| `js/build-cards.js`                | Build cards: summaries, copy button, item categories, build cache |
+| `js/skill-tooltip.js`              | Skill path timeline and per-ability hover tooltips                |
+| `js/router.js`                     | Hash routing (`#hero=<id>` / `#table`)                            |
+| `js/i18n.js`                       | Translation loader and `data-i18n` binding                        |
+| `js/utils.js`                      | Shared helpers (formatting, safe access, caching)                 |
+| `js/constants.js`                  | Shared constants                                                  |
+| `js/skill-sections-data.js`        | Skill tooltip data: property sections and manual key overrides    |
+| `translations/`                    | JSON translation files (`en.json`, `pt-br.json`)                  |
+| `scripts/validate-translations.js` | Checks translation keys stay in sync                              |
+| `scripts/check-syntax.js`          | Runs `node --check` on every module in `js/`                      |
+| `tests/`                           | Unit tests (`node:test`, no dependencies)                         |
+| `package.json`                     | npm scripts for checks and tests (`npm run check`)                |
+| `.github/workflows/ci.yml`         | CI: syntax + translations + tests on every push/PR                |
+| `assets/`                          | Local SVGs and fonts (rest is served by the API CDN)              |
+| `css/style.css`                    | Dark theme, responsive layout, shop/build styling                 |
 
 ## Contributing a translation
 
