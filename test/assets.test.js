@@ -92,6 +92,8 @@ test("asset normalization preserves raw data and known image fields while tolera
     id: 7,
     name: "Example",
     background_image_webp: "https://cdn.example/background.webp",
+    class_name: "hero_example",
+    colors: { hero_color: "#ffffff" },
     future_field: { nested: true },
   }];
 
@@ -100,6 +102,8 @@ test("asset normalization preserves raw data and known image fields while tolera
   assert.equal(normalized.length, 1);
   assert.equal(normalized[0].id, 7);
   assert.equal(normalized[0].name, "Example");
+  assert.equal(normalized[0].className, "hero_example");
+  assert.deepEqual(normalized[0].colors, { hero_color: "#ffffff" });
   assert.equal(normalized[0].images.background_image_webp, raw[0].background_image_webp);
   assert.deepEqual(normalized[0].raw, raw[0]);
   assert.deepEqual(normalized[0].raw.future_field, { nested: true });
