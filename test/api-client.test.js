@@ -292,7 +292,10 @@ test("explicit json responseType parses JSON and rejects invalid JSON", async ()
 
   await assert.rejects(
     apiRequest("/v1/json-invalid", { responseType: "json", cache: false }),
-    SyntaxError,
+    error => error instanceof Error
+      && error.name === "ApiError"
+      && error.code === undefined
+      && error.cause instanceof SyntaxError,
   );
 });
 
