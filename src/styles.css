@@ -59,3 +59,14 @@
 .match-row strong{font-size:10px}
 .match-row small{display:block}
 @media(max-width:560px){.inline-form{flex-direction:column;align-items:stretch}}
+
+.match-detail-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+.match-player-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
+.match-player-card{display:grid;gap:4px;padding:10px;border:1px solid var(--line);background:rgba(13,12,11,.45)}
+.match-player-card strong{font-size:11px}
+.match-player-card small{color:var(--muted);font:8px "DM Mono"}
+.match-raw{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+.match-raw summary{cursor:pointer;color:var(--gold2);font:9px "DM Mono"}
+.match-raw pre{max-height:520px;overflow:auto;margin-top:10px}
+@media(max-width:900px){.match-detail-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.match-player-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.match-detail-summary{grid-template-columns:1fr}}
