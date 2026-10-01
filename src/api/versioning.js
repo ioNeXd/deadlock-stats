@@ -150,13 +150,14 @@ export function reconcileVersionPolicy(previousOpenApi, nextOpenApi, callbacks =
     }
   }
 
-  for (const [resourcePath, previous] of previousState) {
-    if (!nextState.has(resourcePath)) {
+  const nextPaths = new Set(nextEntries.map(entry => entry.path));
+  for (const previousEntry of previousEntries) {
+    if (!nextPaths.has(previousEntry.path)) {
       const event = {
         type: "resource_removed",
-        resourcePath,
-        path: previous.path,
-        version: `v${previous.versionNumber}`,
+        resourcePath: previousEntry.resourcePath,
+        path: previousEntry.path,
+        version: `v${previousEntry.version}`,
       };
 
       events.push(event);
