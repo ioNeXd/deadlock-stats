@@ -22,8 +22,14 @@ export async function getAnalyticsSnapshot(options = {}) {
 export function normalizeGameStats(result) {
   const data = Array.isArray(result?.data) ? result.data : [];
   return data.map(item => ({
-    timestamp: item?.start_time ?? item?.start_time_unix ?? item?.timestamp ?? null,
-    matches: item?.matches ?? item?.match_count ?? item?.total_matches ?? null,
+    bucket: item?.bucket ?? null,
+    totalMatches: item?.total_matches ?? null,
+    totalPlayers: item?.total_players ?? null,
+    avgDurationS: item?.avg_duration_s ?? null,
+    avgKills: item?.avg_kills ?? null,
+    avgPlayerDamage: item?.avg_player_damage ?? null,
+    team0Wins: item?.team0_wins ?? null,
+    team1Wins: item?.team1_wins ?? null,
     raw: item,
   }));
 }
@@ -31,9 +37,9 @@ export function normalizeGameStats(result) {
 export function normalizeHeroBanStats(result) {
   const data = Array.isArray(result?.data) ? result.data : [];
   return data.map(item => ({
-    heroId: item?.hero_id ?? item?.heroId ?? null,
-    bans: item?.bans ?? item?.ban_count ?? item?.total_bans ?? null,
-    rate: item?.ban_rate ?? item?.banRate ?? null,
+    heroId: item?.hero_id ?? null,
+    bucket: item?.bucket ?? null,
+    bans: item?.bans ?? null,
     raw: item,
   }));
 }
