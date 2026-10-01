@@ -268,3 +268,44 @@ test("aborting during retry backoff stops further network attempts", async () =>
   assert.equal(calls, 1);
 });
 
+
+
+test("authenticated GET requests do not reuse shared cache or in-flight dedupe", async () => {
+  clearApiCache();
+  let calls = 0;
+  globalThis.fetch = async input => {
+    calls += 1;
+    return new Response(JSON.stringify({ calls }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  const first = await apiGet("/v1/test-auth", { apiKey: "key-a" });
+  const second = await apiGet("/v1/test-auth", { apiKey: "key-b" });
+  assert.equal(calls, 2);
+  assert.equal(first.data.calls, 1);
+  assert.equal(second.data.calls, 2);
+});
+
+test("retry backoff removes its abort listener after resolving", async () => {
+  const controller = new AbortController();
+  let listeners = 0;
+  const originalAdd = controller.signal.addEventListener.bind(controller.signal);
+  const originalRemove = controller.signal.removeEventListener.bind(controller.signal);
+  controller.signal.addEventListener = (...args) => {
+    listeners += 1;
+    return originalAdd(...args);
+  };
+  controller.signal.removeEventListener = (...args) => {
+    listeners -= 1;
+    return originalRemove(...args);
+  };
+  globalThis.fetch = async () => new Response("{}", { status: 503 });
+  await assert.rejects(() => apiGet("/v1/retry-listener", {
+    signal: controller.signal,
+    retries: 0,
+    cache: false,
+    dedupe: false,
+  }));
+  assert.equal(listeners, 0);
+});
