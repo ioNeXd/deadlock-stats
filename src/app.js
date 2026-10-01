@@ -847,6 +847,12 @@ function bindVersionControl() {
   });
 }
 
+function renderNotFound(routeName) {
+  el.content.innerHTML = '<section class="page-head"><span class="eyebrow">NAVIGATION / 404</span><h2>Route not found</h2><p>The route <code>' +
+    esc('#/' + routeName) +
+    '</code> is not implemented in this build.</p><p><a class="primary-button" href="#/">Return to dashboard</a></p></section>';
+}
+
 function route() {
   const signal = beginRoute();
   const routeName = location.hash.replace(/^#\/?/, "").split("/")[0] || "dashboard";
@@ -856,7 +862,7 @@ function route() {
   else if (routeName === "item-analytics") renderItemAnalytics(signal);
   else if (routeName === "data") renderDataExplorer(signal);
   else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
-  else renderDashboard(signal);
+  else renderNotFound(routeName);
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName)));
   bindVersionControl();
 }
