@@ -33,3 +33,21 @@
 .analytics-filter-panel{margin-bottom:10px}.analytics-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.analytics-filters .field{min-width:0}.analytics-filters .primary-button,.analytics-filters .secondary-button{align-self:end;min-height:38px}.secondary-button{border:1px solid var(--line);background:transparent;color:var(--muted);padding:8px 12px;font:9px "DM Mono";letter-spacing:.08em;text-transform:uppercase;cursor:pointer}.secondary-button:hover{color:var(--text);border-color:var(--gold)}
 @media (max-width:900px){.analytics-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.analytics-filters{grid-template-columns:1fr}}
+
+.analytics-item-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:18px}
+.item-analytics-card{display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);background:rgba(13,12,11,.45)}
+.item-analytics-card img,.item-analytics-card>.asset-placeholder{width:48px;height:48px;min-height:48px;object-fit:cover;border:1px solid var(--line)}
+.item-analytics-card strong,.item-analytics-card small,.item-analytics-card span{display:block}
+.item-analytics-card strong{font-size:11px;color:var(--text)}
+.item-analytics-card small,.item-analytics-card span{margin-top:3px;color:var(--muted);font:8px "DM Mono"}
+.item-analytics-card span{color:var(--gold2)}
+.item-flow-panel{margin-top:10px;min-height:auto}
+.item-flow-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:20px;overflow:auto}
+.item-flow-column{min-width:190px}
+.item-flow-node{display:flex;gap:9px;align-items:center;margin-top:8px;padding:9px;border:1px solid var(--line);background:rgba(13,12,11,.45)}
+.item-flow-node img{width:32px;height:32px;object-fit:cover;border:1px solid var(--line)}
+.item-flow-node strong,.item-flow-node small{display:block}
+.item-flow-node strong{font-size:9px}
+.item-flow-node small{margin-top:3px;color:var(--muted);font:7px "DM Mono"}
+@media(max-width:900px){.analytics-item-grid{grid-template-columns:1fr}.item-flow-grid{grid-template-columns:repeat(2,minmax(190px,1fr))}}
+@media(max-width:560px){.item-flow-grid{grid-template-columns:1fr}}
