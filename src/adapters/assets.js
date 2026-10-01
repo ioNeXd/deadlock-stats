@@ -41,3 +41,14 @@ export function normalizeAsset(entity) { return entity ?? null; }
 export function normalizeHero(entity) { return normalizeEntity(entity); }
 export function normalizeRank(entity) { return normalizeEntity(entity); }
 export function normalizeItem(entity) { return normalizeEntity(entity); }
+
+
+export function resolveAssetImage(entity, preferred = []) {
+  const images = entity?.images && typeof entity.images === "object" ? entity.images : {};
+  const candidates = [...preferred, ...IMAGE_FIELDS];
+  for (const field of candidates) {
+    const value = images[field] ?? entity?.raw?.images?.[field] ?? entity?.raw?.[field];
+    if (typeof value === "string" && value) return value;
+  }
+  return "";
+}
