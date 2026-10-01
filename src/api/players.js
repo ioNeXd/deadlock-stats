@@ -54,6 +54,7 @@ export function getPlayerHeroStats(options = {}) {
     if (query.account_ids.length < 1 || query.account_ids.length > 1000) {
       throw new RangeError("account_ids must contain between 1 and 1000 account IDs");
     }
+    validateAccountIds(query.account_ids);
     query.account_ids = query.account_ids.join(",");
   }
   if (query.account_ids === "") throw new TypeError("account_ids is required");
