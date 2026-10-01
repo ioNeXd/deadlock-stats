@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { listHeroes, fetchHero, listRanks, listItems } from "../src/services/assets.js";
+import { listHeroes, fetchHero, findHeroByName, listRanks, fetchRank, listItems, listItemsByHeroId, listItemsBySlotType, listItemsByType, fetchItem, fetchRankSubrankImage } from "../src/services/assets.js";
 import { clearApiCache } from "../src/api/client.js";
 
 const originalFetch = globalThis.fetch;
@@ -98,4 +98,35 @@ test("listRanks and listItems return normalized collections", async () => {
   assert.equal(items.data[0].id, 55);
   assert.equal(items.data[0].name, "Test Item");
   assert.equal(items.data[0].images.icon, "https://example.test/item.png");
+});
+
+
+test("expanded hero, item, rank and binary asset services use documented paths", async () => {
+  let calls = mockFetch({ id: 9, name: "Nine" });
+  await findHeroByName("Nine", { cache: false, dedupe: false });
+  assert.equal(new URL(calls[0].url).pathname, "/v1/assets/heroes/by-name/Nine");
+
+  calls = mockFetch({ tier: 3, name: "Tier Three" });
+  await fetchRank(3, { cache: false, dedupe: false });
+  assert.equal(new URL(calls[0].url).pathname, "/v1/assets/ranks/3");
+
+  calls = mockFetch([{ item_id: 4 }]);
+  await listItemsByHeroId(12, { cache: false, dedupe: false });
+  assert.equal(new URL(calls[0].url).pathname, "/v1/assets/items/by-hero-id/12");
+
+  calls = mockFetch([{ item_id: 4 }]);
+  await listItemsBySlotType("weapon", { cache: false, dedupe: false });
+  assert.equal(new URL(calls[0].url).pathname, "/v1/assets/items/by-slot-type/weapon");
+
+  calls = mockFetch([{ item_id: 4 }]);
+  await listItemsByType("upgrade", { cache: false, dedupe: false });
+  assert.equal(new URL(calls[0].url).pathname, "/v1/assets/items/by-type/upgrade");
+
+  calls = mockFetch({ item_id: 4 });
+  await fetchItem("item_test", { cache: false, dedupe: false });
+  assert.equal(new URL(calls[0].url).pathname, "/v1/assets/items/item_test");
+
+  calls = mockFetch(new Uint8Array([1, 2, 3]), { contentType: "image/png" });
+  await fetchRankSubrankImage(3, 2, { cache: false, dedupe: false });
+  assert.equal(new URL(calls[0].url).pathname, "/v1/assets/ranks/3/2/image");
 });
