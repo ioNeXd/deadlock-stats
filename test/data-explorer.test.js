@@ -346,3 +346,57 @@ test("buildRequest rejects missing required parameters and preserves non-JSON bo
     /valid JSON/,
   );
 });
+
+
+test("request body metadata resolves examples and preserves encoding", () => {
+  const contractWithBodyMetadata = {
+    components: {
+      examples: {
+        PayloadExample: { summary: "Example", value: { hero_id: 7 } },
+      },
+    },
+    paths: {
+      "/v1/body": {
+        post: {
+          operationId: "body_metadata",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { type: "object" },
+                examples: { payload: { $ref: "#/components/examples/PayloadExample" } },
+                encoding: { payload: { contentType: "application/json" } },
+              },
+            },
+          },
+          responses: { "200": { description: "ok" } },
+        },
+      },
+    },
+  };
+  const operation = listApiOperations(contractWithBodyMetadata)[0];
+  const described = describeOperation(operation, contractWithBodyMetadata);
+  assert.deepEqual(described.requestBodyInfo[0].examples.payload.value, { hero_id: 7 });
+  assert.deepEqual(described.requestBodyInfo[0].encoding.payload, { contentType: "application/json" });
+});
+
+test("buildRequest selects compatible JSON media types", () => {
+  const operation = {
+    operationId: "body_media",
+    method: "POST",
+    path: "/v1/body",
+    parameters: [],
+    requestBody: {
+      content: {
+        "application/vnd.deadlock+json": { schema: { type: "object" } },
+        "text/plain": { schema: { type: "string" } },
+      },
+    },
+  };
+  const request = buildRequest(operation, {
+    __contentType: "application/*+json",
+    __body: '{"ok":true}',
+  });
+  assert.equal(request.mediaType, "application/vnd.deadlock+json");
+  assert.deepEqual(request.body, { ok: true });
+});
