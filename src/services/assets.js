@@ -13,7 +13,7 @@ import {
   getSteamInfo, getAllSteamInfo,
   getLootTables,
 } from "../api/assets.js";
-import { normalizeAsset, normalizeCollection, normalizeHero, normalizeRank, normalizeItem } from "../adapters/assets.js";
+import { normalizeAsset, normalizeCollection, normalizeHero, normalizeRank, normalizeItem, normalizeMap } from "../adapters/assets.js";
 
 function withNormalized(result, normalize) {
   const raw = result?.data;
