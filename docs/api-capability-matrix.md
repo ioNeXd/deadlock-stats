@@ -81,7 +81,21 @@
 ## Cross-cutting contract findings
 
 ### Versioning
-Many source-asset endpoints accept client_version and default to the latest known version. Historical UI must preserve the relationship between data, patch/client version, and assets.
+The public API is currently mixed-version: the OpenAPI contract contains both `/v1/...` and `/v2/...` resources. Version status is therefore determined **per resource path**, never by globally declaring an entire major version current or legacy.
+
+Rules:
+- A version is `CURRENT` when it is the highest documented version for that resource path.
+- A version enters `LEGACY` only when a newer version of the same resource path appears.
+- A newly discovered versioned path emits a `version_discovered` event.
+- A resource transition from an older version to a newer version emits an `entered_legacy` event for the previous version.
+- Removed resources emit a `resource_removed` event so consumers can react explicitly.
+- The transition callbacks are implemented in `src/api/versioning.js` and consume OpenAPI snapshots rather than hardcoded version assumptions.
+
+Example from the current contract:
+- `/v1/assets/heroes` remains current because no `/v2/assets/heroes` replacement is documented.
+- `/v2/patches` is current for the patch feed; `/v1/patches` is not treated as a current endpoint.
+
+Many source-asset endpoints also accept `client_version` and default to the latest known version. Historical UI must preserve the relationship between data, patch/client version, and assets.
 
 ### Localization
 Asset endpoints expose a documented language enum including Brazilian Portuguese, Portuguese, English, Japanese, Korean, Simplified/Traditional Chinese and other locales.
