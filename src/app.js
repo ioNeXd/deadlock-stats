@@ -5,6 +5,7 @@ import { describeOperation, executeOperation, listApiOperations } from "./servic
 import { API_BASE_URL } from "./api/client.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
+import { getDashboardSnapshot } from "./services/dashboard.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
@@ -74,28 +75,78 @@ function beginRoute() {
 }
 
 function renderDashboard(signal) {
-  el.content.innerHTML = '<section class="hero-banner"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA</span><h2>The city never sleeps.</h2><p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p><div class="pills"><span>API-FIRST</span><span>OPENAPI</span></div></div></section>' +
+  el.content.innerHTML = '<section class="hero-banner"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA</span><h2>The city never sleeps.</h2><p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p><div class="pills"><span>API-FIRST</span><span>OPENAPI</span><span>LIVE CONTRACT</span></div></div></section>' +
+    '<section class="dashboard-metrics">' +
+      '<article class="metric-card"><span>FETCHED MATCHES / 24H</span><strong id="matches-per-day">—</strong><small>API info</small></article>' +
+      '<article class="metric-card"><span>DATABASE TABLES</span><strong id="table-count">—</strong><small>reported by API</small></article>' +
+      '<article class="metric-card"><span>KNOWN ROWS</span><strong id="known-rows">—</strong><small>reported table sizes</small></article>' +
+      '<article class="metric-card"><span>HERO ASSETS</span><strong id="asset-count">—</strong><small>current catalog response</small></article>' +
+    '</section>' +
     '<section class="section"><div class="section-head"><div><span class="eyebrow">ROSTER</span><h2>Heroes in the city</h2></div><a href="#/heroes">View all →</a></div><div id="hero-grid" class="hero-grid" aria-live="polite"></div></section>' +
-    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(API_BASE_URL.replace("https://", "")) + '</strong></div><div class="metric"><span>Hero assets</span><strong id="asset-count">—</strong></div><div class="metric"><span>Response</span><strong id="api-latency">—</strong></div></article><article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article></section>';
+    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(API_BASE_URL.replace("https://", "")) + '</strong></div><div class="metric"><span>Hero response</span><strong id="api-latency">—</strong></div><div class="metric"><span>Latest patch</span><strong id="latest-patch" class="patch-link">Loading…</strong></div></article><article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article></section>';
   loadDashboard(signal);
 }
 
 async function loadDashboard(signal) {
-  try {
-    const result = await listHeroes({ ...assetVersion.options(), signal });
-    setConnection(true, "API connected");
-    $("#asset-count").textContent = result.data.length;
-    $("#api-latency").textContent = result.latencyMs + " ms";
-    $("#api-badge").textContent = "ONLINE";
-    $("#api-badge").classList.add("online");
-    renderHeroGrid(result.data);
-  } catch (error) {
-    if (isAborted(error)) return;
-    setConnection(false, "API unavailable");
-    $("#api-badge").textContent = "OFFLINE";
+  const options = { ...assetVersion.options(), signal };
+  const [heroesResult, snapshotResult] = await Promise.allSettled([
+    listHeroes(options),
+    getDashboardSnapshot(options),
+  ]);
+
+  if (signal.aborted) return;
+
+  const heroes = heroesResult.status === "fulfilled" ? heroesResult.value : null;
+  const snapshot = snapshotResult.status === "fulfilled" ? snapshotResult.value : null;
+
+  if (heroes) {
+    $("#asset-count").textContent = heroes.data.length;
+    $("#api-latency").textContent = heroes.latencyMs + " ms";
+    renderHeroGrid(heroes.data);
+  } else {
+    $("#asset-count").textContent = "—";
     $("#api-latency").textContent = "—";
     renderHeroGrid([]);
-    console.error("Deadlock API request failed", { url: error?.url ?? API_BASE_URL, status: error?.status ?? null, error });
+  }
+
+  if (snapshot) {
+    const info = snapshot.info?.data ?? {};
+    const tableSizes = info.table_sizes && typeof info.table_sizes === "object" ? info.table_sizes : {};
+    const knownRows = Object.values(tableSizes)
+      .map(table => Number(table?.rows))
+      .filter(Number.isFinite)
+      .reduce((sum, rows) => sum + rows, 0);
+    $("#matches-per-day").textContent = Number.isFinite(Number(info.fetched_matches_per_day))
+      ? Number(info.fetched_matches_per_day).toLocaleString()
+      : "—";
+    $("#table-count").textContent = Object.keys(tableSizes).length || "—";
+    $("#known-rows").textContent = knownRows ? knownRows.toLocaleString() : "—";
+
+    const patch = snapshot.latestPatch;
+    $("#latest-patch").innerHTML = patch
+      ? '<a href="' + esc(patch.link) + '" target="_blank" rel="noreferrer">' + esc(patch.title) + '</a><small>' + esc(patch.source?.toUpperCase() ?? "FEED") + " · " + esc(new Date(patch.pub_date).toLocaleDateString()) + "</small>"
+      : "No patch feed entries returned.";
+  } else {
+    $("#matches-per-day").textContent = "—";
+    $("#table-count").textContent = "—";
+    $("#known-rows").textContent = "—";
+    $("#latest-patch").textContent = "Patch feed unavailable.";
+  }
+
+  if (heroes || snapshot) {
+    setConnection(true, "API connected");
+    $("#api-badge").textContent = snapshot ? "ONLINE" : "PARTIAL";
+    $("#api-badge").classList.add("online");
+  } else {
+    setConnection(false, "API unavailable");
+    $("#api-badge").textContent = "OFFLINE";
+    renderHeroGrid([]);
+  }
+
+  for (const result of [heroesResult, snapshotResult]) {
+    if (result.status === "rejected" && !isAborted(result.reason)) {
+      console.error("Deadlock API request failed", result.reason);
+    }
   }
 }
 
