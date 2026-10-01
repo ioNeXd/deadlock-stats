@@ -281,7 +281,7 @@ test("buildRequest serializes path arrays and objects", () => {
     ids: [1, 2],
     filters: { hero: "7", mode: "ranked" },
   });
-  assert.equal(request.path, "/v1/test/.1.2/;filters=hero=7,mode=ranked");
+  assert.equal(request.path, "/v1/test/.1.2/;hero=7,mode=ranked");
 });
 
 test("executeOperation applies the documented request media type", async () => {
