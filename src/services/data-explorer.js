@@ -150,8 +150,8 @@ export function describeOperation(operation, contract = null) {
       enum: enumValues(parameterSchema(parameter)),
       constraints: parameterDefaults(parameter),
     })),
-    requestBodyInfo: requestBodyInfo(operation.requestBody),
-    responseInfo: responseInfo(operation.responses),
+    requestBodyInfo: requestBodyInfo(resolvedOperation.requestBody),
+    responseInfo: responseInfo(resolvedOperation.responses),
     security: securityInfo(operation, contract),
   };
 }
