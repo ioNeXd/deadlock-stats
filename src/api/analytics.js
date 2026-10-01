@@ -25,8 +25,8 @@ function analyticsOptions(options = {}, allowedKeys = [], stringArrayKeys = []) 
   const topLevel = Object.fromEntries(Object.entries(rest).filter(([key]) => allowedKeys.includes(key)));
   const source = { ...querySource, ...topLevel };
   const filtered = Object.fromEntries(Object.entries(source).filter(([key]) => allowedKeys.includes(key)));
-  for (const key of stringArrayKeys) {
-    if (Array.isArray(filtered[key])) filtered[key] = filtered[key].join(",");
+  for (const [key, value] of Object.entries(filtered)) {
+    if (Array.isArray(value)) filtered[key] = value.join(",");
   }
   return { ...rest, cacheTtlMs: rest.cacheTtlMs ?? ANALYTICS_CACHE_TTL_MS, query: filtered };
 }
@@ -45,8 +45,8 @@ export function getGameStats({ bucket, ...options } = {}) {
   return apiGet("/v1/analytics/game-stats", withAnalyticsQuery(analyticsOptions(options, ANALYTICS_FILTER_KEYS.game), { bucket }));
 }
 
-export function getHeroBanStats({ bucket, ...options } = {}) {
-  return apiGet("/v1/analytics/hero-ban-stats", withAnalyticsQuery(analyticsOptions(options, ["match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_average_badge","max_average_badge","min_match_id","max_match_id"]), { bucket }));
+export function getHeroBanStats(options = {}) {
+  return apiGet("/v1/analytics/hero-ban-stats", analyticsOptions(options, ["match_mode","bucket","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_average_badge","max_average_badge","min_match_id","max_match_id"]));
 }
 
 export function getHeroStats({ bucket, ...options } = {}) {
