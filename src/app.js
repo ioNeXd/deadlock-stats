@@ -729,7 +729,7 @@ async function loadExplorer(signal) {
       const query = filter.value.trim().toLowerCase();
       const filtered = operations.filter(operation => !query || [operation.operationId, operation.path, operation.summary, ...operation.tags].join(" ").toLowerCase().includes(query));
       list.innerHTML = filtered.map(operation => '<button class="operation-row" data-operation-id="' + esc(operation.operationId) + '"><span class="method ' + operation.method.toLowerCase() + '">' + operation.method + '</span><span><b>' + esc(operation.operationId) + '</b><small>' + esc(operation.path) + '</small></span>' + (operation.deprecated ? "<em>deprecated</em>" : "") + "</button>").join("") || '<p class="muted">No operations match.</p>';
-      list.querySelectorAll(".operation-row").forEach(button => button.addEventListener("click", () => renderOperation(operations.find(operation => operation.operationId === button.dataset.operationId))));
+      list.querySelectorAll(".operation-row").forEach(button => button.addEventListener("click", () => renderOperation(operations.find(operation => operation.operationId === button.dataset.operationId), signal)));
     };
     filter.addEventListener("input", renderList);
     renderList();
@@ -751,7 +751,7 @@ function schemaPlaceholder(schema) {
   return "value";
 }
 
-function renderOperation(operation) {
+function renderOperation(operation, signal) {
   const detail = describeOperation(operation);
   $("#explorer-empty").hidden = true;
   const target = $("#operation-detail");
@@ -817,7 +817,7 @@ function renderOperation(operation) {
     const resultBox = $("#operation-result");
     resultBox.querySelector("pre").textContent = "Loading…";
     try {
-      const result = await executeOperation(operation, values);
+      const result = await executeOperation(operation, values, { signal });
       resultBox.querySelector("pre").textContent = JSON.stringify({
         status: result.status,
         latencyMs: result.latencyMs,
