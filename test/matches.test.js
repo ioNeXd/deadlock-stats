@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getActiveMatches, getRecentlyFetchedMatches, getMatchMetadata, getMatchSalts } from "../src/api/matches.js";
+import { getActiveMatches, getRecentlyFetchedMatches, getMatchMetadata, getMatchSalts, getBulkMatchMetadata } from "../src/api/matches.js";
 import { normalizeMatchInfo, normalizeMatchMetadata } from "../src/services/matches.js";
 
 test("match wrappers target documented endpoints", async () => {
@@ -14,14 +14,31 @@ test("match wrappers target documented endpoints", async () => {
   await getRecentlyFetchedMatches({ cache: false, dedupe: false });
   await getMatchMetadata(123, { cache: false, dedupe: false });
   await getMatchSalts(123, { cache: false, dedupe: false });
+  await getBulkMatchMetadata({
+    match_ids: [123, 456],
+    include_player_final_stats: true,
+    include_player_stats: false,
+    hero_ids: [1, 2],
+    include_item_ids: [101, 202],
+    limit: 2,
+    cache: false,
+    dedupe: false,
+  });
   assert.deepEqual(calls.map(url => url.pathname), [
     "/v1/matches/active",
     "/v1/matches/recently-fetched",
     "/v1/matches/123/metadata",
     "/v1/matches/123/salts",
+    "/v1/matches/metadata",
   ]);
   assert.equal(calls[0].searchParams.get("account_ids"), "7");
   assert.equal(calls[0].searchParams.getAll("account_ids").length, 2);
+  assert.deepEqual(calls[4].searchParams.getAll("match_ids"), ["123", "456"]);
+  assert.equal(calls[4].searchParams.get("include_player_final_stats"), "true");
+  assert.equal(calls[4].searchParams.get("include_player_stats"), "false");
+  assert.equal(calls[4].searchParams.get("hero_ids"), "1,2");
+  assert.equal(calls[4].searchParams.get("include_item_ids"), "101,202");
+  assert.equal(calls[4].searchParams.get("limit"), "2");
 });
 
 test("match normalizers preserve documented fields and raw data", () => {
