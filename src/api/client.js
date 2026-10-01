@@ -1,0 +1,4 @@
+const API_BASE_URL = "https://api.deadlock-api.com";
+export class ApiError extends Error{constructor(message,meta={}){super(message);this.name="ApiError";Object.assign(this,meta)}}
+export async function apiGet(path,{signal}={}){const url=new URL(path,API_BASE_URL);const started=performance.now();const response=await fetch(url,{headers:{Accept:"application/json"},signal});const latencyMs=Math.round(performance.now()-started);if(!response.ok)throw new ApiError(`Deadlock API returned ${response.status} ${response.statusText}`,{status:response.status,url:url.toString()});return{data:await response.json(),latencyMs,status:response.status,url:url.toString()}}
+export{API_BASE_URL};
