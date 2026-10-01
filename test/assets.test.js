@@ -146,4 +146,28 @@ test("map normalization preserves API layers and optional build-specific fields"
   assert.equal(normalized.neutralCamps, null);
   assert.equal(normalized.entities, null);
   assert.deepEqual(normalized.raw.future_field, { preserved: true });
+  assert.equal(normalized.ziplinePaths[0].segments.length, 0);
+});
+
+test("map normalization converts zipline node splines from origin-relative world coordinates to minimap coordinates", () => {
+  const normalized = normalizeMap({
+    radius: 100,
+    images: {},
+    objective_positions: {},
+    zipline_paths: [{
+      origin: [100, -100, 50],
+      color: "#fff",
+      color_parsed: { r: 255, g: 255, b: 255, a: 1 },
+      P0_points: [[0, 0, 0], [100, 100, 0]],
+      P1_points: [[0, 0, 0], [-50, 0, 0]],
+      P2_points: [[50, 0, 0], [0, 0, 0]],
+    }],
+  });
+
+  assert.deepEqual(normalized.ziplinePaths[0].segments, [{
+    start: [1, 1],
+    control1: [1.25, 1],
+    control2: [0.75, 1],
+    end: [1.5, 0.5],
+  }]);
 });
