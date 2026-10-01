@@ -33,12 +33,18 @@ test("analytics API wrappers use documented endpoints and query parameters", asy
 });
 
 test("analytics normalizers preserve unknown source fields", () => {
-  const game = normalizeGameStats({ data: [{ start_time: 123, matches: 42, future_metric: 9 }] });
-  const bans = normalizeHeroBanStats({ data: [{ hero_id: 7, bans: 5, future_metric: 11 }] });
+  const game = normalizeGameStats({ data: [{ bucket: 20261001, total_matches: 42, avg_kills: 8, future_metric: 9 }] });
+  const bans = normalizeHeroBanStats({ data: [{ hero_id: 7, bucket: 20261001, bans: 5, future_metric: 11 }] });
 
   assert.deepEqual(game[0], {
-    timestamp: 123,
-    matches: 42,
+    bucket: 20261001,
+    totalMatches: 42,
+    totalPlayers: null,
+    avgDurationS: null,
+    avgKills: 8,
+    avgPlayerDamage: null,
+    team0Wins: null,
+    team1Wins: null,
     raw: { start_time: 123, matches: 42, future_metric: 9 },
   });
   assert.deepEqual(bans[0], {
