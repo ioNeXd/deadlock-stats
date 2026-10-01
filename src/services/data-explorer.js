@@ -94,6 +94,13 @@ function mergeParameters(pathItem, operation, contract) {
   return [...merged.values()];
 }
 
+function resolveExamples(examples, contract) {
+  return Object.fromEntries(Object.entries(examples ?? {}).map(([name, example]) => {
+    const resolved = resolveLocalRef(example, contract) ?? example;
+    return [name, resolved];
+  }));
+}
+
 function requestBodyInfo(requestBody, contract = null) {
   const content = requestBody?.content ?? {};
   return Object.entries(content).map(([mediaType, media]) => ({
@@ -101,7 +108,8 @@ function requestBodyInfo(requestBody, contract = null) {
     required: requestBody?.required === true,
     schema: resolveSchema(media?.schema ?? null, contract),
     example: media?.example,
-    examples: media?.examples ?? {},
+    examples: resolveExamples(media?.examples, contract),
+    encoding: media?.encoding ?? {},
   }));
 }
 
@@ -270,11 +278,24 @@ function serializePathParameter(parameter, value) {
   return String(value);
 }
 
+function mediaTypeMatches(available, requested) {
+  if (!requested) return false;
+  const [availableType, availableSubtype = "*"] = String(available).toLowerCase().split("/", 2);
+  const [requestedType, requestedSubtype = "*"] = String(requested).toLowerCase().split("/", 2);
+  return (availableType === "*" || requestedType === "*" || availableType === requestedType)
+    && (availableSubtype === "*" || requestedSubtype === "*" || availableSubtype === requestedSubtype);
+}
+
 function selectRequestMediaType(operation, values) {
-  const available = requestBodyInfo(operation.requestBody);
+  const available = requestBodyInfo(operation.requestBody, operation?._contract);
   if (!available.length) return null;
   const requested = values.__contentType;
-  return available.find(item => item.mediaType === requested)?.mediaType ?? available[0].mediaType;
+  if (!requested) return available[0].mediaType;
+  return available.find(item => mediaTypeMatches(item.mediaType, requested))?.mediaType ?? available[0].mediaType;
+}
+
+function isJsonMediaType(mediaType) {
+  return /(^|[/+])json($|[;+])|\+json$/i.test(String(mediaType ?? ""));
 }
 
 export function buildRequest(operation, values = {}) {
@@ -292,7 +313,7 @@ export function buildRequest(operation, values = {}) {
     const coerced = coerceParameter(value, schema);
 
     if (parameter.in === "path") {
-      path = path.replace(`{${parameter.name}}`, encodeURIComponent(serializePathParameter(parameter, coerced)));
+      path = path.replace(`{${parameter.name}}`, serializePathParameter(parameter, coerced));
     } else if (parameter.in === "query") {
       const serialized = serializeQueryParameter(parameter, coerced);
       if (serialized && typeof serialized === "object" && !Array.isArray(serialized)) {
@@ -312,7 +333,7 @@ export function buildRequest(operation, values = {}) {
   if (hasBody) {
     if (typeof values.__body !== "string") {
       body = values.__body;
-    } else if (mediaType?.includes("json")) {
+    } else if (isJsonMediaType(mediaType)) {
       try {
         body = JSON.parse(values.__body);
       } catch {
