@@ -60,7 +60,6 @@ test("probeApiStatus returns normalized online status", async () => {
   assert.equal(result.online, true);
   assert.equal(result.status, 200);
   assert.equal(result.data.services.redis, false);
-  assert.equal(result.online, true);
   assert.equal(result.healthy, false);
   assert.deepEqual(result.services, { clickhouse: true, postgres: true, redis: false });
 });
