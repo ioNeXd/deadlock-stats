@@ -1,4 +1,5 @@
 import { apiGet } from "./client.js";
+import { queryToObject } from "./query.js";
 
 const BULK_METADATA_KEYS = [
   "include_info","include_more_info","include_objectives","include_mid_boss","include_player_info",
