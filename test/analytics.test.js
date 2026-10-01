@@ -73,8 +73,8 @@ test("expanded analytics wrappers use documented paths and preserve query option
   await getHeroBuildStats(7, { query: { min_matches: 20 }, cache: false, dedupe: false });
   await getAbilityOrderStats({ hero_id: 7, cache: false, dedupe: false });
   await getBadgeDistribution({ cache: false, dedupe: false });
-  await getBuffStats({ cache: false, dedupe: false });
-  await getBuildItemStats({ query: { hero_id: 7 }, cache: false, dedupe: false });
+  await getBuffStats({ hero_ids: [7, 8], cache: false, dedupe: false });
+  await getBuildItemStats({ hero_id: 7, cache: false, dedupe: false });
 
   assert.deepEqual(calls.map(url => url.pathname), [
     "/v1/analytics/hero-stats",
