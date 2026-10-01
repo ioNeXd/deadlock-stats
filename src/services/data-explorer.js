@@ -132,10 +132,12 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
 }
 
 export function describeOperation(operation, contract = null) {
+  const parameters = (operation?.parameters ?? []).map(parameter => resolveLocalRef(parameter, contract)).filter(Boolean);
+  const resolvedOperation = { ...operation, parameters };
   return {
-    ...operation,
-    pathParameters: pathParameters(operation),
-    queryParameters: queryParameters(operation),
+    ...resolvedOperation,
+    pathParameters: pathParameters(resolvedOperation),
+    queryParameters: queryParameters(resolvedOperation),
     parameterSummary: resolvedOperation.parameters.map(parameter => ({
       name: parameter.name,
       in: parameter.in,
