@@ -1052,7 +1052,8 @@ function renderOperation(operation, signal, contract = null) {
 
 function bindVersionControl() {
   const select = $("#client-version");
-  if (!select) return;
+  if (!select || select.dataset.bound === "true") return;
+  select.dataset.bound = "true";
   select.addEventListener("change", async event => {
     assetVersion.set(event.target.value);
     await applyAssetColors();
