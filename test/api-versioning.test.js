@@ -185,3 +185,21 @@ test("a path is not deprecated when a sibling operation remains current", () => 
   assert.deepEqual(events, []);
 });
 
+
+
+test("reconcileVersionPolicy reports removed resources with their version", () => {
+  const events = [];
+  const result = reconcileVersionPolicy(
+    { paths: { "/v1/removed": { get: {} } } },
+    { paths: {} },
+    { onResourceRemoved: event => events.push(event) },
+  );
+
+  assert.deepEqual(result.events, [{
+    type: "resource_removed",
+    resourcePath: "/removed",
+    path: "/v1/removed",
+    version: "v1",
+  }]);
+  assert.deepEqual(events, result.events);
+});
