@@ -8,6 +8,12 @@ const HERO_STATS_FILTERS = new Set([
   "min_match_id", "max_match_id",
 ]);
 
+const RANK_DISTRIBUTION_FILTERS = new Set([
+  "min_unix_timestamp", "max_unix_timestamp", "min_duration_s", "max_duration_s",
+  "is_high_skill_range_parties", "is_low_pri_pool", "is_new_player_pool",
+  "min_match_id", "max_match_id",
+]);
+
 const ENEMY_MATE_FILTERS = new Set([
   "game_mode", "min_unix_timestamp", "max_unix_timestamp", "min_duration_s",
   "max_duration_s", "min_match_id", "max_match_id", "min_matches_played",
@@ -35,6 +41,11 @@ export function getPlayerHeroStats(options = {}) {
   return apiGet("/v1/players/hero-stats", { ...options, query });
 }
 
+export function getPlayerRankDistribution(options = {}) {
+  const query = filteredQuery(options, RANK_DISTRIBUTION_FILTERS);
+  return apiGet("/v1/players/rank/distribution", { ...options, query, cacheTtlMs: 60_000 });
+}
+
 export function getPlayerRanks(accountIds, options = {}) {
   if (!Array.isArray(accountIds) || accountIds.length < 1 || accountIds.length > 1000) {
     throw new RangeError("accountIds must contain between 1 and 1000 account IDs");
@@ -55,6 +66,9 @@ export function searchSteamProfiles(searchQuery, options = {}) {
 }
 
 export function getSteamProfiles(accountIds, options = {}) {
+  if (!Array.isArray(accountIds) || accountIds.length < 1 || accountIds.length > 1000) {
+    throw new RangeError("accountIds must contain between 1 and 1000 account IDs");
+  }
   return apiGet("/v1/players/steam", {
     ...options,
     query: { account_ids: Array.isArray(accountIds) ? accountIds.join(",") : accountIds, ...(options.refresh == null ? {} : { refresh: options.refresh }) },
@@ -92,11 +106,14 @@ export function getPlayerMateStats(accountId, options = {}) {
   return apiGet(accountPath(accountId, "/mate-stats"), { ...options, query });
 }
 
-export function getPlayerRankImage(accountId, format = "webp", options = {}) {
+export function getPlayerRankImage(accountIds, format = "webp", options = {}) {
+  if (!Array.isArray(accountIds) || accountIds.length < 1 || accountIds.length > 12) {
+    throw new RangeError("accountIds must contain between 1 and 12 account IDs");
+  }
   const imageFormat = format === "png" ? "png" : "webp";
-  return apiGet(accountPath(accountId, "/rank/image"), {
+  return apiGet("/v1/players/rank/image", {
     ...options,
-    query: { format: imageFormat },
+    query: { account_ids: accountIds.join(","), format: imageFormat },
     responseType: "arrayBuffer",
     cache: false,
     dedupe: false,
