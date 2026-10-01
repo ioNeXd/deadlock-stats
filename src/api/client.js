@@ -83,12 +83,18 @@ function waitForRetry(delayMs, signal) {
   });
 }
 
-function cacheKey(method, url, body) {
+function cacheKey(method, url, body, responseType = "auto", headers = {}) {
+  const normalizedHeaders = Object.entries(headers)
+    .map(([key, value]) => [String(key).toLowerCase(), String(value)])
+    .sort(([a], [b]) => a.localeCompare(b));
+
   return JSON.stringify({
     method: method.toUpperCase(),
     path: url.pathname,
     query: [...url.searchParams.entries()],
     body: stableSerialize(body),
+    responseType,
+    headers: normalizedHeaders,
   });
 }
 
@@ -197,7 +203,7 @@ async function request(path, {
     : (dedupe === undefined ? upperMethod === "GET" : dedupe);
   const url = normalizePath(path, query);
   const requestBody = body == null ? null : typeof body === "string" ? body : JSON.stringify(body);
-  const key = cacheKey(upperMethod, url, body == null ? null : body);
+  const key = cacheKey(upperMethod, url, body == null ? null : body, responseType, headers);
   const now = Date.now();
 
   if (effectiveUseCache) {
