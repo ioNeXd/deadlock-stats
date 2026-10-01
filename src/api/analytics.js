@@ -48,7 +48,7 @@ const ANALYTICS_FILTER_KEYS = {
   badge: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","is_high_skill_range_parties","is_low_pri_pool","is_new_player_pool","min_match_id","max_match_id"],
   buff: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_average_badge","max_average_badge","min_match_id","max_match_id","min_networth","max_networth","hero_ids","account_ids"],
   itemFlow: ["phase_interval_s","phase_count","game_mode","match_mode","hero_ids","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","min_matches","account_ids","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","locked_item_ids","locked_columns"],
-  itemPermutation: ["item_ids","comb_size","min_matches","max_matches","game_mode","match_mode","hero_ids","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","account_ids","ability_order_prefix","ability_unlock_order_prefix","corrupted_items"],
+  itemPermutation: ["item_ids","comb_size","min_matches","max_matches","game_mode","match_mode","hero_ids","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","account_ids","ability_order_prefix","ability_unlock_order_prefix","include_corrupted_items"],
   itemStats: ["bucket","game_mode","match_mode","hero_ids","enemy_hero_ids","enemy_hero_ids_all_match","min_enemy_networth","max_enemy_networth","same_lane_filter","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","min_matches","max_matches","account_ids","min_bought_at_s","max_bought_at_s","item_order","corrupted_items"],
 };
 
@@ -150,12 +150,17 @@ export function getPlayerStatsMetrics(options = {}) {
   return apiGet("/v1/analytics/player-stats/metrics", analyticsOptions(options, PLAYER_METRICS_FILTERS));
 }
 
+function requireSortBy(options = {}) {
+  if (options.sort_by == null || options.sort_by === "") throw new TypeError("sort_by is required");
+  return options;
+}
+
 export function getHeroScoreboard(options = {}) {
-  return apiGet("/v1/analytics/scoreboards/heroes", analyticsOptions(options, SCOREBOARD_FILTERS));
+  return apiGet("/v1/analytics/scoreboards/heroes", analyticsOptions(requireSortBy(options), SCOREBOARD_FILTERS));
 }
 
 export function getPlayerScoreboard(options = {}) {
-  return apiGet("/v1/analytics/scoreboards/players", analyticsOptions(options, PLAYER_SCOREBOARD_FILTERS));
+  return apiGet("/v1/analytics/scoreboards/players", analyticsOptions(requireSortBy(options), PLAYER_SCOREBOARD_FILTERS));
 }
 
 export function getKillDeathStats(options = {}) {
