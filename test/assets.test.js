@@ -149,6 +149,52 @@ test("map normalization preserves API layers and optional build-specific fields"
   assert.equal(normalized.ziplinePaths[0].segments.length, 0);
 });
 
+test("map normalization preserves legacy background and optional modern map layers", () => {
+  const legacy = normalizeMap({
+    radius: 100,
+    images: {
+      background: "https://cdn.example/background.png",
+      minimap: "https://cdn.example/minimap.png",
+      plain: "https://cdn.example/plain.png",
+      frame: "https://cdn.example/frame.png",
+      mid: "https://cdn.example/mid.png",
+      mid_tunnels: null,
+      rat_tunnels: null,
+    },
+    objective_positions: {},
+    zipline_paths: [],
+    neutral_camps: null,
+    entities: null,
+  });
+
+  assert.equal(legacy.images.background, "https://cdn.example/background.png");
+  assert.equal(legacy.neutralCamps, null);
+  assert.equal(legacy.entities, null);
+
+  const modern = normalizeMap({
+    radius: 100,
+    images: {
+      background: null,
+      minimap: "https://cdn.example/minimap.png",
+      plain: "https://cdn.example/plain.png",
+      frame: "https://cdn.example/frame.png",
+      mid: "https://cdn.example/mid.png",
+      mid_tunnels: "https://cdn.example/mid-tunnels.png",
+      rat_tunnels: "https://cdn.example/rat-tunnels.png",
+    },
+    objective_positions: {},
+    zipline_paths: [],
+    neutral_camps: [{ name: "Camp A", left_relative: 0.2, top_relative: 0.3 }],
+    entities: { shops: [{ left_relative: 0.4, top_relative: 0.5, position: [0, 0, 0], top_relative: 0.5 }] },
+  });
+
+  assert.equal(modern.images.background, null);
+  assert.equal(modern.images.mid_tunnels, "https://cdn.example/mid-tunnels.png");
+  assert.equal(modern.images.rat_tunnels, "https://cdn.example/rat-tunnels.png");
+  assert.equal(modern.neutralCamps.length, 1);
+  assert.equal(modern.entities.shops.length, 1);
+});
+
 test("map normalization converts zipline node splines from origin-relative world coordinates to minimap coordinates", () => {
   const normalized = normalizeMap({
     radius: 100,
