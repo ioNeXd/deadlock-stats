@@ -7,6 +7,7 @@ import { API_BASE_URL } from "./api/client.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
+import { listBuilds } from "./services/builds.js";
 import { safeExternalUrl } from "./ui/security.js";
 import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
 
@@ -595,6 +596,60 @@ async function loadApiStatus(signal) {
   }
 }
 
+function renderBuilds(signal) {
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">GAME / BUILDS</span><h2>Builds</h2><p>Search the live build catalog using filters documented by the current Deadlock API.</p></section>' +
+    '<section class="panel analytics-filter-panel"><form id="build-filters" class="analytics-filters">' +
+    '<label class="field"><span>Name</span><input name="search_name" type="search" placeholder="Build name"></label>' +
+    '<label class="field"><span>Hero ID</span><input name="hero_id" type="number" min="0" inputmode="numeric"></label>' +
+    '<label class="field"><span>Author SteamID3</span><input name="author_id" type="number" min="0" inputmode="numeric"></label>' +
+    '<label class="field"><span>Language</span><select name="build_language"><option value="">All</option><option>English</option><option>German</option><option>French</option><option>Italian</option><option>Korean</option><option>SpanishSpain</option><option>ChineseSimplified</option><option>Russian</option><option>Thai</option><option>Japanese</option><option>PortuguesePortugal</option><option>Polish</option><option>Czech</option><option>Turkish</option><option>PortugueseBrazil</option><option>Ukrainian</option><option>SpanishLatinAmerica</option><option>Vietnamese</option></select></label>' +
+    '<label class="field"><span>Sort by</span><select name="sort_by"><option value="weekly_favorites">Weekly favorites</option><option value="favorites" selected>Favorites</option><option value="updated_at">Updated</option><option value="published_at">Published</option><option value="version">Version</option><option value="ignores">Ignores</option><option value="reports">Reports</option></select></label>' +
+    '<label class="field"><span>Direction</span><select name="sort_direction"><option value="desc" selected>Descending</option><option value="asc">Ascending</option></select></label>' +
+    '<label class="field"><span>Latest only</span><select name="only_latest"><option value="true" selected>Yes</option><option value="false">No</option></select></label>' +
+    '<label class="field"><span>Limit</span><input name="limit" type="number" min="0" max="100" value="50"></label>' +
+    '<button class="primary-button" type="submit">Search builds</button></form></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">CATALOG</span><h2>Published builds</h2></div><b id="build-status">LOADING</b></div><div id="build-list" class="analytics-table"><p class="muted">Loading builds.</p></div></section>';
+
+  const form = $("#build-filters");
+  const list = $("#build-list");
+  const load = async values => {
+    $("#build-status").textContent = "LOADING";
+    list.innerHTML = '<p class="muted">Loading builds…</p>';
+    try {
+      const filters = Object.fromEntries(Object.entries(values).filter(([, value]) => value !== ""));
+      if (filters.hero_id !== undefined) filters.hero_id = Number(filters.hero_id);
+      if (filters.author_id !== undefined) filters.author_id = Number(filters.author_id);
+      if (filters.limit !== undefined) filters.limit = Number(filters.limit);
+      if (filters.only_latest !== undefined) filters.only_latest = filters.only_latest === "true";
+      const result = await listBuilds({ ...assetVersion.options(), ...filters, signal });
+      if (signal.aborted) return;
+      const builds = result.data ?? [];
+      $("#build-status").textContent = builds.length + " FOUND";
+      list.innerHTML = builds.map(build => {
+        const hero = build.hero_build ?? {};
+        const details = hero.details ?? {};
+        const categories = Array.isArray(details.mod_categories) ? details.mod_categories.length : 0;
+        const tags = Array.isArray(hero.tags) ? hero.tags.length : 0;
+        return '<article class="analytics-table-row">' +
+          '<span><strong>' + esc(hero.name ?? "Unnamed build") + '</strong><small>Build #' + esc(hero.hero_build_id ?? build.build_id ?? "—") + ' · Hero ' + esc(hero.hero_id ?? "—") + '</small></span>' +
+          '<span><strong>v' + esc(hero.version ?? "—") + '</strong><small>Author ' + esc(hero.author_account_id ?? "—") + ' · ' + esc(categories) + ' categories · ' + esc(tags) + ' tags</small></span>' +
+          '<span><small>Favorites ' + esc(build.num_favorites ?? 0) + '</small><small>Weekly ' + esc(build.num_weekly_favorites ?? 0) + '</small></span>' +
+          '</article>';
+      }).join("") || '<p class="muted">No builds matched the current filters.</p>';
+    } catch (error) {
+      if (isAborted(error)) return;
+      $("#build-status").textContent = "ERROR";
+      list.innerHTML = '<p class="error-text">' + esc(error.message) + '</p>';
+    }
+  };
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    load(Object.fromEntries(new FormData(form).entries()));
+  });
+  load(Object.fromEntries(new FormData(form).entries()));
+}
+
 function renderMatches(signal) {
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">MATCH INTELLIGENCE</span><h2>Matches</h2><p>Live and recently fetched match intelligence from the current Deadlock API.</p></section>' +
@@ -867,6 +922,7 @@ function route() {
   if (routeName === "api") renderApiStatus(signal);
   else if (routeName === "analytics") renderAnalytics(signal);
   else if (routeName === "matches") renderMatches(signal);
+  else if (routeName === "builds") renderBuilds(signal);
   else if (routeName === "item-analytics") renderItemAnalytics(signal);
   else if (routeName === "data") renderDataExplorer(signal);
   else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
