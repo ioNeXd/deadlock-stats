@@ -380,9 +380,8 @@ function validateRequestBody(value, schema, path = "$") {
     throw new TypeError(`Invalid request body at ${path}: null is not allowed.`);
   }
 
-  const variants = [...(schema.oneOf ?? []), ...(schema.anyOf ?? [])];
-  if (variants.length) {
-    const matches = variants.filter(variant => {
+  if (schema.oneOf?.length) {
+    const matches = schema.oneOf.filter(variant => {
       try {
         validateRequestBody(value, variant, path);
         return true;
@@ -390,23 +389,34 @@ function validateRequestBody(value, schema, path = "$") {
         return false;
       }
     });
-    if (schema.oneOf && schema.oneOf.length && matches.length !== 1) {
+    if (matches.length !== 1) {
       throw new TypeError(`Invalid request body at ${path}: oneOf requires exactly one matching schema.`);
     }
-    if (schema.anyOf && schema.anyOf.length && matches.length === 0) {
+  }
+
+  if (schema.anyOf?.length) {
+    const matches = schema.anyOf.filter(variant => {
+      try {
+        validateRequestBody(value, variant, path);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    if (matches.length === 0) {
       throw new TypeError(`Invalid request body at ${path}: no anyOf schema matched.`);
     }
   }
 
-  if (schema.allOf) {
+  if (schema.allOf?.length) {
     for (const variant of schema.allOf) validateRequestBody(value, variant, path);
   }
 
-  if (schema.const !== undefined && !Object.is(value, schema.const)) {
+  if (schema.const !== undefined && !deepEqual(value, schema.const)) {
     throw new TypeError(`Invalid request body at ${path}: value does not match const.`);
   }
 
-  if (Array.isArray(schema.enum) && !schema.enum.some(item => Object.is(item, value))) {
+  if (Array.isArray(schema.enum) && !schema.enum.some(item => deepEqual(item, value))) {
     throw new TypeError(`Invalid request body at ${path}: value is not in enum.`);
   }
 
@@ -416,10 +426,11 @@ function validateRequestBody(value, schema, path = "$") {
       throw new TypeError(`Invalid request body at ${path}: expected an object.`);
     }
     const properties = schema.properties ?? {};
-    for (const [name, propertySchema] of Object.entries(properties)) {
-      if (propertySchema?.required && value[name] === undefined) {
-        throw new TypeError(`Invalid request body at ${path}: missing required property ${name}.`);
-      }
+    if (schema.minProperties !== undefined && Object.keys(value).length < schema.minProperties) {
+      throw new TypeError(`Invalid request body at ${path}: fewer than minProperties.`);
+    }
+    if (schema.maxProperties !== undefined && Object.keys(value).length > schema.maxProperties) {
+      throw new TypeError(`Invalid request body at ${path}: more than maxProperties.`);
     }
     for (const name of schema.required ?? []) {
       if (value[name] === undefined) {
@@ -433,13 +444,21 @@ function validateRequestBody(value, schema, path = "$") {
       for (const name of Object.keys(value)) {
         if (!(name in properties)) throw new TypeError(`Invalid request body at ${path}: unexpected property ${name}.`);
       }
+    } else if (schema.additionalProperties && typeof schema.additionalProperties === "object") {
+      for (const name of Object.keys(value)) {
+        if (!(name in properties)) validateRequestBody(value[name], schema.additionalProperties, `${path}.${name}`);
+      }
     }
   } else if (type === "array") {
     if (!Array.isArray(value)) throw new TypeError(`Invalid request body at ${path}: expected an array.`);
     if (schema.minItems !== undefined && value.length < schema.minItems) throw new TypeError(`Invalid request body at ${path}: fewer than minItems.`);
     if (schema.maxItems !== undefined && value.length > schema.maxItems) throw new TypeError(`Invalid request body at ${path}: more than maxItems.`);
-    if (schema.uniqueItems && new Set(value.map(item => JSON.stringify(item))).size !== value.length) {
-      throw new TypeError(`Invalid request body at ${path}: items must be unique.`);
+    if (schema.uniqueItems) {
+      for (let i = 0; i < value.length; i += 1) {
+        for (let j = i + 1; j < value.length; j += 1) {
+          if (deepEqual(value[i], value[j])) throw new TypeError(`Invalid request body at ${path}: items must be unique.`);
+        }
+      }
     }
     for (let index = 0; index < value.length; index += 1) validateRequestBody(value[index], schema.items, `${path}[${index}]`);
   } else if (type === "integer" || type === "number") {
@@ -448,13 +467,37 @@ function validateRequestBody(value, schema, path = "$") {
     }
     if (schema.minimum !== undefined && value < schema.minimum) throw new TypeError(`Invalid request body at ${path}: below minimum.`);
     if (schema.maximum !== undefined && value > schema.maximum) throw new TypeError(`Invalid request body at ${path}: above maximum.`);
+    if (schema.exclusiveMinimum !== undefined && value <= schema.exclusiveMinimum) throw new TypeError(`Invalid request body at ${path}: at or below exclusiveMinimum.`);
+    if (schema.exclusiveMaximum !== undefined && value >= schema.exclusiveMaximum) throw new TypeError(`Invalid request body at ${path}: at or above exclusiveMaximum.`);
+    if (schema.multipleOf !== undefined && Math.abs(value / schema.multipleOf - Math.round(value / schema.multipleOf)) > Number.EPSILON * Math.max(1, Math.abs(value))) {
+      throw new TypeError(`Invalid request body at ${path}: value is not a multipleOf constraint.`);
+    }
   } else if (type === "boolean" && typeof value !== "boolean") {
     throw new TypeError(`Invalid request body at ${path}: expected boolean.`);
   } else if (type === "string") {
     if (typeof value !== "string") throw new TypeError(`Invalid request body at ${path}: expected string.`);
     if (schema.minLength !== undefined && value.length < schema.minLength) throw new TypeError(`Invalid request body at ${path}: shorter than minLength.`);
     if (schema.maxLength !== undefined && value.length > schema.maxLength) throw new TypeError(`Invalid request body at ${path}: exceeds maxLength.`);
+    if (schema.pattern !== undefined && !(new RegExp(schema.pattern)).test(value)) {
+      throw new TypeError(`Invalid request body at ${path}: does not match pattern.`);
+    }
   }
+}
+
+function deepEqual(left, right) {
+  if (Object.is(left, right)) return true;
+  if (typeof left !== typeof right || left === null || right === null) return false;
+  if (Array.isArray(left) || Array.isArray(right)) {
+    if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
+    return left.every((item, index) => deepEqual(item, right[index]));
+  }
+  if (typeof left === "object") {
+    const leftKeys = Object.keys(left);
+    const rightKeys = Object.keys(right);
+    if (leftKeys.length !== rightKeys.length) return false;
+    return leftKeys.every(key => Object.prototype.hasOwnProperty.call(right, key) && deepEqual(left[key], right[key]));
+  }
+  return false;
 }
 
 export function buildRequest(operation, values = {}) {
