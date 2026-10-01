@@ -827,6 +827,7 @@ function renderOperation(operation, signal) {
         data: result.data,
       }, null, 2);
     } catch (error) {
+      if (isAborted(error)) return;
       resultBox.querySelector("pre").textContent = JSON.stringify({
         error: error.message,
         status: error.status ?? null,
