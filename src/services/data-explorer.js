@@ -2,6 +2,12 @@ import { apiRequest } from "../api/client.js";
 
 const HTTP_METHODS = ["get", "post", "put", "patch", "delete", "head", "options", "trace"];
 
+function resolveLocalRef(value, contract) {
+  if (!value?.$ref || !contract) return value;
+  if (!value.$ref.startsWith("#/")) return value;
+  return value.$ref.slice(2).split("/").reduce((current, key) => current?.[key], contract);
+}
+
 function pathParameters(operation) {
   return (operation?.parameters ?? []).filter(parameter => parameter?.in === "path");
 }
@@ -48,15 +54,17 @@ function parameterDefaults(parameter) {
   };
 }
 
-function mergeParameters(pathItem, operation) {
+function mergeParameters(pathItem, operation, contract) {
   const merged = new Map();
 
   for (const parameter of Array.isArray(pathItem?.parameters) ? pathItem.parameters : []) {
-    if (parameter?.name && parameter?.in) merged.set(`${parameter.in}:${parameter.name}`, parameter);
+    const resolved = resolveLocalRef(parameter, contract);
+    if (resolved?.name && resolved?.in) merged.set(`${resolved.in}:${resolved.name}`, resolved);
   }
 
   for (const parameter of Array.isArray(operation?.parameters) ? operation.parameters : []) {
-    if (parameter?.name && parameter?.in) merged.set(`${parameter.in}:${parameter.name}`, parameter);
+    const resolved = resolveLocalRef(parameter, contract);
+    if (resolved?.name && resolved?.in) merged.set(`${resolved.in}:${resolved.name}`, resolved);
   }
 
   return [...merged.values()];
@@ -102,7 +110,7 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
       if (!operation) continue;
       if (!includeDeprecated && operation.deprecated) continue;
 
-      const parameters = mergeParameters(pathItem, operation);
+      const parameters = mergeParameters(pathItem, operation, contract);
       operations.push({
         operationId: operation.operationId ?? `${method.toUpperCase()} ${path}`,
         method: method.toUpperCase(),
@@ -128,7 +136,7 @@ export function describeOperation(operation, contract = null) {
     ...operation,
     pathParameters: pathParameters(operation),
     queryParameters: queryParameters(operation),
-    parameterSummary: operation.parameters.map(parameter => ({
+    parameterSummary: resolvedOperation.parameters.map(parameter => ({
       name: parameter.name,
       in: parameter.in,
       required: parameter.required === true,
