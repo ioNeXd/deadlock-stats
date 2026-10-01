@@ -491,6 +491,34 @@ test("buildRequest validates oneOf and additionalProperties in JSON bodies", () 
   assert.throws(() => buildRequest(operation, { __body: '{"id":7,"unknown":true}' }), /oneOf/);
 });
 
+test("buildRequest rejects unsupported request content types", () => {
+  const operation = {
+    method: "POST",
+    path: "/v1/body",
+    parameters: [],
+    requestBody: { content: { "application/json": { schema: { type: "object" } } } },
+  };
+  assert.throws(
+    () => buildRequest(operation, { __contentType: "text/plain", __body: "plain" }),
+    /Unsupported request content type/,
+  );
+});
+
+test("response metadata resolves example refs", () => {
+  const contractWithExample = {
+    components: { examples: { Result: { value: { ok: true } } } },
+    paths: { "/v1/result": { get: {
+      responses: { "200": {
+        description: "ok",
+        content: { "application/json": { examples: { result: { $ref: "#/components/examples/Result" } } } },
+      } },
+    } } },
+  };
+  const operation = listApiOperations(contractWithExample)[0];
+  const described = describeOperation(operation);
+  assert.deepEqual(described.responseInfo[0].content[0].examples.result.value, { ok: true });
+});
+
 test("buildRequest selects compatible JSON media types", () => {
   const operation = {
     operationId: "body_media",
