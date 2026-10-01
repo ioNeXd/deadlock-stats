@@ -254,6 +254,48 @@ test("invalidateApiCache can invalidate every query variant for a path", async (
 });
 
 
+test("response types select matching Accept headers", async () => {
+  const accepts = [];
+  mockFetch(async (_url, init) => {
+    accepts.push(init.headers.get("Accept"));
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  await apiRequest("/v1/json", { responseType: "json", cache: false });
+  await apiRequest("/v1/text", { responseType: "text", cache: false });
+  await apiRequest("/v1/raw", { responseType: "response", cache: false });
+
+  assert.equal(accepts[0], "application/json");
+  assert.equal(accepts[1], "text/plain, text/html, */*;q=0.8");
+  assert.equal(accepts[2], "*/*");
+});
+
+test("explicit json responseType parses JSON and rejects invalid JSON", async () => {
+  mockFetch(async () => new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { "content-type": "text/plain" },
+  }));
+
+  const result = await apiRequest("/v1/json", {
+    responseType: "json",
+    cache: false,
+  });
+  assert.deepEqual(result.data, { ok: true });
+
+  mockFetch(async () => new Response("not json", {
+    status: 200,
+    headers: { "content-type": "text/plain" },
+  }));
+
+  await assert.rejects(
+    apiRequest("/v1/json-invalid", { responseType: "json", cache: false }),
+    SyntaxError,
+  );
+});
+
 test("explicit responseType overrides the server content type", async () => {
   mockFetch(async () => new Response("hello", {
     status: 200,
