@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats } from "../src/api/analytics.js";
-import { normalizeGameStats, normalizeHeroBanStats, normalizeHeroStats } from "../src/services/analytics.js";
+import { normalizeGameStats, normalizeHeroBanStats, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats } from "../src/services/analytics.js";
 import { clearApiCache } from "../src/api/client.js";
 
 const originalFetch = globalThis.fetch;
@@ -175,5 +175,79 @@ test("hero stats normalizer follows the current OpenAPI schema", () => {
       permanent_buff_timing_matches: 20,
       future_metric: "kept",
     },
+  });
+});
+
+test("hero matchup normalizers follow the current OpenAPI schemas", () => {
+  const counter = normalizeHeroCounterStats({
+    data: [{
+      hero_id: 7,
+      enemy_hero_id: 8,
+      wins: 12,
+      matches_played: 25,
+      kills: 200,
+      enemy_kills: 180,
+      deaths: 100,
+      enemy_deaths: 120,
+      assists: 300,
+      enemy_assists: 280,
+      denies: 40,
+      enemy_denies: 35,
+      last_hits: 500,
+      enemy_last_hits: 480,
+      networth: 250000,
+      enemy_networth: 240000,
+      obj_damage: 12000,
+      enemy_obj_damage: 11000,
+      creeps: 700,
+      enemy_creeps: 680,
+      future_metric: 99,
+    }],
+  });
+  const synergy = normalizeHeroSynergyStats({
+    data: [{
+      hero_id1: 7,
+      hero_id2: 8,
+      wins: 15,
+      matches_played: 30,
+      kills1: 200,
+      kills2: 180,
+      deaths1: 100,
+      deaths2: 90,
+      assists1: 300,
+      assists2: 280,
+      denies1: 40,
+      denies2: 35,
+      last_hits1: 500,
+      last_hits2: 480,
+      networth1: 250000,
+      networth2: 240000,
+      obj_damage1: 12000,
+      obj_damage2: 11000,
+      creeps1: 700,
+      creeps2: 680,
+      future_metric: 99,
+    }],
+  });
+  const comb = normalizeHeroCombStats({
+    data: [{ hero_ids: [7, 8, 9], wins: 18, losses: 12, matches: 30, future_metric: 99 }],
+  });
+
+  assert.equal(counter[0].heroId, 7);
+  assert.equal(counter[0].enemyHeroId, 8);
+  assert.equal(counter[0].enemyObjDamage, 11000);
+  assert.equal(counter[0].raw.future_metric, 99);
+
+  assert.equal(synergy[0].heroId1, 7);
+  assert.equal(synergy[0].heroId2, 8);
+  assert.equal(synergy[0].wins, 15);
+  assert.equal(synergy[0].raw.future_metric, 99);
+
+  assert.deepEqual(comb[0], {
+    heroIds: [7, 8, 9],
+    wins: 18,
+    losses: 12,
+    matches: 30,
+    raw: { hero_ids: [7, 8, 9], wins: 18, losses: 12, matches: 30, future_metric: 99 },
   });
 });
