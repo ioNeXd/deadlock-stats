@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats, getItemStats, getItemPermutationStats, getItemFlowStats, getLaneMatchupStats, getLaneSoulCurve, getPlayerPerformanceCurve, getPlayerStatsMetrics, getHeroScoreboard, getPlayerScoreboard, getKillDeathStats } from "../src/api/analytics.js";
-import { normalizeGameStats, normalizeHeroBanStats, normalizeBadgeDistribution, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats, normalizeItemStats, normalizeItemPermutationStats, normalizeItemFlowStats } from "../src/services/analytics.js";
+import { normalizeGameStats, normalizeHeroBanStats, normalizeBadgeDistribution, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats, normalizeItemStats, normalizeItemPermutationStats, normalizeItemFlowStats, normalizePlayerPerformanceCurve, normalizeHeroScoreboard, normalizePlayerScoreboard, normalizeKillDeathStats, normalizeLaneMatchupStats, normalizeLaneSoulCurve, normalizePlayerStatsMetrics } from "../src/services/analytics.js";
 import { clearApiCache } from "../src/api/client.js";
 
 const originalFetch = globalThis.fetch;
