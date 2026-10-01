@@ -121,18 +121,74 @@ async function loadExplorer() {
   }
 }
 
+function schemaPlaceholder(schema) {
+  if (!schema) return "value";
+  if (Array.isArray(schema.type)) return schema.type.join(" | ");
+  if (schema.type) return schema.type;
+  if (schema.$ref) return schema.$ref.split("/").pop();
+  return "value";
+}
+
 function renderOperation(operation) {
   const detail = describeOperation(operation);
-  $("#explorer-empty").hidden = true;
-  const target = $("#operation-detail");
+  $("\\#explorer-empty").hidden = true;
+  const target = $("\\#operation-detail");
   target.hidden = false;
-  target.innerHTML = '<div class="operation-title"><div><span class="method ' + operation.method.toLowerCase() + '">' + operation.method + '</span><h3>' + esc(operation.operationId) + '</h3><code>' + esc(operation.path) + '</code></div>' + (operation.deprecated ? "<b>DEPRECATED</b>" : "") + '</div><p class="muted">' + esc(operation.summary) + '</p>' +
-    '<form id="operation-form">' +
-    detail.parameterSummary.map(parameter => '<label class="field"><span>' + esc(parameter.name) + ' <small>' + parameter.in + (parameter.required ? " · required" : "") + '</small></span>' +
-      (parameter.enum.length ? '<select name="' + esc(parameter.name) + '"><option value="">—</option>' + parameter.enum.map(value => '<option value="' + esc(value) + '">' + esc(value) + "</option>").join("") + "</select>" :
-      '<input name="' + esc(parameter.name) + '" placeholder="' + esc(parameter.schema?.type ?? "value") + '">') + "</label>").join("") +
-    (operation.requestBody ? '<label class="field"><span>Request body <small>JSON</small></span><textarea name="__body" rows="7" placeholder="{ }"></textarea></label>' : "") +
-    '<button class="primary-button" type="submit">Execute request</button></form><div id="operation-result" class="result-box"><span class="eyebrow">RESPONSE</span><pre>Waiting for request.</pre></div>';
+
+  const parameterFields = detail.parameterSummary.map(parameter => {
+    const schema = parameter.schema;
+    const constraints = [];
+    if (parameter.constraints.minimum != null) constraints.push("min " + parameter.constraints.minimum);
+    if (parameter.constraints.maximum != null) constraints.push("max " + parameter.constraints.maximum);
+    if (parameter.constraints.minItems != null) constraints.push("min items " + parameter.constraints.minItems);
+    if (parameter.constraints.maxItems != null) constraints.push("max items " + parameter.constraints.maxItems);
+
+    const options = parameter.enum.length
+      ? '<select name="' + esc(parameter.name) + '"><option value="">—</option>' +
+        parameter.enum.map(value => '<option value="' + esc(value) + '">' + esc(value) + "</option>").join("") + "</select>"
+      : '<input name="' + esc(parameter.name) + '" placeholder="' + esc(schemaPlaceholder(schema)) + '"' +
+        (parameter.constraints.default != null ? ' value="' + esc(parameter.constraints.default) + '"' : "") +
+        (parameter.required ? " required" : "") + ">";
+
+    return '<label class="field"><span>' + esc(parameter.name) + ' <small>' +
+      esc(parameter.in) + (parameter.required ? " · required" : "") +
+      (parameter.deprecated ? " · deprecated" : "") + '</small></span>' +
+      (parameter.description ? '<small class="muted">' + esc(parameter.description) + "</small>" : "") +
+      options +
+      (constraints.length ? '<small class="muted">' + esc(constraints.join(" · ")) + "</small>" : "") +
+      "</label>";
+  }).join("");
+
+  const bodyTypes = detail.requestBodyInfo ?? [];
+  const bodyField = bodyTypes.length
+    ? '<label class="field"><span>Request body <small>' + (bodyTypes[0].required ? "required · " : "") + "JSON/body</small></span>" +
+      '<select name="__contentType">' +
+      bodyTypes.map(item => '<option value="' + esc(item.mediaType) + '">' + esc(item.mediaType) + "</option>").join("") +
+      "</select><textarea name=\"__body\" rows=\"8\" placeholder=\"{ }\"></textarea></label>"
+    : "";
+
+  const responseSummary = detail.responseInfo.map(response =>
+    '<div class="metric"><span>' + esc(response.status) + "</span><strong>" +
+    esc(response.description || "Response") + "</strong></div>"
+  ).join("");
+
+  const securitySummary = detail.security.length
+    ? '<div class="result-box"><span class="eyebrow">SECURITY</span><p class="muted">' +
+      esc(detail.security.map(requirement => Object.keys(requirement).join(", ") || "optional").join(" · ")) +
+      "</p></div>"
+    : "";
+
+  target.innerHTML =
+    '<div class="operation-title"><div><span class="method ' + operation.method.toLowerCase() + '">' + operation.method +
+    '</span><h3>' + esc(operation.operationId) + '</h3><code>' + esc(operation.path) + '</code></div>' +
+    (operation.deprecated ? "<b>DEPRECATED</b>" : "") + "</div>" +
+    '<p class="muted">' + esc(operation.description || operation.summary) + "</p>" +
+    (securitySummary ? securitySummary : "") +
+    '<form id="operation-form">' + parameterFields + bodyField +
+    '<button class="primary-button" type="submit">Execute request</button></form>' +
+    '<div id="operation-result" class="result-box"><span class="eyebrow">RESPONSE</span><pre>Waiting for request.</pre></div>' +
+    '<div class="result-box"><span class="eyebrow">DOCUMENTED RESPONSES</span>' + responseSummary + "</div>";
+
   $("#operation-form").addEventListener("submit", async event => {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
@@ -140,9 +196,21 @@ function renderOperation(operation) {
     resultBox.querySelector("pre").textContent = "Loading…";
     try {
       const result = await executeOperation(operation, values);
-      resultBox.querySelector("pre").textContent = JSON.stringify({ status: result.status, latencyMs: result.latencyMs, url: result.url, data: result.data }, null, 2);
+      resultBox.querySelector("pre").textContent = JSON.stringify({
+        status: result.status,
+        latencyMs: result.latencyMs,
+        url: result.url,
+        contentType: result.contentType,
+        request: result.request,
+        data: result.data,
+      }, null, 2);
     } catch (error) {
-      resultBox.querySelector("pre").textContent = JSON.stringify({ error: error.message, status: error.status ?? null, retryAfterMs: error.retryAfterMs ?? null, url: error.url ?? null }, null, 2);
+      resultBox.querySelector("pre").textContent = JSON.stringify({
+        error: error.message,
+        status: error.status ?? null,
+        retryAfterMs: error.retryAfterMs ?? null,
+        url: error.url ?? null,
+      }, null, 2);
     }
   });
 }
