@@ -6,6 +6,7 @@ import {
   describeOperation,
   buildRequest,
   executeOperation,
+  enumValues,
   schemaType,
   schemaNullable,
 } from "../src/services/data-explorer.js";
@@ -89,11 +90,14 @@ test("executeOperation delegates the documented operation to the API client", as
   assert.ok(captured.init.signal instanceof AbortSignal);
 });
 
-
-test("schema helpers support nullable and union types", () => {
+test("schema helpers support OpenAPI 3.1 nullable, composition and const types", () => {
   assert.equal(schemaType({ type: ["integer", "null"] }), "integer");
   assert.equal(schemaNullable({ type: ["integer", "null"] }), true);
   assert.equal(schemaType({ oneOf: [{ type: "string" }, { type: "null" }] }), "string");
+  assert.equal(schemaNullable({ anyOf: [{ type: "integer" }, { const: null }] }), true);
+  assert.equal(schemaType({ allOf: [{ type: "object" }, { properties: {} }] }), "object");
+  assert.equal(schemaType({ const: 7 }), "number");
+  assert.deepEqual(enumValues({ anyOf: [{ enum: ["normal"] }, { const: "ranked" }] }), ["normal", "ranked"]);
 });
 
 test("listApiOperations resolves local parameter refs", () => {
@@ -175,6 +179,39 @@ test("listApiOperations resolves nested schema refs for request and response sch
   assert.equal(operation.responses["200"].content["application/json"].schema.properties.id.type, "integer");
   assert.equal(buildRequest(operation, { hero_id: "7" }).path, "/v1/nested/7");
 });
+
+test("listApiOperations resolves response header refs and schemas", () => {
+  const contractWithHeaders = {
+    components: {
+      headers: {
+        RateLimit: { description: "Requests remaining", schema: { type: "integer", minimum: 0 } },
+      },
+      schemas: { RequestId: { type: "string", format: "uuid" } },
+    },
+    paths: {
+      "/v1/status": {
+        get: {
+          responses: {
+            "200": {
+              description: "ok",
+              headers: {
+                "X-RateLimit-Remaining": { $ref: "#/components/headers/RateLimit" },
+                "X-Request-Id": { schema: { $ref: "#/components/schemas/RequestId" } },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+
+  const operation = listApiOperations(contractWithHeaders)[0];
+  const described = describeOperation(operation, contractWithHeaders);
+  assert.equal(described.responseInfo[0].headers[0].name, "X-RateLimit-Remaining");
+  assert.equal(described.responseInfo[0].headers[0].schema.minimum, 0);
+  assert.equal(described.responseInfo[0].headers[1].schema.format, "uuid");
+});
+
 test("listApiOperations merges path-level parameters and preserves security metadata", () => {
   const extended = {
     openapi: "3.1.0",
@@ -230,7 +267,6 @@ test("executeOperation applies the documented request media type", async () => {
   assert.equal(captured.init.headers.get("Content-Type"), "application/json");
 });
 
-
 test("buildRequest rejects missing required parameters and preserves non-JSON bodies", () => {
   assert.throws(
     () => buildRequest({
@@ -260,7 +296,7 @@ test("buildRequest rejects missing required parameters and preserves non-JSON bo
       path: "/v1/test",
       method: "POST",
       parameters: [],
-      requestBody: { required: true, content: { "application/json": { schema: { type: "object" } } } },
+      requestBody: { required: true, content: { "application/json": { schema: { type: "object" } } },
     }, { __body: "{broken" }),
     /valid JSON/,
   );
