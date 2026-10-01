@@ -63,7 +63,7 @@
 | Leaderboard | Leaderboard protobuf | ADVANCED | Data Explorer / Leaderboard | Binary protobuf |
 | Leaderboard | Hero leaderboard protobuf | ADVANCED | Data Explorer / Leaderboard | Binary protobuf |
 | Matches | Match metadata | UI | Match detail | Includes demo-derived hero build id when available |
-| Matches | Recent matches/fetched | API-ONLY | Data Explorer | Operational feed |
+| Matches | Recent matches/fetched | UI | Matches | Operational feed; recently fetched matches are shown on the Matches surface |
 | Matches | Live broadcast URLs | ADVANCED | Live Query | Live ingestion/spectating |
 | Matches | Match live URL | ADVANCED | Live Query / Demo | Very rate-limited |
 | Matches | Match salts ingest | INTERNAL | — | Data ingestion capability |
