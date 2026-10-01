@@ -867,8 +867,26 @@ function route() {
   bindVersionControl();
 }
 
+function refreshVersionControlOptions() {
+  const select = $("#client-version");
+  if (!select) return;
+
+  const selected = assetVersion.get();
+  select.innerHTML =
+    '<option value="">LATEST</option>' +
+    assetVersion.list().slice().reverse().map(version =>
+      '<option value="' + esc(version) + '"' +
+      (selected === version ? ' selected' : '') +
+      '>BUILD ' + esc(version) + '</option>'
+    ).join("");
+  select.value = selected == null ? "" : String(selected);
+}
+
 window.addEventListener("hashchange", route);
 route();
+
+const initialSelectedVersion = assetVersion.get();
 loadAssetVersionContext().then(() => {
-  if (assetVersion.list().length) route();
+  refreshVersionControlOptions();
+  if (assetVersion.get() !== initialSelectedVersion) route();
 }).catch(() => {});
