@@ -1,4 +1,4 @@
-import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroBuildStats, getAbilityOrderStats } from "../api/analytics.js";
+import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroBuildStats, getAbilityOrderStats, getHeroCombStats, getBuildItemStats, getBuffStats } from "../api/analytics.js";
 
 export async function getAnalyticsSnapshot(options = {}) {
   const { signal, ...requestOptions } = options;
@@ -212,4 +212,60 @@ export async function getAbilityOrderStatsSnapshot(heroId, options = {}) {
     signal,
   });
   return normalizeAbilityOrderStats(result);
+}
+
+
+export function normalizeHeroCombAnalytics(result) {
+  return normalizeHeroCombStats(result);
+}
+
+export function normalizeBuildItemStats(result) {
+  return normalizeRows(result, item => ({
+    itemId: item?.item_id ?? null,
+    builds: item?.builds ?? null,
+    raw: item,
+  }));
+}
+
+export function normalizeBuffStats(result) {
+  return normalizeRows(result, item => ({
+    buffType: item?.buff_type ?? null,
+    isPermanent: item?.is_permanent ?? null,
+    matches: item?.matches ?? null,
+    matchesWithPickup: item?.matches_with_pickup ?? null,
+    pickups: item?.pickups ?? null,
+    timedMatches: item?.timed_matches ?? null,
+    timedPickups: item?.timed_pickups ?? null,
+    totalStatValue: item?.total_stat_value ?? null,
+    avgFirstPickupTimeS: item?.avg_first_pickup_time_s ?? null,
+    avgPickupTimeS: item?.avg_pickup_time_s ?? null,
+    raw: item,
+  }));
+}
+
+export async function getHeroComboSnapshot(options = {}) {
+  const { signal, ...requestOptions } = options;
+  const result = await getHeroCombStats({
+    ...requestOptions,
+    min_matches: requestOptions.min_matches ?? 20,
+    comb_size: requestOptions.comb_size ?? 6,
+    signal,
+  });
+  return normalizeHeroCombAnalytics(result);
+}
+
+export async function getBuildItemSnapshot(heroId, options = {}) {
+  const { signal, ...requestOptions } = options;
+  const result = await getBuildItemStats({
+    ...requestOptions,
+    hero_id: heroId,
+    signal,
+  });
+  return normalizeBuildItemStats(result);
+}
+
+export async function getBuffSnapshot(options = {}) {
+  const { signal, ...requestOptions } = options;
+  const result = await getBuffStats({ ...requestOptions, signal });
+  return normalizeBuffStats(result);
 }
