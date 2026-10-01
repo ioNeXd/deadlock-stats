@@ -1,4 +1,4 @@
-import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroBuildStats, getAbilityOrderStats, getHeroCombStats, getBuildItemStats, getBuffStats } from "../api/analytics.js";
+import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroBuildStats, getAbilityOrderStats, getHeroCombStats, getBuildItemStats, getBuffStats, getBadgeDistribution } from "../api/analytics.js";
 
 export async function getAnalyticsSnapshot(options = {}) {
   const { signal, ...requestOptions } = options;
@@ -44,6 +44,15 @@ export function normalizeHeroBanStats(result) {
   }));
 }
 
+export function normalizeBadgeDistribution(result) {
+  return normalizeRows(result, item => ({
+    badgeLevel: item?.badge_level ?? null,
+    totalMatches: item?.total_matches ?? null,
+    uniquePlayers: item?.unique_players ?? null,
+    raw: item,
+  }));
+}
+
 export function normalizeHeroStats(result) {
   const data = Array.isArray(result?.data) ? result.data : [];
   return data.map(item => ({
@@ -73,6 +82,16 @@ export function normalizeHeroStats(result) {
     permanentBuffTimingMatches: item?.permanent_buff_timing_matches ?? null,
     raw: item,
   }));
+}
+
+export async function getBadgeDistributionSnapshot(options = {}) {
+  const { signal, ...requestOptions } = options;
+  const result = await getBadgeDistribution(requestOptionsWithSignal(requestOptions, signal));
+  return normalizeBadgeDistribution(result);
+}
+
+function requestOptionsWithSignal(options, signal) {
+  return { ...options, signal };
 }
 
 export async function getHeroStatsSnapshot(options = {}) {
