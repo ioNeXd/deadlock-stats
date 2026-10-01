@@ -12,10 +12,7 @@
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <a class="brand" href="#/">
-        <span class="brand-mark">D</span>
-        <span><strong>DEADLOCK</strong><small>STATS</small></span>
-      </a>
+      <a class="brand" href="#/"><span class="brand-mark">D</span><span><strong>DEADLOCK</strong><small>STATS</small></span></a>
       <nav class="nav">
         <span class="nav-label">OVERVIEW</span>
         <a class="nav-item active" href="#/">Dashboard</a>
@@ -34,36 +31,12 @@
       </nav>
       <div class="sidebar-status"><i id="api-dot"></i><span id="api-status">Connecting</span></div>
     </aside>
-
     <main class="main">
       <header class="topbar">
         <div><span class="eyebrow">CURSED APPLE // INTELLIGENCE</span><h1>Command Center</h1></div>
         <label class="search"><span>⌕</span><input id="search" type="search" placeholder="Search heroes, players, matches..."><kbd>⌘ K</kbd></label>
       </header>
-
-      <div id="page-content">
-        <div>
-          <span class="eyebrow">LIVE DATA</span>
-          <h2>The city never sleeps.</h2>
-          <p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p>
-          <div class="pills"><span id="api-version">API LIVE</span><span>API-FIRST</span></div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-head"><div><span class="eyebrow">ROSTER</span><h2>Heroes in the city</h2></div><a href="#/heroes">View all →</a></div>
-        <div id="hero-grid" class="hero-grid" aria-live="polite"></div>
-      </section>
-
-      <section class="dashboard-grid">
-        <article class="panel">
-          <div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div>
-          <div class="metric"><span>Endpoint</span><strong>api.deadlock-api.com</strong></div>
-          <div class="metric"><span>Hero assets</span><strong id="asset-count">—</strong></div>
-          <div class="metric"><span>Response</span><strong id="api-latency">—</strong></div>
-        </article>
-        <article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article>
-      </div>
+      <div id="page-content"></div>
     </main>
   </div>
   <script type="module" src="src/app.js"></script>
