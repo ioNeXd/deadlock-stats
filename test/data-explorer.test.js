@@ -128,6 +128,32 @@ test("listApiOperations resolves local parameter refs", () => {
   assert.equal(buildRequest(operation, { hero_id: "7", __body: "{}" }).path, "/v1/heroes/7");
 });
 
+test("describeOperation resolves parameter and request body schema refs", () => {
+  const contractWithSchemaRef = {
+    components: {
+      schemas: {
+        HeroId: { type: "integer", minimum: 0 },
+        Payload: { type: "object", properties: { hero_id: { $ref: "#/components/schemas/HeroId" } } },
+      },
+    },
+    paths: {
+      "/v1/heroes/{hero_id}": {
+        get: {
+          operationId: "hero",
+          parameters: [{ name: "hero_id", in: "path", required: true, schema: { $ref: "#/components/schemas/HeroId" } }],
+          requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/Payload" } } } },
+          responses: { "200": { description: "ok" } },
+        },
+      },
+    },
+  };
+  const operation = listApiOperations(contractWithSchemaRef)[0];
+  const described = describeOperation(operation, contractWithSchemaRef);
+  assert.equal(described.parameterSummary[0].type, "integer");
+  assert.equal(described.parameterSummary[0].constraints.minimum, 0);
+  assert.equal(described.requestBodyInfo[0].schema.type, "object");
+});
+
 test("listApiOperations merges path-level parameters and preserves security metadata", () => {
   const extended = {
     openapi: "3.1.0",
