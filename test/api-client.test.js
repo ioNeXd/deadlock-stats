@@ -186,3 +186,42 @@ test("explicit responseType overrides the server content type", async () => {
 
   assert.equal(result.data, "hello");
 });
+
+
+test("non-idempotent requests are not retried by default", async () => {
+  let calls = 0;
+  mockFetch(async () => {
+    calls += 1;
+    return new Response("temporary failure", { status: 503 });
+  });
+
+  await assert.rejects(
+    apiRequest("/v1/test", { method: "POST", body: { value: 1 }, retries: 2, cache: false }),
+    error => error.status === 503,
+  );
+
+  assert.equal(calls, 1);
+});
+
+test("non-idempotent retries can be explicitly enabled", async () => {
+  let calls = 0;
+  mockFetch(async () => {
+    calls += 1;
+    if (calls === 1) return new Response("temporary failure", { status: 503 });
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  const result = await apiRequest("/v1/test", {
+    method: "POST",
+    body: { value: 1 },
+    retries: 1,
+    retryNonIdempotent: true,
+    cache: false,
+  });
+
+  assert.deepEqual(result.data, { ok: true });
+  assert.equal(calls, 2);
+});
