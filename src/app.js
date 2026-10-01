@@ -147,32 +147,6 @@ async function loadDashboard(signal) {
   }
 
   if (heroes || snapshot) {
-    
-    const selection = $("#map-selection");
-    const showSelection = (type, title, data) => {
-      selection.innerHTML = '<span class="eyebrow">' + esc(type) + '</span><h4>' + esc(title) + '</h4><pre>' + esc(JSON.stringify(data, null, 2)) + '</pre>';
-    };
-    stage.querySelectorAll(".map-marker").forEach(button => {
-      button.addEventListener("click", () => {
-        showSelection(button.classList.contains("objective-marker") ? "OBJECTIVE" : button.classList.contains("camp-marker") ? "NEUTRAL CAMP" : "ENTITY", button.title, { label: button.title });
-      });
-    });
-    const canvas = stage.querySelector(".map-canvas");
-    let scale = 1;
-    let offsetX = 0, offsetY = 0, dragging = false, startX = 0, startY = 0;
-    const applyTransform = () => {
-      canvas.style.transform = "translate(" + offsetX + "px," + offsetY + "px) scale(" + scale + ")";
-      $("#map-zoom-reset").textContent = Math.round(scale * 100) + "%";
-    };
-    const changeZoom = delta => { scale = Math.min(2.5, Math.max(.75, scale + delta)); applyTransform(); };
-    $("#map-zoom-in").addEventListener("click", () => changeZoom(.25));
-    $("#map-zoom-out").addEventListener("click", () => changeZoom(-.25));
-    $("#map-zoom-reset").addEventListener("click", () => { scale = 1; offsetX = offsetY = 0; applyTransform(); });
-    stage.addEventListener("wheel", event => { event.preventDefault(); changeZoom(event.deltaY < 0 ? .1 : -.1); }, { passive: false });
-    stage.addEventListener("pointerdown", event => { if (event.target.closest(".map-marker")) return; dragging = true; startX = event.clientX - offsetX; startY = event.clientY - offsetY; stage.setPointerCapture(event.pointerId); });
-    stage.addEventListener("pointermove", event => { if (!dragging) return; offsetX = event.clientX - startX; offsetY = event.clientY - startY; applyTransform(); });
-    stage.addEventListener("pointerup", event => { dragging = false; stage.releasePointerCapture?.(event.pointerId); });
-    applyTransform();
     setConnection(true, "API connected");
     $("#api-badge").textContent = snapshot ? "ONLINE" : "PARTIAL";
     $("#api-badge").classList.add("online");
@@ -1095,8 +1069,8 @@ function renderMaps(signal) {
     '<label><input type="checkbox" data-map-layer="camps" checked> Neutral camps</label>' +
     '<label><input type="checkbox" data-map-layer="entities" checked> Entities</label>' +
     '</div></section>' +
-    '<section class="map-layout"><article class="panel map-panel"><div id="map-stage" class="map-stage" aria-live="polite"><div class="map-loading">Loading map data…</div></div></article>' +
-    '<aside class="panel map-legend"><span class="eyebrow">MAP INDEX</span><h3>Live layers</h3><div id="map-summary" class="map-summary"></div><div id="map-details" class="map-details"></div></aside></section>';
+    '<section class="map-layout"><article class="panel map-panel"><div class="map-controls"><button type="button" id="map-zoom-out" aria-label="Zoom out">−</button><button type="button" id="map-zoom-reset">100%</button><button type="button" id="map-zoom-in" aria-label="Zoom in">+</button></div><div id="map-stage" class="map-stage" aria-live="polite"><div class="map-loading">Loading map data…</div></div></article>' +
+    '<aside class="panel map-legend"><span class="eyebrow">MAP INDEX</span><h3>Live layers</h3><div id="map-summary" class="map-summary"></div><div id="map-details" class="map-details"></div><div id="map-selection" class="map-selection" aria-live="polite"><span class="eyebrow">SELECTION</span><p>Choose a marker to inspect its API data.</p></div></aside></section>';
 
   const stage = $("#map-stage");
   const options = { ...assetVersion.options(), signal };
@@ -1182,6 +1156,33 @@ function renderMaps(signal) {
     document.querySelectorAll("[data-map-layer]").forEach(input => {
       input.addEventListener("change", event => setMarkerGroup(event.target.dataset.mapLayer, event.target.checked));
     });
+
+    const selection = $("#map-selection");
+    const showSelection = (type, title, data) => {
+      selection.innerHTML = '<span class="eyebrow">' + esc(type) + '</span><h4>' + esc(title) + '</h4><pre>' + esc(JSON.stringify(data, null, 2)) + '</pre>';
+    };
+    stage.querySelectorAll(".map-marker").forEach(button => button.addEventListener("click", () => showSelection(
+      button.classList.contains("objective-marker") ? "OBJECTIVE" : button.classList.contains("camp-marker") ? "NEUTRAL CAMP" : "ENTITY",
+      button.title,
+      { label: button.title },
+    )));
+    const canvas = stage.querySelector(".map-canvas");
+    let scale = 1, offsetX = 0, offsetY = 0, dragging = false, startX = 0, startY = 0;
+    const applyTransform = () => {
+      if (!canvas) return;
+      canvas.style.transform = "translate(" + offsetX + "px," + offsetY + "px) scale(" + scale + ")";
+      $("#map-zoom-reset").textContent = Math.round(scale * 100) + "%";
+    };
+    const changeZoom = delta => { scale = Math.min(2.5, Math.max(.75, scale + delta)); applyTransform(); };
+    $("#map-zoom-in").addEventListener("click", () => changeZoom(.25));
+    $("#map-zoom-out").addEventListener("click", () => changeZoom(-.25));
+    $("#map-zoom-reset").addEventListener("click", () => { scale = 1; offsetX = offsetY = 0; applyTransform(); });
+    stage.addEventListener("wheel", event => { event.preventDefault(); changeZoom(event.deltaY < 0 ? .1 : -.1); }, { passive: false });
+    stage.addEventListener("pointerdown", event => { if (event.target.closest(".map-marker")) return; dragging = true; startX = event.clientX - offsetX; startY = event.clientY - offsetY; stage.setPointerCapture(event.pointerId); });
+    stage.addEventListener("pointermove", event => { if (!dragging) return; offsetX = event.clientX - startX; offsetY = event.clientY - startY; applyTransform(); });
+    stage.addEventListener("pointerup", event => { dragging = false; stage.releasePointerCapture?.(event.pointerId); });
+    stage.addEventListener("pointercancel", event => { dragging = false; stage.releasePointerCapture?.(event.pointerId); });
+    applyTransform();
 
     $("#map-build").textContent = options.clientVersion ? "BUILD " + options.clientVersion : "LATEST BUILD";
     $("#map-summary").innerHTML =
