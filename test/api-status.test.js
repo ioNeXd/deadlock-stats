@@ -60,6 +60,9 @@ test("probeApiStatus returns normalized online status", async () => {
   assert.equal(result.online, true);
   assert.equal(result.status, 200);
   assert.equal(result.data.services.redis, false);
+  assert.equal(result.online, true);
+  assert.equal(result.healthy, false);
+  assert.deepEqual(result.services, { clickhouse: true, postgres: true, redis: false });
 });
 
 test("probeApiStatus converts API failures into an offline result", async () => {
@@ -75,4 +78,23 @@ test("probeApiStatus converts API failures into an offline result", async () => 
   assert.equal(result.status, 503);
   assert.equal(result.error.status, 503);
   assert.equal(result.error.retryAfterMs, 5000);
+});
+
+
+test("probeApiStatus always bypasses cache and dedupe", async () => {
+  const requests = [];
+  globalThis.fetch = async (input, init = {}) => {
+    requests.push({ input: String(input), init });
+    return new Response(JSON.stringify({
+      services: { clickhouse: true, postgres: true, redis: true },
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  await probeApiStatus({ cache: true, dedupe: true });
+  await probeApiStatus({ cache: true, dedupe: true });
+
+  assert.equal(requests.length, 2);
 });
