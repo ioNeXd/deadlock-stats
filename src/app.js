@@ -1123,8 +1123,6 @@ function renderMaps(signal) {
       return marker("objective-marker" + (isCore ? " objective-core" : ""), position?.left_relative, position?.top_relative, normalizedName, null, "◆");
     }).join("");
 
-    const camps = Array.isArray(map.neutralCamps) ? map.neutralCamps : [];
-    const ziplinePaths = Array.isArray(map.ziplinePaths) ? map.ziplinePaths : [];
     const campsHtml = camps.map(camp =>
       marker("camp-marker camp-" + esc(camp.kind), camp.left_relative, camp.top_relative, camp.name + " · " + camp.kind, camp.icon)
     ).join("");
@@ -1141,7 +1139,7 @@ function renderMaps(signal) {
       '<div class="map-canvas">' +
       (base ? '<img class="map-layer map-base" src="' + esc(base) + '" alt="Deadlock map base layer" draggable="false">' : "") +
       layers.map(([name, url]) => '<img class="map-layer map-' + esc(name) + '" src="' + esc(url) + '" alt="" aria-hidden="true" draggable="false">').join("") +
-      '<svg class="map-ziplines" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">' + ziplineSvg + '</svg>' +
+      '<svg class="map-ziplines" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">' + ziplineSvg + '</svg>' +
       '<div class="map-markers map-objectives">' + objectiveHtml + '</div>' +
       '<div class="map-markers map-camps">' + campsHtml + '</div>' +
       '<div class="map-markers map-entities">' + entitiesHtml + '</div>' +
