@@ -273,7 +273,7 @@ test("response types select matching Accept headers", async () => {
   assert.equal(accepts[2], "*/*");
 });
 
-test("explicit json responseType parses JSON and rejects invalid JSON", async () => {
+test("explicit json responseType parses JSON and rejects invalid JSON without retrying", async () => {
   mockFetch(async () => new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: { "content-type": "text/plain" },
@@ -285,18 +285,23 @@ test("explicit json responseType parses JSON and rejects invalid JSON", async ()
   });
   assert.deepEqual(result.data, { ok: true });
 
-  mockFetch(async () => new Response("not json", {
-    status: 200,
-    headers: { "content-type": "text/plain" },
-  }));
+  let calls = 0;
+  mockFetch(async () => {
+    calls += 1;
+    return new Response("not json", {
+      status: 200,
+      headers: { "content-type": "text/plain" },
+    });
+  });
 
   await assert.rejects(
-    apiRequest("/v1/json-invalid", { responseType: "json", cache: false }),
+    apiRequest("/v1/json-invalid", { responseType: "json", cache: false, retries: 2 }),
     error => error instanceof Error
       && error.name === "ApiError"
-      && error.code === undefined
+      && error.code === "RESPONSE_PARSE_ERROR"
       && error.cause instanceof SyntaxError,
   );
+  assert.equal(calls, 1);
 });
 
 test("explicit responseType overrides the server content type", async () => {
