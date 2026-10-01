@@ -9,6 +9,7 @@ import { colorToCss, createAssetVersionContext } from "./services/asset-version.
 import { getDashboardSnapshot } from "./services/dashboard.js";
 import { listBuilds } from "./services/builds.js";
 import { loadLeaderboard } from "./services/leaderboard.js";
+import { searchPlayers, loadPlayerRank, loadPlayerHeroStats, loadPlayerMatchHistory } from "./services/players.js";
 import { safeExternalUrl } from "./ui/security.js";
 import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
 
@@ -816,6 +817,112 @@ function renderMatches(signal) {
   });
 }
 
+function renderPlayers(signal) {
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">GAME / PLAYERS</span><h2>Players</h2><p>Search Steam profiles and inspect public Deadlock player data from the current API contract.</p></section>' +
+    '<section class="panel"><form id="player-search" class="analytics-filters">' +
+      '<label class="field"><span>Player search</span><input name="query" type="search" required placeholder="Steam name or account ID"></label>' +
+      '<label class="field"><span>Results</span><input name="limit" type="number" min="1" max="1000" value="25"></label>' +
+      '<button class="primary-button" type="submit">Search players</button></form></section>' +
+    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">PROFILES</span><h2>Steam profiles</h2></div><b id="player-search-status">READY</b></div><div id="player-results"><p class="muted">Search for a player to begin.</p></div></article>' +
+      '<article class="panel"><div class="section-head"><div><span class="eyebrow">PLAYER DETAIL</span><h2 id="player-detail-title">Select a player</h2></div><b id="player-detail-status">IDLE</b></div><div id="player-detail"><p class="muted">Choose a result to load rank, hero stats and match history.</p></div></article></section>';
+
+  const form = $("#player-search");
+  const results = $("#player-results");
+  const detail = $("#player-detail");
+
+  const scalarEntries = object => Object.entries(object ?? {})
+    .filter(([, value]) => value == null || ["string", "number", "boolean"].includes(typeof value))
+    .slice(0, 12);
+
+  const renderProfiles = profiles => {
+    results.innerHTML = profiles.map((profile, index) => {
+      const accountId = profile?.account_id ?? profile?.accountid ?? profile?.steam_id3;
+      const name = profile?.personaname ?? profile?.name ?? profile?.display_name ?? "Unknown profile";
+      const avatar = profile?.avatarfull ?? profile?.avatar ?? profile?.avatar_url ?? "";
+      return '<button type="button" class="match-row player-result" data-account-id="' + esc(accountId ?? "") + '">' +
+        (avatar ? '<img class="match-player-hero" src="' + esc(avatar) + '" alt="" loading="lazy" decoding="async">' : "") +
+        '<span><strong>' + esc(name) + '</strong><small>Account ' + esc(accountId ?? "—") + '</small></span>' +
+        '<small>#' + (index + 1) + '</small></button>';
+    }).join("") || '<p class="muted">No profiles found.</p>';
+
+    results.querySelectorAll("[data-account-id]").forEach(button => {
+      button.addEventListener("click", () => loadPlayer(button.dataset.accountId));
+    });
+  };
+
+  const loadPlayer = async accountId => {
+    if (!/^\d+$/.test(String(accountId ?? ""))) {
+      detail.innerHTML = '<p class="error-text">The selected profile has no valid SteamID3.</p>';
+      return;
+    }
+    $("#player-detail-title").textContent = "Account " + accountId;
+    $("#player-detail-status").textContent = "LOADING";
+    detail.innerHTML = '<p class="muted">Loading player data…</p>';
+
+    try {
+      const [rankResult, heroResult, historyResult] = await Promise.all([
+        loadPlayerRank(accountId, { signal }),
+        loadPlayerHeroStats({ account_ids: [Number(accountId)], signal }),
+        loadPlayerMatchHistory(accountId, { signal }),
+      ]);
+      if (signal.aborted) return;
+
+      const rank = rankResult.data ?? {};
+      const heroStats = heroResult.data ?? [];
+      const history = historyResult.data ?? [];
+      const rankMetrics = scalarEntries(rank).map(([key, value]) =>
+        '<div class="metric"><span>' + esc(key) + '</span><strong>' + esc(value ?? "—") + '</strong></div>'
+      ).join("");
+      const heroRows = heroStats.slice(0, 12).map(stat =>
+        '<div class="metric"><span>Hero ' + esc(stat?.hero_id ?? "—") + '</span><strong>' +
+        esc(stat?.matches_played ?? "—") + ' matches</strong><small>' +
+        esc(stat?.wins ?? "—") + ' wins · ' + esc(stat?.kills ?? "—") + ' kills · ' +
+        esc(stat?.deaths ?? "—") + ' deaths</small></div>'
+      ).join("");
+      const historyRows = history.slice(0, 10).map(match =>
+        '<div class="metric"><span>Match ' + esc(match?.match_id ?? "—") + '</span><strong>' +
+        esc(match?.hero_id ?? "Hero —") + '</strong><small>' +
+        esc(match?.won != null ? (match.won ? "Win" : "Loss") : (match?.winning_team != null ? "Team " + match.winning_team : "Result unavailable")) +
+        (match?.duration_s != null ? ' · ' + esc(formatDuration(match.duration_s)) : '') +
+        '</small></div>'
+      ).join("");
+
+      detail.innerHTML =
+        '<div class="match-detail-summary">' + (rankMetrics || '<p class="muted">No rank fields returned.</p>') + '</div>' +
+        '<div class="section-head"><div><span class="eyebrow">HERO HISTORY</span><h3>Hero stats</h3></div><span class="muted">' + heroStats.length + ' returned</span></div>' +
+        '<div class="analytics-grid">' + (heroRows || '<p class="muted">No hero stats returned.</p>') + '</div>' +
+        '<div class="section-head"><div><span class="eyebrow">MATCH HISTORY</span><h3>Recent matches</h3></div><span class="muted">' + history.length + ' returned</span></div>' +
+        '<div class="analytics-grid">' + (historyRows || '<p class="muted">No match history returned.</p>') + '</div>';
+      $("#player-detail-status").textContent = "LOADED";
+    } catch (error) {
+      if (isAborted(error)) return;
+      $("#player-detail-status").textContent = "ERROR";
+      detail.innerHTML = '<p class="error-text">Player request failed: ' + esc(error.message) + '</p>';
+    }
+  };
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(form).entries());
+    $("#player-search-status").textContent = "LOADING";
+    results.innerHTML = '<p class="muted">Searching profiles…</p>';
+    try {
+      const response = await searchPlayers(values.query.trim(), {
+        limit: Number(values.limit),
+        signal,
+      });
+      if (signal.aborted) return;
+      renderProfiles(response.data);
+      $("#player-search-status").textContent = response.data.length + " FOUND";
+    } catch (error) {
+      if (isAborted(error)) return;
+      $("#player-search-status").textContent = "ERROR";
+      results.innerHTML = '<p class="error-text">Player search failed: ' + esc(error.message) + '</p>';
+    }
+  });
+}
+
 function renderDataExplorer(signal) {
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">TOOLS / OPENAPI</span><h2>Data Explorer</h2><p>Inspect and execute documented API operations from the live OpenAPI contract.</p></section>' +
     '<section class="explorer"><aside class="explorer-list"><input id="operation-filter" class="explorer-search" type="search" aria-label="Filter API operations" placeholder="Filter operations…"><div id="operation-list"></div></aside><article class="panel explorer-main"><div id="explorer-empty"><span class="eyebrow">CONTRACT</span><h3>Select an operation</h3><p>The explorer is populated from the live OpenAPI contract.</p></div><div id="operation-detail" hidden></div></article></section>';
@@ -964,6 +1071,7 @@ function route() {
   if (routeName === "api") renderApiStatus(signal);
   else if (routeName === "analytics") renderAnalytics(signal);
   else if (routeName === "matches") renderMatches(signal);
+  else if (routeName === "players") renderPlayers(signal);
   else if (routeName === "builds") renderBuilds(signal);
   else if (routeName === "leaderboard") renderLeaderboard(signal);
   else if (routeName === "item-analytics") renderItemAnalytics(signal);
