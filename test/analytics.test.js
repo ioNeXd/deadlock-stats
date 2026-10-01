@@ -32,16 +32,16 @@ test("analytics API wrappers use documented endpoints and query parameters", asy
   assert.equal(calls[1].searchParams.get("bucket"), "start_time_day");
 });
 
-test("analytics wrappers forward top-level filters used by services", async () => {
+test("analytics wrappers forward top-level filters used by services", async t => {
   const calls = [];
-  globalThis.fetch = async input => {
+  t.mock.method(globalThis, "fetch", async input => {
     const url = new URL(input);
     calls.push(url);
     return new Response("[]", {
       status: 200,
       headers: { "content-type": "application/json" },
     });
-  };
+  });
 
   await getHeroStats({ game_mode: "normal", min_duration_s: 600, hero_ids: [7, 8], cache: false, dedupe: false });
   await getHeroCounterStats({ same_lane_filter: true, min_matches: 20, account_ids: [7], cache: false, dedupe: false });
