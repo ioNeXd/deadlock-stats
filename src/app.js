@@ -1,4 +1,4 @@
-import { listHeroes } from "./services/assets.js";
+import { listHeroes, listItems, listRanks } from "./services/assets.js";
 import { getOpenApiContract } from "./services/versioning.js";
 import { probeApiStatus } from "./services/api-status.js";
 import { describeOperation, executeOperation, listApiOperations } from "./services/data-explorer.js";
@@ -51,6 +51,26 @@ async function loadDashboard() {
     renderHeroGrid([]);
     console.error("Deadlock API request failed", { url: error?.url ?? API_BASE_URL, status: error?.status ?? null, error });
   }
+}
+
+function renderAssetCatalog(kind) {
+  const config = {
+    heroes: { title: "Heroes", eyebrow: "GAME / HEROES", description: "Hero metadata and real game assets from the current Deadlock API contract.", loader: listHeroes, image: hero => hero?.images?.hero_card_critical_webp ?? hero?.images?.hero_card_critical ?? hero?.images?.background_image_webp ?? hero?.images?.background_image },
+    items: { title: "Items", eyebrow: "GAME / ITEMS", description: "Items, abilities, weapons and upgrades published by the current game data.", loader: listItems, image: item => item?.images?.image_webp ?? item?.images?.image ?? item?.images?.icon_webp ?? item?.images?.icon },
+    ranks: { title: "Ranks", eyebrow: "GAME / RANKS", description: "Rank metadata, names and badge assets published by the API.", loader: listRanks, image: rank => rank?.images?.image_webp ?? rank?.images?.image ?? rank?.images?.icon_webp ?? rank?.images?.icon },
+  }[kind];
+  el.content.innerHTML = '<section class="page-head"><span class="eyebrow">' + config.eyebrow + '</span><h2>' + config.title + '</h2><p>' + config.description + '</p></section><section class="asset-catalog" id="asset-catalog"><div class="panel"><p>Loading assets…</p></div></section>';
+  config.loader().then(result => {
+    const catalog = $("#asset-catalog");
+    catalog.innerHTML = result.data.map(entity => {
+      const image = config.image(entity);
+      return '<article class="asset-card">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy">' : '<div class="asset-placeholder">NO ART</div>') + '<div><small>' + kind.toUpperCase() + '</small><h3>' + esc(entity.name ?? "Unnamed") + '</h3><p>ID ' + esc(entity.id ?? "—") + '</p></div></article>';
+    }).join("") || '<div class="panel"><p>No assets returned.</p></div>';
+    setConnection(true, "API connected");
+  }).catch(error => {
+    $("#asset-catalog").innerHTML = '<div class="panel"><p class="error-text">Asset request failed: ' + esc(error.message) + '</p></div>';
+    setConnection(false, "API unavailable");
+  });
 }
 
 function renderApiStatus() {
@@ -131,6 +151,7 @@ function route() {
   const routeName = location.hash.replace(/^#\\/?/, "").split("/")[0] || "dashboard";
   if (routeName === "api") renderApiStatus();
   else if (routeName === "data") renderDataExplorer();
+  else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName);
   else renderDashboard();
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName)));
 }
