@@ -60,7 +60,11 @@ test("listHeroes accepts a direct array response", async () => {
   assert.deepEqual(result.raw, payload);
   assert.deepEqual(result.data[0], {
     id: 7,
+    className: null,
     name: "Array Hero",
+    type: null,
+    slotType: null,
+    colors: null,
     images: {},
     raw: payload[0],
   });
