@@ -1,4 +1,4 @@
-import { listHeroes, listItems, listRanks } from "./services/assets.js";
+import { listHeroes, listItems, listRanks, listMiscEntities } from "./services/assets.js";
 import { getOpenApiContract } from "./services/versioning.js";
 import { probeApiStatus } from "./services/api-status.js";
 import { describeOperation, executeOperation, listApiOperations } from "./services/data-explorer.js";
@@ -187,27 +187,20 @@ function renderAnalytics(signal) {
     '<section class="analytics-grid" id="analytics-summary"><article class="metric-card"><span>MATCHES</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>PLAYERS</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>AVG DURATION</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>AVG KILLS</span><strong>—</strong><small>loading</small></article></section>' +
     '<section class="panel analytics-hero-panel"><div class="section-head"><div><span class="eyebrow">HERO STATS</span><h2>Performance by hero</h2></div><span class="muted">TOP 16 BY MATCHES</span></div><div class="hero-stats-table"><div class="hero-stat-head"><span>HERO</span><span>MATCHES</span><span>WIN RATE</span><span>K / D / A</span><span>TOTAL DAMAGE</span><span>TOTAL NET WORTH</span></div><div id="hero-stats-list"></div></div></section>' +
     '<section class="panel analytics-matchup-panel"><div class="section-head"><div><span class="eyebrow">HERO MATCHUPS</span><h2>Counter intelligence</h2></div><select id="matchup-hero-select" class="explorer-select" aria-label="Select hero for matchup analysis"></select></div><div id="hero-matchup-list" class="analytics-matchups"><p class="muted">Loading matchup data.</p></div></section><section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">GAME STATS</span><h2>Daily activity</h2></div><b id="analytics-status">LOADING</b></div><div id="game-stats-list" class="analytics-bars"></div></article>' +
-    '<article class="panel"><div class="section-head"><div><span class="eyebrow">HERO BANS</span><h2>Ban activity</h2></div></div><div id="hero-ban-list" class="analytics-table"></div></article></section>';
+    '<article class="panel"><div class="section-head"><div><span class="eyebrow">HERO BANS</span><h2>Ban activity</h2></div></div><div id="hero-ban-list" class="analytics-table"></div></article></section>' +
+    '<section class="dashboard-grid"><article class="panel analytics-builds"><div class="section-head"><div><span class="eyebrow">HERO BUILDS</span><h2>Build & ability intelligence</h2></div><select id="build-hero-select" class="explorer-select" aria-label="Select hero for build analysis"></select></div><div id="hero-build-list"><p class="muted">Loading build data.</p></div><div class="analytics-table"><div class="section-head"><div><span class="eyebrow">BUILD ITEMS</span><h3>Items used in builds</h3></div></div><div id="build-item-list"><p class="muted">Loading item data.</p></div></div></article>' +
+    '<article class="panel"><div class="section-head"><div><span class="eyebrow">HERO COMBINATIONS</span><h2>Team combinations</h2></div></div><div id="hero-combo-list" class="analytics-table"><p class="muted">Loading combinations.</p></div><div class="section-head"><div><span class="eyebrow">BUFF STATS</span><h2>Power-up pickups</h2></div></div><div id="buff-stats-list" class="analytics-table"><p class="muted">Loading buffs.</p></div></article></section>';
   loadAnalytics(signal);
 }
 
 async function loadAnalytics(signal) {
   try {
     const [snapshotResult, heroStats, matchup, comboStats, buffStats] = await Promise.all([
-      getAnalyticsSnapshot({
-        ...assetVersion.options(),
-        bucket: "start_time_day",
-        signal,
-      }),
-      getHeroStatsSnapshot({
-        ...assetVersion.options(),
-        signal,
-      }),
-      getHeroMatchupSnapshot({
-        ...assetVersion.options(),
-        min_matches: 20,
-        signal,
-      }),
+      getAnalyticsSnapshot({ ...assetVersion.options(), bucket: "start_time_day", signal }),
+      getHeroStatsSnapshot({ ...assetVersion.options(), signal }),
+      getHeroMatchupSnapshot({ ...assetVersion.options(), min_matches: 20, signal }),
+      getHeroComboSnapshot({ ...assetVersion.options(), min_matches: 20, comb_size: 6, signal }),
+      getBuffSnapshot({ ...assetVersion.options(), signal }),
     ]);
     const result = snapshotResult;
     if (signal.aborted) return;
@@ -241,9 +234,19 @@ async function loadAnalytics(signal) {
         sortedBans.map(item => '<div class="analytics-table-row"><span>Hero ' + esc(item.heroId) + '</span><strong>' + esc(Number(item.bans ?? 0).toLocaleString()) + '</strong></div>').join("")
       : '<p class="muted">No hero ban statistics returned.</p>';
 
-    const heroCatalog = await listHeroes({ ...assetVersion.options(), signal });
+    const [heroCatalog, itemCatalog, miscCatalog] = await Promise.all([
+      listHeroes({ ...assetVersion.options(), signal }),
+      listItems({ ...assetVersion.options(), signal }),
+      listMiscEntities({ ...assetVersion.options(), signal }),
+    ]);
     if (signal.aborted) return;
     const heroesById = new Map(heroCatalog.data.map(hero => [String(idOf(hero)), hero]));
+    const itemsById = new Map(itemCatalog.data.map(item => [String(item.id), item]));
+    const buffsByType = new Map(
+      miscCatalog.data
+        .filter(entity => entity?.raw?.buff_type_name || entity?.raw?.buff_type_loc_string)
+        .map(entity => [String(entity.raw.buff_type_loc_string ?? entity.raw.class_name), entity])
+    );
     const heroRows = heroStats
       .filter(item => item?.heroId != null)
       .sort((a, b) => Number(b.matches ?? 0) - Number(a.matches ?? 0))
@@ -307,7 +310,13 @@ async function loadAnalytics(signal) {
     const buffRows = [...buffStats].sort((a,b) => Number(b.pickups ?? 0) - Number(a.pickups ?? 0)).slice(0, 10);
     $("#buff-stats-list").innerHTML = buffRows.length
       ? '<div class="analytics-table-head"><span>BUFF</span><span>PICKUPS</span></div>' +
-        buffRows.map(item => '<div class="analytics-table-row"><span>' + esc(item.buffType ?? "—") + '<small class="matchup-meta">' + esc(item.matchesWithPickup ?? "—") + ' matches with pickup</small></span><strong>' + esc(Number(item.pickups ?? 0).toLocaleString()) + '</strong></div>').join("")
+        buffRows.map(item => {
+          const metadata = buffsByType.get(String(item.buffType));
+          const raw = metadata?.raw ?? {};
+          const label = raw.buff_type_name ?? metadata?.name ?? item.buffType ?? "—";
+          const unit = raw.buff_type_value_unit ? " · " + raw.buff_type_value_unit : "";
+          return '<div class="analytics-table-row"><span>' + esc(label) + '<small class="matchup-meta">' + esc(item.buffType ?? "—") + ' · ' + esc(item.matchesWithPickup ?? "—") + ' matches with pickup' + esc(unit) + '</small></span><strong>' + esc(Number(item.pickups ?? 0).toLocaleString()) + '</strong></div>';
+        }).join("")
       : '<p class="muted">No buff statistics returned.</p>';
     const buildSelect = $("#build-hero-select");
     buildSelect.innerHTML = heroOptions;
@@ -329,8 +338,15 @@ async function loadAnalytics(signal) {
         if (signal.aborted || requestId !== buildRequestId) return;
         const items = [...itemRows].sort((a,b) => Number(b.builds ?? 0) - Number(a.builds ?? 0)).slice(0, 8);
         $("#build-item-list").innerHTML = items.length
-          ? '<div class="analytics-table-head"><span>ITEM ID</span><span>BUILDS</span></div>' +
-            items.map(item => '<div class="analytics-table-row"><span>Item ' + esc(item.itemId ?? "—") + '</span><strong>' + esc(Number(item.builds ?? 0).toLocaleString()) + '</strong></div>').join("")
+          ? '<div class="analytics-table-head"><span>ITEM</span><span>BUILDS</span></div>' +
+            items.map(item => {
+              const asset = itemsById.get(String(item.itemId));
+              const image = asset ? resolveAssetImage(asset, ["image_webp", "image", "icon_webp", "icon"]) : "";
+              const label = asset?.name ?? asset?.className ?? ("Item " + (item.itemId ?? "—"));
+              return '<div class="analytics-table-row"><span class="hero-stat-identity">' +
+                (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '') +
+                '<span><strong>' + esc(label) + '</strong><small class="matchup-meta">ID ' + esc(item.itemId ?? "—") + '</small></span></span><strong>' + esc(Number(item.builds ?? 0).toLocaleString()) + '</strong></div>';
+            }).join("")
           : '<p class="muted">No build-item statistics returned.</p>';
         panel.innerHTML =
           '<div class="matchup-columns"><div><div class="analytics-table-head"><span>BUILD ID</span><span>WIN RATE</span></div>' +
