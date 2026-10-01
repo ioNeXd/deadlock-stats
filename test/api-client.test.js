@@ -225,3 +225,46 @@ test("non-idempotent retries can be explicitly enabled", async () => {
   assert.deepEqual(result.data, { ok: true });
   assert.equal(calls, 2);
 });
+
+test("request cache keys normalize object body property order", async () => {
+  let calls = 0;
+  mockFetch(async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ calls }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  await apiRequest("/v1/test", {
+    method: "POST",
+    body: { b: 2, a: 1 },
+    cache: true,
+  });
+  await apiRequest("/v1/test", {
+    method: "POST",
+    body: { a: 1, b: 2 },
+    cache: true,
+  });
+
+  assert.equal(calls, 1);
+});
+
+test("aborting during retry backoff stops further network attempts", async () => {
+  let calls = 0;
+  const controller = new AbortController();
+
+  mockFetch(async () => {
+    calls += 1;
+    controller.abort();
+    return new Response("temporary failure", { status: 503 });
+  });
+
+  await assert.rejects(
+    apiGet("/v1/test", { retries: 2, cache: false, signal: controller.signal }),
+    error => error.code === "ABORTED",
+  );
+
+  assert.equal(calls, 1);
+});
+
