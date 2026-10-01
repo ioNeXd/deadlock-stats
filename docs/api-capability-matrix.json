@@ -1,0 +1,30 @@
+{
+  "source": "https://api.deadlock-api.com/openapi.json",
+  "audited_at": "2026-10-01",
+  "openapi_version": "3.1.0",
+  "api_version": "0.1.0",
+  "server": "https://api.deadlock-api.com",
+  "classifications": [
+    "UI",
+    "API-ONLY",
+    "ADVANCED",
+    "DEPRECATED",
+    "INTERNAL",
+    "UNAVAILABLE"
+  ],
+  "parameter_classifications": [
+    "SUPPORTED_UI",
+    "SUPPORTED_API_ONLY",
+    "DEPRECATED",
+    "INTERNAL",
+    "NOT_APPLICABLE"
+  ],
+  "audit_status": {
+    "endpoint_inventory": "PENDING_MACHINE_GENERATION",
+    "parameter_inventory": "PENDING_MACHINE_GENERATION",
+    "schema_inventory": "PENDING_MACHINE_GENERATION",
+    "content_type_inventory": "CONFIRMED",
+    "authentication_inventory": "CONFIRMED_IN_CONTRACT",
+    "rate_limit_inventory": "CONFIRMED_IN_DESCRIPTIONS"
+  }
+}
