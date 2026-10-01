@@ -1,24 +1,35 @@
 const VERSION_PATTERN = /\/v(\d+)(?=\/|$)/;
+const OPERATION_KEYS = new Set(["get", "post", "put", "patch", "delete", "options", "head", "trace"]);
 
-function versionedPath(path) {
+export function versionedPath(path) {
   const match = path.match(VERSION_PATTERN);
   if (!match) return null;
 
   return {
     version: Number(match[1]),
-    resourcePath: path.replace(VERSION_PATTERN, "/"),
+    resourcePath: path.replace(VERSION_PATTERN, "") || "/",
   };
 }
 
-function entriesFrom(openApi) {
+function operationsFrom(pathItem) {
+  return Object.entries(pathItem ?? {})
+    .filter(([key, value]) => OPERATION_KEYS.has(key) && value && typeof value === "object")
+    .map(([, operation]) => operation);
+}
+
+export function entriesFrom(openApi) {
   return Object.entries(openApi?.paths ?? {})
-    .map(([path, pathItem]) => ({
-      path,
-      ...versionedPath(path),
-      deprecated: Object.values(pathItem ?? {}).some(
-        operation => operation && typeof operation === "object" && operation.deprecated === true,
-      ),
-    }))
+    .map(([path, pathItem]) => {
+      const operations = operationsFrom(pathItem);
+
+      return {
+        path,
+        ...versionedPath(path),
+        deprecated: operations.length > 0 && operations.every(
+          operation => operation.deprecated === true,
+        ),
+      };
+    })
     .filter(entry => entry.version != null);
 }
 
@@ -52,7 +63,7 @@ export function buildVersionPolicy(openApi, onLegacy) {
         currentPath: newer?.path ?? null,
         currentVersion: newer ? `v${newer.version}` : null,
         reason: entry.deprecated
-          ? "The OpenAPI contract marks this operation as deprecated."
+          ? "The OpenAPI contract marks this resource as deprecated."
           : "A newer API version exists for the same resource path.",
       };
 
@@ -73,16 +84,12 @@ export function buildVersionPolicy(openApi, onLegacy) {
   };
 }
 
-function resourceKey(entry) {
-  return entry.resourcePath;
-}
-
 function stateMap(openApi) {
   const entries = entriesFrom(openApi);
   const map = new Map();
 
   for (const entry of entries) {
-    const key = resourceKey(entry);
+    const key = entry.resourcePath;
     const existing = map.get(key);
 
     if (!existing || entry.version > existing.version) {
