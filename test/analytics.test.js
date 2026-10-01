@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats } from "../src/api/analytics.js";
-import { normalizeGameStats, normalizeHeroBanStats, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats } from "../src/services/analytics.js";
+import { normalizeGameStats, normalizeHeroBanStats, normalizeBadgeDistribution, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats } from "../src/services/analytics.js";
 import { clearApiCache } from "../src/api/client.js";
 
 const originalFetch = globalThis.fetch;
@@ -335,4 +335,25 @@ test("combo, build-item and buff normalizers follow current schemas", () => {
   assert.equal(buffs[0].buffType, "hp_permanent_pickup_lv2");
   assert.equal(buffs[0].totalStatValue, 1200);
   assert.equal(buffs[0].raw.future_metric, 3);
+});
+
+
+test("badge distribution normalizer follows the current OpenAPI schema", () => {
+  const result = normalizeBadgeDistribution({
+    data: [
+      { badge_level: 73, total_matches: 1200, unique_players: 640, future_metric: "kept" },
+    ],
+  });
+
+  assert.deepEqual(result[0], {
+    badgeLevel: 73,
+    totalMatches: 1200,
+    uniquePlayers: 640,
+    raw: {
+      badge_level: 73,
+      total_matches: 1200,
+      unique_players: 640,
+      future_metric: "kept",
+    },
+  });
 });
