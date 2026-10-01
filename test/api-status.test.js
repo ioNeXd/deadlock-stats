@@ -97,3 +97,18 @@ test("probeApiStatus always bypasses cache and dedupe", async () => {
 
   assert.equal(requests.length, 2);
 });
+
+
+test("probeApiStatus treats incomplete health payloads as unknown", async () => {
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    services: { clickhouse: true, postgres: true },
+  }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+
+  const result = await probeApiStatus();
+
+  assert.equal(result.online, true);
+  assert.equal(result.healthy, null);
+});
