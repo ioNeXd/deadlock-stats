@@ -67,12 +67,12 @@ function isAborted(error) {\n  return error?.code === "ABORTED" || error?.name =
   el.content.innerHTML = '<section class="hero-banner"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA</span><h2>The city never sleeps.</h2><p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p><div class="pills"><span>API-FIRST</span><span>OPENAPI</span></div></div></section>' +
     '<section class="section"><div class="section-head"><div><span class="eyebrow">ROSTER</span><h2>Heroes in the city</h2></div><a href="#/heroes">View all →</a></div><div id="hero-grid" class="hero-grid" aria-live="polite"></div></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(API_BASE_URL.replace("https://", "")) + '</strong></div><div class="metric"><span>Hero assets</span><strong id="asset-count">—</strong></div><div class="metric"><span>Response</span><strong id="api-latency">—</strong></div></article><article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article></section>';
-  loadDashboard();
+  loadDashboard(signal);
 }
 
-async function loadDashboard() {
+async function loadDashboard(signal) {
   try {
-    const result = await listHeroes(assetVersion.options());
+    const result = await listHeroes({ ...assetVersion.options(), signal });
     setConnection(true, "API connected");
     $("#asset-count").textContent = result.data.length;
     $("#api-latency").textContent = result.latencyMs + " ms";
@@ -80,6 +80,7 @@ async function loadDashboard() {
     $("#api-badge").classList.add("online");
     renderHeroGrid(result.data);
   } catch (error) {
+    if (isAborted(error)) return;
     setConnection(false, "API unavailable");
     $("#api-badge").textContent = "OFFLINE";
     $("#api-latency").textContent = "—";
@@ -95,7 +96,8 @@ function renderAssetCatalog(kind, signal) {
     ranks: { title: "Ranks", eyebrow: "GAME / RANKS", description: "Rank metadata, names and badge assets published by the API.", loader: listRanks },
   }[kind];
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">' + config.eyebrow + '</span><h2>' + config.title + '</h2><p>' + config.description + '</p></section><section class="asset-catalog" id="asset-catalog"><div class="panel"><p>Loading assets…</p></div></section>';
-  config.loader(assetVersion.options()).then(result => {
+  config.loader({ ...assetVersion.options(), signal }).then(result => {
+    if (signal.aborted) return;
     const catalog = $("#asset-catalog");
     catalog.innerHTML = result.data.map(entity => {
       const image = resolveAssetImage(entity);
@@ -103,7 +105,10 @@ function renderAssetCatalog(kind, signal) {
     }).join("") || '<div class="panel"><p>No assets returned.</p></div>';
     setConnection(true, "API connected");
   }).catch(error => {
-    $("#asset-catalog").innerHTML = '<div class="panel"><p class="error-text">Asset request failed: ' + esc(error.message) + '</p></div>';
+    if (isAborted(error)) return;
+    const catalog = $("#asset-catalog");
+    if (!catalog) return;
+    catalog.innerHTML = '<div class="panel"><p class="error-text">Asset request failed: ' + esc(error.message) + '</p></div>';
     setConnection(false, "API unavailable");
   });
 }
@@ -111,11 +116,13 @@ function renderAssetCatalog(kind, signal) {
 function renderApiStatus(signal) {
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">SYSTEM / API</span><h2>API Status</h2><p>Live health probe for the documented Deadlock API infrastructure.</p></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">HEALTH</span><h2 id="status-title">Checking…</h2></div><b id="status-badge">CHECKING</b></div><div id="status-metrics"></div></article><article class="panel"><span class="eyebrow">SERVICES</span><h2>Infrastructure</h2><div id="service-list"></div></article></section>';
-  loadApiStatus();
+  loadApiStatus(signal);
 }
 
-async function loadApiStatus() {
-  const result = await probeApiStatus();
+async function loadApiStatus(signal) {
+  try {
+    const result = await probeApiStatus({ signal });
+    if (signal.aborted) return;
   const badge = $("#status-badge");
   badge.textContent = result.online ? (result.healthy === false ? "DEGRADED" : "ONLINE") : "OFFLINE";
   badge.classList.toggle("online", result.online && result.healthy !== false);
@@ -126,18 +133,27 @@ async function loadApiStatus() {
     const value = services[name];
     return '<div class="metric"><span>' + esc(name) + '</span><strong>' + (value === true ? "HEALTHY" : value === false ? "UNHEALTHY" : "UNKNOWN") + '</strong></div>';
   }).join("");
-  setConnection(result.online, result.online ? "API connected" : "API unavailable");
+    setConnection(result.online, result.online ? "API connected" : "API unavailable");
+  } catch (error) {
+    if (isAborted(error)) return;
+    setConnection(false, "API unavailable");
+    const badge = $("#status-badge");
+    if (badge) badge.textContent = "OFFLINE";
+    const title = $("#status-title");
+    if (title) title.textContent = "API status check failed";
+  }
 }
 
 function renderDataExplorer(signal) {
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">TOOLS / OPENAPI</span><h2>Data Explorer</h2><p>Inspect and execute documented API operations from the live OpenAPI contract.</p></section>' +
     '<section class="explorer"><aside class="explorer-list"><input id="operation-filter" class="explorer-search" placeholder="Filter operations…"><div id="operation-list"></div></aside><article class="panel explorer-main"><div id="explorer-empty"><span class="eyebrow">CONTRACT</span><h3>Select an operation</h3><p>The explorer is populated from the live OpenAPI contract.</p></div><div id="operation-detail" hidden></div></article></section>';
-  loadExplorer();
+  loadExplorer(signal);
 }
 
-async function loadExplorer() {
+async function loadExplorer(signal) {
   try {
-    const contractResult = await getOpenApiContract({ cacheTtlMs: 5 * 60_000 });
+    const contractResult = await getOpenApiContract({ cacheTtlMs: 5 * 60_000, signal });
+    if (signal.aborted) return;
     const operations = listApiOperations(contractResult.data);
     const list = $("#operation-list");
     const filter = $("#operation-filter");
@@ -151,6 +167,9 @@ async function loadExplorer() {
     renderList();
     setConnection(true, "API connected");
   } catch (error) {
+    if (isAborted(error)) return;
+    const list = $("#operation-list");
+    if (!list) return;
     list.innerHTML = '<p class="error-text">OpenAPI contract could not be loaded: ' + esc(error.message) + "</p>";
     setConnection(false, "API unavailable");
   }
@@ -261,11 +280,12 @@ function bindVersionControl() {
 }
 
 function route() {
+  const signal = beginRoute();
   const routeName = location.hash.replace(/^#\/?/, "").split("/")[0] || "dashboard";
-  if (routeName === "api") renderApiStatus();
-  else if (routeName === "data") renderDataExplorer();
-  else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName);
-  else renderDashboard();
+  if (routeName === "api") renderApiStatus(signal);
+  else if (routeName === "data") renderDataExplorer(signal);
+  else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
+  else renderDashboard(signal);
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName)));
   bindVersionControl();
 }
