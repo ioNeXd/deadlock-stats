@@ -45,7 +45,7 @@ test("analytics normalizers preserve unknown source fields", () => {
     avgPlayerDamage: null,
     team0Wins: null,
     team1Wins: null,
-    raw: { start_time: 123, matches: 42, future_metric: 9 },
+    raw: { bucket: 20261001, total_matches: 42, avg_kills: 8, future_metric: 9 },
   });
   assert.deepEqual(bans[0], {
     heroId: 7,
