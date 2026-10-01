@@ -1081,7 +1081,7 @@ function renderMaps(signal) {
     const map = result?.data ?? {};
     const images = map.images ?? {};
     const safe = url => safeExternalUrl(url);
-    const base = safe(images.plain) ?? safe(images.mid) ?? safe(images.minimap);
+    const base = safe(images.background) ?? safe(images.plain) ?? safe(images.minimap) ?? safe(images.mid);
     const layers = [
       ["mid", images.mid],
       ["mid_tunnels", images.mid_tunnels],
