@@ -1,19 +1,22 @@
 import { apiGet } from "./client.js";
 import { queryToObject } from "./query.js";
 
+const ANALYTICS_CACHE_TTL_MS = 60 * 60_000;
+const ITEM_STATS_CACHE_TTL_MS = 6 * 60 * 60_000;
+
 const ANALYTICS_FILTER_KEYS = {
-  game: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","hero_ids","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","account_ids"],
-  heroStats: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","min_hero_matches","max_hero_matches","min_hero_matches_total","max_hero_matches_total","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","account_ids"],
+  game: ["bucket","game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","hero_ids","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","account_ids"],
+  heroStats: ["bucket","game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","min_hero_matches","max_hero_matches","min_hero_matches_total","max_hero_matches_total","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","account_ids"],
   matchup: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_enemy_networth","max_enemy_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","same_lane_filter","min_matches","max_matches","account_ids"],
   synergy: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","same_lane_filter","min_matches","max_matches","account_ids"],
-  combo: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_average_badge","max_average_badge","min_match_id","max_match_id","include_hero_ids","exclude_hero_ids","include_enemy_hero_ids","exclude_enemy_hero_ids","min_matches","max_matches","comb_size","account_ids"],
+  combo: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","include_hero_ids","exclude_hero_ids","include_enemy_hero_ids","exclude_enemy_hero_ids","min_matches","max_matches","comb_size","account_ids"],
   build: ["match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_average_badge","max_average_badge","min_match_id","max_match_id","hero_build_id","min_matches","account_ids","ability_order_prefix","ability_unlock_order_prefix"],
   ability: ["hero_id","game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_ability_upgrades","max_ability_upgrades","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","min_matches","account_ids","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix"],
   badge: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","is_high_skill_range_parties","is_low_pri_pool","is_new_player_pool","min_match_id","max_match_id"],
   buff: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_average_badge","max_average_badge","min_match_id","max_match_id","min_networth","max_networth","hero_ids","account_ids"],
   itemFlow: ["phase_interval_s","phase_count","game_mode","match_mode","hero_ids","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","min_matches","account_ids","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","locked_item_ids","locked_columns"],
   itemPermutation: ["item_ids","comb_size","min_matches","max_matches","game_mode","match_mode","hero_ids","hero_id","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","account_ids","ability_order_prefix","ability_unlock_order_prefix","include_corrupted_items"],
-  itemStats: ["bucket","game_mode","match_mode","hero_ids","enemy_hero_ids","enemy_hero_ids_all_match","min_enemy_networth","max_enemy_networth","same_lane_filter","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","min_matches","max_matches","account_ids","min_bought_at_s","max_bought_at_s","item_order","corrupted_items"],
+  itemStats: ["bucket","game_mode","match_mode","hero_ids","enemy_hero_ids","enemy_hero_ids_all_match","min_enemy_networth","max_enemy_networth","same_lane_filter","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","min_matches","max_matches","account_ids","min_bought_at_s","max_bought_at_s","item_order","corrupted_items","include_corrupted_items"],
 };
 
 function analyticsOptions(options = {}, allowedKeys = [], stringArrayKeys = []) {
@@ -25,7 +28,7 @@ function analyticsOptions(options = {}, allowedKeys = [], stringArrayKeys = []) 
   for (const key of stringArrayKeys) {
     if (Array.isArray(filtered[key])) filtered[key] = filtered[key].join(",");
   }
-  return { ...rest, query: filtered };
+  return { ...rest, cacheTtlMs: rest.cacheTtlMs ?? ANALYTICS_CACHE_TTL_MS, query: filtered };
 }
 
 function withAnalyticsQuery(options = {}, query = {}) {
@@ -91,5 +94,8 @@ export function getItemPermutationStats(options = {}) {
 }
 
 export function getItemStats(options = {}) {
-  return apiGet("/v1/analytics/item-stats", analyticsOptions(options, ANALYTICS_FILTER_KEYS.itemStats, ["hero_ids", "enemy_hero_ids"]));
+  return apiGet("/v1/analytics/item-stats", {
+    ...analyticsOptions(options, ANALYTICS_FILTER_KEYS.itemStats, ["hero_ids", "enemy_hero_ids"]),
+    cacheTtlMs: options.cacheTtlMs ?? ITEM_STATS_CACHE_TTL_MS,
+  });
 }
