@@ -26,7 +26,7 @@ function renderHeroGrid(data) {
     const image = resolveAssetImage(hero, ["hero_card_critical_webp", "hero_card_critical", "background_image_webp", "background_image"]);
     const heroColor = colorToCss(hero?.colors?.ui);
     return '<a class="hero-card" href="#/heroes/' + encodeURIComponent(idOf(hero)) + '">' +
-      (image ? '<img src="' + esc(image) + '" alt="" loading="lazy">' : "") +
+      (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : "") +
       '<div class="hero-info"' + (heroColor ? ' style="--hero-accent:' + esc(heroColor) + '"' : "") + '><small>HERO ASSET</small><h3>' + esc(nameOf(hero)) + '</h3><p>ID ' + esc(idOf(hero)) + '</p></div></a>';
   }).join("") || '<article class="panel"><p>No hero assets returned.</p></article>';
 }
@@ -98,7 +98,7 @@ function renderAssetCatalog(kind) {
     const catalog = $("#asset-catalog");
     catalog.innerHTML = result.data.map(entity => {
       const image = resolveAssetImage(entity);
-      return '<article class="asset-card">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy">' : '<div class="asset-placeholder">NO ART</div>') + '<div><small>' + kind.toUpperCase() + '</small><h3>' + esc(entity.name ?? "Unnamed") + '</h3><p>ID ' + esc(entity.id ?? "—") + '</p></div></article>';
+      return '<article class="asset-card">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') + '<div><small>' + kind.toUpperCase() + '</small><h3>' + esc(entity.name ?? "Unnamed") + '</h3><p>ID ' + esc(entity.id ?? "—") + '</p></div></article>';
     }).join("") || '<div class="panel"><p>No assets returned.</p></div>';
     setConnection(true, "API connected");
   }).catch(error => {
@@ -270,4 +270,7 @@ function route() {
 }
 
 window.addEventListener("hashchange", route);
-loadAssetVersionContext().finally(route);
+route();
+loadAssetVersionContext().then(() => {
+  if (assetVersion.list().length) route();
+}).catch(() => {});
