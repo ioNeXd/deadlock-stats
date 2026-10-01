@@ -121,7 +121,7 @@ function responseInfo(responses, contract = null) {
       mediaType,
       schema: resolveSchema(media?.schema ?? null, contract),
       example: media?.example,
-      examples: media?.examples ?? {},
+      examples: resolveExamples(media?.examples, contract),
     })),
     headers: Object.entries(response?.headers ?? {}).map(([name, header]) => ({
       name,
@@ -324,8 +324,9 @@ function serializePathParameter(parameter, value) {
 
 function mediaTypeMatches(available, requested) {
   if (!available || !requested) return false;
-  const [availableType, availableSubtype = "*"] = String(available).toLowerCase().split("/", 2);
-  const [requestedType, requestedSubtype = "*"] = String(requested).toLowerCase().split("/", 2);
+  const normalize = value => String(value).split(";", 1)[0].trim().toLowerCase();
+  const [availableType, availableSubtype = "*"] = normalize(available).split("/", 2);
+  const [requestedType, requestedSubtype = "*"] = normalize(requested).split("/", 2);
 
   const subtypeMatches = (left, right) => {
     if (left === "*" || right === "*" || left === right) return true;
@@ -343,7 +344,9 @@ function selectRequestMediaType(operation, values) {
   if (!available.length) return null;
   const requested = values.__contentType;
   if (!requested) return available[0].mediaType;
-  return available.find(item => mediaTypeMatches(item.mediaType, requested))?.mediaType ?? available[0].mediaType;
+  const selected = available.find(item => mediaTypeMatches(item.mediaType, requested));
+  if (!selected) throw new TypeError(`Unsupported request content type: ${requested}`);
+  return selected.mediaType;
 }
 
 function isJsonMediaType(mediaType) {
