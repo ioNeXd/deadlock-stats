@@ -83,10 +83,17 @@ function waitForRetry(delayMs, signal) {
   });
 }
 
-function cacheKey(method, url, body, responseType = "auto", headers = {}) {
-  const normalizedHeaders = Object.entries(headers)
+function normalizeHeaders(headers = {}) {
+  const entries = headers instanceof Headers
+    ? [...headers.entries()]
+    : Object.entries(headers ?? {});
+  return entries
     .map(([key, value]) => [String(key).toLowerCase(), String(value)])
-    .sort(([a], [b]) => a.localeCompare(b));
+    .sort(([a, av], [b, bv]) => a.localeCompare(b) || av.localeCompare(bv));
+}
+
+function cacheKey(method, url, body, responseType = "auto", headers = {}) {
+  const normalizedHeaders = normalizeHeaders(headers);
 
   return JSON.stringify({
     method: method.toUpperCase(),
