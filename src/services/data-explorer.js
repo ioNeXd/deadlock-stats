@@ -648,8 +648,8 @@ export async function executeOperation(operation, values = {}, options = {}) {
     headers,
     cache: options.cache ?? false,
     dedupe: options.dedupe ?? false,
-    apiKey: undefined,
-    authorization: undefined,
+    apiKey: securityInfo(operation, operation?._contract).length ? undefined : options.apiKey,
+    authorization: securityInfo(operation, operation?._contract).length ? undefined : options.authorization,
   });
 
   return { ...result, request: { ...request, query: secured.query } };
