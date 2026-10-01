@@ -17,12 +17,23 @@ function queryParameters(operation) {
 }
 
 function resolveSchema(value, contract, seen = new Set()) {
-  if (!value || typeof value !== "object") return value;
-  if (!value.$ref || !contract || !value.$ref.startsWith("#/")) return value;
-  if (seen.has(value.$ref)) return {};
-  seen.add(value.$ref);
-  const resolved = resolveLocalRef(value, contract);
-  return resolveSchema(resolved, contract, seen);
+  if (!value || typeof value !== "object" || !contract) return value;
+  if (Array.isArray(value)) return value.map(item => resolveSchema(item, contract, seen));
+
+  if (value.$ref && value.$ref.startsWith("#/")) {
+    if (seen.has(value.$ref)) return { ...value };
+    const resolved = resolveLocalRef(value, contract);
+    if (!resolved || resolved === value) return value;
+    const nextSeen = new Set(seen);
+    nextSeen.add(value.$ref);
+    const siblings = { ...value };
+    delete siblings.$ref;
+    return resolveSchema({ ...resolved, ...siblings }, contract, nextSeen);
+  }
+
+  const result = {};
+  for (const [key, child] of Object.entries(value)) result[key] = resolveSchema(child, contract, seen);
+  return result;
 }
 
 function parameterSchema(parameter, contract = null) {
@@ -119,21 +130,37 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
       if (!operation) continue;
       if (!includeDeprecated && operation.deprecated) continue;
 
-      const parameters = mergeParameters(pathItem, operation, contract);
-      operations.push({
-        operationId: operation.operationId ?? `${method.toUpperCase()} ${path}`,
-        method: method.toUpperCase(),
-        path,
+      const parameters = mergeParameters(pathItem, operation, contract).map(parameter => ({
+        ...parameter,
+        schema: resolveSchema(parameter.schema ?? {}, contract),
+      }));
+      const requestBody = resolveLocalRef(operation.requestBody, contract) ?? null;
+      const responses = Object.fromEntries(Object.entries(operation.responses ?? {}).map(([status, response]) => [
+        status,
+        response ? {
+          ...response,
+          content: Object.fromEntries(Object.entries(response.content ?? {}).map(([mediaType, media]) => [
+            mediaType, media ? { ...media, schema: resolveSchema(media.schema ?? null, contract) } : media,
+          ])),
+        } : response,
+      ]));
+      const result = {
+        operationId: operation.operationId ?? method.toUpperCase() + " " + path,
+        method: method.toUpperCase(), path,
         summary: operation.summary ?? operation.description?.split("\n")[0] ?? "",
-        description: operation.description ?? "",
-        deprecated: operation.deprecated === true,
-        tags: Array.isArray(operation.tags) ? operation.tags : [],
-        parameters,
-        requestBody: resolveLocalRef(operation.requestBody, contract) ?? null,
-        responses: Object.fromEntries(Object.entries(operation.responses ?? {}).map(([status, response]) => [status, resolveLocalRef(response, contract)])),
-        security: securityInfo(operation, contract),
+        description: operation.description ?? "", deprecated: operation.deprecated === true,
+        tags: Array.isArray(operation.tags) ? operation.tags : [], parameters,
+        requestBody: requestBody ? {
+          ...requestBody,
+          content: Object.fromEntries(Object.entries(requestBody.content ?? {}).map(([mediaType, media]) => [
+            mediaType, media ? { ...media, schema: resolveSchema(media.schema ?? null, contract) } : media,
+          ])),
+        } : null,
+        responses, security: securityInfo(operation, contract),
         servers: operation.servers ?? contract.servers ?? [],
-      });
+      };
+      Object.defineProperty(result, "_contract", { value: contract, enumerable: false });
+      operations.push(result);;
     }
   }
 
@@ -215,7 +242,7 @@ export function buildRequest(operation, values = {}) {
 
   for (const parameter of operation.parameters) {
     const value = values[parameter.name];
-    const schema = parameterSchema(parameter);
+    const schema = parameterSchema(parameter, operation?._contract);
     if (value === undefined || value === "") {
       if (parameter.required) throw new TypeError(`Missing required parameter: ${parameter.name}`);
       continue;
