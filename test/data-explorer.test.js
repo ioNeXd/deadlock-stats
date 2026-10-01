@@ -296,7 +296,7 @@ test("buildRequest rejects missing required parameters and preserves non-JSON bo
       path: "/v1/test",
       method: "POST",
       parameters: [],
-      requestBody: { required: true, content: { "application/json": { schema: { type: "object" } } },
+      requestBody: { required: true, content: { "application/json": { schema: { type: "object" } } } },
     }, { __body: "{broken" }),
     /valid JSON/,
   );
