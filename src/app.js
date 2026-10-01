@@ -1,3 +1,4 @@
+import { getActiveMatchesSnapshot, getRecentlyFetchedMatchesSnapshot, getMatchMetadataSnapshot } from "./services/matches.js";
 import { listHeroes, listItems, listRanks, listMiscEntities } from "./services/assets.js";
 import { getOpenApiContract } from "./services/versioning.js";
 import { probeApiStatus } from "./services/api-status.js";
@@ -578,6 +579,57 @@ async function loadApiStatus(signal) {
   }
 }
 
+function renderMatches(signal) {
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">MATCH INTELLIGENCE</span><h2>Matches</h2><p>Live and recently fetched match intelligence from the current Deadlock API.</p></section>' +
+    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">ACTIVE</span><h2>Live matches</h2></div><b id="active-match-status">LOADING</b></div><div id="active-match-list" class="analytics-table"><p class="muted">Loading active matches.</p></div></article>' +
+    '<article class="panel"><div class="section-head"><div><span class="eyebrow">RECENTLY FETCHED</span><h2>Recent matches</h2></div><b id="recent-match-status">LOADING</b></div><div id="recent-match-list" class="analytics-table"><p class="muted">Loading recent matches.</p></div></article></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">MATCH LOOKUP</span><h2>Inspect metadata</h2></div></div><form id="match-lookup" class="inline-form"><input name="match_id" type="number" min="0" placeholder="Match ID" required><button class="primary-button" type="submit">Load metadata</button></form><div id="match-detail" class="result-box"><span class="eyebrow">RESPONSE</span><pre>Enter a match ID to inspect its API metadata.</pre></div></section>';
+
+  const renderList = (target, matches) => {
+    $(target).innerHTML = matches.slice(0, 50).map(match =>
+      '<button class="analytics-table-row match-row" data-match-id="' + esc(match.matchId) + '"><span><strong>#' + esc(match.matchId) + '</strong><small class="matchup-meta">' + esc(new Date(Number(match.startTime) * 1000).toLocaleString()) + ' · ' + esc(match.durationS ?? 0) + 's</small></span><strong>' + esc(match.players.length) + ' players</strong></button>'
+    ).join("") || '<p class="muted">No matches returned.</p>';
+    document.querySelectorAll(target + " .match-row").forEach(button => button.addEventListener("click", () => {
+      $("#match-lookup [name=match_id]").value = button.dataset.matchId;
+      loadDetail(button.dataset.matchId);
+    }));
+  };
+
+  const loadDetail = async matchId => {
+    $("#match-detail pre").textContent = "Loading…";
+    try {
+      const data = await getMatchMetadataSnapshot(matchId, { signal });
+      if (signal.aborted) return;
+      $("#match-detail pre").textContent = JSON.stringify(data, null, 2);
+    } catch (error) {
+      if (isAborted(error)) return;
+      $("#match-detail pre").textContent = JSON.stringify({ error: error.message, status: error.status ?? null }, null, 2);
+    }
+  };
+
+  try {
+    const [active, recent] = await Promise.all([
+      getActiveMatchesSnapshot({ signal }),
+      getRecentlyFetchedMatchesSnapshot({ signal }),
+    ]);
+    if (signal.aborted) return;
+    renderList("#active-match-list", active);
+    renderList("#recent-match-list", recent);
+    $("#active-match-status").textContent = active.length + " LIVE";
+    $("#recent-match-status").textContent = recent.length + " FOUND";
+  } catch (error) {
+    if (isAborted(error)) return;
+    $("#active-match-status").textContent = "ERROR";
+    $("#recent-match-status").textContent = "ERROR";
+  }
+
+  $("#match-lookup").addEventListener("submit", event => {
+    event.preventDefault();
+    loadDetail(new FormData(event.currentTarget).get("match_id"));
+  });
+}
+
 function renderDataExplorer(signal) {
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">TOOLS / OPENAPI</span><h2>Data Explorer</h2><p>Inspect and execute documented API operations from the live OpenAPI contract.</p></section>' +
     '<section class="explorer"><aside class="explorer-list"><input id="operation-filter" class="explorer-search" placeholder="Filter operations…"><div id="operation-list"></div></aside><article class="panel explorer-main"><div id="explorer-empty"><span class="eyebrow">CONTRACT</span><h3>Select an operation</h3><p>The explorer is populated from the live OpenAPI contract.</p></div><div id="operation-detail" hidden></div></article></section>';
@@ -718,6 +770,7 @@ function route() {
   const routeName = location.hash.replace(/^#\/?/, "").split("/")[0] || "dashboard";
   if (routeName === "api") renderApiStatus(signal);
   else if (routeName === "analytics") renderAnalytics(signal);
+  else if (routeName === "matches") renderMatches(signal);
   else if (routeName === "item-analytics") renderItemAnalytics(signal);
   else if (routeName === "data") renderDataExplorer(signal);
   else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
