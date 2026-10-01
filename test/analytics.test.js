@@ -389,6 +389,42 @@ test("badge distribution normalizer follows the current OpenAPI schema", () => {
 });
 
 
+test("analytics wrappers forward current combo and permutation filters", async () => {
+  const calls = [];
+  globalThis.fetch = async input => {
+    const url = new URL(input);
+    calls.push(url);
+    return new Response("[]", {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  await getHeroCombStats({
+    query: {
+      include_hero_ids: [7, 8],
+      exclude_hero_ids: [9],
+      include_enemy_hero_ids: [10],
+      exclude_enemy_hero_ids: [11, 12],
+    },
+    cache: false,
+    dedupe: false,
+  });
+  await getItemPermutationStats({
+    query: { hero_id: 7, hero_ids: [8, 9] },
+    cache: false,
+    dedupe: false,
+  });
+
+  assert.deepEqual(calls[0].searchParams.getAll("include_hero_ids"), ["7", "8"]);
+  assert.deepEqual(calls[0].searchParams.getAll("exclude_hero_ids"), ["9"]);
+  assert.deepEqual(calls[0].searchParams.getAll("include_enemy_hero_ids"), ["10"]);
+  assert.deepEqual(calls[0].searchParams.getAll("exclude_enemy_hero_ids"), ["11", "12"]);
+  assert.equal(calls[1].searchParams.get("hero_id"), "7");
+  assert.equal(calls[1].searchParams.get("hero_ids"), "8,9");
+});
+
+
 test("analytics wrappers drop filters not documented for each endpoint", async () => {
   const calls = [];
   globalThis.fetch = async input => {
