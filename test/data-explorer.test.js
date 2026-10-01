@@ -267,6 +267,33 @@ test("buildRequest honors OpenAPI query serialization styles", () => {
   });
 });
 
+test("buildRequest parses string arrays according to OpenAPI query styles", () => {
+  const operation = {
+    method: "GET",
+    path: "/v1/test",
+    parameters: [
+      { name: "space_ids", in: "query", style: "spaceDelimited", schema: { type: "array", items: { type: "integer" } } },
+      { name: "pipe_ids", in: "query", style: "pipeDelimited", schema: { type: "array", items: { type: "integer" } } },
+      { name: "form_ids", in: "query", style: "form", explode: false, schema: { type: "array", items: { type: "integer" } } },
+      { name: "form_exploded", in: "query", style: "form", explode: true, schema: { type: "array", items: { type: "integer" } } },
+    ],
+    requestBody: null,
+  };
+  const request = buildRequest(operation, {
+    space_ids: "1 2 3",
+    pipe_ids: "4|5|6",
+    form_ids: "7,8,9",
+    form_exploded: "10",
+  });
+
+  assert.deepEqual(request.query, {
+    space_ids: "1 2 3",
+    pipe_ids: "4|5|6",
+    form_ids: "7,8,9",
+    form_exploded: [10],
+  });
+});
+
 test("buildRequest serializes path arrays and objects", () => {
   const operation = {
     method: "GET",
