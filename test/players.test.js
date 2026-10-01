@@ -12,6 +12,8 @@ import {
 
 test("player hero stats requires account ids and forwards documented filters", async () => {
   assert.throws(() => getPlayerHeroStats(), TypeError);
+  assert.throws(() => getPlayerHeroStats({ account_ids: [] }), RangeError);
+  assert.throws(() => getPlayerHeroStats({ account_ids: new Array(1001).fill(1) }), RangeError);
 
   const originalFetch = globalThis.fetch;
   const calls = [];
@@ -91,10 +93,13 @@ test("player match history preserves force_refetch and rank images stay binary",
   try {
     await getPlayerMatchHistory(123, { force_refetch: true });
     await getPlayerRankImage([123, 456], "webp");
+    await getPlayerRankImage([123]);
+    assert.throws(() => getPlayerRankImage([123], "jpg"), RangeError);
     assert.equal(calls[0].searchParams.get("force_refetch"), "true");
     assert.equal(calls[1].pathname, "/v1/players/rank/image");
     assert.equal(calls[1].searchParams.get("account_ids"), "123,456");
     assert.equal(calls[1].searchParams.get("format"), "webp");
+    assert.equal(calls[2].searchParams.get("format"), "png");
   } finally {
     globalThis.fetch = originalFetch;
   }
