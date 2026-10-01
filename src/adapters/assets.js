@@ -53,13 +53,52 @@ export function resolveAssetImage(entity, preferred = []) {
   return "";
 }
 
+function mapWorldToRelative(point, radius, origin = [0, 0, 0]) {
+  if (!Array.isArray(point) || point.length < 2 || !Number.isFinite(radius) || radius <= 0) return null;
+  const x = Number(point[0]) + Number(origin[0] ?? 0);
+  const y = Number(point[1]) + Number(origin[1] ?? 0);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  return [
+    (x + radius) / (2 * radius),
+    (radius - y) / (2 * radius),
+  ];
+}
+
+function normalizeZiplinePath(path, radius) {
+  if (!path || typeof path !== "object" || !Number.isFinite(radius) || radius <= 0) return { ...path, segments: [] };
+  const origin = Array.isArray(path.origin) ? path.origin : [0, 0, 0];
+  const p0 = Array.isArray(path.P0_points) ? path.P0_points : [];
+  const p1 = Array.isArray(path.P1_points) ? path.P1_points : [];
+  const p2 = Array.isArray(path.P2_points) ? path.P2_points : [];
+  const count = Math.min(p0.length, p1.length, p2.length);
+  const nodes = Array.from({ length: count }, (_, index) => ({
+    p0: mapWorldToRelative(p0[index], radius, origin),
+    p1: mapWorldToRelative(p1[index], radius, origin),
+    p2: mapWorldToRelative(p2[index], radius, origin),
+  }));
+  const segments = [];
+  for (let index = 0; index < nodes.length - 1; index += 1) {
+    const current = nodes[index];
+    const next = nodes[index + 1];
+    if (!current.p0 || !current.p2 || !next.p1 || !next.p0) continue;
+    segments.push({
+      start: current.p0,
+      control1: current.p2,
+      control2: next.p1,
+      end: next.p0,
+    });
+  }
+  return { ...path, segments };
+}
+
 export function normalizeMap(entity) {
   if (!entity || typeof entity !== "object") return { radius: null, images: {}, objectivePositions: {}, ziplinePaths: [], neutralCamps: null, entities: null, raw: entity };
+  const radius = Number.isFinite(Number(entity.radius)) ? Number(entity.radius) : null;
   return {
-    radius: Number.isFinite(Number(entity.radius)) ? Number(entity.radius) : null,
+    radius,
     images: entity.images && typeof entity.images === "object" ? { ...entity.images } : {},
     objectivePositions: entity.objective_positions && typeof entity.objective_positions === "object" ? { ...entity.objective_positions } : {},
-    ziplinePaths: Array.isArray(entity.zipline_paths) ? entity.zipline_paths.slice() : [],
+    ziplinePaths: Array.isArray(entity.zipline_paths) ? entity.zipline_paths.map(path => normalizeZiplinePath(path, radius)) : [],
     neutralCamps: Array.isArray(entity.neutral_camps) ? entity.neutral_camps.slice() : entity.neutral_camps === null ? null : null,
     entities: entity.entities && typeof entity.entities === "object" ? { ...entity.entities } : null,
     raw: entity,
