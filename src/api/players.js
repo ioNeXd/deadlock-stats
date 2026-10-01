@@ -90,7 +90,7 @@ export function getSteamProfiles(accountIds, options = {}) {
   validateAccountIds(accountIds);
   return apiGet("/v1/players/steam", {
     ...options,
-    query: { account_ids: Array.isArray(accountIds) ? accountIds.join(",") : accountIds, ...(options.refresh == null ? {} : { refresh: options.refresh }) },
+    query: { account_ids: accountIds.join(","), ...(options.refresh == null ? {} : { refresh: options.refresh }) },
   });
 }
 
@@ -126,9 +126,7 @@ export function getPlayerMateStats(accountId, options = {}) {
 }
 
 export function getPlayerRankImage(accountIds, format = "png", options = {}) {
-  if (!Array.isArray(accountIds) || accountIds.length < 1 || accountIds.length > 12) {
-    throw new RangeError("accountIds must contain between 1 and 12 account IDs");
-  }
+  validateAccountIds(accountIds, 12);
   if (format !== "png" && format !== "webp") {
     throw new RangeError("format must be png or webp");
   }
