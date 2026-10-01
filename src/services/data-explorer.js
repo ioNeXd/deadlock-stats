@@ -218,18 +218,61 @@ export function describeOperation(operation, contract = null) {
   };
 }
 
+function schemaAllowsNull(schema) {
+  return schemaNullable(schema) || schema?.type === "null" || schema?.const === null;
+}
+
+function validateEnum(value, schema) {
+  const values = enumValues(schema);
+  if (!values.length) return;
+  const valid = values.some(item => Object.is(item, value) || (typeof item === "number" && Number(item) === value));
+  if (!valid) throw new TypeError("Value is not allowed by the parameter enum.");
+}
+
 function coerceScalar(value, schema) {
+  if (value === null) {
+    if (schemaAllowsNull(schema)) return null;
+    throw new TypeError("Null is not allowed by the parameter schema.");
+  }
+
   const type = schemaType(schema);
-  if (type === "integer" || type === "number") return Number(value);
-  if (type === "boolean") return value === true || value === "true";
-  return value;
+  if (type === "integer" || type === "number") {
+    const number = Number(value);
+    if (!Number.isFinite(number)) throw new TypeError("Parameter must be a finite number.");
+    if (type === "integer" && !Number.isInteger(number)) throw new TypeError("Parameter must be an integer.");
+    validateEnum(number, schema);
+    if (schema.minimum !== undefined && number < schema.minimum) throw new TypeError("Parameter is below the minimum.");
+    if (schema.maximum !== undefined && number > schema.maximum) throw new TypeError("Parameter exceeds the maximum.");
+    return number;
+  }
+
+  if (type === "boolean") {
+    if (value === true || value === "true") {
+      validateEnum(true, schema);
+      return true;
+    }
+    if (value === false || value === "false") {
+      validateEnum(false, schema);
+      return false;
+    }
+    throw new TypeError("Parameter must be a boolean.");
+  }
+
+  const result = String(value);
+  validateEnum(result, schema);
+  if (schema.minLength !== undefined && result.length < schema.minLength) throw new TypeError("Parameter is shorter than minLength.");
+  if (schema.maxLength !== undefined && result.length > schema.maxLength) throw new TypeError("Parameter exceeds maxLength.");
+  return result;
 }
 
 function coerceParameter(value, schema) {
-  if (value === "" || value === null || value === undefined) return undefined;
+  if (value === "" || value === undefined) return undefined;
+  if (value === null) return schemaAllowsNull(schema) ? null : undefined;
 
   if (schemaType(schema) === "array") {
     const values = Array.isArray(value) ? value : String(value).split(",").map(item => item.trim()).filter(Boolean);
+    if (schema.minItems !== undefined && values.length < schema.minItems) throw new TypeError("Parameter has fewer items than minItems.");
+    if (schema.maxItems !== undefined && values.length > schema.maxItems) throw new TypeError("Parameter has more items than maxItems.");
     return values.map(item => coerceScalar(item, schema?.items ?? {}));
   }
 
@@ -312,11 +355,14 @@ export function buildRequest(operation, values = {}) {
   const query = {};
 
   for (const parameter of operation.parameters) {
-    const value = values[parameter.name];
     const schema = parameterSchema(parameter, operation?._contract);
+    let value = values[parameter.name];
     if (value === undefined || value === "") {
-      if (parameter.required) throw new TypeError(`Missing required parameter: ${parameter.name}`);
-      continue;
+      if (schema?.default !== undefined) value = schema.default;
+      else {
+        if (parameter.required) throw new TypeError(`Missing required parameter: ${parameter.name}`);
+        continue;
+      }
     }
 
     const coerced = coerceParameter(value, schema);
