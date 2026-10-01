@@ -28,6 +28,7 @@ function normalizeEntity(entity) {
 }
 
 export function normalizeCollection(payload) { return asArray(payload).map(normalizeEntity); }
+export function normalizeAsset(entity) { return entity ?? null; }
 export function normalizeHero(entity) { return normalizeEntity(entity); }
 export function normalizeRank(entity) { return normalizeEntity(entity); }
 export function normalizeItem(entity) { return normalizeEntity(entity); }
