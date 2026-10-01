@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats } from "../src/api/analytics.js";
-import { normalizeGameStats, normalizeHeroBanStats, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats } from "../src/services/analytics.js";
+import { normalizeGameStats, normalizeHeroBanStats, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats } from "../src/services/analytics.js";
 import { clearApiCache } from "../src/api/client.js";
 
 const originalFetch = globalThis.fetch;
@@ -71,7 +71,7 @@ test("expanded analytics wrappers use documented paths and preserve query option
   await getHeroSynergyStats({ query: { min_matches: 20 }, cache: false, dedupe: false });
   await getHeroCombStats({ query: { comb_size: 6 }, cache: false, dedupe: false });
   await getHeroBuildStats(7, { query: { min_matches: 20 }, cache: false, dedupe: false });
-  await getAbilityOrderStats({ query: { hero_id: 7 }, cache: false, dedupe: false });
+  await getAbilityOrderStats({ hero_id: 7, cache: false, dedupe: false });
   await getBadgeDistribution({ cache: false, dedupe: false });
   await getBuffStats({ cache: false, dedupe: false });
   await getBuildItemStats({ query: { hero_id: 7 }, cache: false, dedupe: false });
@@ -89,7 +89,7 @@ test("expanded analytics wrappers use documented paths and preserve query option
   ]);
   assert.equal(calls[0].searchParams.get("bucket"), "start_time_day");
   assert.equal(calls[0].searchParams.get("min_matches"), "20");
-  assert.equal(calls[4].searchParams.get("min_matches"), "20");
+  assert.equal(calls[4].searchParams.get("min_matches"), "20");\n  assert.equal(calls[5].searchParams.get("hero_id"), "7");
 });
 
 test("hero stats normalizer follows the current OpenAPI schema", () => {
@@ -249,5 +249,72 @@ test("hero matchup normalizers follow the current OpenAPI schemas", () => {
     losses: 12,
     matches: 30,
     raw: { hero_ids: [7, 8, 9], wins: 18, losses: 12, matches: 30, future_metric: 99 },
+  });
+});
+
+
+test("hero build and ability order normalizers follow the current OpenAPI schemas", () => {
+  const builds = normalizeHeroBuildStats({
+    data: [{
+      hero_id: 7,
+      hero_build_id: 123,
+      wins: 60,
+      losses: 40,
+      matches: 100,
+      players: 35,
+      future_metric: 9,
+    }],
+  });
+  const orders = normalizeAbilityOrderStats({
+    data: [{
+      abilities: [1, 2, 3, 4],
+      wins: 70,
+      losses: 30,
+      matches: 100,
+      players: 50,
+      total_kills: 900,
+      total_deaths: 400,
+      total_assists: 1200,
+      future_metric: 10,
+    }],
+  });
+
+  assert.deepEqual(builds[0], {
+    heroId: 7,
+    heroBuildId: 123,
+    wins: 60,
+    losses: 40,
+    matches: 100,
+    players: 35,
+    raw: {
+      hero_id: 7,
+      hero_build_id: 123,
+      wins: 60,
+      losses: 40,
+      matches: 100,
+      players: 35,
+      future_metric: 9,
+    },
+  });
+  assert.deepEqual(orders[0], {
+    abilities: [1, 2, 3, 4],
+    wins: 70,
+    losses: 30,
+    matches: 100,
+    players: 50,
+    totalKills: 900,
+    totalDeaths: 400,
+    totalAssists: 1200,
+    raw: {
+      abilities: [1, 2, 3, 4],
+      wins: 70,
+      losses: 30,
+      matches: 100,
+      players: 50,
+      total_kills: 900,
+      total_deaths: 400,
+      total_assists: 1200,
+      future_metric: 10,
+    },
   });
 });
