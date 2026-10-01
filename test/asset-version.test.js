@@ -100,5 +100,8 @@ test("normalizes official color channel shapes without changing source values", 
   assert.deepEqual(normalizeColorValue([10, 20, 30, 255]), [10, 20, 30, 255]);
   assert.deepEqual(normalizeColorValue({ r: 10, g: 20, b: 30, a: 128 }), [10, 20, 30, 128]);
   assert.equal(colorToCss({ r: 10, g: 20, b: 30, a: 128 }), "rgba(10,20,30,0.5019607843137255)");
+  assert.equal(colorToCss("#abc"), "#abc");
+  assert.equal(colorToCss("rgb(255,0,0)"), "");
+  assert.equal(colorToCss("red;--x:url(javascript:alert(1))"), "");
   assert.equal(STORAGE_KEY, "deadlock-stats:client-version");
 });
