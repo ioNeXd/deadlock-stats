@@ -145,6 +145,51 @@ function securityInfo(operation, contract) {
   return Array.isArray(security) ? security : [];
 }
 
+function securitySchemes(contract) {
+  return contract?.components?.securitySchemes ?? {};
+}
+
+function applySecurity(operation, request, options = {}) {
+  const security = securityInfo(operation, operation?._contract);
+  if (!security.length) return { headers: new Headers(options.headers), query: { ...request.query } };
+
+  const schemes = securitySchemes(operation?._contract);
+  const credentials = { apiKey: options.apiKey, authorization: options.authorization };
+
+  for (const requirement of security) {
+    if (!requirement || typeof requirement !== "object") continue;
+    if (Object.keys(requirement).length === 0) {
+      return { headers: new Headers(options.headers), query: { ...request.query } };
+    }
+
+    const headers = new Headers(options.headers);
+    const query = { ...request.query };
+    let satisfied = true;
+
+    for (const schemeName of Object.keys(requirement)) {
+      const scheme = resolveLocalRef(schemes[schemeName], operation?._contract);
+      if (!scheme) { satisfied = false; break; }
+      if (scheme.type === "apiKey") {
+        if (!credentials.apiKey) { satisfied = false; break; }
+        if (scheme.in === "header") headers.set(scheme.name, credentials.apiKey);
+        else if (scheme.in === "query") query[scheme.name] = credentials.apiKey;
+        else { satisfied = false; break; }
+        continue;
+      }
+      if (scheme.type === "http") {
+        if (!credentials.authorization) { satisfied = false; break; }
+        headers.set("Authorization", credentials.authorization);
+        continue;
+      }
+      satisfied = false;
+      break;
+    }
+    if (satisfied) return { headers, query };
+  }
+
+  throw new TypeError("Missing or unsupported authentication credentials for this operation.");
+}
+
 export function listApiOperations(contract, { includeDeprecated = true } = {}) {
   const paths = contract?.paths ?? {};
   const operations = [];
@@ -588,7 +633,8 @@ export function buildRequest(operation, values = {}) {
 
 export async function executeOperation(operation, values = {}, options = {}) {
   const request = buildRequest(operation, values);
-  const headers = new Headers(options.headers);
+  const secured = applySecurity(operation, request, options);
+  const headers = secured.headers;
 
   if (request.mediaType && !headers.has("Content-Type")) {
     headers.set("Content-Type", request.mediaType);
@@ -597,14 +643,16 @@ export async function executeOperation(operation, values = {}, options = {}) {
   const result = await apiRequest(request.path, {
     ...options,
     method: request.method,
-    query: request.query,
+    query: secured.query,
     body: request.body,
     headers,
     cache: options.cache ?? false,
     dedupe: options.dedupe ?? false,
+    apiKey: undefined,
+    authorization: undefined,
   });
 
-  return { ...result, request };
+  return { ...result, request: { ...request, query: secured.query } };
 }
 
 export {
