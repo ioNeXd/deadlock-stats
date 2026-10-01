@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { clearApiCache } from "../src/api/client.js";
 import { getHeroes, getRankSubrankImage, getMap, getColors } from "../src/api/assets.js";
-import { normalizeCollection } from "../src/adapters/assets.js";
+import { normalizeCollection, resolveAssetImage } from "../src/adapters/assets.js";
 
 function mockJsonResponse(value, contentType = "application/json") {
   return new Response(JSON.stringify(value), {
@@ -107,4 +107,23 @@ test("asset normalization preserves raw data and known image fields while tolera
   assert.equal(normalized[0].images.background_image_webp, raw[0].background_image_webp);
   assert.deepEqual(normalized[0].raw, raw[0]);
   assert.deepEqual(normalized[0].raw.future_field, { nested: true });
+});
+
+
+test("asset image resolution prefers explicit fields and falls back across official asset fields", () => {
+  const entity = {
+    images: {
+      background_image: "https://cdn.example/background.jpg",
+      image_webp: "https://cdn.example/item.webp",
+    },
+  };
+
+  assert.equal(
+    resolveAssetImage(entity, ["image_webp", "background_image"]),
+    "https://cdn.example/item.webp",
+  );
+  assert.equal(
+    resolveAssetImage({ raw: { images: { icon: "https://cdn.example/icon.png" } } }),
+    "https://cdn.example/icon.png",
+  );
 });
