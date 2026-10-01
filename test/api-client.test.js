@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { apiGet, apiRequest, clearApiCache } from "../src/api/client.js";
+import { apiGet, apiRequest, clearApiCache, invalidateApiCache } from "../src/api/client.js";
 
 const realFetch = globalThis.fetch;
 
@@ -114,4 +114,60 @@ test("binary and stream response types are supported", async () => {
 
   assert.ok(stream.data);
   assert.equal(typeof stream.data.getReader, "function");
+});
+
+
+test("case-insensitive GET methods receive cache and dedupe defaults", async () => {
+  let calls = 0;
+  mockFetch(async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ calls }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  await apiRequest("/v1/test", { method: "get" });
+  await apiRequest("/v1/test", { method: "get" });
+
+  assert.equal(calls, 1);
+});
+
+test("binary response requests do not force JSON Accept", async () => {
+  let accept;
+  mockFetch(async (_url, init) => {
+    accept = init.headers.get("Accept");
+    return new Response(new Uint8Array([1, 2]), {
+      status: 200,
+      headers: { "content-type": "image/png" },
+    });
+  });
+
+  await apiGet("/v1/test", {
+    responseType: "blob",
+    cache: false,
+  });
+
+  assert.equal(accept, "*/*");
+});
+
+test("invalidateApiCache can invalidate every query variant for a path", async () => {
+  let calls = 0;
+  mockFetch(async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ calls }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  await apiGet("/v1/test", { query: { a: 1 } });
+  await apiGet("/v1/test", { query: { a: 2 } });
+  assert.equal(calls, 2);
+
+  invalidateApiCache("/v1/test");
+
+  await apiGet("/v1/test", { query: { a: 1 } });
+  await apiGet("/v1/test", { query: { a: 2 } });
+  assert.equal(calls, 4);
 });
