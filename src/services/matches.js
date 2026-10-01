@@ -28,7 +28,8 @@ export function normalizeMatchInfo(result) {
 }
 
 export function normalizeMatchMetadata(result) {
-  return result?.data ? result.data : result;
+  if (result && Object.prototype.hasOwnProperty.call(result, "data")) return result.data;
+  return result;
 }
 
 export async function getActiveMatchesSnapshot(options = {}) {
