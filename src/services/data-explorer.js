@@ -120,8 +120,8 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
         deprecated: operation.deprecated === true,
         tags: Array.isArray(operation.tags) ? operation.tags : [],
         parameters,
-        requestBody: operation.requestBody ?? null,
-        responses: operation.responses ?? {},
+        requestBody: resolveLocalRef(operation.requestBody, contract) ?? null,
+        responses: Object.fromEntries(Object.entries(operation.responses ?? {}).map(([status, response]) => [status, resolveLocalRef(response, contract)])),
         security: securityInfo(operation, contract),
         servers: operation.servers ?? contract.servers ?? [],
       });
