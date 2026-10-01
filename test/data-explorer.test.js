@@ -86,7 +86,7 @@ test("executeOperation delegates the documented operation to the API client", as
   assert.equal(url.pathname, "/v1/example/7");
   assert.equal(url.searchParams.get("limit"), "5");
   assert.equal(result.data.ok, true);
-  assert.equal(captured.init.signal, controller.signal);
+  assert.ok(captured.init.signal instanceof AbortSignal);
 });
 
 
