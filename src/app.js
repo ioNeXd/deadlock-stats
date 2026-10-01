@@ -260,7 +260,7 @@ function bindVersionControl() {
 }
 
 function route() {
-  const routeName = location.hash.replace(/^#\\/?/, "").split("/")[0] || "dashboard";
+  const routeName = location.hash.replace(/^#\/?/, "").split("/")[0] || "dashboard";
   if (routeName === "api") renderApiStatus();
   else if (routeName === "data") renderDataExplorer();
   else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName);
