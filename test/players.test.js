@@ -14,6 +14,8 @@ test("player hero stats requires account ids and forwards documented filters", a
   assert.throws(() => getPlayerHeroStats(), TypeError);
   assert.throws(() => getPlayerHeroStats({ account_ids: [] }), RangeError);
   assert.throws(() => getPlayerHeroStats({ account_ids: new Array(1001).fill(1) }), RangeError);
+  assert.throws(() => getPlayerHeroStats({ account_ids: [-1] }), RangeError);
+  assert.throws(() => getPlayerRanks([1, 1.5]), RangeError);
 
   const originalFetch = globalThis.fetch;
   const calls = [];
@@ -45,6 +47,9 @@ test("batch player ranks and Steam search use current documented endpoints", asy
     return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
   };
   try {
+    assert.throws(() => searchSteamProfiles(""), TypeError);
+    assert.throws(() => searchSteamProfiles("detective", { limit: 0 }), RangeError);
+    assert.throws(() => searchSteamProfiles("detective", { limit: 1001 }), RangeError);
     await getPlayerRanks([1, 2]);
     await searchSteamProfiles("detective", { limit: 25, unsupported: "drop" });
     assert.equal(calls[0].pathname, "/v1/players/rank");
@@ -91,6 +96,7 @@ test("player match history preserves force_refetch and rank images stay binary",
     });
   };
   try {
+    assert.throws(() => getPlayerMatchHistory(-1), RangeError);
     await getPlayerMatchHistory(123, { force_refetch: true });
     await getPlayerRankImage([123, 456], "webp");
     await getPlayerRankImage([123]);
