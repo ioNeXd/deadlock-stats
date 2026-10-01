@@ -137,10 +137,33 @@ function contentTypeOf(response) {
   return response.headers.get("content-type")?.split(";")[0].trim().toLowerCase() || "";
 }
 
+function acceptHeaderFor(responseType) {
+  switch (responseType) {
+    case "json":
+      return "application/json";
+    case "text":
+      return "text/plain, text/html, */*;q=0.8";
+    case "stream":
+      return "text/event-stream";
+    case "blob":
+    case "arrayBuffer":
+    case "response":
+      return "*/*";
+    default:
+      return "application/json";
+  }
+}
+
 async function parseResponse(response, responseType = "auto") {
   const contentType = contentTypeOf(response);
 
   if (responseType === "response") return response;
+  if (responseType === "json") {
+    if (response.status === 204) return null;
+    const text = await response.text();
+    if (!text) return null;
+    return JSON.parse(text);
+  }
   if (responseType === "arrayBuffer") return response.arrayBuffer();
   if (responseType === "text") return response.text();
   if (responseType === "stream") return response.body;
@@ -235,14 +258,7 @@ async function request(path, {
       try {
         const requestHeaders = new Headers(headers);
         if (!requestHeaders.has("Accept")) {
-          requestHeaders.set(
-            "Accept",
-            responseType === "stream"
-              ? "text/event-stream"
-              : responseType === "blob" || responseType === "arrayBuffer"
-                ? "*/*"
-                : "application/json",
-          );
+          requestHeaders.set("Accept", acceptHeaderFor(responseType));
         }
 
         if (body != null && !requestHeaders.has("Content-Type") && typeof body !== "string") {
