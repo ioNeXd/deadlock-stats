@@ -35,6 +35,9 @@ export function getPlayerHeroStats(options = {}) {
 }
 
 export function getPlayerRanks(accountIds, options = {}) {
+  if (!Array.isArray(accountIds) || accountIds.length < 1 || accountIds.length > 1000) {
+    throw new RangeError("accountIds must contain between 1 and 1000 account IDs");
+  }
   const query = { account_ids: accountIds };
   return apiGet("/v1/players/rank", { ...options, query });
 }
