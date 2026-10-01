@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { searchBuilds } from "../src/api/builds.js";
+import { getBuild } from "../src/services/builds.js";
 
 test("searchBuilds forwards only documented build filters", async () => {
   const originalFetch = globalThis.fetch;
@@ -27,6 +28,21 @@ test("searchBuilds forwards only documented build filters", async () => {
     assert.equal(calls[0].searchParams.get("hero_id"), "123");
     assert.equal(calls[0].searchParams.get("limit"), "20");
     assert.equal(calls[0].searchParams.has("unsupported"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("getBuild preserves the documented single-build object response", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ hero_build_id: 1234, hero_id: 7 }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+  try {
+    const result = await getBuild(7, 1234);
+    assert.deepEqual(result.data, { hero_build_id: 1234, hero_id: 7 });
+    assert.deepEqual(result.raw, result.data);
   } finally {
     globalThis.fetch = originalFetch;
   }
