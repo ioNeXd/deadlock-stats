@@ -147,7 +147,7 @@ async function loadDashboard(signal) {
   }
 
   if (heroes || snapshot) {
-    setConnection(true, "API connected");
+    setConnection(      '<svg class="map-ziplines" viewBox="0 0 1 1" preserveAspectRatio="none">', "API connected");
     $("#api-badge").textContent = snapshot ? "ONLINE" : "PARTIAL";
     $("#api-badge").classList.add("online");
   } else {
@@ -1092,26 +1092,28 @@ function renderMaps(signal) {
       (icon ? '<img src="' + esc(icon) + '" alt="" loading="lazy" decoding="async">' : '<span>' + esc(extra || "•") + '</span>') + '</button>';
 
     
-    const pathPoint = point => {
-      if (Array.isArray(point)) {
-        const x = Number(point[0]), y = Number(point[1]);
-        return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
-      }
-      if (point && typeof point === "object") {
-        const x = Number(point.x ?? point[0]), y = Number(point.y ?? point[1]);
-        return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
-      }
-      return null;
-    };
+    const camps = Array.isArray(map.neutralCamps) ? map.neutralCamps : [];
+    const ziplinePaths = Array.isArray(map.ziplinePaths) ? map.ziplinePaths : [];
     const ziplineSvg = ziplinePaths.map((path, index) => {
-      const p0 = Array.isArray(path?.P0_points) ? path.P0_points.map(pathPoint).filter(Boolean) : [];
-      const p1 = Array.isArray(path?.P1_points) ? path.P1_points.map(pathPoint).filter(Boolean) : [];
-      const p2 = Array.isArray(path?.P2_points) ? path.P2_points.map(pathPoint).filter(Boolean) : [];
-      const points = [...p0, ...p1, ...p2];
-      if (points.length < 2) return "";
-      const d = points.map(([x, y], pointIndex) => (pointIndex ? "L" : "M") + " " + x + " " + y).join(" ");
+      const segments = Array.isArray(path?.segments) ? path.segments : [];
+      if (!segments.length) return "";
+      const first = segments[0]?.start;
+      if (!Array.isArray(first) || first.length < 2) return "";
+      const commands = ["M " + Number(first[0]) + " " + Number(first[1])];
+      for (const segment of segments) {
+        const c1 = segment?.control1;
+        const c2 = segment?.control2;
+        const end = segment?.end;
+        if (![c1, c2, end].every(point => Array.isArray(point) && point.length >= 2 && point.every(value => Number.isFinite(Number(value))))) continue;
+        commands.push(
+          "C " +
+          Number(c1[0]) + " " + Number(c1[1]) + " " +
+          Number(c2[0]) + " " + Number(c2[1]) + " " +
+          Number(end[0]) + " " + Number(end[1])
+        );
+      }
       const color = colorToCss(path?.color_parsed ?? path?.color);
-      return '<path class="map-zipline-path" data-zipline="' + index + '" d="' + esc(d) + '"' +
+      return '<path class="map-zipline-path" data-zipline="' + index + '" d="' + esc(commands.join(" ")) + '"' +
         (color ? ' style="--zipline-color:' + esc(color) + '"' : "") +
         ' vector-effect="non-scaling-stroke"></path>';
     }).join("");
