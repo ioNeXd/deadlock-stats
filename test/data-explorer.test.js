@@ -154,6 +154,27 @@ test("describeOperation resolves parameter and request body schema refs", () => 
   assert.equal(described.requestBodyInfo[0].schema.type, "object");
 });
 
+test("listApiOperations resolves nested schema refs for request and response schemas", () => {
+  const nested = {
+    components: { schemas: {
+      Id: { type: "integer", minimum: 0 },
+      Payload: { type: "object", properties: { hero_id: { $ref: "#/components/schemas/Id" }, ids: { type: "array", items: { $ref: "#/components/schemas/Id" } } } },
+      Result: { type: "object", properties: { id: { $ref: "#/components/schemas/Id" } } },
+    } },
+    paths: { "/v1/nested/{hero_id}": { get: {
+      operationId: "nested",
+      parameters: [{ name: "hero_id", in: "path", required: true, schema: { $ref: "#/components/schemas/Id" } }],
+      requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/Payload" } } } },
+      responses: { "200": { description: "ok", content: { "application/json": { schema: { $ref: "#/components/schemas/Result" } } } } },
+    } } },
+  };
+  const operation = listApiOperations(nested)[0];
+  assert.equal(operation.parameters[0].schema.type, "integer");
+  assert.equal(operation.requestBody.content["application/json"].schema.properties.hero_id.type, "integer");
+  assert.equal(operation.requestBody.content["application/json"].schema.properties.ids.items.type, "integer");
+  assert.equal(operation.responses["200"].content["application/json"].schema.properties.id.type, "integer");
+  assert.equal(buildRequest(operation, { hero_id: "7" }).path, "/v1/nested/7");
+});
 test("listApiOperations merges path-level parameters and preserves security metadata", () => {
   const extended = {
     openapi: "3.1.0",
