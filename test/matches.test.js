@@ -81,3 +81,26 @@ test("match normalizers preserve documented fields and raw data", () => {
   assert.deepEqual(normalizeMatchMetadata({ match_id: 123, future_metric: true }), { match_id: 123, future_metric: true });
   assert.deepEqual(normalizeMatchMetadata({ data: [] }), []);
 });
+
+
+test("bulk match metadata preserves repeated URLSearchParams filters", async () => {
+  let requestedUrl;
+  globalThis.fetch = async input => {
+    requestedUrl = new URL(input);
+    return new Response("[]", {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  const query = new URLSearchParams();
+  query.append("match_ids", "123");
+  query.append("match_ids", "456");
+  query.append("account_ids", "7");
+  query.append("account_ids", "8");
+
+  await getBulkMatchMetadata({ query, cache: false, dedupe: false });
+
+  assert.deepEqual(requestedUrl.searchParams.getAll("match_ids"), ["123", "456"]);
+  assert.deepEqual(requestedUrl.searchParams.getAll("account_ids"), ["7", "8"]);
+});
