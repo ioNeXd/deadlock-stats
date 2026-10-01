@@ -605,7 +605,9 @@ function renderMatches(signal) {
     }));
   };
 
-  const renderDetail = data => {
+  const renderDetail = (data, catalogs = {}) => {
+    const heroes = catalogs.heroes ?? new Map();
+    const items = catalogs.items ?? new Map();
     const object = data && typeof data === "object" ? data : {};
     const entries = Object.entries(object).filter(([, value]) => value == null || ["string","number","boolean"].includes(typeof value));
     const players = Array.isArray(object.players) ? object.players : [];
@@ -616,10 +618,27 @@ function renderMatches(signal) {
       const kda = ["kills","deaths","assists"].every(key => player?.[key] != null)
         ? esc(player.kills) + '/' + esc(player.deaths) + '/' + esc(player.assists)
         : "—";
-      const items = Array.isArray(player?.items) ? player.items.length + " items" : "—";
-      return '<div class="match-player-card"><span class="eyebrow">PLAYER ' + (index + 1) + '</span><strong>Account ' + esc(player?.account_id ?? "—") + '</strong><small>Hero ' + esc(player?.hero_id ?? "—") + ' · Team ' + esc(player?.team ?? "—") + '</small><small>K/D/A ' + kda + ' · ' + esc(items) + '</small>' +
+      const playerItems = Array.isArray(player?.items) ? player.items : [];
+      const itemLabels = playerItems.slice(0, 8).map(item => {
+        const id = Number(item?.item_id ?? item?.id ?? item);
+        return items.get(id)?.name ?? ("Item " + (Number.isFinite(id) ? id : "—"));
+      });
+      const heroId = Number(player?.hero_id);
+      const hero = heroes.get(heroId);
+      const finalStats = player?.final_stats && typeof player.final_stats === "object"
+        ? Object.entries(player.final_stats).filter(([, value]) => ["string","number","boolean"].includes(typeof value)).slice(0, 8)
+        : [];
+      const finalStatsText = finalStats.map(([key, value]) => key + ": " + value).join(" · ");
+      const heroImage = hero ? resolveAssetImage(hero, ["icon_image_small_webp", "icon_image_small", "hero_card_critical_webp", "hero_card_critical"]) : "";
+      return '<div class="match-player-card">' +
+        (heroImage ? '<img class="match-player-hero" src="' + esc(heroImage) + '" alt="" loading="lazy" decoding="async">' : "") +
+        '<span class="eyebrow">PLAYER ' + (index + 1) + '</span><strong>Account ' + esc(player?.account_id ?? "—") + '</strong><small>Hero ' + esc(hero?.name ?? player?.hero_id ?? "—") + ' · Team ' + esc(player?.team ?? "—") + '</small><small>K/D/A ' + kda + ' · ' + esc(playerItems.length) + ' items</small>' +
         (player?.hero_build_id != null ? '<small>Build ' + esc(player.hero_build_id) + '</small>' : "") +
-        (player?.pregame_hero_id != null ? '<small>Pregame hero ' + esc(player.pregame_hero_id) + '</small>' : "") + '</div>';
+        (player?.pregame_hero_id != null ? '<small>Pregame hero ' + esc(player.pregame_hero_id) + '</small>' : "") +
+        (itemLabels.length ? '<small>Items: ' + esc(itemLabels.join(", ")) + '</small>' : "") +
+        (finalStatsText ? '<small>Final: ' + esc(finalStatsText) + '</small>' : "") +
+        (Array.isArray(player?.death_details) ? '<small>Deaths: ' + esc(player.death_details.length) + '</small>' : "") +
+        '</div>';
     }).join("");
     const arraySummary = Object.entries(object).filter(([, value]) => Array.isArray(value)).map(([key, value]) =>
       '<div class="metric"><span>' + esc(key) + '</span><strong>' + value.length + ' entries</strong></div>'
@@ -633,7 +652,8 @@ function renderMatches(signal) {
   const loadDetail = async matchId => {
     $("#match-detail").innerHTML = '<span class="eyebrow">RESPONSE</span><p class="muted">Loading metadata…</p>';
     try {
-      const data = await getBulkMatchMetadataSnapshot({
+      const [data, heroCatalog, itemCatalog] = await Promise.all([
+        getBulkMatchMetadataSnapshot({
         match_ids: [Number(matchId)],
         include_info: true,
         include_more_info: true,
@@ -646,14 +666,19 @@ function renderMatches(signal) {
         include_player_death_details: true,
         limit: 1,
         signal,
-      });
+      }),
+        listHeroes({ ...assetVersion.options(), signal }),
+        listItems({ ...assetVersion.options(), signal }),
+      ]);
       if (signal.aborted) return;
       const detail = Array.isArray(data) ? data[0] : data;
+      const heroes = new Map((heroCatalog.data ?? []).map(hero => [Number(hero.id), hero]));
+      const items = new Map((itemCatalog.data ?? []).map(item => [Number(item.id), item]));
       if (!detail) {
         $("#match-detail").innerHTML = '<span class="eyebrow">NOT FOUND</span><p class="muted">No metadata matched this match ID.</p>';
         return;
       }
-      renderDetail(detail);
+      renderDetail(detail, { heroes, items });
     } catch (error) {
       if (isAborted(error)) return;
       $("#match-detail").innerHTML = '<span class="eyebrow">ERROR</span><pre>' + esc(JSON.stringify({ error: error.message, status: error.status ?? null }, null, 2)) + '</pre>';
