@@ -6,6 +6,7 @@ import { API_BASE_URL } from "./api/client.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
+import { getAnalyticsSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
@@ -172,6 +173,70 @@ function renderAssetCatalog(kind, signal) {
     catalog.innerHTML = '<div class="panel"><p class="error-text">Asset request failed: ' + esc(error.message) + '</p></div>';
     setConnection(false, "API unavailable");
   });
+}
+
+function formatDuration(seconds) {
+  if (!Number.isFinite(Number(seconds))) return "—";
+  const value = Number(seconds);
+  return Math.floor(value / 60) + "m " + Math.round(value % 60) + "s";
+}
+
+function renderAnalytics(signal) {
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">ANALYTICS / MATCH INTELLIGENCE</span><h2>Analytics</h2><p>Aggregate match and hero-ban statistics from the documented analytics API.</p></section>' +
+    '<section class="analytics-grid" id="analytics-summary"><article class="metric-card"><span>MATCHES</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>PLAYERS</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>AVG DURATION</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>AVG KILLS</span><strong>—</strong><small>loading</small></article></section>' +
+    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">GAME STATS</span><h2>Daily activity</h2></div><b id="analytics-status">LOADING</b></div><div id="game-stats-list" class="analytics-bars"></div></article>' +
+    '<article class="panel"><div class="section-head"><div><span class="eyebrow">HERO BANS</span><h2>Ban activity</h2></div></div><div id="hero-ban-list" class="analytics-table"></div></article></section>';
+  loadAnalytics(signal);
+}
+
+async function loadAnalytics(signal) {
+  try {
+    const result = await getAnalyticsSnapshot({
+      ...assetVersion.options(),
+      bucket: "start_time_day",
+      signal,
+    });
+    if (signal.aborted) return;
+
+    const game = normalizeGameStats(result.gameStats);
+    const bans = normalizeHeroBanStats(result.heroBanStats);
+    const latest = game.at(-1);
+    const summary = $("#analytics-summary");
+    const values = [
+      [latest?.totalMatches, "matches"],
+      [latest?.totalPlayers, "players"],
+      [formatDuration(latest?.avgDurationS), "per player"],
+      [latest?.avgKills, "per player"],
+    ];
+    summary.innerHTML = values.map(([value, label], index) =>
+      '<article class="metric-card"><span>' + ["MATCHES","PLAYERS","AVG DURATION","AVG KILLS"][index] + '</span><strong>' +
+      esc(Number.isFinite(Number(value)) ? Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 }) : value) +
+      '</strong><small>' + esc(label) + '</small></article>'
+    ).join("");
+
+    const maxMatches = Math.max(1, ...game.map(item => Number(item.totalMatches) || 0));
+    $("#game-stats-list").innerHTML = game.slice(-14).map(item =>
+      '<div class="analytics-bar-row"><span>' + esc(item.bucket ?? "—") + '</span><div><i style="width:' +
+      Math.min(100, ((Number(item.totalMatches) || 0) / maxMatches) * 100) + '%"></i></div><strong>' +
+      esc(Number(item.totalMatches ?? 0).toLocaleString()) + '</strong></div>'
+    ).join("") || '<p class="muted">No game statistics returned.</p>';
+
+    const sortedBans = [...bans].sort((a, b) => Number(b.bans ?? 0) - Number(a.bans ?? 0)).slice(0, 12);
+    $("#hero-ban-list").innerHTML = sortedBans.length
+      ? '<div class="analytics-table-head"><span>HERO ID</span><span>BANS</span></div>' +
+        sortedBans.map(item => '<div class="analytics-table-row"><span>Hero ' + esc(item.heroId) + '</span><strong>' + esc(Number(item.bans ?? 0).toLocaleString()) + '</strong></div>').join("")
+      : '<p class="muted">No hero ban statistics returned.</p>';
+
+    $("#analytics-status").textContent = "LIVE";
+    $("#analytics-status").classList.add("online");
+    setConnection(true, "API connected");
+  } catch (error) {
+    if (isAborted(error)) return;
+    $("#analytics-status").textContent = "ERROR";
+    setConnection(false, "API unavailable");
+    console.error("Deadlock analytics request failed", error);
+  }
 }
 
 function renderApiStatus(signal) {
@@ -344,6 +409,7 @@ function route() {
   const signal = beginRoute();
   const routeName = location.hash.replace(/^#\/?/, "").split("/")[0] || "dashboard";
   if (routeName === "api") renderApiStatus(signal);
+  else if (routeName === "analytics") renderAnalytics(signal);
   else if (routeName === "data") renderDataExplorer(signal);
   else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
   else renderDashboard(signal);
