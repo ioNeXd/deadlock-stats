@@ -152,8 +152,8 @@ async function request(path, {
   timeoutMs = DEFAULT_TIMEOUT_MS,
   retries = DEFAULT_RETRIES,
   cacheTtlMs = DEFAULT_CACHE_TTL_MS,
-  cache: useCache = method === "GET",
-  dedupe = method === "GET",
+  cache: useCache,
+  dedupe,
   responseType = "auto",
   apiKey,
   authorization,
@@ -247,9 +247,9 @@ async function request(path, {
 
         if (effectiveUseCache && cacheTtlMs > 0) {
           cache.set(key, { expiresAt: Date.now() + cacheTtlMs, value: result });
-    while (cache.size > MAX_CACHE_ENTRIES) {
-      cache.delete(cache.keys().next().value);
-    }
+          while (cache.size > MAX_CACHE_ENTRIES) {
+            cache.delete(cache.keys().next().value);
+          }
         }
 
         return result;
