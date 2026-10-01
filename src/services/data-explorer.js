@@ -55,7 +55,16 @@ function schemaType(schema) {
   if (variants.length) return variants.map(item => schemaType(item)).find(type => type !== "null") ?? "string";
   if (schema?.const !== undefined) {
     if (schema.const === null) return "null";
+    if (Array.isArray(schema.const)) return "array";
+    if (typeof schema.const === "object") return "object";
     return typeof schema.const === "boolean" ? "boolean" : typeof schema.const === "number" ? "number" : "string";
+  }
+  if (Array.isArray(schema?.enum) && schema.enum.length) {
+    const first = schema.enum[0];
+    if (first === null) return "null";
+    if (Array.isArray(first)) return "array";
+    if (typeof first === "object") return "object";
+    return typeof first === "boolean" ? "boolean" : typeof first === "number" ? "number" : "string";
   }
   if (schema?.$ref) return "object";
   return "string";
