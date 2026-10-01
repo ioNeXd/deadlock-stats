@@ -113,7 +113,7 @@ test("reconcileVersionPolicy reports discovered paths and legacy transitions", (
     },
     {
       type: "entered_legacy",
-      resourcePath: "/patches/",
+      resourcePath: "/patches",
       legacyPath: "/v1/patches",
       legacyVersion: "v1",
       currentPath: "/v2/patches",
@@ -147,7 +147,7 @@ test("reconcileVersionPolicy reports an explicit deprecation transition", () => 
 
   assert.deepEqual(result.events, [{
     type: "entered_legacy",
-    resourcePath: "/patches/",
+    resourcePath: "/patches",
     legacyPath: "/v1/patches",
     legacyVersion: "v1",
     currentPath: null,
@@ -156,3 +156,42 @@ test("reconcileVersionPolicy reports an explicit deprecation transition", () => 
   }]);
   assert.deepEqual(events, result.events);
 });
+
+
+test("versioned resource paths remove the version segment without changing the resource", () => {
+  const { versionedPath } = requireVersioningForTest();
+  assert.deepEqual(versionedPath("/v1/assets/heroes"), {
+    version: 1,
+    resourcePath: "/assets/heroes",
+  });
+});
+
+test("a path is not deprecated when a sibling operation remains current", () => {
+  const events = [];
+  const policy = buildVersionPolicy(
+    {
+      paths: {
+        "/v1/example": {
+          get: { deprecated: true },
+          post: { deprecated: false },
+        },
+      },
+    },
+    event => events.push(event),
+  );
+
+  assert.deepEqual(policy.legacy, []);
+  assert.deepEqual(policy.current, [{ path: "/v1/example", version: "v1" }]);
+  assert.deepEqual(events, []);
+});
+
+function requireVersioningForTest() {
+  return {
+    versionedPath: path => {
+      const match = path.match(/\/v(\d+)(?=\/|$)/);
+      return match
+        ? { version: Number(match[1]), resourcePath: path.replace(/\/v(\d+)(?=\/|$)/, "") || "/" }
+        : null;
+    },
+  };
+}
