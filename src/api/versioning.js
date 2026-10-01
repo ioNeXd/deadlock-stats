@@ -137,9 +137,9 @@ export function reconcileVersionPolicy(previousOpenApi, nextOpenApi, callbacks =
         type: "entered_legacy",
         resourcePath,
         legacyPath: versionChanged ? previous.path : next.path,
-        legacyVersion: versionChanged ? previous.version : next.version,
+        legacyVersion: versionChanged ? `v${previous.versionNumber}` : `v${next.versionNumber}`,
         currentPath: versionChanged ? next.path : null,
-        currentVersion: versionChanged ? next.version : null,
+        currentVersion: versionChanged ? `v${next.versionNumber}` : null,
         reason: newlyDeprecated
           ? "The OpenAPI contract marked the resource as deprecated."
           : "A newer API version replaced the resource.",
