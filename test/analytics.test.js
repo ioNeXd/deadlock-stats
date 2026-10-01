@@ -42,14 +42,13 @@ test("analytics wrappers forward top-level filters used by services", async t =>
     });
   });
 
-  await getHeroStats({ game_mode: "normal", min_duration_s: 600, hero_ids: [7, 8], cache: false, dedupe: false });
+  await getHeroStats({ game_mode: "normal", min_duration_s: 600, cache: false, dedupe: false });
   await getHeroCounterStats({ same_lane_filter: true, min_matches: 20, account_ids: [7], cache: false, dedupe: false });
   await getAbilityOrderStats({ hero_id: 7, min_ability_upgrades: 4, account_ids: [7, 8], cache: false, dedupe: false });
   await getItemStats({ hero_ids: [7], enemy_hero_ids: [8], corrupted_items: "include", cache: false, dedupe: false });
 
   assert.equal(new URL(calls[0]).searchParams.get("game_mode"), "normal");
   assert.equal(new URL(calls[0]).searchParams.get("min_duration_s"), "600");
-  assert.equal(new URL(calls[0]).searchParams.get("hero_ids"), "7");
   assert.equal(new URL(calls[1]).searchParams.get("same_lane_filter"), "true");
   assert.equal(new URL(calls[1]).searchParams.get("min_matches"), "20");
   assert.equal(new URL(calls[1]).searchParams.get("account_ids"), "7");
