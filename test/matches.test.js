@@ -49,11 +49,23 @@ test("match normalizers preserve documented fields and raw data", () => {
     match_mode: 1,
     game_mode: 0,
     average_badge: 72,
+    winning_team: 1,
+    net_worth_team_0: 12000,
+    net_worth_team_1: 14000,
+    objectives_mask_team0: 3,
+    objectives_mask_team1: 7,
+    lobby_id: 55,
+    spectators: 12,
+    open_spectator_slots: 4,
     players: [{ account_id: 7, hero_id: 1 }],
     future_metric: "kept",
   }]});
   assert.equal(result[0].matchId, 123);
   assert.equal(result[0].durationS, 1800);
+  assert.equal(result[0].winningTeam, 1);
+  assert.equal(result[0].netWorthTeam0, 12000);
+  assert.equal(result[0].objectivesMaskTeam1, 7);
+  assert.equal(result[0].lobbyId, 55);
   assert.equal(result[0].players.length, 1);
   assert.equal(result[0].raw.future_metric, "kept");
   assert.deepEqual(normalizeMatchMetadata({ match_id: 123, future_metric: true }), { match_id: 123, future_metric: true });
