@@ -1,36 +1,66 @@
-const VERSION_PATTERN = /\/v(\d+)(?:\/|$)/;
+const VERSION_PATTERN = /\/v(\d+)(?=\/|$)/;
 
-function versionsFromPaths(paths = {}) {
+function versionedPath(path) {
+  const match = path.match(VERSION_PATTERN);
+  if (!match) return null;
+
+  return {
+    version: Number(match[1]),
+    resourcePath: path.replace(VERSION_PATTERN, "/"),
+  };
+}
+
+export function detectApiVersions(openApi) {
   const versions = new Set();
 
-  for (const path of Object.keys(paths)) {
-    const match = path.match(VERSION_PATTERN);
-    if (match) versions.add(Number(match[1]));
+  for (const path of Object.keys(openApi?.paths ?? {})) {
+    const entry = versionedPath(path);
+    if (entry) versions.add(entry.version);
   }
 
   return [...versions].sort((a, b) => a - b);
 }
 
-export function detectApiVersions(openApi) {
-  return versionsFromPaths(openApi?.paths);
-}
-
 export function buildVersionPolicy(openApi, onLegacy) {
-  const versions = detectApiVersions(openApi);
-  const currentVersion = versions.length ? Math.max(...versions) : null;
-  const legacyVersions = versions.filter(version => version < currentVersion);
+  const paths = openApi?.paths ?? {};
+  const entries = Object.keys(paths)
+    .map(path => ({ path, ...versionedPath(path) }))
+    .filter(entry => entry.version != null);
 
-  for (const version of legacyVersions) {
-    onLegacy?.({
-      version: `v${version}`,
-      currentVersion: currentVersion == null ? null : `v${currentVersion}`,
-      reason: `A newer API version (v${currentVersion}) is present in the OpenAPI contract.`,
-    });
+  const versions = detectApiVersions(openApi);
+  const legacy = [];
+  const current = [];
+
+  for (const entry of entries) {
+    const newer = entries
+      .filter(candidate =>
+        candidate.resourcePath === entry.resourcePath &&
+        candidate.version > entry.version
+      )
+      .sort((a, b) => b.version - a.version)[0];
+
+    if (newer) {
+      const event = {
+        path: entry.path,
+        version: `v${entry.version}`,
+        currentPath: newer.path,
+        currentVersion: `v${newer.version}`,
+        reason: `A newer API version exists for the same resource path.`,
+      };
+
+      legacy.push(event);
+      onLegacy?.(event);
+    } else {
+      current.push({
+        path: entry.path,
+        version: `v${entry.version}`,
+      });
+    }
   }
 
   return {
-    currentVersion: currentVersion == null ? null : `v${currentVersion}`,
     versions: versions.map(version => `v${version}`),
-    legacyVersions: legacyVersions.map(version => `v${version}`),
+    legacy,
+    current,
   };
 }
