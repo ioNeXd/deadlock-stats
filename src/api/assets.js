@@ -1,9 +1,8 @@
 import { apiGet } from "./client.js";
+import { queryToObject } from "./query.js";
 
 function withAssetQuery(options = {}, query = {}) {
-  const existing = options.query instanceof URLSearchParams
-    ? Object.fromEntries(options.query.entries())
-    : (options.query ?? {});
+  const existing = queryToObject(options.query);
 
   const merged = Object.fromEntries(
     Object.entries({ ...existing, ...query }).filter(([, value]) => value !== undefined && value !== null),
