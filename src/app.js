@@ -4,9 +4,11 @@ import { probeApiStatus } from "./services/api-status.js";
 import { describeOperation, executeOperation, listApiOperations } from "./services/data-explorer.js";
 import { API_BASE_URL } from "./api/client.js";
 import { resolveAssetImage } from "./adapters/assets.js";
+import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
+const assetVersion = createAssetVersionContext();
 const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 const nameOf = hero => hero?.name ?? hero?.display_name ?? hero?.hero_name ?? ("Hero " + (hero?.id ?? "?"));
 const idOf = hero => hero?.id ?? hero?.hero_id ?? hero?.class_name ?? "—";
@@ -28,8 +30,39 @@ function renderHeroGrid(data) {
   }).join("") || '<article class="panel"><p>No hero assets returned.</p></article>';
 }
 
+function renderVersionControl() {
+  const versions = assetVersion.list();
+  return '<label class="version-control"><span>CLIENT VERSION</span><select id="client-version"><option value="">LATEST</option>' +
+    versions.slice().reverse().map(version => '<option value="' + esc(version) + '"' +
+      (assetVersion.get() === version ? ' selected' : '') + '>BUILD ' + esc(version) + '</option>').join("") +
+    '</select></label>';
+}
+
+async function applyAssetColors() {
+  try {
+    const result = await assetVersion.loadColors();
+    const colors = result?.data && typeof result.data === "object" ? result.data : {};
+    const root = document.documentElement;
+    for (const [name, value] of Object.entries(colors)) {
+      const css = colorToCss(value);
+      if (css && /^[a-z0-9_]+$/.test(name)) root.style.setProperty("--api-" + name.replaceAll("_", "-"), css);
+    }
+  } catch (error) {
+    console.warn("Deadlock API color palette unavailable", error);
+  }
+}
+
+async function loadAssetVersionContext() {
+  try {
+    await assetVersion.load({ cacheTtlMs: 10 * 60_000 });
+  } catch (error) {
+    console.warn("Deadlock API client versions unavailable", error);
+  }
+  await applyAssetColors();
+}
+
 function renderDashboard() {
-  el.content.innerHTML = '<section class="hero-banner"><div><span class="eyebrow">LIVE DATA</span><h2>The city never sleeps.</h2><p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p><div class="pills"><span>API-FIRST</span><span>OPENAPI</span></div></div></section>' +
+  el.content.innerHTML = '<section class="hero-banner"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA</span><h2>The city never sleeps.</h2><p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p><div class="pills"><span>API-FIRST</span><span>OPENAPI</span></div></div></section>' +
     '<section class="section"><div class="section-head"><div><span class="eyebrow">ROSTER</span><h2>Heroes in the city</h2></div><a href="#/heroes">View all →</a></div><div id="hero-grid" class="hero-grid" aria-live="polite"></div></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(API_BASE_URL.replace("https://", "")) + '</strong></div><div class="metric"><span>Hero assets</span><strong id="asset-count">—</strong></div><div class="metric"><span>Response</span><strong id="api-latency">—</strong></div></article><article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article></section>';
   loadDashboard();
@@ -37,7 +70,7 @@ function renderDashboard() {
 
 async function loadDashboard() {
   try {
-    const result = await listHeroes();
+    const result = await listHeroes(assetVersion.options());
     setConnection(true, "API connected");
     $("#asset-count").textContent = result.data.length;
     $("#api-latency").textContent = result.latencyMs + " ms";
@@ -60,7 +93,7 @@ function renderAssetCatalog(kind) {
     ranks: { title: "Ranks", eyebrow: "GAME / RANKS", description: "Rank metadata, names and badge assets published by the API.", loader: listRanks },
   }[kind];
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">' + config.eyebrow + '</span><h2>' + config.title + '</h2><p>' + config.description + '</p></section><section class="asset-catalog" id="asset-catalog"><div class="panel"><p>Loading assets…</p></div></section>';
-  config.loader().then(result => {
+  config.loader(assetVersion.options()).then(result => {
     const catalog = $("#asset-catalog");
     catalog.innerHTML = result.data.map(entity => {
       const image = resolveAssetImage(entity);
@@ -215,6 +248,16 @@ function renderOperation(operation) {
   });
 }
 
+function bindVersionControl() {
+  const select = $("#client-version");
+  if (!select) return;
+  select.addEventListener("change", async event => {
+    assetVersion.set(event.target.value);
+    await applyAssetColors();
+    route();
+  });
+}
+
 function route() {
   const routeName = location.hash.replace(/^#\\/?/, "").split("/")[0] || "dashboard";
   if (routeName === "api") renderApiStatus();
@@ -222,7 +265,8 @@ function route() {
   else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName);
   else renderDashboard();
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName)));
+  bindVersionControl();
 }
 
 window.addEventListener("hashchange", route);
-route();
+loadAssetVersionContext().finally(route);
