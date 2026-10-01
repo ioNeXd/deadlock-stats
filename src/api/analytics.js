@@ -1,4 +1,5 @@
 import { apiGet } from "./client.js";
+import { queryToObject } from "./query.js";
 
 const ANALYTICS_FILTER_KEYS = {
   game: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","hero_ids","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","account_ids"],
@@ -17,7 +18,7 @@ const ANALYTICS_FILTER_KEYS = {
 
 function analyticsOptions(options = {}, allowedKeys = [], stringArrayKeys = []) {
   const { query, ...rest } = options;
-  const querySource = query instanceof URLSearchParams ? Object.fromEntries(query.entries()) : (query ?? {});
+  const querySource = queryToObject(query);
   const topLevel = Object.fromEntries(Object.entries(rest).filter(([key]) => allowedKeys.includes(key)));
   const source = { ...querySource, ...topLevel };
   const filtered = Object.fromEntries(Object.entries(source).filter(([key]) => allowedKeys.includes(key)));
@@ -28,9 +29,7 @@ function analyticsOptions(options = {}, allowedKeys = [], stringArrayKeys = []) 
 }
 
 function withAnalyticsQuery(options = {}, query = {}) {
-  const existing = options.query instanceof URLSearchParams
-    ? Object.fromEntries(options.query.entries())
-    : (options.query ?? {});
+  const existing = queryToObject(options.query);
 
   const merged = Object.fromEntries(
     Object.entries({ ...existing, ...query }).filter(([, value]) => value !== undefined && value !== null),
