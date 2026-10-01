@@ -92,10 +92,11 @@ function stateMap(openApi) {
     const key = entry.resourcePath;
     const existing = map.get(key);
 
-    if (!existing || entry.version > existing.version) {
+    if (!existing || entry.version > existing.versionNumber) {
       map.set(key, {
         path: entry.path,
         version: `v${entry.version}`,
+        versionNumber: entry.version,
         deprecated: entry.deprecated,
       });
     }
