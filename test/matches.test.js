@@ -79,4 +79,5 @@ test("match normalizers preserve documented fields and raw data", () => {
   assert.equal(result[0].players.length, 1);
   assert.equal(result[0].raw.future_metric, "kept");
   assert.deepEqual(normalizeMatchMetadata({ match_id: 123, future_metric: true }), { match_id: 123, future_metric: true });
+  assert.deepEqual(normalizeMatchMetadata({ data: [] }), []);
 });
