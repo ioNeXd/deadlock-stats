@@ -27,7 +27,7 @@ const contract = {
           { name: "hero_id", in: "path", required: true, schema: { type: "integer" } },
           { name: "limit", in: "query", schema: { type: "integer" } },
           { name: "enabled", in: "query", schema: { type: "boolean" } },
-          { name: "ids", in: "query", schema: { type: "array", items: { type: "integer" } } },
+          { name: "ids", in: "query", description: "Comma separated list of ids", schema: { type: "array", items: { type: "integer" } } },
         ],
         responses: { "200": { description: "ok" } },
       },
@@ -65,7 +65,7 @@ test("buildRequest coerces typed query parameters and encodes path parameters", 
   });
 
   assert.equal(request.path, "/v1/example/42");
-  assert.deepEqual(request.query, { enabled: true, ids: [1, 2, 3], limit: 10 });
+  assert.deepEqual(request.query, { enabled: true, ids: "1,2,3", limit: 10 });
 });
 
 test("executeOperation delegates the documented operation to the API client", async () => {
@@ -152,7 +152,7 @@ test("listApiOperations merges path-level parameters and preserves security meta
 test("buildRequest coerces array items according to their schema", () => {
   const operation = listApiOperations(contract, { includeDeprecated: false })[0];
   const request = buildRequest(operation, { hero_id: "7", ids: "1,2,3" });
-  assert.deepEqual(request.query.ids, [1, 2, 3]);
+  assert.equal(request.query.ids, "1,2,3");
 });
 
 test("executeOperation applies the documented request media type", async () => {
