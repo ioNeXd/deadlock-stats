@@ -254,6 +254,98 @@ test("listApiOperations merges path-level parameters and preserves security meta
   assert.deepEqual(operation.security, [{ apiKeyAuth: [] }]);
 });
 
+
+test("executeOperation applies an OpenAPI apiKey header security scheme", async () => {
+  let captured;
+  globalThis.fetch = async (input, init) => {
+    captured = { input: String(input), init };
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  const securedContract = {
+    components: { securitySchemes: { apiKeyHeader: { type: "apiKey", in: "header", name: "X-API-KEY" } } },
+    paths: { "/v1/secure": { get: {
+      operationId: "secure",
+      security: [{ apiKeyHeader: [] }],
+      responses: { "200": { description: "ok" } },
+    } } },
+  };
+  const operation = listApiOperations(securedContract)[0];
+  await executeOperation(operation, {}, { apiKey: "secret-key" });
+  assert.equal(captured.init.headers.get("X-API-KEY"), "secret-key");
+});
+
+test("executeOperation applies an OpenAPI apiKey query security scheme", async () => {
+  let captured;
+  globalThis.fetch = async (input, init) => {
+    captured = { input: String(input), init };
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  const securedContract = {
+    components: { securitySchemes: { apiKeyQuery: { type: "apiKey", in: "query", name: "api_key" } } },
+    paths: { "/v1/secure": { get: {
+      operationId: "secure",
+      security: [{ apiKeyQuery: [] }],
+      responses: { "200": { description: "ok" } },
+    } } },
+  };
+  const operation = listApiOperations(securedContract)[0];
+  await executeOperation(operation, {}, { apiKey: "secret-key" });
+  const url = new URL(captured.input);
+  assert.equal(url.searchParams.get("api_key"), "secret-key");
+  assert.equal(captured.init.headers.get("X-API-KEY"), null);
+});
+
+test("executeOperation honors OpenAPI security alternatives and rejects missing credentials", async () => {
+  const contract = {
+    components: {
+      securitySchemes: {
+        headerKey: { type: "apiKey", in: "header", name: "X-API-KEY" },
+        queryKey: { type: "apiKey", in: "query", name: "api_key" },
+      },
+    },
+    paths: { "/v1/secure": { get: {
+      operationId: "secure",
+      security: [{ headerKey: [] }, { queryKey: [] }],
+      responses: { "200": { description: "ok" } },
+    } } },
+  };
+  const operation = listApiOperations(contract)[0];
+
+  globalThis.fetch = async () => new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+
+  await assert.rejects(
+    () => executeOperation(operation),
+    /Missing or unsupported authentication credentials/,
+  );
+});
+
+test("executeOperation preserves explicit authentication for operations without security requirements", async () => {
+  let captured;
+  globalThis.fetch = async (input, init) => {
+    captured = { input: String(input), init };
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  const operation = listApiOperations(contract, { includeDeprecated: false })[0];
+  await executeOperation(operation, {}, { apiKey: "secret-key" });
+  assert.equal(captured.init.headers.get("X-API-KEY"), "secret-key");
+});
+
+
 test("buildRequest coerces array items according to their schema", () => {
   const operation = listApiOperations(contract, { includeDeprecated: false })[0];
   const request = buildRequest(operation, { hero_id: "7", ids: "1,2,3" });
