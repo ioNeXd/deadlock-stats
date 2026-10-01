@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { clearApiCache } from "../src/api/client.js";
 import { getHeroes, getRankSubrankImage, getMap, getColors } from "../src/api/assets.js";
-import { normalizeCollection, resolveAssetImage } from "../src/adapters/assets.js";
+import { normalizeCollection, normalizeMap, resolveAssetImage } from "../src/adapters/assets.js";
 
 function mockJsonResponse(value, contentType = "application/json") {
   return new Response(JSON.stringify(value), {
