@@ -55,9 +55,9 @@ async function loadDashboard() {
 
 function renderAssetCatalog(kind) {
   const config = {
-    heroes: { title: "Heroes", eyebrow: "GAME / HEROES", description: "Hero metadata and real game assets from the current Deadlock API contract.", loader: listHeroes, image: hero => hero?.images?.hero_card_critical_webp ?? hero?.images?.hero_card_critical ?? hero?.images?.background_image_webp ?? hero?.images?.background_image },
-    items: { title: "Items", eyebrow: "GAME / ITEMS", description: "Items, abilities, weapons and upgrades published by the current game data.", loader: listItems, image: item => item?.images?.image_webp ?? item?.images?.image ?? item?.images?.icon_webp ?? item?.images?.icon },
-    ranks: { title: "Ranks", eyebrow: "GAME / RANKS", description: "Rank metadata, names and badge assets published by the API.", loader: listRanks, image: rank => rank?.images?.image_webp ?? rank?.images?.image ?? rank?.images?.icon_webp ?? rank?.images?.icon },
+    heroes: { title: "Heroes", eyebrow: "GAME / HEROES", description: "Hero metadata and real game assets from the current Deadlock API contract.", loader: listHeroes },
+    items: { title: "Items", eyebrow: "GAME / ITEMS", description: "Items, abilities, weapons and upgrades published by the current game data.", loader: listItems },
+    ranks: { title: "Ranks", eyebrow: "GAME / RANKS", description: "Rank metadata, names and badge assets published by the API.", loader: listRanks },
   }[kind];
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">' + config.eyebrow + '</span><h2>' + config.title + '</h2><p>' + config.description + '</p></section><section class="asset-catalog" id="asset-catalog"><div class="panel"><p>Loading assets…</p></div></section>';
   config.loader().then(result => {
