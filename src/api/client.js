@@ -195,10 +195,11 @@ async function request(path, {
 } = {}) {
   const upperMethod = method.toUpperCase();
   const authenticated = Boolean(apiKey || authorization);
-  const effectiveUseCache = authenticated
+  const oneShotResponse = responseType === "stream" || responseType === "response";
+  const effectiveUseCache = authenticated || oneShotResponse
     ? false
     : (useCache === undefined ? upperMethod === "GET" : useCache);
-  const effectiveDedupe = authenticated
+  const effectiveDedupe = authenticated || oneShotResponse
     ? false
     : (dedupe === undefined ? upperMethod === "GET" : dedupe);
   const url = normalizePath(path, query);
