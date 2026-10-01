@@ -13,7 +13,7 @@
   <div class="app-shell">
     <aside class="sidebar">
       <a class="brand" href="#/"><span class="brand-mark">D</span><span><strong>DEADLOCK</strong><small>STATS</small></span></a>
-      <nav class="nav">
+      <nav class="nav" aria-label="Primary navigation">
         <span class="nav-label">OVERVIEW</span>
         <a class="nav-item active" href="#/">Dashboard</a>
         <a class="nav-item" href="#/matches">Matches</a>
@@ -26,9 +26,9 @@
         <a class="nav-item" href="#/data">Data Explorer</a>
         <a class="nav-item" href="#/api">API Status</a>
       </nav>
-      <div class="sidebar-status"><i id="api-dot"></i><span id="api-status">Connecting</span></div>
+      <div class="sidebar-status" aria-live="polite"><i id="api-dot" aria-hidden="true"></i><span id="api-status">Connecting</span></div>
     </aside>
-    <main class="main">
+    <main class="main" id="main-content">
       <header class="topbar">
         <div><span class="eyebrow">CURSED APPLE // INTELLIGENCE</span><h1>Command Center</h1></div>
       </header>
