@@ -239,6 +239,51 @@ test("buildRequest coerces array items according to their schema", () => {
   assert.equal(request.query.ids, "1,2,3");
 });
 
+test("buildRequest honors OpenAPI query serialization styles", () => {
+  const operation = {
+    method: "GET",
+    path: "/v1/test/{id}",
+    parameters: [
+      { name: "id", in: "path", required: true, schema: { type: "integer" } },
+      { name: "tags", in: "query", style: "pipeDelimited", schema: { type: "array", items: { type: "string" } } },
+      { name: "filters", in: "query", style: "deepObject", explode: true, schema: { type: "object" } },
+      { name: "ids", in: "query", schema: { type: "array", items: { type: "integer" } } },
+    ],
+    requestBody: null,
+  };
+  const request = buildRequest(operation, {
+    id: 7,
+    tags: ["a", "b"],
+    filters: { hero: "7", mode: "ranked" },
+    ids: [1, 2, 3],
+  });
+
+  assert.equal(request.path, "/v1/test/7");
+  assert.deepEqual(request.query, {
+    "filters[hero]": "7",
+    "filters[mode]": "ranked",
+    ids: [1, 2, 3],
+    tags: "a|b",
+  });
+});
+
+test("buildRequest serializes path arrays and objects", () => {
+  const operation = {
+    method: "GET",
+    path: "/v1/test/{ids}/{filters}",
+    parameters: [
+      { name: "ids", in: "path", style: "label", schema: { type: "array", items: { type: "integer" } } },
+      { name: "filters", in: "path", style: "matrix", schema: { type: "object" } },
+    ],
+    requestBody: null,
+  };
+  const request = buildRequest(operation, {
+    ids: [1, 2],
+    filters: { hero: "7", mode: "ranked" },
+  });
+  assert.equal(request.path, "/v1/test/.1.2/;filters=hero=7,mode=ranked");
+});
+
 test("executeOperation applies the documented request media type", async () => {
   let captured;
   globalThis.fetch = async (input, init) => {
