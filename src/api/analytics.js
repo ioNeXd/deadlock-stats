@@ -4,11 +4,13 @@ import { queryToObject } from "./query.js";
 const ANALYTICS_CACHE_TTL_MS = 60 * 60_000;
 const ITEM_STATS_CACHE_TTL_MS = 6 * 60 * 60_000;
 
-const LANE_ANALYTICS_FILTERS = [
+const LANE_BASE_FILTERS = [
   "game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s",
-  "min_average_badge","max_average_badge","min_match_id","max_match_id","sample_time_s","assigned_lanes",
+  "min_average_badge","max_average_badge","min_match_id","max_match_id","assigned_lanes",
   "hero_ids","enemy_hero_ids","stats","group_by","min_matches","max_matches","account_ids",
 ];
+const LANE_MATCHUP_FILTERS = ["sample_time_s", ...LANE_BASE_FILTERS];
+const LANE_SOUL_CURVE_FILTERS = ["min_time_s","max_time_s", ...LANE_BASE_FILTERS];
 
 const PLAYER_PERFORMANCE_FILTERS = [
   "resolution","game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s",
@@ -53,7 +55,7 @@ const ANALYTICS_FILTER_KEYS = {
   itemStats: ["bucket","game_mode","match_mode","hero_ids","enemy_hero_ids","enemy_hero_ids_all_match","min_enemy_networth","max_enemy_networth","same_lane_filter","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","min_matches","max_matches","account_ids","min_bought_at_s","max_bought_at_s","item_order","corrupted_items"],
 };
 
-function analyticsOptions(options = {}, allowedKeys = [], stringArrayKeys = []) {
+function analyticsOptions(options = {}, allowedKeys = []) {
   const { query, ...rest } = options;
   const querySource = queryToObject(query);
   const topLevel = Object.fromEntries(Object.entries(rest).filter(([key]) => allowedKeys.includes(key)));
@@ -136,11 +138,11 @@ export function getItemStats(options = {}) {
 
 
 export function getLaneMatchupStats(options = {}) {
-  return apiGet("/v1/analytics/lane-matchup-stats", analyticsOptions(options, LANE_ANALYTICS_FILTERS));
+  return apiGet("/v1/analytics/lane-matchup-stats", analyticsOptions(options, LANE_MATCHUP_FILTERS));
 }
 
 export function getLaneSoulCurve(options = {}) {
-  return apiGet("/v1/analytics/lane-soul-curve", analyticsOptions(options, LANE_ANALYTICS_FILTERS));
+  return apiGet("/v1/analytics/lane-soul-curve", analyticsOptions(options, LANE_SOUL_CURVE_FILTERS));
 }
 
 export function getPlayerPerformanceCurve(options = {}) {
