@@ -228,14 +228,46 @@ function coerceParameter(value, schema) {
 }
 
 function serializeQueryParameter(parameter, value) {
-  if (!Array.isArray(value)) return value;
-
   const style = parameter?.style ?? "form";
   const explode = parameter?.explode ?? (style === "form");
-  const commaSeparated = /comma separated/i.test(parameter?.description ?? "");
 
-  if (style === "form" && (commaSeparated || explode === false)) return value.join(",");
+  if (Array.isArray(value)) {
+    if (style === "spaceDelimited") return value.join(" ");
+    if (style === "pipeDelimited") return value.join("|");
+    if (style === "form" && (explode === false || /comma separated/i.test(parameter?.description ?? ""))) {
+      return value.join(",");
+    }
+    return value;
+  }
+
+  if (value && typeof value === "object") {
+    if (style === "deepObject") {
+      return Object.fromEntries(Object.entries(value).map(([key, item]) => [
+        parameter.name + "[" + key + "]",
+        Array.isArray(item) ? item.join(",") : item,
+      ]));
+    }
+    if (style === "form" && explode) return value;
+    return Object.entries(value).flat().join(",");
+  }
+
   return value;
+}
+
+function serializePathParameter(parameter, value) {
+  const style = parameter?.style ?? "simple";
+  if (Array.isArray(value)) {
+    if (style === "label") return "." + value.join(".");
+    if (style === "matrix") return ";" + parameter.name + "=" + value.join(",");
+    return value.join(",");
+  }
+  if (value && typeof value === "object") {
+    const pairs = Object.entries(value);
+    if (style === "label") return "." + pairs.map(([key, item]) => key + "=" + item).join(",");
+    if (style === "matrix") return ";" + pairs.map(([key, item]) => key + "=" + item).join(",");
+    return pairs.map(([key, item]) => key + "," + item).join(",");
+  }
+  return String(value);
 }
 
 function selectRequestMediaType(operation, values) {
@@ -260,9 +292,14 @@ export function buildRequest(operation, values = {}) {
     const coerced = coerceParameter(value, schema);
 
     if (parameter.in === "path") {
-      path = path.replace(`{${parameter.name}}`, encodeURIComponent(String(coerced)));
+      path = path.replace(`{${parameter.name}}`, encodeURIComponent(serializePathParameter(parameter, coerced)));
     } else if (parameter.in === "query") {
-      query[parameter.name] = serializeQueryParameter(parameter, coerced);
+      const serialized = serializeQueryParameter(parameter, coerced);
+      if (serialized && typeof serialized === "object" && !Array.isArray(serialized)) {
+        Object.assign(query, serialized);
+      } else {
+        query[parameter.name] = serialized;
+      }
     }
   }
 
