@@ -1,4 +1,4 @@
-const VERSION_PATTERN = /\/v(\d+)(?=\/|$)/;
+const VERSION_PATTERN = /^\/v(\d+)(?=\/|$)/;
 const OPERATION_KEYS = new Set(["get", "post", "put", "patch", "delete", "options", "head", "trace"]);
 
 export function versionedPath(path) {
