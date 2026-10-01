@@ -1104,15 +1104,22 @@ function renderMaps(signal) {
       return null;
     };
     const ziplineSvg = ziplinePaths.map((path, index) => {
-      const candidates = ["P0_points", "P1_points", "P2_points"].flatMap(key => Array.isArray(path?.[key]) ? path[key] : []);
-      const points = candidates.map(pathPoint).filter(Boolean);
+      const p0 = Array.isArray(path?.P0_points) ? path.P0_points.map(pathPoint).filter(Boolean) : [];
+      const p1 = Array.isArray(path?.P1_points) ? path.P1_points.map(pathPoint).filter(Boolean) : [];
+      const p2 = Array.isArray(path?.P2_points) ? path.P2_points.map(pathPoint).filter(Boolean) : [];
+      const points = [...p0, ...p1, ...p2];
       if (points.length < 2) return "";
-      const d = points.map(([x,y], i) => (i ? "L" : "M") + " " + x + " " + y).join(" ");
-      return '<path class="map-zipline-path" data-zipline="' + index + '" d="' + esc(d) + '" vector-effect="non-scaling-stroke"></path>';
+      const d = points.map(([x, y], pointIndex) => (pointIndex ? "L" : "M") + " " + x + " " + y).join(" ");
+      const color = colorToCss(path?.color_parsed ?? path?.color);
+      return '<path class="map-zipline-path" data-zipline="' + index + '" d="' + esc(d) + '"' +
+        (color ? ' style="--zipline-color:' + esc(color) + '"' : "") +
+        ' vector-effect="non-scaling-stroke"></path>';
     }).join("");
-    const objectiveHtml = Object.entries(map.objectivePositions ?? {}).map(([name, position]) =>
-      marker("objective-marker", position?.left_relative, position?.top_relative, name.replaceAll("_", " "), null, "◆")
-    ).join("");
+    const objectiveHtml = Object.entries(map.objectivePositions ?? {}).map(([name, position]) => {
+      const normalizedName = name.replaceAll("_", " ");
+      const isCore = /core|patron/i.test(name);
+      return marker("objective-marker" + (isCore ? " objective-core" : ""), position?.left_relative, position?.top_relative, normalizedName, null, "◆");
+    }).join("");
 
     const camps = Array.isArray(map.neutralCamps) ? map.neutralCamps : [];
     const ziplinePaths = Array.isArray(map.ziplinePaths) ? map.ziplinePaths : [];
@@ -1138,19 +1145,8 @@ function renderMaps(signal) {
       '<div class="map-markers map-entities">' + entitiesHtml + '</div>' +
       '</div>';
 
-    const setLayer = (name, visible) => {
-      const node = stage.querySelector(".map-" + name);
-      if (node) node.hidden = !visible;
-      const markers = stage.querySelector(".map-" + name);
-      if (markers) markers.hidden = !visible;
-    };
-    document.querySelectorAll("[data-map-layer]").forEach(input => {
-      input.addEventListener("change", event => setLayer(event.target.dataset.mapLayer, event.target.checked));
-    });
-
-    const layerNode = name => stage.querySelector(".map-" + name);
     const setMarkerGroup = (name, visible) => {
-      const node = stage.querySelector(".map-" + name);
+      const node = stage.querySelector(".map-markers.map-" + name);
       if (node) node.hidden = !visible;
     };
     document.querySelectorAll("[data-map-layer]").forEach(input => {
