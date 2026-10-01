@@ -55,12 +55,32 @@ function normalizePath(path, query) {
   return url;
 }
 
+function stableSerialize(value) {
+  if (value === null || value === undefined || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return "[" + value.map(stableSerialize).join(",") + "]";
+  return "{" + Object.keys(value).sort().map(key => JSON.stringify(key) + ":" + stableSerialize(value[key])).join(",") + "}";
+}
+
+function waitForRetry(delayMs, signal) {
+  if (!delayMs) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, delayMs);
+    if (!signal) return;
+    const abort = () => {
+      clearTimeout(timer);
+      reject(signal.reason instanceof Error ? signal.reason : new DOMException("Request aborted", "AbortError"));
+    };
+    if (signal.aborted) abort();
+    else signal.addEventListener("abort", abort, { once: true });
+  });
+}
+
 function cacheKey(method, url, body) {
   return JSON.stringify({
     method: method.toUpperCase(),
     path: url.pathname,
     query: [...url.searchParams.entries()],
-    body: body ?? null,
+    body: stableSerialize(body),
   });
 }
 
@@ -229,7 +249,7 @@ async function request(path, {
           );
 
           if (attempt < retries && isRetryableMethod(upperMethod, retryNonIdempotent) && shouldRetry(response.status)) {
-            await new Promise(resolve => setTimeout(resolve, retryDelay(attempt, retryAfterMs)));
+            await waitForRetry(retryDelay(attempt, retryAfterMs), signal);
             continue;
           }
 
@@ -269,7 +289,7 @@ async function request(path, {
         if (error instanceof ApiError) throw error;
 
         if (attempt < retries && isRetryableMethod(upperMethod, retryNonIdempotent)) {
-          await new Promise(resolve => setTimeout(resolve, retryDelay(attempt, null)));
+          await waitForRetry(retryDelay(attempt, null), signal);
           continue;
         }
 
