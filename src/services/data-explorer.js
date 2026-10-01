@@ -188,6 +188,7 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
 }
 
 export function describeOperation(operation, contract = null) {
+  contract = contract ?? operation?._contract ?? null;
   const parameters = (operation?.parameters ?? []).map(parameter => resolveLocalRef(parameter, contract)).filter(Boolean);
   const resolvedOperation = {
     ...operation,
@@ -279,11 +280,19 @@ function serializePathParameter(parameter, value) {
 }
 
 function mediaTypeMatches(available, requested) {
-  if (!requested) return false;
+  if (!available || !requested) return false;
   const [availableType, availableSubtype = "*"] = String(available).toLowerCase().split("/", 2);
   const [requestedType, requestedSubtype = "*"] = String(requested).toLowerCase().split("/", 2);
+
+  const subtypeMatches = (left, right) => {
+    if (left === "*" || right === "*" || left === right) return true;
+    if (left.startsWith("*+") && right.endsWith(left.slice(1))) return true;
+    if (right.startsWith("*+") && left.endsWith(right.slice(1))) return true;
+    return false;
+  };
+
   return (availableType === "*" || requestedType === "*" || availableType === requestedType)
-    && (availableSubtype === "*" || requestedSubtype === "*" || availableSubtype === requestedSubtype);
+    && subtypeMatches(availableSubtype, requestedSubtype);
 }
 
 function selectRequestMediaType(operation, values) {
