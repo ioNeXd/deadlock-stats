@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats } from "../src/api/analytics.js";
-import { normalizeGameStats, normalizeHeroBanStats, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats } from "../src/services/analytics.js";
+import { normalizeGameStats, normalizeHeroBanStats, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats } from "../src/services/analytics.js";
 import { clearApiCache } from "../src/api/client.js";
 
 const originalFetch = globalThis.fetch;
@@ -317,4 +317,19 @@ test("hero build and ability order normalizers follow the current OpenAPI schema
       future_metric: 10,
     },
   });
+});
+
+
+test("combo, build-item and buff normalizers follow current schemas", () => {
+  const combos = normalizeHeroCombAnalytics({ data: [{ hero_ids: [1,2,3,4,5,6], wins: 40, losses: 20, matches: 60, future_metric: 1 }] });
+  const items = normalizeBuildItemStats({ data: [{ item_id: 123, builds: 77, future_metric: 2 }] });
+  const buffs = normalizeBuffStats({ data: [{ buff_type: "hp_permanent_pickup_lv2", is_permanent: true, matches: 100, matches_with_pickup: 50, pickups: 55, timed_matches: 90, timed_pickups: 45, total_stat_value: 1200, avg_first_pickup_time_s: 300, avg_pickup_time_s: 360, future_metric: 3 }] });
+  assert.equal(combos[0].heroIds.length, 6);
+  assert.equal(combos[0].raw.future_metric, 1);
+  assert.equal(items[0].itemId, 123);
+  assert.equal(items[0].builds, 77);
+  assert.equal(items[0].raw.future_metric, 2);
+  assert.equal(buffs[0].buffType, "hp_permanent_pickup_lv2");
+  assert.equal(buffs[0].totalStatValue, 1200);
+  assert.equal(buffs[0].raw.future_metric, 3);
 });
