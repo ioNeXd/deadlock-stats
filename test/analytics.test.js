@@ -575,7 +575,8 @@ test("advanced analytics normalizers preserve documented response shapes", () =>
   assert.deepEqual(normalizePlayerScoreboard({ data: [{ rank: 1, account_id: 42, value: 900, matches: 20, badge: 90, badge_progress: 500 }] })[0], { rank: 1, accountId: 42, value: 900, matches: 20, badge: 90, badgeProgress: 500, raw: { rank: 1, account_id: 42, value: 900, matches: 20, badge: 90, badge_progress: 500 } });
   assert.deepEqual(normalizeKillDeathStats({ data: [{ position_x: 1, position_y: 2, killer_team: 0, deaths: 3, kills: 4 }] })[0], { positionX: 1, positionY: 2, killerTeam: 0, deaths: 3, kills: 4, raw: { position_x: 1, position_y: 2, killer_team: 0, deaths: 3, kills: 4 } });
   assert.deepEqual(normalizeLaneMatchupStats({ data: [{ assigned_lane: 1, hero_ids: [7, 8], enemy_hero_ids: [9, 10], wins: 5, matches_played: 10, sample_time_s: 900, net_worth_diff: 100, sample_matches: 8, stats: { kills: { value: 3 } } }] })[0].heroIds, [7, 8]);
-  assert.deepEqual(normalizeLaneSoulCurve({ data: [{ assigned_lane: 1, hero_ids: [], enemy_hero_ids: [], sample_times_s: [180], sample_matches: [10], matches_played: 12, net_worth_diff: [50], net_worth_diff_std: [20], stats: { kills: { value: [2], value_std: [1], diff: [1], diff_std: [0.5] } }] })[0].sampleTimesS, [180]);
+  const laneSoul = normalizeLaneSoulCurve({ data: [{ assigned_lane: 1, hero_ids: [], enemy_hero_ids: [], sample_times_s: [180], sample_matches: [10], matches_played: 12, net_worth_diff: [50], net_worth_diff_std: [20], stats: { kills: { value: [2], value_std: [1], diff: [1], diff_std: [0.5] } }] });
+  assert.deepEqual(laneSoul[0].sampleTimesS, [180]);
   const metrics = normalizePlayerStatsMetrics({ data: { "42": { kills: { avg: 3 } } } });
   assert.deepEqual(metrics.data, { "42": { kills: { avg: 3 } } });
 });
