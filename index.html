@@ -1,260 +1,71 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Deadlock Stats</title>
-    <meta
-      name="description"
-      content="Live hero and item win rates and pick rates for Deadlock, powered by the community Deadlock API."
-    />
-    <meta property="og:title" content="Deadlock Stats" />
-    <meta
-      property="og:description"
-      content="Live hero and item win rates and pick rates for Deadlock, powered by the community Deadlock API."
-    />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://ionexd.github.io/deadlock-stats" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
-    <meta name="theme-color" content="#1a1a1a" />
-    <link rel="stylesheet" href="css/style.css" />
-  </head>
-  <body class="lobby-active">
-    <div id="lobby-view" class="lobby-view">
-      <div class="lobby-content">
-        <img
-          src="assets/images/branding/logo.png"
-          alt="Deadlock Stats"
-          class="lobby-logo"
-        />
-        <nav class="lobby-nav" aria-label="Main menu">
-          <a
-            href="#tierlist"
-            id="lobby-tierlist"
-            class="lobby-btn lobby-btn--primary"
-            data-i18n="lobby_tierlist"
-            >Tierlist</a
-          >
-          <button type="button" class="lobby-btn lobby-btn--disabled" disabled>
-            <span data-i18n="lobby_leaderboard">Leaderboard</span>
-            <span class="lobby-btn-tag" data-i18n="lobby_coming_soon"
-              >Coming soon</span
-            >
-          </button>
-          <button type="button" class="lobby-btn lobby-btn--disabled" disabled>
-            <span data-i18n="lobby_lore">Lore</span>
-            <span class="lobby-btn-tag" data-i18n="lobby_coming_soon"
-              >Coming soon</span
-            >
-          </button>
-          <button type="button" class="lobby-btn lobby-btn--disabled" disabled>
-            <span data-i18n="nav_heroes">Heroes</span>
-            <span class="lobby-btn-tag" data-i18n="lobby_coming_soon"
-              >Coming soon</span
-            >
-          </button>
-          <button type="button" class="lobby-btn lobby-btn--disabled" disabled>
-            <span data-i18n="lobby_tutorials">Tutorials</span>
-            <span class="lobby-btn-tag" data-i18n="lobby_coming_soon"
-              >Coming soon</span
-            >
-          </button>
-        </nav>
-      </div>
-    </div>
-
-    <header>
-      <nav class="site-nav" aria-label="Site sections">
-        <a href="#" class="site-nav-item site-nav-item--home" aria-label="Home">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M3 10.5 12 3l9 7.5" />
-            <path d="M5 9.5V21h14V9.5" />
-          </svg>
-        </a>
-        <a
-          href="#tierlist"
-          class="site-nav-item site-nav-item--active"
-          data-i18n="lobby_tierlist"
-          >Tierlist</a
-        >
-        <span class="site-nav-item site-nav-item--disabled">
-          <span data-i18n="lobby_leaderboard">Leaderboard</span>
-        </span>
-        <span class="site-nav-item site-nav-item--disabled">
-          <span data-i18n="lobby_lore">Lore</span>
-        </span>
-        <span class="site-nav-item site-nav-item--disabled">
-          <span data-i18n="nav_heroes">Heroes</span>
-        </span>
-        <span class="site-nav-item site-nav-item--disabled">
-          <span data-i18n="lobby_tutorials">Tutorials</span>
-        </span>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d0c0b">
+  <meta name="description" content="Deadlock Stats — modern analytics powered directly by the Deadlock API.">
+  <title>Deadlock Stats</title>
+  <link rel="icon" href="favicon.ico">
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#/">
+        <span class="brand-mark">D</span>
+        <span><strong>DEADLOCK</strong><small>STATS</small></span>
+      </a>
+      <nav class="nav">
+        <span class="nav-label">OVERVIEW</span>
+        <a class="nav-item active" href="#/">Dashboard</a>
+        <a class="nav-item" href="#/matches">Matches</a>
+        <a class="nav-item" href="#/players">Players</a>
+        <span class="nav-label">GAME</span>
+        <a class="nav-item" href="#/heroes">Heroes</a>
+        <a class="nav-item" href="#/items">Items</a>
+        <a class="nav-item" href="#/builds">Builds</a>
+        <span class="nav-label">ANALYTICS</span>
+        <a class="nav-item" href="#/analytics">Analytics</a>
+        <a class="nav-item" href="#/leaderboard">Leaderboard</a>
+        <span class="nav-label">TOOLS</span>
+        <a class="nav-item" href="#/data">Data Explorer</a>
+        <a class="nav-item" href="#/api">API Status</a>
       </nav>
-      <div class="title-row">
-        <h1 class="site-logo">
-          <img
-            src="assets/images/branding/logo.png"
-            alt="Deadlock Stats"
-            width="160"
-            height="88"
-          />
-        </h1>
-        <span id="last-updated" class="last-updated" data-i18n="loading"
-          >Loading...</span
-        >
-        <div class="lang-switcher" id="lang-switcher">
-          <button
-            id="lang-toggle"
-            aria-haspopup="true"
-            aria-expanded="false"
-          ></button>
-          <ul id="lang-menu" class="lang-menu hidden"></ul>
-        </div>
-      </div>
-      <nav role="navigation" aria-label="Main navigation">
-        <a href="#" id="nav-heroes" data-i18n="nav_heroes" tabindex="0"
-          >Heroes</a
-        >
-        <a href="#" id="nav-items" data-i18n="nav_items" tabindex="0">Items</a>
-      </nav>
-    </header>
-    <main>
-      <div id="table-view" class="hidden">
-        <div class="table-controls">
-          <input
-            id="search-input"
-            type="search"
-            placeholder="Search heroes or items"
-            aria-label="Search"
-          />
-          <button
-            id="refresh-button"
-            class="btn-action"
-            data-i18n="refresh_button"
-          >
-            Refresh
-          </button>
-        </div>
+      <div class="sidebar-status"><i id="api-dot"></i><span id="api-status">Connecting</span></div>
+    </aside>
 
-        <div
-          id="error-banner"
-          class="error-banner hidden"
-          role="alert"
-          aria-live="assertive"
-          aria-atomic="true"
-          tabindex="-1"
-        >
-          <span id="error-banner-message"></span>
-          <button id="error-retry" class="btn-action" data-i18n="retry_button">
-            Retry
-          </button>
+    <main class="main">
+      <header class="topbar">
+        <div><span class="eyebrow">CURSED APPLE // INTELLIGENCE</span><h1>Command Center</h1></div>
+        <label class="search"><span>⌕</span><input id="search" type="search" placeholder="Search heroes, players, matches..."><kbd>⌘ K</kbd></label>
+      </header>
+
+      <section class="hero-banner">
+        <div>
+          <span class="eyebrow">LIVE DATA</span>
+          <h2>The city never sleeps.</h2>
+          <p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p>
+          <div class="pills"><span id="api-version">API LIVE</span><span>API-FIRST</span></div>
         </div>
+      </section>
 
-        <div
-          id="loading-container"
-          class="loading-container"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <div class="spinner" aria-hidden="true"></div>
-          <span id="loading-text" class="loading-text" data-i18n="loading"
-            >Loading...</span
-          >
-        </div>
+      <section class="section">
+        <div class="section-head"><div><span class="eyebrow">ROSTER</span><h2>Heroes in the city</h2></div><a href="#/heroes">View all →</a></div>
+        <div id="hero-grid" class="hero-grid" aria-live="polite"></div>
+      </section>
 
-        <div
-          id="sr-status"
-          class="visually-hidden"
-          aria-live="polite"
-          aria-atomic="true"
-        ></div>
-
-        <div class="table-scroll">
-          <table
-            id="stats-table"
-            aria-describedby="loading-text error-banner-message"
-            aria-busy="true"
-            aria-label="Statistics table"
-          >
-            <caption
-              id="stats-caption"
-              class="visually-hidden"
-              data-i18n="table_caption"
-            >
-              Hero and item statistics table
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col"></th>
-                <th id="table-name-header" data-i18n="table_hero" tabindex="0">
-                  Hero
-                </th>
-                <th
-                  id="header-winrate"
-                  data-i18n="table_winrate"
-                  role="button"
-                  tabindex="0"
-                  aria-sort="none"
-                >
-                  Win Rate
-                </th>
-                <th
-                  id="header-pickrate"
-                  data-i18n="table_pickrate"
-                  role="button"
-                  tabindex="0"
-                  aria-sort="none"
-                >
-                  Pick Rate
-                </th>
-              </tr>
-            </thead>
-            <tbody id="stats-table-body"></tbody>
-          </table>
-        </div>
-
-        <div class="pagination-controls">
-          <button
-            id="prev-page"
-            aria-label="Previous page"
-            data-i18n="pagination_prev"
-          >
-            ← Prev
-          </button>
-          <span id="page-info">1</span>
-          <button
-            id="next-page"
-            aria-label="Next page"
-            data-i18n="pagination_next"
-          >
-            Next →
-          </button>
-        </div>
-      </div>
-
-      <div id="hero-detail-view" class="hidden">
-        <button id="back-to-table" data-i18n="back_to_table">
-          ← Back to table
-        </button>
-        <div id="hero-detail-content"></div>
-      </div>
+      <section class="dashboard-grid">
+        <article class="panel">
+          <div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div>
+          <div class="metric"><span>Endpoint</span><strong>api.deadlock-api.com</strong></div>
+          <div class="metric"><span>Hero assets</span><strong id="asset-count">—</strong></div>
+          <div class="metric"><span>Response</span><strong id="api-latency">—</strong></div>
+        </article>
+        <article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article>
+      </section>
     </main>
-
-    <footer>
-      <p data-i18n="footer_credit">Data provided by deadlock-api.com</p>
-    </footer>
-
-    <script type="module" src="js/table.js"></script>
-  </body>
+  </div>
+  <script type="module" src="src/app.js"></script>
+</body>
 </html>
