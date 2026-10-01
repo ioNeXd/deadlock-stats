@@ -4,6 +4,7 @@ const DEFAULT_TIMEOUT_MS = 15_000;
 const DEFAULT_CACHE_TTL_MS = 30_000;
 const DEFAULT_RETRIES = 2;
 const MAX_RETRY_DELAY_MS = 10_000;
+const MAX_CACHE_ENTRIES = 200;
 
 const cache = new Map();
 const inFlight = new Map();
@@ -158,18 +159,20 @@ async function request(path, {
   authorization,
 } = {}) {
   const upperMethod = method.toUpperCase();
+  const effectiveUseCache = useCache === undefined ? upperMethod === "GET" : useCache;
+  const effectiveDedupe = dedupe === undefined ? upperMethod === "GET" : dedupe;
   const url = normalizePath(path, query);
   const requestBody = body == null ? null : typeof body === "string" ? body : JSON.stringify(body);
   const key = cacheKey(upperMethod, url, requestBody);
   const now = Date.now();
 
-  if (useCache) {
+  if (effectiveUseCache) {
     const cached = cache.get(key);
     if (cached && cached.expiresAt > now) return cached.value;
     if (cached) cache.delete(key);
   }
 
-  if (dedupe && inFlight.has(key)) return inFlight.get(key);
+  if (effectiveDedupe && inFlight.has(key)) return inFlight.get(key);
 
   const promise = (async () => {
     let lastError;
@@ -180,7 +183,16 @@ async function request(path, {
 
       try {
         const requestHeaders = new Headers(headers);
-        requestHeaders.set("Accept", requestHeaders.get("Accept") || "*/*");
+        if (!requestHeaders.has("Accept")) {
+          requestHeaders.set(
+            "Accept",
+            responseType === "stream"
+              ? "text/event-stream"
+              : responseType === "blob" || responseType === "arrayBuffer"
+                ? "*/*"
+                : "application/json",
+          );
+        }
 
         if (body != null && !requestHeaders.has("Content-Type") && typeof body !== "string") {
           requestHeaders.set("Content-Type", "application/json");
@@ -233,8 +245,11 @@ async function request(path, {
           contentType: contentTypeOf(response),
         };
 
-        if (useCache && cacheTtlMs > 0) {
+        if (effectiveUseCache && cacheTtlMs > 0) {
           cache.set(key, { expiresAt: Date.now() + cacheTtlMs, value: result });
+    while (cache.size > MAX_CACHE_ENTRIES) {
+      cache.delete(cache.keys().next().value);
+    }
         }
 
         return result;
@@ -270,7 +285,7 @@ async function request(path, {
     throw lastError;
   })();
 
-  if (dedupe) inFlight.set(key, promise);
+  if (effectiveDedupe) inFlight.set(key, promise);
 
   try {
     return await promise;
@@ -287,10 +302,6 @@ export function apiGet(path, options = {}) {
   return request(path, {
     ...options,
     method: "GET",
-    headers: {
-      Accept: "application/json",
-      ...(options.headers || {}),
-    },
   });
 }
 
@@ -300,10 +311,18 @@ export function clearApiCache() {
 
 export function invalidateApiCache(path, query) {
   const url = normalizePath(path, query);
-  const prefix = JSON.stringify({ method: "GET", path: url.pathname, query: [...url.searchParams.entries()] }).slice(0, -1);
+  const targetQuery = query === undefined ? null : [...url.searchParams.entries()];
 
   for (const key of cache.keys()) {
-    if (key.startsWith(prefix)) cache.delete(key);
+    try {
+      const parsed = JSON.parse(key);
+      if (parsed.method !== "GET" || parsed.path !== url.pathname) continue;
+      if (targetQuery === null || JSON.stringify(parsed.query) === JSON.stringify(targetQuery)) {
+        cache.delete(key);
+      }
+    } catch {
+      cache.delete(key);
+    }
   }
 }
 
