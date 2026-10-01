@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { colorToCss, createAssetVersionContext, normalizeColorValue, STORAGE_KEY } from "../src/services/asset-version.js";
+import { clearApiCache } from "../src/api/client.js";
 
 test("normalizes client version lists without inventing versions", async () => {
+  clearApiCache();
   const storage = {
     getItem: () => null,
     setItem: () => {},
@@ -32,6 +34,7 @@ test("normalizes client version lists without inventing versions", async () => {
 });
 
 test("selects only API-advertised versions and persists the selection", async () => {
+  clearApiCache();
   let stored = null;
   const storage = {
     getItem: () => stored,
@@ -63,6 +66,7 @@ test("selects only API-advertised versions and persists the selection", async ()
 });
 
 test("passes the selected version to the colors endpoint", async () => {
+  clearApiCache();
   const storage = {
     getItem: () => null,
     setItem: () => {},
@@ -92,6 +96,7 @@ test("passes the selected version to the colors endpoint", async () => {
 });
 
 test("normalizes official color channel shapes without changing source values", () => {
+  clearApiCache();
   assert.deepEqual(normalizeColorValue([10, 20, 30, 255]), [10, 20, 30, 255]);
   assert.deepEqual(normalizeColorValue({ r: 10, g: 20, b: 30, a: 128 }), [10, 20, 30, 128]);
   assert.equal(colorToCss({ r: 10, g: 20, b: 30, a: 128 }), "rgba(10,20,30,0.5019607843137255)");
