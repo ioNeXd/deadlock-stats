@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats } from "../src/api/analytics.js";
-import { normalizeGameStats, normalizeHeroBanStats, normalizeBadgeDistribution, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats } from "../src/services/analytics.js";
+import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats, getItemStats, getItemPermutationStats, getItemFlowStats } from "../src/api/analytics.js";
+import { normalizeGameStats, normalizeHeroBanStats, normalizeBadgeDistribution, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats, normalizeItemStats, normalizeItemPermutationStats, normalizeItemFlowStats } from "../src/services/analytics.js";
 import { clearApiCache } from "../src/api/client.js";
 
 const originalFetch = globalThis.fetch;
@@ -401,4 +401,40 @@ test("analytics wrappers drop filters not documented for each endpoint", async (
 
   assert.equal(calls[3].searchParams.get("hero_id"), null);
   assert.equal(calls[3].searchParams.get("min_networth"), null);
+});
+
+
+test("item analytics wrappers use documented endpoints and normalize current schemas", async () => {
+  const calls = [];
+  globalThis.fetch = async input => {
+    const url = new URL(input);
+    calls.push(url);
+    return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+  };
+
+  await getItemStats({ query: { hero_ids: [7, 8], corrupted_items: "include" }, cache: false, dedupe: false });
+  await getItemPermutationStats({ query: { hero_ids: [7, 8], item_ids: [101, 202] }, cache: false, dedupe: false });
+  await getItemFlowStats({ query: { hero_ids: [7, 8], locked_item_ids: [101, 202], locked_columns: [0, 1] }, cache: false, dedupe: false });
+
+  assert.deepEqual(calls.map(url => url.pathname), [
+    "/v1/analytics/item-stats",
+    "/v1/analytics/item-permutation-stats",
+    "/v1/analytics/item-flow-stats",
+  ]);
+  assert.equal(calls[0].searchParams.get("hero_ids"), "7,8");
+  assert.equal(calls[0].searchParams.get("corrupted_items"), "include");
+  assert.equal(calls[1].searchParams.get("hero_ids"), "7,8");
+  assert.deepEqual(calls[1].searchParams.getAll("item_ids"), ["101", "202"]);
+  assert.deepEqual(calls[2].searchParams.getAll("locked_item_ids"), ["101", "202"]);
+  assert.deepEqual(calls[2].searchParams.getAll("locked_columns"), ["0", "1"]);
+
+  const item = normalizeItemStats({ data: [{ item_id: 101, bucket: 0, wins: 60, losses: 40, matches: 100, players: 100, avg_buy_time_s: 420, avg_sell_time_s: 900, avg_buy_time_relative: 0.25, avg_sell_time_relative: 0.5, future_metric: true }] });
+  const permutation = normalizeItemPermutationStats({ data: [{ item_ids: [101, 202], wins: 30, losses: 20, matches: 50, future_metric: true }] });
+  const flow = normalizeItemFlowStats({ data: { nodes: [{ column: 0, item_id: 101, wins: 60, losses: 40, matches: 100, players: 100, total_kills: 500, total_deaths: 400, total_assists: 800, adjusted_win_rate: 0.58, avg_net_worth_at_buy: 3200, future_metric: true }], edges: [{ from_column: 0, from_item_id: 101, to_item_id: 202, wins: 20, losses: 10, matches: 30 }], summary: { wins: 60, losses: 40, matches: 100, players: 100, total_kills: 500, total_deaths: 400, total_assists: 800, avg_net_worth: 15000, avg_duration_s: 1500 }, baseline: { matches: 120 }, reached_per_column: [120, 80] } });
+
+  assert.equal(item[0].avgBuyTimeS, 420);
+  assert.equal(item[0].raw.future_metric, true);
+  assert.deepEqual(permutation[0].itemIds, [101, 202]);
+  assert.equal(flow.nodes[0].adjustedWinRate, 0.58);
+  assert.deepEqual(flow.reachedPerColumn, [120, 80]);
 });
