@@ -63,7 +63,8 @@ export function getRank(tier, { language, clientVersion, ...options } = {}) {
   return apiGet(`/v1/assets/ranks/${encodeURIComponent(tier)}`, versionedOptions(options, { language, clientVersion }));
 }
 
-export function getRankSubrankImage(tier, subrank, { format, responseType, ...options } = {}) {
+export function getRankSubrankImage(tier, subrank, { format = "png", responseType, ...options } = {}) {
+  if (format !== "png" && format !== "webp") throw new RangeError("format must be png or webp");
   return apiGet(
     `/v1/assets/ranks/${encodeURIComponent(tier)}/${encodeURIComponent(subrank)}/image`,
     {
