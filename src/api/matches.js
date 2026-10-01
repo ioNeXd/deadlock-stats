@@ -7,7 +7,7 @@ const BULK_METADATA_KEYS = [
   "max_unix_timestamp","min_duration_s","max_duration_s","min_average_badge","max_average_badge",
   "min_match_id","max_match_id","is_high_skill_range_parties","is_low_pri_pool","is_new_player_pool",
   "account_ids","only_filtered_players","hero_ids","item_filter_hero_id","include_item_ids",
-  "exclude_item_ids","limit","offset"
+  "exclude_item_ids","extra_match_columns","extra_player_columns","order_by","order_direction","limit","format"
 ];
 
 function bulkMetadataOptions(options = {}) {
