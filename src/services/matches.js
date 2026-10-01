@@ -14,6 +14,14 @@ export function normalizeMatchInfo(result) {
     averageBadge: match?.average_badge ?? null,
     averageBadgeTeam0: match?.average_badge_team0 ?? null,
     averageBadgeTeam1: match?.average_badge_team1 ?? null,
+    winningTeam: match?.winning_team ?? null,
+    netWorthTeam0: match?.net_worth_team_0 ?? null,
+    netWorthTeam1: match?.net_worth_team_1 ?? null,
+    objectivesMaskTeam0: match?.objectives_mask_team0 ?? null,
+    objectivesMaskTeam1: match?.objectives_mask_team1 ?? null,
+    lobbyId: match?.lobby_id ?? null,
+    spectators: match?.spectators ?? null,
+    openSpectatorSlots: match?.open_spectator_slots ?? null,
     players: Array.isArray(match?.players) ? match.players : [],
     raw: match,
   }));
@@ -45,5 +53,6 @@ export async function getMatchSaltsSnapshot(matchId, options = {}) {
 
 export async function getBulkMatchMetadataSnapshot(options = {}) {
   const { signal, ...requestOptions } = options;
-  return getBulkMatchMetadata({ ...requestOptions, signal });
+  const result = await getBulkMatchMetadata({ ...requestOptions, signal });
+  return normalizeMatchMetadata(result);
 }
