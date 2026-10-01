@@ -50,7 +50,7 @@ test("version monitor compares successive OpenAPI snapshots", async () => {
     },
     {
       type: "entered_legacy",
-      resourcePath: "/patches/",
+      resourcePath: "/patches",
       legacyPath: "/v1/patches",
       legacyVersion: "v1",
       currentPath: "/v2/patches",
