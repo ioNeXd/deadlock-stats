@@ -240,9 +240,18 @@ function renderItemAnalytics(signal) {
       if (result[key]) result[key] = Math.floor(new Date(result[key] + "T00:00:00Z").getTime() / 1000);
       else delete result[key];
     }
-    for (const key of ["hero_ids", "enemy_hero_ids", "locked_item_ids", "locked_columns"]) {
-      if (result[key]) result[key] = String(result[key]).split(",").map(value => Number(value.trim())).filter(Number.isInteger).join(",");
+    for (const key of ["hero_ids", "enemy_hero_ids"]) {
+      if (result[key]) result[key] = String(result[key]).split(",").map(value => Number(value.trim())).filter(Number.isInteger);
       else delete result[key];
+    }
+    for (const key of ["locked_item_ids", "locked_columns"]) {
+      if (result[key]) result[key] = String(result[key]).split(",").map(value => Number(value.trim())).filter(Number.isInteger);
+      else delete result[key];
+    }
+    if (result.locked_item_ids?.length || result.locked_columns?.length) {
+      if ((result.locked_item_ids?.length ?? 0) !== (result.locked_columns?.length ?? 0)) {
+        throw new TypeError("Locked item IDs and locked columns must have the same length.");
+      }
     }
     for (const key of ["min_matches", "comb_size"]) {
       if (result[key] !== "") result[key] = Number(result[key]);
