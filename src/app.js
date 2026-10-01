@@ -185,7 +185,7 @@ function renderAnalytics(signal) {
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">ANALYTICS / MATCH INTELLIGENCE</span><h2>Analytics</h2><p>Aggregate match and hero-ban statistics from the documented analytics API.</p></section>' +
     '<section class="analytics-grid" id="analytics-summary"><article class="metric-card"><span>MATCHES</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>PLAYERS</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>AVG DURATION</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>AVG KILLS</span><strong>—</strong><small>loading</small></article></section>' +
-    '<section class="panel analytics-hero-panel"><div class="section-head"><div><span class="eyebrow">HERO STATS</span><h2>Performance by hero</h2></div><span class="muted">TOP 16 BY MATCHES</span></div><div class="hero-stats-table"><div class="hero-stat-head"><span>HERO</span><span>MATCHES</span><span>WIN RATE</span><span>K / D / A</span><span>DAMAGE / MIN</span><span>NET WORTH / MIN</span></div><div id="hero-stats-list"></div></div></section>' +
+    '<section class="panel analytics-hero-panel"><div class="section-head"><div><span class="eyebrow">HERO STATS</span><h2>Performance by hero</h2></div><span class="muted">TOP 16 BY MATCHES</span></div><div class="hero-stats-table"><div class="hero-stat-head"><span>HERO</span><span>MATCHES</span><span>WIN RATE</span><span>K / D / A</span><span>TOTAL DAMAGE</span><span>TOTAL NET WORTH</span></div><div id="hero-stats-list"></div></div></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">GAME STATS</span><h2>Daily activity</h2></div><b id="analytics-status">LOADING</b></div><div id="game-stats-list" class="analytics-bars"></div></article>' +
     '<article class="panel"><div class="section-head"><div><span class="eyebrow">HERO BANS</span><h2>Ban activity</h2></div></div><div id="hero-ban-list" class="analytics-table"></div></article></section>';
   loadAnalytics(signal);
@@ -241,22 +241,22 @@ async function loadAnalytics(signal) {
     const heroesById = new Map(heroCatalog.data.map(hero => [String(idOf(hero)), hero]));
     const heroRows = heroStats
       .filter(item => item?.heroId != null)
-      .sort((a, b) => Number(b.matchesPlayed ?? 0) - Number(a.matchesPlayed ?? 0))
+      .sort((a, b) => Number(b.matches ?? 0) - Number(a.matches ?? 0))
       .slice(0, 16);
     $("#hero-stats-list").innerHTML = heroRows.length
       ? heroRows.map(item => {
           const hero = heroesById.get(String(item.heroId));
           const name = hero ? nameOf(hero) : "Hero " + item.heroId;
           const image = hero ? resolveAssetImage(hero, ["icon_hero_card_webp", "icon_hero_card", "hero_card_critical_webp", "hero_card_critical"]) : null;
-          const matches = Number(item.matchesPlayed);
+          const matches = Number(item.matches);
           const wins = Number(item.wins);
           const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? ((wins / matches) * 100).toFixed(1) + "%" : "—";
-          const kda = [item.kills, item.deaths, item.assists].map(Number);
+          const kda = [item.totalKills, item.totalDeaths, item.totalAssists].map(Number);
           const kdaText = kda.every(Number.isFinite) ? kda.join(" / ") : "—";
           return '<div class="hero-stat-row"><div class="hero-stat-identity">' +
             (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">?</div>') +
             '<span><strong>' + esc(name) + '</strong><small>ID ' + esc(item.heroId) + '</small></span></div>' +
-            '<span>' + esc(Number.isFinite(matches) ? matches.toLocaleString() : "—") + '</span><span>' + esc(winRate) + '</span><span>' + esc(kdaText) + '</span><span>' + esc(Number.isFinite(Number(item.damagePerMin)) ? Number(item.damagePerMin).toFixed(0) : "—") + '</span><span>' + esc(Number.isFinite(Number(item.networthPerMin)) ? Number(item.networthPerMin).toFixed(0) : "—") + '</span></div>';
+            '<span>' + esc(Number.isFinite(matches) ? matches.toLocaleString() : "—") + '</span><span>' + esc(winRate) + '</span><span>' + esc(kdaText) + '</span><span>' + esc(Number.isFinite(Number(item.totalPlayerDamage)) ? Number(item.totalPlayerDamage).toLocaleString() : "—") + '</span><span>' + esc(Number.isFinite(Number(item.totalNetWorth)) ? Number(item.totalNetWorth).toLocaleString() : "—") + '</span></div>';
         }).join("")
       : '<p class="muted">No hero statistics returned.</p>';
 
