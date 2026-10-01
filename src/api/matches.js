@@ -13,7 +13,7 @@ const BULK_METADATA_KEYS = [
 
 function bulkMetadataOptions(options = {}) {
   const { query, ...rest } = options;
-  const source = query instanceof URLSearchParams ? Object.fromEntries(query.entries()) : (query ?? {});
+  const source = queryToObject(query);
   const topLevel = Object.fromEntries(Object.entries(rest).filter(([key]) => BULK_METADATA_KEYS.includes(key)));
   const merged = { ...source, ...topLevel };
   for (const key of ["match_ids","account_ids"]) {
