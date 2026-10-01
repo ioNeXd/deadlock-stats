@@ -356,29 +356,49 @@ For hero data, the application can consume documented fields such as:
 
 The asset layer should not invent replacement artwork when the API provides the corresponding asset.
 
-## 10. Map Explorer / Coordinate Transformation Debt
+## 10. Map Explorer / Coordinate Transformation
 
-The Map Explorer consumes the documented `/v1/assets/map` contract and currently renders the official map image, objective positions, neutral camps, entities, and zipline data.
+The Map Explorer consumes the documented `/v1/assets/map` contract and renders the official map image, objective positions, neutral camps, entities, and zipline geometry.
 
-The API contract distinguishes two coordinate representations:
+The API contract distinguishes these coordinate representations:
 
 - objective positions are already expressed as relative percentages suitable for CSS placement;
-- neutral camps/entities expose world `[x,y,z]` positions and, where applicable, relative `left`/`top` coordinates;
-- zipline paths expose cubic-spline control-point arrays (`P0_points`, `P1_points`, `P2_points`) in world coordinates.
+- neutral camps/entities expose world `[x,y,z]` positions and API-provided relative `left`/`top` values;
+- zipline paths expose cubic-spline nodes through `P0_points`, `P1_points`, and `P2_points`.
 
-### Explicit pending item
+The official API implementation confirms that zipline path nodes are stored **relative to the lane origin**. The minimap projection is:
 
-**Map world-coordinate → minimap-coordinate transformation remains unresolved.**
+```text
+left = (world_x + radius) / (2 * radius)
+top  = (radius - world_y) / (2 * radius)
+```
 
-The current UI must not invent a mathematically incorrect projection. In particular:
+where `world_x/world_y` are obtained by adding the lane `origin` to the origin-relative node coordinates.
 
-- do not treat cubic-spline control points as a simple polyline unless the rendering is explicitly documented as an approximation;
-- do not infer an arbitrary world-to-image transform from `radius` alone;
-- do not silently assume axis orientation, origin, scale, or image bounds.
+For spline rendering, consecutive nodes form cubic Bézier segments:
 
-The next implementation step for the Map Explorer is therefore to determine and verify the coordinate transform from the official API contract/data before making zipline geometry visually authoritative.
+```text
+start    = current.P0
+control1 = current.P2
+control2 = next.P1
+end      = next.P0
+```
 
-If the official contract does not expose enough information for a deterministic transform, keep the raw zipline geometry available and document the limitation instead of fabricating a projection.
+The adapter converts these segments into minimap-relative coordinates before they reach the UI. The UI therefore only renders normalized Bézier paths and does not contain API-specific coordinate math.
+
+This keeps the architecture aligned with:
+
+```text
+API world geometry
+      ↓
+normalizeMap()
+      ↓
+minimap-relative spline view model
+      ↓
+SVG cubic Bézier rendering
+```
+
+The raw API payload remains preserved in `raw` for debugging and Data Explorer use.
 
 ## 11. UI / View Models
 
