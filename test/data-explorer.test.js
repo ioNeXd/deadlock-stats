@@ -79,12 +79,14 @@ test("executeOperation delegates the documented operation to the API client", as
   };
 
   const operation = listApiOperations(contract, { includeDeprecated: false })[0];
-  const result = await executeOperation(operation, { hero_id: 7, limit: "5" });
+  const controller = new AbortController();
+  const result = await executeOperation(operation, { hero_id: 7, limit: "5" }, { signal: controller.signal });
 
   const url = new URL(captured.input);
   assert.equal(url.pathname, "/v1/example/7");
   assert.equal(url.searchParams.get("limit"), "5");
   assert.equal(result.data.ok, true);
+  assert.equal(captured.init.signal, controller.signal);
 });
 
 
@@ -92,6 +94,29 @@ test("schema helpers support nullable and union types", () => {
   assert.equal(schemaType({ type: ["integer", "null"] }), "integer");
   assert.equal(schemaNullable({ type: ["integer", "null"] }), true);
   assert.equal(schemaType({ oneOf: [{ type: "string" }, { type: "null" }] }), "string");
+});
+
+test("listApiOperations resolves local parameter refs", () => {
+  const contractWithRef = {
+    components: {
+      parameters: {
+        HeroId: { name: "hero_id", in: "path", required: true, schema: { type: "integer" } },
+      },
+    },
+    paths: {
+      "/v1/heroes/{hero_id}": {
+        get: {
+          operationId: "hero",
+          parameters: [{ $ref: "#/components/parameters/HeroId" }],
+          responses: { "200": { description: "ok" } },
+        },
+      },
+    },
+  };
+
+  const operation = listApiOperations(contractWithRef)[0];
+  assert.equal(operation.parameters[0].name, "hero_id");
+  assert.equal(buildRequest(operation, { hero_id: "7" }).path, "/v1/heroes/7");
 });
 
 test("listApiOperations merges path-level parameters and preserves security metadata", () => {
