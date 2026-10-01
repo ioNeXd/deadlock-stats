@@ -401,6 +401,39 @@ test("buildRequest matches structured suffix media type wildcards", () => {
   assert.deepEqual(request.body, { ok: true });
 });
 
+test("buildRequest validates numeric, boolean, enum and array constraints", () => {
+  const operation = {
+    method: "GET",
+    path: "/v1/validate",
+    parameters: [
+      { name: "count", in: "query", schema: { type: "integer", minimum: 1, maximum: 10 } },
+      { name: "enabled", in: "query", schema: { type: "boolean" } },
+      { name: "mode", in: "query", schema: { type: "string", enum: ["ranked", "normal"] } },
+      { name: "ids", in: "query", schema: { type: "array", minItems: 2, maxItems: 3, items: { type: "integer" } } },
+    ],
+    requestBody: null,
+  };
+
+  assert.equal(buildRequest(operation, { count: "4", enabled: "false", mode: "ranked", ids: "1,2" }).query.count, 4);
+  assert.equal(buildRequest(operation, { count: "4", enabled: "false", mode: "ranked", ids: "1,2" }).query.enabled, false);
+  assert.throws(() => buildRequest(operation, { count: "1.5" }), /integer/);
+  assert.throws(() => buildRequest(operation, { count: "0" }), /minimum/);
+  assert.throws(() => buildRequest(operation, { enabled: "yes" }), /boolean/);
+  assert.throws(() => buildRequest(operation, { mode: "casual" }), /enum/);
+  assert.throws(() => buildRequest(operation, { ids: "1" }), /minItems/);
+  assert.throws(() => buildRequest(operation, { ids: "1,2,3,4" }), /maxItems/);
+});
+
+test("buildRequest applies OpenAPI parameter defaults", () => {
+  const operation = {
+    method: "GET",
+    path: "/v1/defaults",
+    parameters: [{ name: "limit", in: "query", schema: { type: "integer", default: 20 } }],
+    requestBody: null,
+  };
+  assert.deepEqual(buildRequest(operation, {}).query, { limit: 20 });
+});
+
 test("buildRequest selects compatible JSON media types", () => {
   const operation = {
     operationId: "body_media",
