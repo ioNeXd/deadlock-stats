@@ -66,7 +66,7 @@ test("expanded analytics wrappers use documented paths and preserve query option
     });
   };
 
-  await getHeroStats({ bucket: "start_time_day", query: { min_matches: 20 }, cache: false, dedupe: false });
+  await getHeroStats({ bucket: "start_time_day", query: { min_hero_matches: 20 }, cache: false, dedupe: false });
   await getHeroCounterStats({ query: { same_lane_filter: true }, cache: false, dedupe: false });
   await getHeroSynergyStats({ query: { min_matches: 20 }, cache: false, dedupe: false });
   await getHeroCombStats({ query: { comb_size: 6 }, cache: false, dedupe: false });
@@ -88,10 +88,10 @@ test("expanded analytics wrappers use documented paths and preserve query option
     "/v1/analytics/build-item-stats",
   ]);
   assert.equal(calls[0].searchParams.get("bucket"), "start_time_day");
-  assert.equal(calls[0].searchParams.get("min_matches"), "20");
+  assert.equal(calls[0].searchParams.get("min_hero_matches"), "20");
   assert.equal(calls[4].searchParams.get("min_matches"), "20");
   assert.equal(calls[5].searchParams.get("hero_id"), "7");
-  assert.equal(calls[7].searchParams.get("hero_ids"), "7,8");
+  assert.deepEqual(calls[7].searchParams.getAll("hero_ids"), ["7", "8"]);
   assert.equal(calls[8].searchParams.get("hero_id"), "7");
 });
 
@@ -356,4 +356,49 @@ test("badge distribution normalizer follows the current OpenAPI schema", () => {
       future_metric: "kept",
     },
   });
+});
+
+
+test("analytics wrappers drop filters not documented for each endpoint", async () => {
+  const calls = [];
+  globalThis.fetch = async input => {
+    const url = new URL(input);
+    calls.push(url);
+    return new Response("[]", {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  const query = {
+    game_mode: "normal",
+    match_mode: "ranked",
+    min_networth: 1000,
+    hero_ids: [7, 8],
+    account_ids: [123, 456],
+    include_item_ids: [900],
+    ability_order_prefix: [1, 2],
+    is_low_pri_pool: true,
+  };
+
+  await getGameStats({ query, cache: false, dedupe: false });
+  await getBadgeDistribution({ query, cache: false, dedupe: false });
+  await getHeroBuildStats(7, { query, cache: false, dedupe: false });
+  await getBuildItemStats({ query, cache: false, dedupe: false });
+
+  assert.equal(calls[0].searchParams.get("hero_ids"), "7");
+  assert.equal(calls[0].searchParams.get("account_ids"), "123");
+  assert.equal(calls[0].searchParams.get("is_low_pri_pool"), null);
+
+  assert.equal(calls[1].searchParams.get("is_low_pri_pool"), "true");
+  assert.equal(calls[1].searchParams.get("min_networth"), null);
+  assert.equal(calls[1].searchParams.get("hero_ids"), null);
+
+  assert.equal(calls[2].searchParams.get("match_mode"), "ranked");
+  assert.equal(calls[2].searchParams.get("hero_ids"), null);
+  assert.equal(calls[2].searchParams.get("min_networth"), null);
+  assert.equal(calls[2].searchParams.get("account_ids"), "123");
+
+  assert.equal(calls[3].searchParams.get("hero_id"), null);
+  assert.equal(calls[3].searchParams.get("min_networth"), null);
 });
