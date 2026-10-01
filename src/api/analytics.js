@@ -4,6 +4,39 @@ import { queryToObject } from "./query.js";
 const ANALYTICS_CACHE_TTL_MS = 60 * 60_000;
 const ITEM_STATS_CACHE_TTL_MS = 6 * 60 * 60_000;
 
+const LANE_ANALYTICS_FILTERS = [
+  "game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s",
+  "min_average_badge","max_average_badge","min_match_id","max_match_id","sample_time_s","assigned_lanes",
+  "hero_ids","enemy_hero_ids","stats","group_by","min_matches","max_matches","account_ids",
+];
+
+const PLAYER_PERFORMANCE_FILTERS = [
+  "resolution","game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s",
+  "min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","hero_ids",
+  "include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","account_ids",
+];
+
+const PLAYER_METRICS_FILTERS = [
+  "hero_ids","game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s",
+  "min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","max_matches",
+  "include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","account_ids","include_buff_metrics",
+];
+
+const SCOREBOARD_FILTERS = [
+  "sort_by","sort_direction","game_mode","match_mode","hero_id","min_matches","max_matches","min_unix_timestamp",
+  "max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge",
+  "max_average_badge","min_match_id","max_match_id","account_ids",
+];
+
+const PLAYER_SCOREBOARD_FILTERS = [...SCOREBOARD_FILTERS, "start", "limit"];
+
+const KILL_DEATH_FILTERS = [
+  "team","game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s",
+  "account_ids","hero_ids","min_networth","max_networth","is_high_skill_range_parties","is_low_pri_pool",
+  "is_new_player_pool","min_match_id","max_match_id","min_average_badge","max_average_badge","min_kills_per_raster",
+  "max_kills_per_raster","min_deaths_per_raster","max_deaths_per_raster","min_game_time_s","max_game_time_s",
+];
+
 const ANALYTICS_FILTER_KEYS = {
   game: ["bucket","game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","hero_ids","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","account_ids"],
   heroStats: ["bucket","game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","min_hero_matches","max_hero_matches","min_hero_matches_total","max_hero_matches_total","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","account_ids"],
@@ -98,4 +131,37 @@ export function getItemStats(options = {}) {
     ...analyticsOptions(options, ANALYTICS_FILTER_KEYS.itemStats, ["hero_ids", "enemy_hero_ids"]),
     cacheTtlMs: options.cacheTtlMs ?? ITEM_STATS_CACHE_TTL_MS,
   });
+}
+
+
+export function getLaneMatchupStats(options = {}) {
+  return apiGet("/v1/analytics/lane-matchup-stats", analyticsOptions(options, LANE_ANALYTICS_FILTERS));
+}
+
+export function getLaneSoulCurve(options = {}) {
+  return apiGet("/v1/analytics/lane-soul-curve", analyticsOptions(options, LANE_ANALYTICS_FILTERS));
+}
+
+export function getPlayerPerformanceCurve(options = {}) {
+  return apiGet("/v1/analytics/player-performance-curve", analyticsOptions(options, PLAYER_PERFORMANCE_FILTERS));
+}
+
+export function getPlayerStatsMetrics(options = {}) {
+  return apiGet("/v1/analytics/player-stats/metrics", analyticsOptions(options, PLAYER_METRICS_FILTERS));
+}
+
+export function getHeroScoreboard(options = {}) {
+  return apiGet("/v1/analytics/scoreboards/heroes", analyticsOptions(options, SCOREBOARD_FILTERS));
+}
+
+export function getPlayerScoreboard(options = {}) {
+  return apiGet("/v1/analytics/scoreboards/players", analyticsOptions(options, PLAYER_SCOREBOARD_FILTERS));
+}
+
+export function getKillDeathStats(options = {}) {
+  const { query, ...rest } = options;
+  const source = { ...queryToObject(query), ...Object.fromEntries(Object.entries(rest).filter(([key]) => KILL_DEATH_FILTERS.includes(key))) };
+  const filtered = Object.fromEntries(Object.entries(source).filter(([key, value]) => KILL_DEATH_FILTERS.includes(key) && value !== undefined && value !== null && value !== ""));
+  if (typeof filtered.hero_ids === "string") filtered.hero_ids = filtered.hero_ids;
+  return apiGet("/v1/analytics/kill-death-stats", { ...rest, cacheTtlMs: rest.cacheTtlMs ?? ANALYTICS_CACHE_TTL_MS, query: filtered });
 }
