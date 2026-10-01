@@ -276,6 +276,26 @@ function coerceParameter(value, schema) {
     return values.map(item => coerceScalar(item, schema?.items ?? {}));
   }
 
+  if (schemaType(schema) === "object") {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new TypeError("Parameter must be an object.");
+    }
+    const properties = schema.properties ?? {};
+    const result = { ...value };
+    for (const [name, propertySchema] of Object.entries(properties)) {
+      if (result[name] !== undefined) result[name] = coerceParameter(result[name], propertySchema);
+    }
+    for (const name of schema.required ?? []) {
+      if (result[name] === undefined) throw new TypeError("Missing required object property: " + name);
+    }
+    if (schema.additionalProperties === false) {
+      for (const name of Object.keys(result)) {
+        if (!(name in properties)) throw new TypeError("Unexpected object property: " + name);
+      }
+    }
+    return result;
+  }
+
   return coerceScalar(value, schema);
 }
 
