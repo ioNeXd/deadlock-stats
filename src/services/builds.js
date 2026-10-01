@@ -11,6 +11,10 @@ function withBuilds(result) {
   return { ...result, raw, data: normalizeBuilds(raw) };
 }
 
+function withBuild(result) {
+  return { ...result, raw: result?.data, data: result?.data ?? null };
+}
+
 export async function listBuilds(options = {}) {
   return withBuilds(await searchBuilds(options));
 }
@@ -20,5 +24,5 @@ export async function listBuildsByAuthor(accountId, options = {}) {
 }
 
 export async function getBuild(heroId, buildId, options = {}) {
-  return withBuilds(await fetchBuild(heroId, buildId, options));
+  return withBuild(await fetchBuild(heroId, buildId, options));
 }
