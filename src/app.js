@@ -650,11 +650,16 @@ function renderMatches(signal) {
   };
 
   const loadDetail = async matchId => {
+    const numericMatchId = Number(matchId);
+    if (!Number.isInteger(numericMatchId) || numericMatchId < 0) {
+      $("#match-detail").innerHTML = '<span class="eyebrow">INVALID ID</span><p class="muted">Match ID must be a non-negative integer.</p>';
+      return;
+    }
     $("#match-detail").innerHTML = '<span class="eyebrow">RESPONSE</span><p class="muted">Loading metadata…</p>';
     try {
       const [data, heroCatalog, itemCatalog] = await Promise.all([
         getBulkMatchMetadataSnapshot({
-        match_ids: [Number(matchId)],
+        match_ids: [numericMatchId],
         include_info: true,
         include_more_info: true,
         include_objectives: true,
