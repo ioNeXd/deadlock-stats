@@ -1,6 +1,6 @@
 import { apiRequest } from "../api/client.js";
 
-const HTTP_METHODS = ["get", "post", "put", "patch", "delete", "head", "options"];
+const HTTP_METHODS = ["get", "post", "put", "patch", "delete", "head", "options", "trace"];
 
 function pathParameters(operation) {
   return (operation?.parameters ?? []).filter(parameter => parameter?.in === "path");
@@ -22,6 +22,76 @@ function enumValues(schema) {
   return [];
 }
 
+function schemaType(schema) {
+  if (typeof schema?.type === "string") return schema.type;
+  if (Array.isArray(schema?.type)) return schema.type.find(type => type !== "null") ?? "string";
+  if (Array.isArray(schema?.oneOf)) {
+    return schema.oneOf.map(item => schemaType(item)).find(type => type !== "null") ?? "string";
+  }
+  if (schema?.$ref) return "object";
+  return "string";
+}
+
+function schemaNullable(schema) {
+  return Array.isArray(schema?.type) && schema.type.includes("null")
+    || Array.isArray(schema?.oneOf) && schema.oneOf.some(item => item?.type === "null");
+}
+
+function parameterDefaults(parameter) {
+  const schema = parameterSchema(parameter);
+  return {
+    default: schema?.default ?? null,
+    minimum: schema?.minimum ?? null,
+    maximum: schema?.maximum ?? null,
+    minItems: schema?.minItems ?? null,
+    maxItems: schema?.maxItems ?? null,
+  };
+}
+
+function mergeParameters(pathItem, operation) {
+  const merged = new Map();
+
+  for (const parameter of Array.isArray(pathItem?.parameters) ? pathItem.parameters : []) {
+    if (parameter?.name && parameter?.in) merged.set(`${parameter.in}:${parameter.name}`, parameter);
+  }
+
+  for (const parameter of Array.isArray(operation?.parameters) ? operation.parameters : []) {
+    if (parameter?.name && parameter?.in) merged.set(`${parameter.in}:${parameter.name}`, parameter);
+  }
+
+  return [...merged.values()];
+}
+
+function requestBodyInfo(requestBody) {
+  const content = requestBody?.content ?? {};
+  return Object.entries(content).map(([mediaType, media]) => ({
+    mediaType,
+    required: requestBody?.required === true,
+    schema: media?.schema ?? null,
+    example: media?.example,
+    examples: media?.examples ?? {},
+  }));
+}
+
+function responseInfo(responses) {
+  return Object.entries(responses ?? {}).map(([status, response]) => ({
+    status,
+    description: response?.description ?? "",
+    content: Object.entries(response?.content ?? {}).map(([mediaType, media]) => ({
+      mediaType,
+      schema: media?.schema ?? null,
+      example: media?.example,
+      examples: media?.examples ?? {},
+    })),
+    headers: Object.keys(response?.headers ?? {}),
+  }));
+}
+
+function securityInfo(operation, contract) {
+  const security = operation?.security ?? contract?.security ?? [];
+  return Array.isArray(security) ? security : [];
+}
+
 export function listApiOperations(contract, { includeDeprecated = true } = {}) {
   const paths = contract?.paths ?? {};
   const operations = [];
@@ -32,6 +102,7 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
       if (!operation) continue;
       if (!includeDeprecated && operation.deprecated) continue;
 
+      const parameters = mergeParameters(pathItem, operation);
       operations.push({
         operationId: operation.operationId ?? `${method.toUpperCase()} ${path}`,
         method: method.toUpperCase(),
@@ -40,9 +111,11 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
         description: operation.description ?? "",
         deprecated: operation.deprecated === true,
         tags: Array.isArray(operation.tags) ? operation.tags : [],
-        parameters: Array.isArray(operation.parameters) ? operation.parameters : [],
+        parameters,
         requestBody: operation.requestBody ?? null,
         responses: operation.responses ?? {},
+        security: securityInfo(operation, contract),
+        servers: operation.servers ?? contract.servers ?? [],
       });
     }
   }
@@ -50,7 +123,7 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
   return operations.sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method));
 }
 
-export function describeOperation(operation) {
+export function describeOperation(operation, contract = null) {
   return {
     ...operation,
     pathParameters: pathParameters(operation),
@@ -60,20 +133,42 @@ export function describeOperation(operation) {
       in: parameter.in,
       required: parameter.required === true,
       deprecated: parameter.deprecated === true,
+      description: parameter.description ?? "",
       schema: parameterSchema(parameter),
+      type: schemaType(parameterSchema(parameter)),
+      nullable: schemaNullable(parameterSchema(parameter)),
       enum: enumValues(parameterSchema(parameter)),
+      constraints: parameterDefaults(parameter),
     })),
+    requestBodyInfo: requestBodyInfo(operation.requestBody),
+    responseInfo: responseInfo(operation.responses),
+    security: securityInfo(operation, contract),
   };
+}
+
+function coerceScalar(value, schema) {
+  const type = schemaType(schema);
+  if (type === "integer" || type === "number") return Number(value);
+  if (type === "boolean") return value === true || value === "true";
+  return value;
 }
 
 function coerceParameter(value, schema) {
   if (value === "" || value === null || value === undefined) return undefined;
-  if (schema?.type === "integer" || schema?.type === "number") return Number(value);
-  if (schema?.type === "boolean") return value === true || value === "true";
-  if (schema?.type === "array") {
-    return Array.isArray(value) ? value : String(value).split(",").map(item => item.trim()).filter(Boolean);
+
+  if (schemaType(schema) === "array") {
+    const values = Array.isArray(value) ? value : String(value).split(",").map(item => item.trim()).filter(Boolean);
+    return values.map(item => coerceScalar(item, schema?.items ?? {}));
   }
-  return value;
+
+  return coerceScalar(value, schema);
+}
+
+function selectRequestMediaType(operation, values) {
+  const available = requestBodyInfo(operation.requestBody);
+  if (!available.length) return null;
+  const requested = values.__contentType;
+  return available.find(item => item.mediaType === requested)?.mediaType ?? available[0].mediaType;
 }
 
 export function buildRequest(operation, values = {}) {
@@ -95,6 +190,7 @@ export function buildRequest(operation, values = {}) {
   }
 
   let body;
+  const mediaType = selectRequestMediaType(operation, values);
   if (values.__body !== undefined && values.__body !== "") {
     body = typeof values.__body === "string" ? JSON.parse(values.__body) : values.__body;
   }
@@ -104,19 +200,37 @@ export function buildRequest(operation, values = {}) {
     method: operation.method,
     query,
     body,
+    mediaType,
   };
 }
 
 export async function executeOperation(operation, values = {}, options = {}) {
   const request = buildRequest(operation, values);
+  const headers = new Headers(options.headers);
+
+  if (request.mediaType && !headers.has("Content-Type")) {
+    headers.set("Content-Type", request.mediaType);
+  }
+
   const result = await apiRequest(request.path, {
     ...options,
     method: request.method,
     query: request.query,
     body: request.body,
+    headers,
     cache: options.cache ?? false,
     dedupe: options.dedupe ?? false,
   });
 
   return { ...result, request };
 }
+
+export {
+  coerceParameter,
+  enumValues,
+  parameterSchema,
+  requestBodyInfo,
+  responseInfo,
+  schemaNullable,
+  schemaType,
+};
