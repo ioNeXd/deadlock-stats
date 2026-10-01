@@ -133,6 +133,24 @@ test("case-insensitive GET methods receive cache and dedupe defaults", async () 
   assert.equal(calls, 1);
 });
 
+test("one-shot stream responses are never cached or deduplicated", async () => {
+  let calls = 0;
+  mockFetch(async () => {
+    calls += 1;
+    return new Response("data: " + calls + "\\n\\n", {
+      status: 200,
+      headers: { "content-type": "text/event-stream" },
+    });
+  });
+
+  const first = await apiGet("/v1/stream", { responseType: "stream" });
+  const second = await apiGet("/v1/stream", { responseType: "stream" });
+
+  assert.notEqual(first.data, second.data);
+  assert.equal(calls, 2);
+});
+
+
 test("binary response requests do not force JSON Accept", async () => {
   let accept;
   mockFetch(async (_url, init) => {
