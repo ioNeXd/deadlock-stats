@@ -3,8 +3,7 @@ import { normalizeCollection, normalizeHero, normalizeRank, normalizeItem } from
 
 function withNormalized(result, normalize) {
   const raw = result?.data;
-  const normalized = normalize(raw);
-  return { ...result, raw, data: normalized };
+  return { ...result, raw, data: normalize(raw) };
 }
 
 export async function listHeroes(options = {}) {
