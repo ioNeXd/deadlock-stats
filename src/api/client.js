@@ -104,7 +104,6 @@ async function parseResponse(response, responseType = "auto") {
   if (contentType === "text/plain" || contentType === "text/html") return response.text();
   if (contentType === "text/event-stream") return response.body;
   if (contentType.startsWith("image/")) return response.blob();
-}
   if (response.status === 204) return null;
 
   const text = await response.text();
