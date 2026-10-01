@@ -52,8 +52,8 @@ function schemaNullable(schema) {
     || Array.isArray(schema?.oneOf) && schema.oneOf.some(item => item?.type === "null");
 }
 
-function parameterDefaults(parameter) {
-  const schema = parameterSchema(parameter);
+function parameterDefaults(parameter, contract = null) {
+  const schema = parameterSchema(parameter, contract);
   return {
     default: schema?.default ?? null,
     minimum: schema?.minimum ?? null,
@@ -162,7 +162,7 @@ export function describeOperation(operation, contract = null) {
       type: schemaType(parameterSchema(parameter, contract)),
       nullable: schemaNullable(parameterSchema(parameter, contract)),
       enum: enumValues(parameterSchema(parameter, contract)),
-      constraints: parameterDefaults(parameter),
+      constraints: parameterDefaults(parameter, contract),
     })),
     requestBodyInfo: requestBodyInfo(resolvedOperation.requestBody).map(item => ({
       ...item,
