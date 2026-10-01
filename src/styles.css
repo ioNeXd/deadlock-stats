@@ -70,3 +70,5 @@
 .match-raw pre{max-height:520px;overflow:auto;margin-top:10px}
 @media(max-width:900px){.match-detail-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.match-player-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.match-detail-summary{grid-template-columns:1fr}}
+
+.match-player-hero{width:42px;height:42px;object-fit:cover;border:1px solid var(--line);margin-bottom:2px}
