@@ -117,7 +117,7 @@ export async function fetchGenericData(options = {}) {
 }
 
 export async function fetchMap(options = {}) {
-  return withNormalized(await getMap(options), normalizeAsset);
+  return withNormalized(await getMap(options), normalizeMap);
 }
 
 export async function listMiscEntities(options = {}) {
