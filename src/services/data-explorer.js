@@ -155,11 +155,11 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
         const resolvedResponse = resolveLocalRef(response, contract) ?? response;
         return [status, resolvedResponse ? {
           ...resolvedResponse,
-          headers: Object.fromEntries(Object.entries(response.headers ?? {}).map(([name, header]) => {
+          headers: Object.fromEntries(Object.entries(resolvedResponse.headers ?? {}).map(([name, header]) => {
             const resolved = resolveLocalRef(header, contract) ?? header;
             return [name, { ...resolved, schema: resolveSchema(resolved.schema ?? null, contract) }];
           })),
-          content: Object.fromEntries(Object.entries(response.content ?? {}).map(([mediaType, media]) => [
+          content: Object.fromEntries(Object.entries(resolvedResponse.content ?? {}).map(([mediaType, media]) => [
             mediaType, media ? { ...media, schema: resolveSchema(media.schema ?? null, contract) } : media,
           ])),
         } : resolvedResponse];
