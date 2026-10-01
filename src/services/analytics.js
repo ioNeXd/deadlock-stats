@@ -1,4 +1,4 @@
-import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroBuildStats, getAbilityOrderStats, getHeroCombStats, getBuildItemStats, getBuffStats, getBadgeDistribution } from "../api/analytics.js";
+import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroBuildStats, getAbilityOrderStats, getHeroCombStats, getBuildItemStats, getBuffStats, getBadgeDistribution, getItemFlowStats, getItemPermutationStats, getItemStats } from "../api/analytics.js";
 
 export async function getAnalyticsSnapshot(options = {}) {
   const { signal, ...requestOptions } = options;
@@ -283,4 +283,107 @@ export async function getBuffSnapshot(options = {}) {
   const { signal, ...requestOptions } = options;
   const result = await getBuffStats({ ...requestOptions, signal });
   return normalizeBuffStats(result);
+}
+
+export function normalizeItemStats(result) {
+  return normalizeRows(result, item => ({
+    itemId: item?.item_id ?? null,
+    bucket: item?.bucket ?? null,
+    wins: item?.wins ?? null,
+    losses: item?.losses ?? null,
+    matches: item?.matches ?? null,
+    players: item?.players ?? null,
+    avgBuyTimeS: item?.avg_buy_time_s ?? null,
+    avgSellTimeS: item?.avg_sell_time_s ?? null,
+    avgBuyTimeRelative: item?.avg_buy_time_relative ?? null,
+    avgSellTimeRelative: item?.avg_sell_time_relative ?? null,
+    raw: item,
+  }));
+}
+
+export function normalizeItemPermutationStats(result) {
+  return normalizeRows(result, item => ({
+    itemIds: Array.isArray(item?.item_ids) ? item.item_ids : [],
+    wins: item?.wins ?? null,
+    losses: item?.losses ?? null,
+    matches: item?.matches ?? null,
+    raw: item,
+  }));
+}
+
+export function normalizeItemFlowStats(result) {
+  const source = result?.data ?? result ?? {};
+  const normalizeSummary = summary => ({
+    wins: summary?.wins ?? null,
+    losses: summary?.losses ?? null,
+    matches: summary?.matches ?? null,
+    players: summary?.players ?? null,
+    totalKills: summary?.total_kills ?? null,
+    totalDeaths: summary?.total_deaths ?? null,
+    totalAssists: summary?.total_assists ?? null,
+    avgNetWorth: summary?.avg_net_worth ?? null,
+    avgDurationS: summary?.avg_duration_s ?? null,
+    raw: summary ?? null,
+  });
+  return {
+    nodes: Array.isArray(source.nodes) ? source.nodes.map(item => ({
+      column: item?.column ?? null,
+      itemId: item?.item_id ?? null,
+      wins: item?.wins ?? null,
+      losses: item?.losses ?? null,
+      matches: item?.matches ?? null,
+      players: item?.players ?? null,
+      totalKills: item?.total_kills ?? null,
+      totalDeaths: item?.total_deaths ?? null,
+      totalAssists: item?.total_assists ?? null,
+      adjustedWinRate: item?.adjusted_win_rate ?? null,
+      avgNetWorthAtBuy: item?.avg_net_worth_at_buy ?? null,
+      raw: item,
+    })) : [],
+    edges: Array.isArray(source.edges) ? source.edges.map(item => ({
+      fromColumn: item?.from_column ?? null,
+      fromItemId: item?.from_item_id ?? null,
+      toItemId: item?.to_item_id ?? null,
+      wins: item?.wins ?? null,
+      losses: item?.losses ?? null,
+      matches: item?.matches ?? null,
+      raw: item,
+    })) : [],
+    summary: normalizeSummary(source.summary),
+    baseline: normalizeSummary(source.baseline),
+    reachedPerColumn: Array.isArray(source.reached_per_column) ? source.reached_per_column : [],
+    raw: source,
+  };
+}
+
+export async function getItemStatsSnapshot(options = {}) {
+  const { signal, ...requestOptions } = options;
+  const result = await getItemStats({
+    ...requestOptions,
+    bucket: requestOptions.bucket ?? "no_bucket",
+    min_matches: requestOptions.min_matches ?? 20,
+    signal,
+  });
+  return normalizeItemStats(result);
+}
+
+export async function getItemPermutationSnapshot(options = {}) {
+  const { signal, ...requestOptions } = options;
+  const result = await getItemPermutationStats({
+    ...requestOptions,
+    min_matches: requestOptions.min_matches ?? 20,
+    comb_size: requestOptions.comb_size ?? 2,
+    signal,
+  });
+  return normalizeItemPermutationStats(result);
+}
+
+export async function getItemFlowSnapshot(options = {}) {
+  const { signal, ...requestOptions } = options;
+  const result = await getItemFlowStats({
+    ...requestOptions,
+    min_matches: requestOptions.min_matches ?? 20,
+    signal,
+  });
+  return normalizeItemFlowStats(result);
 }
