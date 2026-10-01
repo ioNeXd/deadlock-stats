@@ -165,8 +165,8 @@ function schemaPlaceholder(schema) {
 
 function renderOperation(operation) {
   const detail = describeOperation(operation);
-  $("\#explorer-empty").hidden = true;
-  const target = $("\#operation-detail");
+  $("#explorer-empty").hidden = true;
+  const target = $("#operation-detail");
   target.hidden = false;
 
   const parameterFields = detail.parameterSummary.map(parameter => {
