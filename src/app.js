@@ -1,4 +1,5 @@
-import{getHeroes}from"./api/assets.js";
+import{listHeroes}from"./services/assets.js";
+import{API_BASE_URL}from"./api/client.js";
 const $=s=>document.querySelector(s);
 const el={grid:$("#hero-grid"),dot:$("#api-dot"),status:$("#api-status"),badge:$("#api-badge"),version:$("#api-version"),count:$("#asset-count"),latency:$("#api-latency")};
 const imageOf=h=>h?.images?.hero_card_critical_webp??h?.images?.hero_card_critical??h?.images?.background_image_webp??h?.images?.background_image??h?.hero_card_critical_webp??h?.hero_card_critical??h?.background_image_webp??h?.background_image??"";
@@ -6,5 +7,5 @@ const nameOf=h=>h?.name??h?.display_name??h?.hero_name??`Hero ${h?.id??"?"}`;
 const idOf=h=>h?.id??h?.hero_id??h?.class_name??"—";
 const esc=v=>String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
 function render(data){const heroes=Array.isArray(data)?data:(data?.data??[]);el.count.textContent=heroes.length;el.grid.innerHTML=heroes.slice(0,8).map(h=>{const image=imageOf(h);return`<a class="hero-card" href="#/heroes/${encodeURIComponent(idOf(h))}">${image?`<img src="${esc(image)}" alt="" loading="lazy">`:""}<div class="hero-info"><small>HERO ASSET</small><h3>${esc(nameOf(h))}</h3><p>ID ${esc(idOf(h))}</p></div></a>`}).join("")||'<article class="panel"><p>No hero assets returned.</p></article>'}
-async function boot(){try{const result=await getHeroes();el.dot.classList.add("online");el.status.textContent="API connected";el.badge.textContent="ONLINE";el.badge.classList.add("online");el.version.textContent="API LIVE";el.latency.textContent=`${result.latencyMs} ms`;render(result.data)}catch(error){el.dot.classList.add("offline");el.status.textContent="API unavailable";el.badge.textContent="OFFLINE";el.version.textContent="API OFFLINE";el.latency.textContent="—";el.grid.innerHTML='<article class="panel"><p>Live hero assets could not be loaded.</p></article>';console.error(error)}}
+async function boot(){try{const result=await listHeroes();el.dot.classList.add("online");el.status.textContent="API connected";el.badge.textContent="ONLINE";el.badge.classList.add("online");el.version.textContent="API LIVE";el.latency.textContent=`${result.latencyMs} ms`;render(result.data)}catch(error){el.dot.classList.add("offline");el.status.textContent="API unavailable";el.badge.textContent="OFFLINE";el.version.textContent="API OFFLINE";el.latency.textContent="—";el.grid.innerHTML='<article class="panel"><p>Live hero assets could not be loaded.</p></article>';console.error("Deadlock API request failed",{url:error?.url??API_BASE_URL,status:error?.status??null,error})}}
 boot();
