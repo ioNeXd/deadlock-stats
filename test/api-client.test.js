@@ -171,3 +171,18 @@ test("invalidateApiCache can invalidate every query variant for a path", async (
   await apiGet("/v1/test", { query: { a: 2 } });
   assert.equal(calls, 4);
 });
+
+
+test("explicit responseType overrides the server content type", async () => {
+  mockFetch(async () => new Response("hello", {
+    status: 200,
+    headers: { "content-type": "application/octet-stream" },
+  }));
+
+  const result = await apiRequest("/v1/test", {
+    responseType: "text",
+    cache: false,
+  });
+
+  assert.equal(result.data, "hello");
+});
