@@ -86,12 +86,8 @@ export function normalizeHeroStats(result) {
 
 export async function getBadgeDistributionSnapshot(options = {}) {
   const { signal, ...requestOptions } = options;
-  const result = await getBadgeDistribution(requestOptionsWithSignal(requestOptions, signal));
+  const result = await getBadgeDistribution({ ...requestOptions, signal });
   return normalizeBadgeDistribution(result);
-}
-
-function requestOptionsWithSignal(options, signal) {
-  return { ...options, signal };
 }
 
 export async function getHeroStatsSnapshot(options = {}) {
