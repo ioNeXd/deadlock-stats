@@ -300,12 +300,19 @@ test("retry backoff removes its abort listener after resolving", async () => {
     listeners -= 1;
     return originalRemove(...args);
   };
-  globalThis.fetch = async () => new Response("{}", { status: 503 });
-  await assert.rejects(() => apiGet("/v1/retry-listener", {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return calls === 1
+      ? new Response("{}", { status: 503 })
+      : new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
+  };
+  await apiGet("/v1/retry-listener", {
     signal: controller.signal,
-    retries: 0,
+    retries: 1,
     cache: false,
     dedupe: false,
-  }));
+  });
+  assert.equal(calls, 2);
   assert.equal(listeners, 0);
 });
