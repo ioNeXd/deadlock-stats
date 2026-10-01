@@ -175,6 +175,22 @@ function renderAssetCatalog(kind, signal) {
   });
 }
 
+function normalizeAnalyticsFilters(filters = {}) {
+  const normalized = { ...filters };
+  for (const key of ["min_unix_timestamp", "max_unix_timestamp"]) {
+    if (normalized[key]) {
+      const timestamp = /^\\d+$/.test(String(normalized[key])) ? Number(normalized[key]) : Math.floor(new Date(normalized[key] + "T00:00:00Z").getTime() / 1000);
+      if (Number.isFinite(timestamp)) normalized[key] = timestamp;
+      else delete normalized[key];
+    }
+  }
+  for (const key of ["min_average_badge", "max_average_badge", "min_duration_s", "max_duration_s", "comb_size"]) {
+    if (normalized[key] !== undefined && normalized[key] !== "") normalized[key] = Number(normalized[key]);
+    else delete normalized[key];
+  }
+  return normalized;
+}
+
 function formatDuration(seconds) {
   if (!Number.isFinite(Number(seconds))) return "—";
   const value = Number(seconds);
@@ -184,23 +200,44 @@ function formatDuration(seconds) {
 function renderAnalytics(signal) {
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">ANALYTICS / MATCH INTELLIGENCE</span><h2>Analytics</h2><p>Aggregate match and hero-ban statistics from the documented analytics API.</p></section>' +
-    '<section class="analytics-grid" id="analytics-summary"><article class="metric-card"><span>MATCHES</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>PLAYERS</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>AVG DURATION</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>AVG KILLS</span><strong>—</strong><small>loading</small></article></section>' +
+    '<section class="panel analytics-filter-panel"><div class="section-head"><div><span class="eyebrow">FILTERS</span><h2>Analytics scope</h2></div><button id="analytics-reset" class="secondary-button" type="button">Reset</button></div><form id="analytics-filters" class="analytics-filters"><label class="field"><span>Game mode</span><select name="game_mode"><option value="normal" selected>Normal</option><option value="street_brawl">Street Brawl</option></select></label><label class="field"><span>Match mode</span><select name="match_mode"><option value="ranked,unranked" selected>Ranked + Unranked</option><option value="ranked">Ranked</option><option value="unranked">Unranked</option><option value="private_lobby">Private Lobby</option><option value="hero_labs">Hero Labs</option></select></label><label class="field"><span>From</span><input name="min_unix_timestamp" type="date"></label><label class="field"><span>To</span><input name="max_unix_timestamp" type="date"></label><label class="field"><span>Min badge</span><input name="min_average_badge" type="number" min="0" max="116" placeholder="0"></label><label class="field"><span>Max badge</span><input name="max_average_badge" type="number" min="0" max="116" placeholder="116"></label><label class="field"><span>Min duration</span><input name="min_duration_s" type="number" min="0" max="7000" placeholder="seconds"></label><label class="field"><span>Max duration</span><input name="max_duration_s" type="number" min="0" max="7000" placeholder="seconds"></label><label class="field"><span>Combo size</span><select name="comb_size"><option value="2">2 heroes</option><option value="3">3 heroes</option><option value="4">4 heroes</option><option value="5">5 heroes</option><option value="6" selected>6 heroes</option></select></label><button class="primary-button" type="submit">Apply filters</button></form></section>' +
+    '<section class="analytics-grid" id="analytics-summary"><article class="metric-card"><span>MATCHES</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>PLAYERS</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>AVG DURATION</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>AVG KILLS</span><strong>—</strong><small>loading</small></article></section>'
     '<section class="panel analytics-hero-panel"><div class="section-head"><div><span class="eyebrow">HERO STATS</span><h2>Performance by hero</h2></div><span class="muted">TOP 16 BY MATCHES</span></div><div class="hero-stats-table"><div class="hero-stat-head"><span>HERO</span><span>MATCHES</span><span>WIN RATE</span><span>K / D / A</span><span>TOTAL DAMAGE</span><span>TOTAL NET WORTH</span></div><div id="hero-stats-list"></div></div></section>' +
     '<section class="panel analytics-matchup-panel"><div class="section-head"><div><span class="eyebrow">HERO MATCHUPS</span><h2>Counter intelligence</h2></div><select id="matchup-hero-select" class="explorer-select" aria-label="Select hero for matchup analysis"></select></div><div id="hero-matchup-list" class="analytics-matchups"><p class="muted">Loading matchup data.</p></div></section><section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">GAME STATS</span><h2>Daily activity</h2></div><b id="analytics-status">LOADING</b></div><div id="game-stats-list" class="analytics-bars"></div></article>' +
     '<article class="panel"><div class="section-head"><div><span class="eyebrow">HERO BANS</span><h2>Ban activity</h2></div></div><div id="hero-ban-list" class="analytics-table"></div></article></section>' +
     '<section class="dashboard-grid"><article class="panel analytics-builds"><div class="section-head"><div><span class="eyebrow">HERO BUILDS</span><h2>Build & ability intelligence</h2></div><select id="build-hero-select" class="explorer-select" aria-label="Select hero for build analysis"></select></div><div id="hero-build-list"><p class="muted">Loading build data.</p></div><div class="analytics-table"><div class="section-head"><div><span class="eyebrow">BUILD ITEMS</span><h3>Items used in builds</h3></div></div><div id="build-item-list"><p class="muted">Loading item data.</p></div></div></article>' +
     '<article class="panel"><div class="section-head"><div><span class="eyebrow">HERO COMBINATIONS</span><h2>Team combinations</h2></div></div><div id="hero-combo-list" class="analytics-table"><p class="muted">Loading combinations.</p></div><div class="section-head"><div><span class="eyebrow">BUFF STATS</span><h2>Power-up pickups</h2></div></div><div id="buff-stats-list" class="analytics-table"><p class="muted">Loading buffs.</p></div></article></section>';
-  loadAnalytics(signal);
+  const form = $("#analytics-filters");
+  const defaults = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  form.elements.min_unix_timestamp.value = defaults;
+  form.elements.max_unix_timestamp.value = new Date().toISOString().slice(0, 10);
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    loadAnalytics(signal, Object.fromEntries(new FormData(form).entries()));
+  });
+  $("#analytics-reset").addEventListener("click", () => {
+    form.reset();
+    form.elements.min_unix_timestamp.value = defaults;
+    form.elements.max_unix_timestamp.value = new Date().toISOString().slice(0, 10);
+    loadAnalytics(signal, {});
+  });
+  loadAnalytics(signal, {
+    game_mode: "normal",
+    match_mode: "ranked,unranked",
+    min_unix_timestamp: Math.floor(Date.now() / 1000) - 30 * 86400,
+    max_unix_timestamp: Math.floor(Date.now() / 1000),
+    comb_size: 6,
+  });
 }
 
-async function loadAnalytics(signal) {
+async function loadAnalytics(signal, filters = {}) {
   try {
     const [snapshotResult, heroStats, matchup, comboStats, buffStats] = await Promise.all([
-      getAnalyticsSnapshot({ ...assetVersion.options(), bucket: "start_time_day", signal }),
-      getHeroStatsSnapshot({ ...assetVersion.options(), signal }),
-      getHeroMatchupSnapshot({ ...assetVersion.options(), min_matches: 20, signal }),
-      getHeroComboSnapshot({ ...assetVersion.options(), min_matches: 20, comb_size: 6, signal }),
-      getBuffSnapshot({ ...assetVersion.options(), signal }),
+      getAnalyticsSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), bucket: "start_time_day", signal }),
+      getHeroStatsSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
+      getHeroMatchupSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, signal }),
+      getHeroComboSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, comb_size: Number(filters.comb_size) || 6, signal }),
+      getBuffSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
     ]);
     const result = snapshotResult;
     if (signal.aborted) return;
@@ -327,14 +364,14 @@ async function loadAnalytics(signal) {
       panel.innerHTML = '<p class="muted">Loading builds and ability orders…</p>';
       try {
         const [builds, abilities] = await Promise.all([
-          getHeroBuildStatsSnapshot(heroId, { ...assetVersion.options(), min_matches: 20, signal }),
-          getAbilityOrderStatsSnapshot(heroId, { ...assetVersion.options(), min_matches: 20, signal }),
+          getHeroBuildStatsSnapshot(heroId, { ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, signal }),
+          getAbilityOrderStatsSnapshot(heroId, { ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, signal }),
         ]);
         if (signal.aborted || requestId !== buildRequestId) return;
         const buildRows = [...builds].sort((a,b) => Number(b.matches ?? 0) - Number(a.matches ?? 0)).slice(0, 8);
         const abilityRows = [...abilities].sort((a,b) => Number(b.matches ?? 0) - Number(a.matches ?? 0)).slice(0, 6);
         const rate = (wins, matches) => Number.isFinite(Number(wins)) && Number(matches) > 0 ? ((Number(wins) / Number(matches))*100).toFixed(1) + "%" : "—";
-        const itemRows = await getBuildItemSnapshot(heroId, { ...assetVersion.options(), signal });
+        const itemRows = await getBuildItemSnapshot(heroId, { ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal });
         if (signal.aborted || requestId !== buildRequestId) return;
         const items = [...itemRows].sort((a,b) => Number(b.builds ?? 0) - Number(a.builds ?? 0)).slice(0, 8);
         $("#build-item-list").innerHTML = items.length
