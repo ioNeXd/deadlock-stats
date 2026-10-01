@@ -1,6 +1,8 @@
 import { getClientVersions, getColors } from "./assets.js";
 
 const STORAGE_KEY = "deadlock-stats:client-version";
+const VERSION_CACHE_TTL_MS = 60 * 60_000;
+const COLOR_CACHE_TTL_MS = 60 * 60_000;
 
 function normalizeVersions(payload) {
   const values = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
@@ -44,7 +46,7 @@ export function createAssetVersionContext({ storage = globalThis.localStorage } 
 
   return {
     async load(options = {}) {
-      const result = await getClientVersions(options);
+      const result = await getClientVersions({ cacheTtlMs: VERSION_CACHE_TTL_MS, ...options });
       versions = normalizeVersions(result?.data);
       if (selectedVersion != null && !versions.includes(selectedVersion)) selectedVersion = null;
       return { ...result, raw: result?.data, data: versions };
@@ -52,6 +54,7 @@ export function createAssetVersionContext({ storage = globalThis.localStorage } 
 
     async loadColors(options = {}) {
       return getColors({
+        cacheTtlMs: COLOR_CACHE_TTL_MS,
         ...options,
         ...(selectedVersion == null ? {} : { clientVersion: selectedVersion }),
       });
