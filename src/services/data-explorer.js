@@ -149,7 +149,9 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
   const paths = contract?.paths ?? {};
   const operations = [];
 
-  for (const [path, pathItem] of Object.entries(paths)) {
+  for (const [path, rawPathItem] of Object.entries(paths)) {
+    const pathItem = resolveLocalRef(rawPathItem, contract);
+    if (!pathItem) continue;
     for (const method of HTTP_METHODS) {
       const operation = pathItem?.[method];
       if (!operation) continue;
