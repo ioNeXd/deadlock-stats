@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildVersionPolicy, detectApiVersions } from "../src/api/versioning.js";
+import {
+  buildVersionPolicy,
+  detectApiVersions,
+  reconcileVersionPolicy,
+} from "../src/api/versioning.js";
 
 test("detectApiVersions finds API versions from OpenAPI paths", () => {
   assert.deepEqual(
@@ -32,25 +36,65 @@ test("v1 stays current when no matching v2 resource exists", () => {
   assert.deepEqual(events, []);
 });
 
-test("legacy callback is triggered only for the matching v1 resource", () => {
+test("buildVersionPolicy identifies a v1 resource replaced by v2", () => {
   const events = [];
   const policy = buildVersionPolicy(
     { paths: { "/v1/patches": {}, "/v1/assets/heroes": {}, "/v2/patches": {} } },
     event => events.push(event),
   );
 
-  assert.deepEqual(policy.legacy, [
+  assert.deepEqual(policy.legacy, [{
+    type: "legacy",
+    path: "/v1/patches",
+    version: "v1",
+    currentPath: "/v2/patches",
+    currentVersion: "v2",
+    reason: "A newer API version exists for the same resource path.",
+  }]);
+  assert.deepEqual(events, policy.legacy);
+});
+
+test("reconcileVersionPolicy reports discovered paths and legacy transitions", () => {
+  const events = [];
+  const previous = {
+    paths: {
+      "/v1/patches": {},
+      "/v1/assets/heroes": {},
+    },
+  };
+  const next = {
+    paths: {
+      "/v1/patches": {},
+      "/v2/patches": {},
+      "/v1/assets/heroes": {},
+      "/v1/items": {},
+    },
+  };
+
+  const result = reconcileVersionPolicy(previous, next, {
+    onVersionDiscovered: event => events.push(event),
+    onEnterLegacy: event => events.push(event),
+  });
+
+  assert.deepEqual(result.events, [
     {
-      path: "/v1/patches",
+      type: "version_discovered",
+      path: "/v2/patches",
+      version: "v2",
+    },
+    {
+      type: "version_discovered",
+      path: "/v1/items",
       version: "v1",
+    },
+    {
+      type: "entered_legacy",
+      resourcePath: "/patches/",
+      legacyPath: "/v1/patches",
+      legacyVersion: "v1",
       currentPath: "/v2/patches",
       currentVersion: "v2",
-      reason: "A newer API version exists for the same resource path.",
     },
   ]);
-  assert.deepEqual(events, policy.legacy);
-  assert.deepEqual(policy.current, [
-    { path: "/v1/assets/heroes", version: "v1" },
-    { path: "/v2/patches", version: "v2" },
-  ]);
+  assert.deepEqual(events, result.events);
 });
