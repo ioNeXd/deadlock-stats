@@ -209,3 +209,26 @@ test("reconcileVersionPolicy reports removed resources with their version", () =
 test("version detection ignores non-version path segments", () => {
   assert.equal(versionedPath("/foo/v1/assets"), null);
 });
+
+
+test("reconcileVersionPolicy reports a removed newer version even when an older version remains", () => {
+  const events = [];
+  const previous = {
+    paths: {
+      "/v1/resource": { get: {} },
+      "/v2/resource": { get: {} },
+    },
+  };
+  const next = {
+    paths: {
+      "/v1/resource": { get: {} },
+    },
+  };
+  const transition = reconcileVersionPolicy(previous, next, {
+    onResourceRemoved: event => events.push(event),
+  });
+  assert.ok(transition.events.some(event =>
+    event.type === "resource_removed" && event.path === "/v2/resource" && event.version === "v2",
+  ));
+  assert.equal(events.filter(event => event.type === "resource_removed").length, 1);
+});
