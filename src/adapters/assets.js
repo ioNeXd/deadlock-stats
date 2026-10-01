@@ -24,7 +24,16 @@ function normalizeEntity(entity) {
   if (!entity || typeof entity !== "object") return { id: null, name: null, images: {}, raw: entity };
   const images = entity.images && typeof entity.images === "object" ? { ...entity.images } : {};
   for (const field of IMAGE_FIELDS) if (typeof entity[field] === "string" && entity[field]) images[field] = entity[field];
-  return { id: pickId(entity), name: pickName(entity), images, raw: entity };
+  return {
+    id: pickId(entity),
+    className: entity.class_name ?? null,
+    name: pickName(entity),
+    type: entity.type ?? null,
+    slotType: entity.item_slot_type ?? null,
+    colors: entity.colors ?? null,
+    images,
+    raw: entity,
+  };
 }
 
 export function normalizeCollection(payload) { return asArray(payload).map(normalizeEntity); }
