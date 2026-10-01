@@ -32,6 +32,36 @@ test("analytics API wrappers use documented endpoints and query parameters", asy
   assert.equal(calls[1].searchParams.get("bucket"), "start_time_day");
 });
 
+test("analytics wrappers forward top-level filters used by services", async () => {
+  const calls = [];
+  globalThis.fetch = async input => {
+    const url = new URL(input);
+    calls.push(url);
+    return new Response("[]", {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  await getHeroStats({ game_mode: "normal", min_duration_s: 600, hero_ids: [7, 8], cache: false, dedupe: false });
+  await getHeroCounterStats({ same_lane_filter: true, min_matches: 20, account_ids: [7], cache: false, dedupe: false });
+  await getAbilityOrderStats({ hero_id: 7, min_ability_upgrades: 4, account_ids: [7, 8], cache: false, dedupe: false });
+  await getItemStats({ hero_ids: [7], enemy_hero_ids: [8], corrupted_items: "include", cache: false, dedupe: false });
+
+  assert.equal(calls[0].searchParams.get("game_mode"), "normal");
+  assert.equal(calls[0].searchParams.get("min_duration_s"), "600");
+  assert.equal(calls[0].searchParams.get("hero_ids"), "7");
+  assert.equal(calls[1].searchParams.get("same_lane_filter"), "true");
+  assert.equal(calls[1].searchParams.get("min_matches"), "20");
+  assert.equal(calls[1].searchParams.get("account_ids"), "7");
+  assert.equal(calls[2].searchParams.get("hero_id"), "7");
+  assert.equal(calls[2].searchParams.get("min_ability_upgrades"), "4");
+  assert.equal(calls[2].searchParams.get("account_ids"), "7");
+  assert.equal(calls[3].searchParams.get("hero_ids"), "7");
+  assert.equal(calls[3].searchParams.get("enemy_hero_ids"), "8");
+  assert.equal(calls[3].searchParams.get("corrupted_items"), "include");
+});
+
 test("analytics normalizers preserve unknown source fields", () => {
   const game = normalizeGameStats({ data: [{ bucket: 20261001, total_matches: 42, avg_kills: 8, future_metric: 9 }] });
   const bans = normalizeHeroBanStats({ data: [{ hero_id: 7, bucket: 20261001, bans: 5, future_metric: 11 }] });
