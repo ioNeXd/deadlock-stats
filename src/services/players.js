@@ -1,6 +1,7 @@
 import {
   getPlayerHeroStats,
   getPlayerRanks,
+  getPlayerRankDistribution,
   searchSteamProfiles,
   getSteamProfiles,
   getPlayerRank,
@@ -41,6 +42,10 @@ export async function loadPlayerRanks(accountIds, options = {}) {
   return withArray(await getPlayerRanks(accountIds, options));
 }
 
+export async function loadPlayerRankDistribution(options = {}) {
+  return withArray(await getPlayerRankDistribution(options));
+}
+
 export async function loadPlayerRank(accountId, options = {}) {
   return withObject(await getPlayerRank(accountId, options));
 }
@@ -65,6 +70,6 @@ export async function loadPlayerMateStats(accountId, options = {}) {
   return withArray(await getPlayerMateStats(accountId, options));
 }
 
-export function loadPlayerRankImage(accountId, format, options = {}) {
-  return getPlayerRankImage(accountId, format, options);
+export function loadPlayerRankImage(accountIds, format, options = {}) {
+  return getPlayerRankImage(accountIds, format, options);
 }
