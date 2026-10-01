@@ -50,6 +50,8 @@ export async function probeApiStatus(options = {}) {
       error: null,
     };
   } catch (error) {
+    if (error?.code === "ABORTED" || error?.name === "AbortError") throw error;
+
     return {
       online: false,
       healthy: false,
