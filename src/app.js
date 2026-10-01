@@ -9,6 +9,7 @@ import { colorToCss, createAssetVersionContext } from "./services/asset-version.
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
 const assetVersion = createAssetVersionContext();
+let routeController = null;
 const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 const nameOf = hero => hero?.name ?? hero?.display_name ?? hero?.hero_name ?? ("Hero " + (hero?.id ?? "?"));
 const idOf = hero => hero?.id ?? hero?.hero_id ?? hero?.class_name ?? "—";
@@ -62,7 +63,7 @@ async function loadAssetVersionContext() {
   await applyAssetColors();
 }
 
-function renderDashboard() {
+function isAborted(error) {\n  return error?.code === "ABORTED" || error?.name === "AbortError";\n}\n\nfunction beginRoute() {\n  routeController?.abort();\n  routeController = new AbortController();\n  return routeController.signal;\n}\n\nfunction renderDashboard(signal) {
   el.content.innerHTML = '<section class="hero-banner"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA</span><h2>The city never sleeps.</h2><p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p><div class="pills"><span>API-FIRST</span><span>OPENAPI</span></div></div></section>' +
     '<section class="section"><div class="section-head"><div><span class="eyebrow">ROSTER</span><h2>Heroes in the city</h2></div><a href="#/heroes">View all →</a></div><div id="hero-grid" class="hero-grid" aria-live="polite"></div></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(API_BASE_URL.replace("https://", "")) + '</strong></div><div class="metric"><span>Hero assets</span><strong id="asset-count">—</strong></div><div class="metric"><span>Response</span><strong id="api-latency">—</strong></div></article><article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article></section>';
@@ -87,7 +88,7 @@ async function loadDashboard() {
   }
 }
 
-function renderAssetCatalog(kind) {
+function renderAssetCatalog(kind, signal) {
   const config = {
     heroes: { title: "Heroes", eyebrow: "GAME / HEROES", description: "Hero metadata and real game assets from the current Deadlock API contract.", loader: listHeroes },
     items: { title: "Items", eyebrow: "GAME / ITEMS", description: "Items, abilities, weapons and upgrades published by the current game data.", loader: listItems },
@@ -107,7 +108,7 @@ function renderAssetCatalog(kind) {
   });
 }
 
-function renderApiStatus() {
+function renderApiStatus(signal) {
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">SYSTEM / API</span><h2>API Status</h2><p>Live health probe for the documented Deadlock API infrastructure.</p></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">HEALTH</span><h2 id="status-title">Checking…</h2></div><b id="status-badge">CHECKING</b></div><div id="status-metrics"></div></article><article class="panel"><span class="eyebrow">SERVICES</span><h2>Infrastructure</h2><div id="service-list"></div></article></section>';
   loadApiStatus();
@@ -128,7 +129,7 @@ async function loadApiStatus() {
   setConnection(result.online, result.online ? "API connected" : "API unavailable");
 }
 
-function renderDataExplorer() {
+function renderDataExplorer(signal) {
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">TOOLS / OPENAPI</span><h2>Data Explorer</h2><p>Inspect and execute documented API operations from the live OpenAPI contract.</p></section>' +
     '<section class="explorer"><aside class="explorer-list"><input id="operation-filter" class="explorer-search" placeholder="Filter operations…"><div id="operation-list"></div></aside><article class="panel explorer-main"><div id="explorer-empty"><span class="eyebrow">CONTRACT</span><h3>Select an operation</h3><p>The explorer is populated from the live OpenAPI contract.</p></div><div id="operation-detail" hidden></div></article></section>';
   loadExplorer();
