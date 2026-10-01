@@ -565,3 +565,31 @@ test("advanced analytics wrappers use current API paths and filters", async t =>
   assert.equal(calls[6].pathname, "/v1/analytics/kill-death-stats");
   assert.deepEqual(calls[6].searchParams.getAll("account_ids"), ["10", "20"]);
 });
+
+
+test("advanced analytics normalizers preserve documented response shapes", () => {
+  const performance = normalizePlayerPerformanceCurve({ data: [{ game_time: 10, net_worth_avg: 100, permanent_buffs_avg: null, gold_player_avg: 4 }] });
+  assert.deepEqual(performance[0], { gameTime: 10, netWorthAvg: 100, netWorthStd: null, killsAvg: null, killsStd: null, deathsAvg: null, deathsStd: null, assistsAvg: null, assistsStd: null, goldPlayerAvg: 4, goldPlayerOrbsAvg: null, goldLaneCreepAvg: null, goldLaneCreepOrbsAvg: null, goldNeutralCreepAvg: null, goldNeutralCreepOrbsAvg: null, goldBossAvg: null, goldBossOrbAvg: null, goldTreasureAvg: null, goldDeniedAvg: null, goldDeathLossAvg: null, goldAssistsAvg: null, goldTeamBonusAvg: null, goldBreakableAvg: null, goldAbilityAssassinateAvg: null, goldItemTrophyCollectorAvg: null, goldItemCultistSacrificeAvg: null, goldItemGooseEggAvg: null, permanentBuffsAvg: null, raw: { game_time: 10, net_worth_avg: 100, permanent_buffs_avg: null, gold_player_avg: 4 } });
+
+  assert.deepEqual(normalizeHeroScoreboard({ data: [{ rank: 1, hero_id: 7, value: 12.5, matches: 20 }] })[0], { rank: 1, heroId: 7, value: 12.5, matches: 20, raw: { rank: 1, hero_id: 7, value: 12.5, matches: 20 } });
+  assert.deepEqual(normalizePlayerScoreboard({ data: [{ rank: 1, account_id: 42, value: 900, matches: 20, badge: 90, badge_progress: 500 }] })[0], { rank: 1, accountId: 42, value: 900, matches: 20, badge: 90, badgeProgress: 500, raw: { rank: 1, account_id: 42, value: 900, matches: 20, badge: 90, badge_progress: 500 } });
+  assert.deepEqual(normalizeKillDeathStats({ data: [{ position_x: 1, position_y: 2, killer_team: 0, deaths: 3, kills: 4 }] })[0], { positionX: 1, positionY: 2, killerTeam: 0, deaths: 3, kills: 4, raw: { position_x: 1, position_y: 2, killer_team: 0, deaths: 3, kills: 4 } });
+  assert.deepEqual(normalizeLaneMatchupStats({ data: [{ assigned_lane: 1, hero_ids: [7, 8], enemy_hero_ids: [9, 10], wins: 5, matches_played: 10, sample_time_s: 900, net_worth_diff: 100, sample_matches: 8, stats: { kills: { value: 3 } } }] })[0].heroIds, [7, 8]);
+  assert.deepEqual(normalizeLaneSoulCurve({ data: [{ assigned_lane: 1, hero_ids: [], enemy_hero_ids: [], sample_times_s: [180], sample_matches: [10], matches_played: 12, net_worth_diff: [50], net_worth_diff_std: [20], stats: { kills: { value: [2], value_std: [1], diff: [1], diff_std: [0.5] } }] })[0].sampleTimesS, [180]);
+  const metrics = normalizePlayerStatsMetrics({ data: { "42": { kills: { avg: 3 } } } });
+  assert.deepEqual(metrics.data, { "42": { kills: { avg: 3 } } });
+});
+
+test("lane analytics wrappers reject filters that belong to the other lane endpoint", async t => {
+  const calls = [];
+  t.mock.method(globalThis, "fetch", async input => {
+    calls.push(new URL(input));
+    return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+  });
+  await getLaneMatchupStats({ min_time_s: 10, sample_time_s: 900, cache: false, dedupe: false });
+  await getLaneSoulCurve({ min_time_s: 180, sample_time_s: 900, cache: false, dedupe: false });
+  assert.equal(calls[0].searchParams.get("sample_time_s"), "900");
+  assert.equal(calls[0].searchParams.get("min_time_s"), null);
+  assert.equal(calls[1].searchParams.get("min_time_s"), "180");
+  assert.equal(calls[1].searchParams.get("sample_time_s"), null);
+});
