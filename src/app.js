@@ -1,4 +1,4 @@
-import { getActiveMatchesSnapshot, getRecentlyFetchedMatchesSnapshot, getMatchMetadataSnapshot } from "./services/matches.js";
+import { getActiveMatchesSnapshot, getRecentlyFetchedMatchesSnapshot, getBulkMatchMetadataSnapshot } from "./services/matches.js";
 import { listHeroes, listItems, listRanks, listMiscEntities } from "./services/assets.js";
 import { getOpenApiContract } from "./services/versioning.js";
 import { probeApiStatus } from "./services/api-status.js";
@@ -633,9 +633,27 @@ function renderMatches(signal) {
   const loadDetail = async matchId => {
     $("#match-detail").innerHTML = '<span class="eyebrow">RESPONSE</span><p class="muted">Loading metadata…</p>';
     try {
-      const data = await getMatchMetadataSnapshot(matchId, { signal });
+      const data = await getBulkMatchMetadataSnapshot({
+        match_ids: [Number(matchId)],
+        include_info: true,
+        include_more_info: true,
+        include_objectives: true,
+        include_mid_boss: true,
+        include_player_info: true,
+        include_player_kda: true,
+        include_player_items: true,
+        include_player_final_stats: true,
+        include_player_death_details: true,
+        limit: 1,
+        signal,
+      });
       if (signal.aborted) return;
-      renderDetail(data);
+      const detail = Array.isArray(data) ? data[0] : data;
+      if (!detail) {
+        $("#match-detail").innerHTML = '<span class="eyebrow">NOT FOUND</span><p class="muted">No metadata matched this match ID.</p>';
+        return;
+      }
+      renderDetail(detail);
     } catch (error) {
       if (isAborted(error)) return;
       $("#match-detail").innerHTML = '<span class="eyebrow">ERROR</span><pre>' + esc(JSON.stringify({ error: error.message, status: error.status ?? null }, null, 2)) + '</pre>';
