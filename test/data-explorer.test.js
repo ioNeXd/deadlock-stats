@@ -148,3 +148,39 @@ test("executeOperation applies the documented request media type", async () => {
   await executeOperation(operation, { __body: JSON.stringify({ hello: "world" }) });
   assert.equal(captured.init.headers.get("Content-Type"), "application/json");
 });
+
+
+test("buildRequest rejects missing required parameters and preserves non-JSON bodies", () => {
+  assert.throws(
+    () => buildRequest({
+      path: "/v1/test/{id}",
+      method: "GET",
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+      requestBody: null,
+    }, {}),
+    /Missing required parameter: id/,
+  );
+
+  const request = buildRequest({
+    path: "/v1/test",
+    method: "POST",
+    parameters: [],
+    requestBody: {
+      required: true,
+      content: { "text/plain": { schema: { type: "string" } } },
+    },
+  }, { __contentType: "text/plain", __body: "plain text" });
+
+  assert.equal(request.body, "plain text");
+  assert.equal(request.mediaType, "text/plain");
+
+  assert.throws(
+    () => buildRequest({
+      path: "/v1/test",
+      method: "POST",
+      parameters: [],
+      requestBody: { required: true, content: { "application/json": { schema: { type: "object" } } } },
+    }, { __body: "{broken" }),
+    /valid JSON/,
+  );
+});
