@@ -584,11 +584,11 @@ function renderMatches(signal) {
     '<section class="page-head"><span class="eyebrow">MATCH INTELLIGENCE</span><h2>Matches</h2><p>Live and recently fetched match intelligence from the current Deadlock API.</p></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">ACTIVE</span><h2>Live matches</h2></div><b id="active-match-status">LOADING</b></div><div id="active-match-list" class="analytics-table"><p class="muted">Loading active matches.</p></div></article>' +
     '<article class="panel"><div class="section-head"><div><span class="eyebrow">RECENTLY FETCHED</span><h2>Recent matches</h2></div><b id="recent-match-status">LOADING</b></div><div id="recent-match-list" class="analytics-table"><p class="muted">Loading recent matches.</p></div></article></section>' +
-    '<section class="panel"><div class="section-head"><div><span class="eyebrow">MATCH LOOKUP</span><h2>Inspect metadata</h2></div></div><form id="match-lookup" class="inline-form"><input name="match_id" type="number" min="0" placeholder="Match ID" required><button class="primary-button" type="submit">Load metadata</button></form><div id="match-detail" class="result-box"><span class="eyebrow">RESPONSE</span><pre>Enter a match ID to inspect its API metadata.</pre></div></section>';
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">MATCH LOOKUP</span><h2>Inspect metadata</h2></div></div><form id="match-lookup" class="inline-form"><input name="match_id" type="number" min="0" placeholder="Match ID" required><button class="primary-button" type="submit">Load metadata</button></form><div id="match-detail" class="match-detail result-box"><span class="eyebrow">RESPONSE</span><p class="muted">Enter a match ID to inspect its API metadata.</p></div></section>';
 
   const renderList = (target, matches) => {
     $(target).innerHTML = matches.slice(0, 50).map(match =>
-      '<button class="analytics-table-row match-row" data-match-id="' + esc(match.matchId) + '"><span><strong>#' + esc(match.matchId) + '</strong><small class="matchup-meta">' + esc(new Date(Number(match.startTime) * 1000).toLocaleString()) + ' · ' + esc(match.durationS ?? 0) + 's</small></span><strong>' + esc(match.players.length) + ' players</strong></button>'
+      '<button class="analytics-table-row match-row" data-match-id="' + esc(match.matchId) + '"><span><strong>#' + esc(match.matchId) + '</strong><small class="matchup-meta">' + esc(match.startTime ? new Date(Number(match.startTime) * 1000).toLocaleString() : "Unknown start") + ' · ' + esc(match.durationS ?? "—") + 's</small></span><strong>' + esc(match.players.length) + ' players</strong></button>'
     ).join("") || '<p class="muted">No matches returned.</p>';
     document.querySelectorAll(target + " .match-row").forEach(button => button.addEventListener("click", () => {
       $("#match-lookup [name=match_id]").value = button.dataset.matchId;
@@ -596,15 +596,40 @@ function renderMatches(signal) {
     }));
   };
 
+  const renderDetail = data => {
+    const object = data && typeof data === "object" ? data : {};
+    const entries = Object.entries(object).filter(([, value]) => value == null || ["string","number","boolean"].includes(typeof value));
+    const players = Array.isArray(object.players) ? object.players : [];
+    const summary = entries.slice(0, 18).map(([key, value]) =>
+      '<div class="metric"><span>' + esc(key) + '</span><strong>' + esc(value ?? "—") + '</strong></div>'
+    ).join("");
+    const playerRows = players.map((player, index) => {
+      const kda = ["kills","deaths","assists"].every(key => player?.[key] != null)
+        ? esc(player.kills) + '/' + esc(player.deaths) + '/' + esc(player.assists)
+        : "—";
+      const items = Array.isArray(player?.items) ? player.items.length + " items" : "—";
+      return '<div class="match-player-card"><span class="eyebrow">PLAYER ' + (index + 1) + '</span><strong>Account ' + esc(player?.account_id ?? "—") + '</strong><small>Hero ' + esc(player?.hero_id ?? "—") + ' · Team ' + esc(player?.team ?? "—") + '</small><small>K/D/A ' + kda + ' · ' + esc(items) + '</small>' +
+        (player?.hero_build_id != null ? '<small>Build ' + esc(player.hero_build_id) + '</small>' : "") +
+        (player?.pregame_hero_id != null ? '<small>Pregame hero ' + esc(player.pregame_hero_id) + '</small>' : "") + '</div>';
+    }).join("");
+    const arraySummary = Object.entries(object).filter(([, value]) => Array.isArray(value)).map(([key, value]) =>
+      '<div class="metric"><span>' + esc(key) + '</span><strong>' + value.length + ' entries</strong></div>'
+    ).join("");
+    $("#match-detail").innerHTML =
+      '<div class="match-detail-summary">' + summary + arraySummary + '</div>' +
+      (players.length ? '<div class="match-player-grid">' + playerRows + '</div>' : '<p class="muted">No player array was returned by this metadata response.</p>') +
+      '<details class="match-raw"><summary>Raw API response</summary><pre>' + esc(JSON.stringify(data, null, 2)) + '</pre></details>';
+  };
+
   const loadDetail = async matchId => {
-    $("#match-detail pre").textContent = "Loading…";
+    $("#match-detail").innerHTML = '<span class="eyebrow">RESPONSE</span><p class="muted">Loading metadata…</p>';
     try {
       const data = await getMatchMetadataSnapshot(matchId, { signal });
       if (signal.aborted) return;
-      $("#match-detail pre").textContent = JSON.stringify(data, null, 2);
+      renderDetail(data);
     } catch (error) {
       if (isAborted(error)) return;
-      $("#match-detail pre").textContent = JSON.stringify({ error: error.message, status: error.status ?? null }, null, 2);
+      $("#match-detail").innerHTML = '<span class="eyebrow">ERROR</span><pre>' + esc(JSON.stringify({ error: error.message, status: error.status ?? null }, null, 2)) + '</pre>';
     }
   };
 
