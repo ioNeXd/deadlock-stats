@@ -362,3 +362,26 @@ test("GET cache keys isolate response representations", async () => {
   assert.equal(calls, 2);
   assert.deepEqual(jsonAgain.data, { calls: 1 });
 });
+
+
+test("cache keys include Headers instances", async () => {
+  let calls = 0;
+  mockFetch(async (_url, init) => {
+    calls += 1;
+    return new Response(JSON.stringify({ authorization: init.headers.get("Authorization") }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  const first = await apiGet("/v1/header-cache", {
+    headers: new Headers({ Authorization: "Bearer first" }),
+  });
+  const second = await apiGet("/v1/header-cache", {
+    headers: new Headers({ Authorization: "Bearer second" }),
+  });
+
+  assert.equal(calls, 2);
+  assert.equal(first.data.authorization, "Bearer first");
+  assert.equal(second.data.authorization, "Bearer second");
+});
