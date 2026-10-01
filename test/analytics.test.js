@@ -441,14 +441,14 @@ test("analytics wrappers forward current combo/item filters and cache TTLs", asy
     dedupe: false,
   });
   await getItemStats({
-    query: { include_corrupted_items: true },
+    query: { corrupted_items: "include" },
     cache: true,
     dedupe: false,
   });
 
   assert.equal(calls[0].searchParams.get("min_networth"), "1000");
   assert.equal(calls[0].searchParams.get("max_networth"), "5000");
-  assert.equal(calls[1].searchParams.get("include_corrupted_items"), "true");
+  assert.equal(calls[1].searchParams.get("corrupted_items"), "include");
 });
 
 
