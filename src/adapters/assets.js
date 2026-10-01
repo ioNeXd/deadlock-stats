@@ -52,3 +52,16 @@ export function resolveAssetImage(entity, preferred = []) {
   }
   return "";
 }
+
+export function normalizeMap(entity) {
+  if (!entity || typeof entity !== "object") return { radius: null, images: {}, objectivePositions: {}, ziplinePaths: [], neutralCamps: null, entities: null, raw: entity };
+  return {
+    radius: Number.isFinite(Number(entity.radius)) ? Number(entity.radius) : null,
+    images: entity.images && typeof entity.images === "object" ? { ...entity.images } : {},
+    objectivePositions: entity.objective_positions && typeof entity.objective_positions === "object" ? { ...entity.objective_positions } : {},
+    ziplinePaths: Array.isArray(entity.zipline_paths) ? entity.zipline_paths.slice() : [],
+    neutralCamps: Array.isArray(entity.neutral_camps) ? entity.neutral_camps.slice() : entity.neutral_camps === null ? null : null,
+    entities: entity.entities && typeof entity.entities === "object" ? { ...entity.entities } : null,
+    raw: entity,
+  };
+}
