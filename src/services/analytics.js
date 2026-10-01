@@ -1,4 +1,4 @@
-import { getGameStats, getHeroBanStats, getHeroStats } from "../api/analytics.js";
+import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats } from "../api/analytics.js";
 
 export async function getAnalyticsSnapshot(options = {}) {
   const { signal, ...requestOptions } = options;
@@ -151,4 +151,17 @@ export function normalizeHeroCombStats(result) {
     matches: item?.matches ?? null,
     raw: item,
   }));
+}
+
+
+export async function getHeroMatchupSnapshot(options = {}) {
+  const { signal, ...requestOptions } = options;
+  const [counterResult, synergyResult] = await Promise.all([
+    getHeroCounterStats({ ...requestOptions, signal }),
+    getHeroSynergyStats({ ...requestOptions, signal }),
+  ]);
+  return {
+    counters: normalizeHeroCounterStats(counterResult),
+    synergies: normalizeHeroSynergyStats(synergyResult),
+  };
 }
