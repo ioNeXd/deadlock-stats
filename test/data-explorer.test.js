@@ -102,13 +102,20 @@ test("listApiOperations resolves local parameter refs", () => {
       parameters: {
         HeroId: { name: "hero_id", in: "path", required: true, schema: { type: "integer" } },
       },
+      requestBodies: {
+        Body: { required: true, content: { "application/json": { schema: { type: "object" } } } },
+      },
+      responses: {
+        Ok: { description: "ok", content: { "application/json": { schema: { type: "object" } } } },
+      },
     },
     paths: {
       "/v1/heroes/{hero_id}": {
         get: {
           operationId: "hero",
           parameters: [{ $ref: "#/components/parameters/HeroId" }],
-          responses: { "200": { description: "ok" } },
+          requestBody: { $ref: "#/components/requestBodies/Body" },
+          responses: { "200": { $ref: "#/components/responses/Ok" } },
         },
       },
     },
@@ -116,7 +123,9 @@ test("listApiOperations resolves local parameter refs", () => {
 
   const operation = listApiOperations(contractWithRef)[0];
   assert.equal(operation.parameters[0].name, "hero_id");
-  assert.equal(buildRequest(operation, { hero_id: "7" }).path, "/v1/heroes/7");
+  assert.equal(operation.requestBody.required, true);
+  assert.equal(operation.responses["200"].description, "ok");
+  assert.equal(buildRequest(operation, { hero_id: "7", __body: "{}" }).path, "/v1/heroes/7");
 });
 
 test("listApiOperations merges path-level parameters and preserves security metadata", () => {
