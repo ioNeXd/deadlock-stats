@@ -307,12 +307,25 @@ async function request(path, {
       } catch (error) {
         lastError = error;
 
-        if (error?.name === "AbortError" || error?.name === "TimeoutError") {
+        if (error?.name === "AbortError") {
           throw new ApiError(error.message || "Request aborted", {
             cause: error,
             url: url.toString(),
             method: upperMethod,
-            code: error.name === "TimeoutError" ? "TIMEOUT" : "ABORTED",
+            code: "ABORTED",
+          });
+        }
+
+        if (error?.name === "TimeoutError") {
+          if (attempt < retries && isRetryableMethod(upperMethod, retryNonIdempotent)) {
+            await waitForRetry(retryDelay(attempt, null), signal);
+            continue;
+          }
+          throw new ApiError(error.message || "Request timed out", {
+            cause: error,
+            url: url.toString(),
+            method: upperMethod,
+            code: "TIMEOUT",
           });
         }
 
