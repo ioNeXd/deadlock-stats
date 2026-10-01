@@ -23,7 +23,8 @@ function renderHeroGrid(data) {
   const heroes = Array.isArray(data) ? data : (data?.data ?? []);
   const grid = $("#hero-grid");
   grid.innerHTML = heroes.slice(0, 8).map(hero => {
-    const image = resolveAssetImage(hero, ["hero_card_critical_webp", "hero_card_critical", "background_image_webp", "background_image"]);\n    const heroColor = colorToCss(hero?.colors?.ui);
+    const image = resolveAssetImage(hero, ["hero_card_critical_webp", "hero_card_critical", "background_image_webp", "background_image"]);
+    const heroColor = colorToCss(hero?.colors?.ui);
     return '<a class="hero-card" href="#/heroes/' + encodeURIComponent(idOf(hero)) + '">' +
       (image ? '<img src="' + esc(image) + '" alt="" loading="lazy">' : "") +
       '<div class="hero-info"' + (heroColor ? ' style="--hero-accent:' + esc(heroColor) + '"' : "") + '><small>HERO ASSET</small><h3>' + esc(nameOf(hero)) + '</h3><p>ID ' + esc(idOf(hero)) + '</p></div></a>';
