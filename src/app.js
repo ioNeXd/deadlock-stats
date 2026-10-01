@@ -126,8 +126,14 @@ async function loadDashboard(signal) {
     $("#known-rows").textContent = knownRows ? knownRows.toLocaleString() : "—";
 
     const patch = snapshot.latestPatch;
+    const patchUrl = safeExternalUrl(patch?.link);
+    const patchTitle = esc(patch?.title ?? "Latest patch");
+    const patchDate = patch?.pub_date ? new Date(patch.pub_date).toLocaleDateString() : "Unknown date";
+    const patchMeta = esc(patch?.source?.toUpperCase() ?? "FEED") + " · " + esc(patchDate);
     $("#latest-patch").innerHTML = patch
-      ? '<a href="' + esc(patch.link) + '" target="_blank" rel="noreferrer">' + esc(patch.title) + '</a><small>' + esc(patch.source?.toUpperCase() ?? "FEED") + " · " + esc(new Date(patch.pub_date).toLocaleDateString()) + "</small>"
+      ? (patchUrl
+        ? '<a href="' + esc(patchUrl) + '" target="_blank" rel="noopener noreferrer">' + patchTitle + '</a><small>' + patchMeta + '</small>'
+        : '<span>' + patchTitle + '</span><small>' + patchMeta + '</small>')
       : "No patch feed entries returned.";
   } else {
     $("#matches-per-day").textContent = "—";
