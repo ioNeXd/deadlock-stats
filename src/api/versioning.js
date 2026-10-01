@@ -11,8 +11,14 @@ function versionedPath(path) {
 }
 
 function entriesFrom(openApi) {
-  return Object.keys(openApi?.paths ?? {})
-    .map(path => ({ path, ...versionedPath(path) }))
+  return Object.entries(openApi?.paths ?? {})
+    .map(([path, pathItem]) => ({
+      path,
+      ...versionedPath(path),
+      deprecated: Object.values(pathItem ?? {}).some(
+        operation => operation && typeof operation === "object" && operation.deprecated === true,
+      ),
+    }))
     .filter(entry => entry.version != null);
 }
 
@@ -38,14 +44,16 @@ export function buildVersionPolicy(openApi, onLegacy) {
       )
       .sort((a, b) => b.version - a.version)[0];
 
-    if (newer) {
+    if (entry.deprecated || newer) {
       const event = {
         type: "legacy",
         path: entry.path,
         version: `v${entry.version}`,
-        currentPath: newer.path,
-        currentVersion: `v${newer.version}`,
-        reason: "A newer API version exists for the same resource path.",
+        currentPath: newer?.path ?? null,
+        currentVersion: newer ? `v${newer.version}` : null,
+        reason: entry.deprecated
+          ? "The OpenAPI contract marks this operation as deprecated."
+          : "A newer API version exists for the same resource path.",
       };
 
       legacy.push(event);
