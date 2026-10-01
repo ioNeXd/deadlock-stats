@@ -6,7 +6,7 @@ import { API_BASE_URL } from "./api/client.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
-import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
+import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
@@ -232,12 +232,13 @@ function renderAnalytics(signal) {
 
 async function loadAnalytics(signal, filters = {}) {
   try {
-    const [snapshotResult, heroStats, matchup, comboStats, buffStats] = await Promise.all([
+    const [snapshotResult, heroStats, matchup, comboStats, buffStats, badgeDistribution] = await Promise.all([
       getAnalyticsSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), bucket: "start_time_day", signal }),
       getHeroStatsSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
       getHeroMatchupSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, signal }),
       getHeroComboSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, comb_size: Number(filters.comb_size) || 6, signal }),
       getBuffSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
+      getBadgeDistributionSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
     ]);
     const result = snapshotResult;
     if (signal.aborted) return;
@@ -264,6 +265,17 @@ async function loadAnalytics(signal, filters = {}) {
       Math.min(100, ((Number(item.totalMatches) || 0) / maxMatches) * 100) + '%"></i></div><strong>' +
       esc(Number(item.totalMatches ?? 0).toLocaleString()) + '</strong></div>'
     ).join("") || '<p class="muted">No game statistics returned.</p>';
+
+    const badgeRows = [...badgeDistribution].sort((a, b) => Number(a.badgeLevel ?? 0) - Number(b.badgeLevel ?? 0));
+    const maxBadgeMatches = Math.max(1, ...badgeRows.map(item => Number(item.totalMatches) || 0));
+    $("#badge-distribution-list").innerHTML = badgeRows.length
+      ? badgeRows.map(item =>
+          '<div class="analytics-bar-row"><span>Badge ' + esc(item.badgeLevel ?? "—") + '<small class="matchup-meta">' +
+          esc(Number(item.uniquePlayers ?? 0).toLocaleString()) + ' players</small></span><div><i style="width:' +
+          Math.min(100, ((Number(item.totalMatches) || 0) / maxBadgeMatches) * 100) + '%"></i></div><strong>' +
+          esc(Number(item.totalMatches ?? 0).toLocaleString()) + '</strong></div>'
+        ).join("")
+      : '<p class="muted">No badge distribution returned.</p>';
 
     const sortedBans = [...bans].sort((a, b) => Number(b.bans ?? 0) - Number(a.bans ?? 0)).slice(0, 12);
     $("#hero-ban-list").innerHTML = sortedBans.length
