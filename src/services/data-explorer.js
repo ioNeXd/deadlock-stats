@@ -16,8 +16,17 @@ function queryParameters(operation) {
   return (operation?.parameters ?? []).filter(parameter => parameter?.in === "query");
 }
 
-function parameterSchema(parameter) {
-  return parameter?.schema ?? {};
+function resolveSchema(value, contract, seen = new Set()) {
+  if (!value || typeof value !== "object") return value;
+  if (!value.$ref || !contract || !value.$ref.startsWith("#/")) return value;
+  if (seen.has(value.$ref)) return {};
+  seen.add(value.$ref);
+  const resolved = resolveLocalRef(value, contract);
+  return resolveSchema(resolved, contract, seen);
+}
+
+function parameterSchema(parameter, contract = null) {
+  return resolveSchema(parameter?.schema ?? {}, contract);
 }
 
 function enumValues(schema) {
@@ -133,7 +142,12 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
 
 export function describeOperation(operation, contract = null) {
   const parameters = (operation?.parameters ?? []).map(parameter => resolveLocalRef(parameter, contract)).filter(Boolean);
-  const resolvedOperation = { ...operation, parameters };
+  const resolvedOperation = {
+    ...operation,
+    parameters,
+    requestBody: resolveLocalRef(operation?.requestBody, contract) ?? null,
+    responses: Object.fromEntries(Object.entries(operation?.responses ?? {}).map(([status, response]) => [status, resolveLocalRef(response, contract)])),
+  };
   return {
     ...resolvedOperation,
     pathParameters: pathParameters(resolvedOperation),
@@ -144,13 +158,16 @@ export function describeOperation(operation, contract = null) {
       required: parameter.required === true,
       deprecated: parameter.deprecated === true,
       description: parameter.description ?? "",
-      schema: parameterSchema(parameter),
-      type: schemaType(parameterSchema(parameter)),
-      nullable: schemaNullable(parameterSchema(parameter)),
-      enum: enumValues(parameterSchema(parameter)),
+      schema: parameterSchema(parameter, contract),
+      type: schemaType(parameterSchema(parameter, contract)),
+      nullable: schemaNullable(parameterSchema(parameter, contract)),
+      enum: enumValues(parameterSchema(parameter, contract)),
       constraints: parameterDefaults(parameter),
     })),
-    requestBodyInfo: requestBodyInfo(resolvedOperation.requestBody),
+    requestBodyInfo: requestBodyInfo(resolvedOperation.requestBody).map(item => ({
+      ...item,
+      schema: resolveSchema(item.schema, contract),
+    })),
     responseInfo: responseInfo(resolvedOperation.responses),
     security: securityInfo(operation, contract),
   };
@@ -268,6 +285,7 @@ export {
   enumValues,
   parameterSchema,
   requestBodyInfo,
+  resolveSchema,
   responseInfo,
   schemaNullable,
   schemaType,
