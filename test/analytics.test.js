@@ -425,6 +425,33 @@ test("analytics wrappers forward current combo and permutation filters", async (
 });
 
 
+test("analytics wrappers forward current combo/item filters and cache TTLs", async () => {
+  const calls = [];
+  globalThis.fetch = async input => {
+    calls.push(new URL(input));
+    return new Response("[]", {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  await getHeroCombStats({
+    query: { min_networth: 1000, max_networth: 5000 },
+    cache: true,
+    dedupe: false,
+  });
+  await getItemStats({
+    query: { include_corrupted_items: true },
+    cache: true,
+    dedupe: false,
+  });
+
+  assert.equal(calls[0].searchParams.get("min_networth"), "1000");
+  assert.equal(calls[0].searchParams.get("max_networth"), "5000");
+  assert.equal(calls[1].searchParams.get("include_corrupted_items"), "true");
+});
+
+
 test("analytics wrappers drop filters not documented for each endpoint", async () => {
   const calls = [];
   globalThis.fetch = async input => {
