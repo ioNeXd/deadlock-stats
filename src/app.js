@@ -6,7 +6,7 @@ import { API_BASE_URL } from "./api/client.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
-import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
+import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
@@ -208,6 +208,111 @@ function formatDuration(seconds) {
   if (!Number.isFinite(Number(seconds))) return "—";
   const value = Number(seconds);
   return Math.floor(value / 60) + "m " + Math.round(value % 60) + "s";
+}
+
+function renderItemAnalytics(signal) {
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">ANALYTICS / ITEM INTELLIGENCE</span><h2>Item Intelligence</h2><p>Purchase performance, permutations and phase-to-phase build flow from the documented Deadlock analytics API.</p></section>' +
+    '<section class="panel analytics-filter-panel"><div class="section-head"><div><span class="eyebrow">SCOPE</span><h2>Item analytics filters</h2></div><b id="item-analytics-status">LOADING</b></div><form id="item-analytics-filters" class="analytics-filters">' +
+    '<label class="field"><span>Game mode</span><select name="game_mode"><option value="normal" selected>Normal</option><option value="street_brawl">Street Brawl</option></select></label>' +
+    '<label class="field"><span>Match mode</span><select name="match_mode"><option value="ranked,unranked" selected>Ranked + Unranked</option><option value="ranked">Ranked</option><option value="unranked">Unranked</option></select></label>' +
+    '<label class="field"><span>From</span><input name="min_unix_timestamp" type="date"></label><label class="field"><span>To</span><input name="max_unix_timestamp" type="date"></label>' +
+    '<label class="field"><span>Hero IDs</span><input name="hero_ids" type="text" inputmode="numeric" placeholder="1, 2, 3"></label>' +
+    '<label class="field"><span>Enemy Hero IDs</span><input name="enemy_hero_ids" type="text" inputmode="numeric" placeholder="1, 2"></label>' +
+    '<label class="field"><span>Min matches</span><input name="min_matches" type="number" min="1" value="20"></label>' +
+    '<label class="field"><span>Item bucket</span><select name="bucket"><option value="no_bucket" selected>Overall</option><option value="hero">Hero</option><option value="team">Team</option><option value="game_time_min">Game minute</option><option value="game_time_normalized_percentage">Game time %</option><option value="net_worth_by_1000">Net worth / 1000</option><option value="net_worth_by_5000">Net worth / 5000</option></select></label>' +
+    '<label class="field"><span>Corrupted items</span><select name="corrupted_items"><option value="exclude" selected>Exclude</option><option value="include">Include</option><option value="only">Only</option></select></label>' +
+    '<label class="field"><span>Permutation size</span><input name="comb_size" type="number" min="2" max="12" value="2"></label>' +
+    '<button class="primary-button" type="submit">Apply filters</button></form></section>' +
+    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">ITEM STATS</span><h2>Purchase performance</h2></div></div><div id="item-stats-list" class="analytics-item-grid"><p class="muted">Loading item statistics.</p></div></article>' +
+    '<article class="panel"><div class="section-head"><div><span class="eyebrow">PERMUTATIONS</span><h2>Item combinations</h2></div></div><div id="item-permutation-list" class="analytics-table"><p class="muted">Loading item combinations.</p></div></article></section>' +
+    '<section class="panel item-flow-panel"><div class="section-head"><div><span class="eyebrow">ITEM FLOW</span><h2>Build progression</h2></div><span class="muted">PHASE NODES + TRANSITIONS</span></div><div id="item-flow-summary" class="analytics-grid"></div><div id="item-flow-list" class="item-flow-grid"><p class="muted">Loading item flow.</p></div></section>';
+
+  const form = $("#item-analytics-filters");
+  const from = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  form.elements.min_unix_timestamp.value = from;
+  form.elements.max_unix_timestamp.value = new Date().toISOString().slice(0, 10);
+
+  const normalize = values => {
+    const result = { ...values };
+    for (const key of ["min_unix_timestamp", "max_unix_timestamp"]) {
+      if (result[key]) result[key] = Math.floor(new Date(result[key] + "T00:00:00Z").getTime() / 1000);
+      else delete result[key];
+    }
+    for (const key of ["hero_ids", "enemy_hero_ids"]) {
+      if (result[key]) result[key] = String(result[key]).split(",").map(value => Number(value.trim())).filter(Number.isInteger).join(",");
+      else delete result[key];
+    }
+    for (const key of ["min_matches", "comb_size"]) {
+      if (result[key] !== "") result[key] = Number(result[key]);
+      else delete result[key];
+    }
+    return result;
+  };
+
+  const itemName = new Map();
+  const itemImage = new Map();
+
+  const load = async filters => {
+    $("#item-analytics-status").textContent = "LOADING";
+    try {
+      const [items, stats, permutations, flow] = await Promise.all([
+        listItems({ ...assetVersion.options(), signal }),
+        getItemStatsSnapshot({ ...assetVersion.options(), ...filters, signal }),
+        getItemPermutationSnapshot({ ...assetVersion.options(), ...filters, signal }),
+        getItemFlowSnapshot({ ...assetVersion.options(), ...filters, signal }),
+      ]);
+      if (signal.aborted) return;
+      for (const item of items.data ?? []) {
+        const id = Number(item.id);
+        if (Number.isFinite(id)) {
+          itemName.set(id, item.name ?? "Item " + id);
+          const image = resolveAssetImage(item);
+          if (image) itemImage.set(id, image);
+        }
+      }
+
+      const statsList = $("#item-stats-list");
+      statsList.innerHTML = stats.slice().sort((a,b) => Number(b.matches ?? 0) - Number(a.matches ?? 0)).slice(0, 24).map(item => {
+        const winRate = Number(item.matches) > 0 ? Number(item.wins) / Number(item.matches) * 100 : null;
+        const image = itemImage.get(Number(item.itemId));
+        return '<article class="item-analytics-card">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">ITEM</div>') +
+          '<div><strong>' + esc(itemName.get(Number(item.itemId)) ?? "Item " + item.itemId) + '</strong><small>ID ' + esc(item.itemId) + '</small><span>' + (winRate == null ? "—" : winRate.toFixed(1) + "% WR") + ' · ' + esc(Number(item.matches ?? 0).toLocaleString()) + ' matches</span><span>BUY ' + esc(formatDuration(item.avgBuyTimeS)) + ' · SELL ' + esc(formatDuration(item.avgSellTimeS)) + '</span></div></article>';
+      }).join("") || '<p class="muted">No item statistics returned.</p>';
+
+      $("#item-permutation-list").innerHTML = permutations.slice(0, 30).map(item => {
+        const names = item.itemIds.map(id => itemName.get(Number(id)) ?? "Item " + id);
+        const rate = Number(item.matches) > 0 ? Number(item.wins) / Number(item.matches) * 100 : null;
+        return '<div class="analytics-table-row"><span>' + esc(names.join(" + ")) + '<small class="matchup-meta">' + esc(item.itemIds.join(", ")) + '</small></span><strong>' + (rate == null ? "—" : rate.toFixed(1) + "%") + ' · ' + esc(item.matches ?? 0) + '</strong></div>';
+      }).join("") || '<p class="muted">No item combinations returned.</p>';
+
+      const flow = $("#item-flow-list");
+      const nodes = flowData => flowData.nodes.slice().sort((a,b) => Number(a.column ?? 0) - Number(b.column ?? 0) || Number(b.matches ?? 0) - Number(a.matches ?? 0)).slice(0, 48);
+      const flowNodes = nodes(flow);
+      const columns = [...new Set(flowNodes.map(node => Number(node.column ?? 0)))];
+      flow.innerHTML = columns.map(column => {
+        const entries = flowNodes.filter(node => Number(node.column ?? 0) === column).slice(0, 8);
+        return '<section class="item-flow-column"><span class="eyebrow">PHASE ' + esc(column + 1) + '</span>' + entries.map(node => {
+          const rate = Number(node.matches) > 0 ? Number(node.wins) / Number(node.matches) * 100 : null;
+          return '<div class="item-flow-node">' + (itemImage.get(Number(node.itemId)) ? '<img src="' + esc(itemImage.get(Number(node.itemId))) + '" alt="" loading="lazy" decoding="async">' : '') + '<div><strong>' + esc(itemName.get(Number(node.itemId)) ?? "Item " + node.itemId) + '</strong><small>' + (rate == null ? "—" : rate.toFixed(1) + "% WR") + ' · ' + esc(node.matches ?? 0) + ' matches</small>' + (node.adjustedWinRate == null ? '' : '<small>ADJ ' + (Number(node.adjustedWinRate) * 100).toFixed(1) + '%</small>') + '</div></div>';
+        }).join("") + '</section>';
+      }).join("") || '<p class="muted">No flow nodes returned.</p>';
+
+      const summary = flow.summary ?? {};
+      $("#item-flow-summary").innerHTML = [
+        ["BASELINE MATCHES", summary.matches], ["BASELINE PLAYERS", summary.players],
+        ["REACHED COLUMNS", flow.reachedPerColumn?.length ?? 0], ["EDGES", flow.edges?.length ?? 0],
+      ].map(([label,value]) => '<article class="metric-card"><span>' + label + '</span><strong>' + esc(value ?? "—") + '</strong><small>item flow</small></article>').join("");
+      $("#item-analytics-status").textContent = "ONLINE";
+    } catch (error) {
+      if (isAborted(error)) return;
+      $("#item-analytics-status").textContent = "ERROR";
+      $("#item-stats-list").innerHTML = '<p class="error-text">' + esc(error.message) + '</p>';
+    }
+  };
+
+  form.addEventListener("submit", event => { event.preventDefault(); load(normalize(Object.fromEntries(new FormData(form).entries()))); });
+  load(normalize(Object.fromEntries(new FormData(form).entries())));
 }
 
 function renderAnalytics(signal) {
@@ -607,6 +712,7 @@ function route() {
   const routeName = location.hash.replace(/^#\/?/, "").split("/")[0] || "dashboard";
   if (routeName === "api") renderApiStatus(signal);
   else if (routeName === "analytics") renderAnalytics(signal);
+  else if (routeName === "item-analytics") renderItemAnalytics(signal);
   else if (routeName === "data") renderDataExplorer(signal);
   else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
   else renderDashboard(signal);
