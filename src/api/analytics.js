@@ -162,6 +162,5 @@ export function getKillDeathStats(options = {}) {
   const { query, ...rest } = options;
   const source = { ...queryToObject(query), ...Object.fromEntries(Object.entries(rest).filter(([key]) => KILL_DEATH_FILTERS.includes(key))) };
   const filtered = Object.fromEntries(Object.entries(source).filter(([key, value]) => KILL_DEATH_FILTERS.includes(key) && value !== undefined && value !== null && value !== ""));
-  if (typeof filtered.hero_ids === "string") filtered.hero_ids = filtered.hero_ids;
   return apiGet("/v1/analytics/kill-death-stats", { ...rest, cacheTtlMs: rest.cacheTtlMs ?? ANALYTICS_CACHE_TTL_MS, query: filtered });
 }
