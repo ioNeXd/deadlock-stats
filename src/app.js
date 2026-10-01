@@ -8,6 +8,7 @@ import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
 import { listBuilds } from "./services/builds.js";
+import { fetchMap } from "./services/assets.js";
 import { loadLeaderboard } from "./services/leaderboard.js";
 import { searchPlayers, loadPlayerRank, loadPlayerHeroStats, loadPlayerMatchHistory } from "./services/players.js";
 import { safeExternalUrl } from "./ui/security.js";
@@ -1059,6 +1060,112 @@ function bindVersionControl() {
   });
 }
 
+
+function renderMaps(signal) {
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">GAME / MAP INTELLIGENCE</span><h2>Map Explorer</h2><p>Live map geometry and official map layers from the Deadlock asset contract. Coordinates and markers are rendered directly from the API response.</p></section>' +
+    '<section class="map-toolbar panel"><div><span class="eyebrow">MAP DATA</span><strong id="map-build">LATEST BUILD</strong></div><div class="map-toggles" role="group" aria-label="Map layers">' +
+    '<label><input type="checkbox" data-map-layer="objectives" checked> Objectives</label>' +
+    '<label><input type="checkbox" data-map-layer="camps" checked> Neutral camps</label>' +
+    '<label><input type="checkbox" data-map-layer="entities" checked> Entities</label>' +
+    '</div></section>' +
+    '<section class="map-layout"><article class="panel map-panel"><div id="map-stage" class="map-stage" aria-live="polite"><div class="map-loading">Loading map data…</div></div></article>' +
+    '<aside class="panel map-legend"><span class="eyebrow">MAP INDEX</span><h3>Live layers</h3><div id="map-summary" class="map-summary"></div><div id="map-details" class="map-details"></div></aside></section>';
+
+  const stage = $("#map-stage");
+  const options = { ...assetVersion.options(), signal };
+  fetchMap(options).then(result => {
+    if (signal.aborted) return;
+    const map = result?.data ?? {};
+    const images = map.images ?? {};
+    const safe = url => safeExternalUrl(url);
+    const base = safe(images.plain) ?? safe(images.mid) ?? safe(images.minimap);
+    const layers = [
+      ["mid", images.mid],
+      ["mid_tunnels", images.mid_tunnels],
+      ["rat_tunnels", images.rat_tunnels],
+      ["frame", images.frame],
+    ].map(([name, url]) => [name, safe(url)]).filter(([, url]) => url);
+
+    const marker = (className, left, top, title, icon, extra = "") =>
+      '<button type="button" class="map-marker ' + className + '" style="left:' + (Number(left) * 100) + '%;top:' + (Number(top) * 100) + '%" title="' + esc(title) + '" aria-label="' + esc(title) + '">' +
+      (icon ? '<img src="' + esc(icon) + '" alt="" loading="lazy" decoding="async">' : '<span>' + esc(extra || "•") + '</span>') + '</button>';
+
+    const objectiveHtml = Object.entries(map.objective_positions ?? {}).map(([name, position]) =>
+      marker("objective-marker", position?.left_relative, position?.top_relative, name.replaceAll("_", " "), null, "◆")
+    ).join("");
+
+    const camps = Array.isArray(map.neutral_camps) ? map.neutral_camps : [];
+    const campsHtml = camps.map(camp =>
+      marker("camp-marker camp-" + esc(camp.kind), camp.left_relative, camp.top_relative, camp.name + " · " + camp.kind, camp.icon)
+    ).join("");
+
+    const entities = map.entities && typeof map.entities === "object" ? map.entities : {};
+    const entityGroups = Object.entries(entities).flatMap(([group, values]) =>
+      Array.isArray(values) ? values.map((entity, index) => ({ group, entity, index })) : []
+    );
+    const entitiesHtml = entityGroups.map(({ group, entity, index }) =>
+      marker("entity-marker", entity.left_relative, entity.top_relative, group.replaceAll("_", " ") + " #" + (index + 1), null, "•")
+    ).join("");
+
+    stage.innerHTML =
+      '<div class="map-canvas">' +
+      (base ? '<img class="map-layer map-base" src="' + esc(base) + '" alt="Deadlock map base layer" draggable="false">' : "") +
+      layers.map(([name, url]) => '<img class="map-layer map-' + esc(name) + '" src="' + esc(url) + '" alt="" aria-hidden="true" draggable="false">').join("") +
+      '<div class="map-markers map-objectives">' + objectiveHtml + '</div>' +
+      '<div class="map-markers map-camps">' + campsHtml + '</div>' +
+      '<div class="map-markers map-entities">' + entitiesHtml + '</div>' +
+      '</div>';
+
+    const setLayer = (name, visible) => {
+      const node = stage.querySelector(".map-" + name);
+      if (node) node.hidden = !visible;
+      const markers = stage.querySelector(".map-" + name);
+      if (markers) markers.hidden = !visible;
+    };
+    document.querySelectorAll("[data-map-layer]").forEach(input => {
+      input.addEventListener("change", event => setLayer(event.target.dataset.mapLayer, event.target.checked));
+    });
+
+    const layerNode = name => stage.querySelector(".map-" + name);
+    const setMarkerGroup = (name, visible) => {
+      const node = stage.querySelector(".map-" + name);
+      if (node) node.hidden = !visible;
+    };
+    document.querySelectorAll("[data-map-layer]").forEach(input => {
+      input.addEventListener("change", event => setMarkerGroup(event.target.dataset.mapLayer, event.target.checked));
+    });
+
+    $("#map-build").textContent = options.clientVersion ? "BUILD " + options.clientVersion : "LATEST BUILD";
+    $("#map-summary").innerHTML =
+      '<div><span>RADIUS</span><strong>' + esc(map.radius ?? "—") + '</strong></div>' +
+      '<div><span>OBJECTIVES</span><strong>' + Object.keys(map.objective_positions ?? {}).length + '</strong></div>' +
+      '<div><span>NEUTRAL CAMPS</span><strong>' + camps.length + '</strong></div>' +
+      '<div><span>ENTITIES</span><strong>' + entityGroups.length + '</strong></div>' +
+      '<div><span>ZIPLINES</span><strong>' + (Array.isArray(map.zipline_paths) ? map.zipline_paths.length : 0) + '</strong></div>';
+
+    const entityNames = entityGroups.reduce((counts, item) => {
+      counts[item.group] = (counts[item.group] ?? 0) + 1;
+      return counts;
+    }, {});
+    $("#map-details").innerHTML =
+      '<div class="map-detail"><span class="eyebrow">IMAGE LAYERS</span><p>' + layers.map(([name]) => esc(name)).join(" · ") + '</p></div>' +
+      '<div class="map-detail"><span class="eyebrow">ENTITY GROUPS</span><p>' +
+      (Object.entries(entityNames).map(([name, count]) => esc(name.replaceAll("_", " ")) + " × " + count).join(" · ") || "No extracted entities for this build.") +
+      '</p></div>' +
+      '<div class="map-detail"><span class="eyebrow">DATA AVAILABILITY</span><p>' +
+      (map.neutral_camps == null ? "Neutral camps are not available for this asset build." : "Neutral camp positions are available.") +
+      " " + (map.entities == null ? "Map entity extraction is not available." : "Map entity extraction is available.") +
+      '</p></div>';
+
+    setConnection(true, "API connected");
+  }).catch(error => {
+    if (isAborted(error)) return;
+    stage.innerHTML = '<div class="map-loading error-text">Map request failed: ' + esc(error.message) + '</div>';
+    setConnection(false, "API unavailable");
+  });
+}
+
 function renderNotFound(routeName) {
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">NAVIGATION / 404</span><h2>Route not found</h2><p>The route <code>' +
     esc('#/' + routeName) +
@@ -1075,6 +1182,7 @@ function route() {
   else if (routeName === "builds") renderBuilds(signal);
   else if (routeName === "leaderboard") renderLeaderboard(signal);
   else if (routeName === "item-analytics") renderItemAnalytics(signal);
+  else if (routeName === "maps") renderMaps(signal);
   else if (routeName === "data") renderDataExplorer(signal);
   else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
   else renderNotFound(routeName);
