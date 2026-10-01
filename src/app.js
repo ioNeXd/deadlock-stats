@@ -940,7 +940,7 @@ async function loadExplorer(signal) {
       const query = filter.value.trim().toLowerCase();
       const filtered = operations.filter(operation => !query || [operation.operationId, operation.path, operation.summary, ...operation.tags].join(" ").toLowerCase().includes(query));
       list.innerHTML = filtered.map(operation => '<button class="operation-row" data-operation-id="' + esc(operation.operationId) + '"><span class="method ' + operation.method.toLowerCase() + '">' + operation.method + '</span><span><b>' + esc(operation.operationId) + '</b><small>' + esc(operation.path) + '</small></span>' + (operation.deprecated ? "<em>deprecated</em>" : "") + "</button>").join("") || '<p class="muted">No operations match.</p>';
-      list.querySelectorAll(".operation-row").forEach(button => button.addEventListener("click", () => renderOperation(operations.find(operation => operation.operationId === button.dataset.operationId), signal)));
+      list.querySelectorAll(".operation-row").forEach(button => button.addEventListener("click", () => renderOperation(operations.find(operation => operation.operationId === button.dataset.operationId), signal, contractResult.data)));
     };
     filter.addEventListener("input", renderList);
     renderList();
@@ -962,8 +962,8 @@ function schemaPlaceholder(schema) {
   return "value";
 }
 
-function renderOperation(operation, signal) {
-  const detail = describeOperation(operation);
+function renderOperation(operation, signal, contract = null) {
+  const detail = describeOperation(operation, contract);
   $("#explorer-empty").hidden = true;
   const target = $("#operation-detail");
   target.hidden = false;
