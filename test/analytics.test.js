@@ -89,7 +89,10 @@ test("expanded analytics wrappers use documented paths and preserve query option
   ]);
   assert.equal(calls[0].searchParams.get("bucket"), "start_time_day");
   assert.equal(calls[0].searchParams.get("min_matches"), "20");
-  assert.equal(calls[4].searchParams.get("min_matches"), "20");\n  assert.equal(calls[5].searchParams.get("hero_id"), "7");
+  assert.equal(calls[4].searchParams.get("min_matches"), "20");
+  assert.equal(calls[5].searchParams.get("hero_id"), "7");
+  assert.equal(calls[7].searchParams.get("hero_ids"), "7,8");
+  assert.equal(calls[8].searchParams.get("hero_id"), "7");
 });
 
 test("hero stats normalizer follows the current OpenAPI schema", () => {
