@@ -178,7 +178,10 @@ export function buildRequest(operation, values = {}) {
   for (const parameter of operation.parameters) {
     const value = values[parameter.name];
     const schema = parameterSchema(parameter);
-    if (value === undefined || value === "") continue;
+    if (value === undefined || value === "") {
+      if (parameter.required) throw new TypeError(`Missing required parameter: ${parameter.name}`);
+      continue;
+    }
 
     const coerced = coerceParameter(value, schema);
 
@@ -191,8 +194,22 @@ export function buildRequest(operation, values = {}) {
 
   let body;
   const mediaType = selectRequestMediaType(operation, values);
-  if (values.__body !== undefined && values.__body !== "") {
-    body = typeof values.__body === "string" ? JSON.parse(values.__body) : values.__body;
+  const hasBody = values.__body !== undefined && values.__body !== "";
+  if (operation.requestBody?.required && !hasBody) {
+    throw new TypeError("Missing required request body");
+  }
+  if (hasBody) {
+    if (typeof values.__body !== "string") {
+      body = values.__body;
+    } else if (mediaType?.includes("json")) {
+      try {
+        body = JSON.parse(values.__body);
+      } catch {
+        throw new TypeError("Request body must contain valid JSON for the selected content type.");
+      }
+    } else {
+      body = values.__body;
+    }
   }
 
   return {
