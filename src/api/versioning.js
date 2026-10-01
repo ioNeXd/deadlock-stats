@@ -156,7 +156,7 @@ export function reconcileVersionPolicy(previousOpenApi, nextOpenApi, callbacks =
         type: "resource_removed",
         resourcePath,
         path: previous.path,
-        version: previous.version,
+        version: `v${previous.versionNumber}`,
       };
 
       events.push(event);
