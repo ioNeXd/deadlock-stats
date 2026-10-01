@@ -119,7 +119,7 @@ test("expanded analytics wrappers use documented paths and preserve query option
   assert.equal(calls[0].searchParams.get("min_hero_matches"), "20");
   assert.equal(calls[4].searchParams.get("min_matches"), "20");
   assert.equal(calls[5].searchParams.get("hero_id"), "7");
-  assert.deepEqual(calls[7].searchParams.getAll("hero_ids"), ["7", "8"]);
+  assert.equal(calls[7].searchParams.get("hero_ids"), "7,8");
   assert.equal(calls[8].searchParams.get("hero_id"), "7");
 });
 
@@ -414,10 +414,10 @@ test("analytics wrappers forward current combo and permutation filters", async (
     dedupe: false,
   });
 
-  assert.deepEqual(calls[0].searchParams.getAll("include_hero_ids"), ["7", "8"]);
-  assert.deepEqual(calls[0].searchParams.getAll("exclude_hero_ids"), ["9"]);
-  assert.deepEqual(calls[0].searchParams.getAll("include_enemy_hero_ids"), ["10"]);
-  assert.deepEqual(calls[0].searchParams.getAll("exclude_enemy_hero_ids"), ["11", "12"]);
+  assert.equal(calls[0].searchParams.get("include_hero_ids"), "7,8");
+  assert.equal(calls[0].searchParams.get("exclude_hero_ids"), "9");
+  assert.equal(calls[0].searchParams.get("include_enemy_hero_ids"), "10");
+  assert.equal(calls[0].searchParams.get("exclude_enemy_hero_ids"), "11,12");
   assert.equal(calls[1].searchParams.get("hero_id"), null);
   assert.equal(calls[1].searchParams.get("hero_ids"), "8,9");
 });
@@ -515,9 +515,9 @@ test("item analytics wrappers use documented endpoints and normalize current sch
   assert.equal(calls[0].searchParams.get("hero_ids"), "7,8");
   assert.equal(calls[0].searchParams.get("corrupted_items"), "include");
   assert.equal(calls[1].searchParams.get("hero_ids"), "7,8");
-  assert.deepEqual(calls[1].searchParams.getAll("item_ids"), ["101", "202"]);
-  assert.deepEqual(calls[2].searchParams.getAll("locked_item_ids"), ["101", "202"]);
-  assert.deepEqual(calls[2].searchParams.getAll("locked_columns"), ["0", "1"]);
+  assert.equal(calls[1].searchParams.get("item_ids"), "101,202");
+  assert.equal(calls[2].searchParams.get("locked_item_ids"), "101,202");
+  assert.equal(calls[2].searchParams.get("locked_columns"), "0,1");
 
   const item = normalizeItemStats({ data: [{ item_id: 101, bucket: 0, wins: 60, losses: 40, matches: 100, players: 100, avg_buy_time_s: 420, avg_sell_time_s: 900, avg_buy_time_relative: 0.25, avg_sell_time_relative: 0.5, future_metric: true }] });
   const permutation = normalizeItemPermutationStats({ data: [{ item_ids: [101, 202], wins: 30, losses: 20, matches: 50, future_metric: true }] });
