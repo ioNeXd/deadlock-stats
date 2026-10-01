@@ -96,18 +96,15 @@ async function parseResponse(response, responseType = "auto") {
   const contentType = contentTypeOf(response);
 
   if (responseType === "response") return response;
-  if (responseType === "arrayBuffer" || contentType === "application/octet-stream") {
-    return response.arrayBuffer();
-  }
-  if (responseType === "text" || contentType === "text/plain" || contentType === "text/html") {
-    return response.text();
-  }
-  if (responseType === "stream" || contentType === "text/event-stream") {
-    return response.body;
-  }
-  if (responseType === "blob" || contentType.startsWith("image/")) {
-    return response.blob();
-  }
+  if (responseType === "arrayBuffer") return response.arrayBuffer();
+  if (responseType === "text") return response.text();
+  if (responseType === "stream") return response.body;
+  if (responseType === "blob") return response.blob();
+  if (contentType === "application/octet-stream") return response.arrayBuffer();
+  if (contentType === "text/plain" || contentType === "text/html") return response.text();
+  if (contentType === "text/event-stream") return response.body;
+  if (contentType.startsWith("image/")) return response.blob();
+}
   if (response.status === 204) return null;
 
   const text = await response.text();
