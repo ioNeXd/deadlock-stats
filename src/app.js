@@ -6,7 +6,7 @@ import { API_BASE_URL } from "./api/client.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
-import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
+import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
@@ -203,6 +203,11 @@ async function loadAnalytics(signal) {
         ...assetVersion.options(),
         signal,
       }),
+      getHeroMatchupSnapshot({
+        ...assetVersion.options(),
+        min_matches: 20,
+        signal,
+      }),
     ]);
     const result = snapshotResult;
     if (signal.aborted) return;
@@ -290,6 +295,36 @@ async function loadAnalytics(signal) {
     };
     matchupSelect.addEventListener("change", event => renderMatchups(event.target.value));
     if (heroRows.length) renderMatchups(heroRows[0].heroId);
+    const buildSelect = $("#build-hero-select");
+    buildSelect.innerHTML = heroOptions;
+    let buildRequestId = 0;
+    const loadHeroBuilds = async heroId => {
+      const requestId = ++buildRequestId;
+      const panel = $("#hero-build-list");
+      panel.innerHTML = '<p class="muted">Loading builds and ability orders…</p>';
+      try {
+        const [builds, abilities] = await Promise.all([
+          getHeroBuildStatsSnapshot(heroId, { ...assetVersion.options(), min_matches: 20, signal }),
+          getAbilityOrderStatsSnapshot(heroId, { ...assetVersion.options(), min_matches: 20, signal }),
+        ]);
+        if (signal.aborted || requestId !== buildRequestId) return;
+        const buildRows = [...builds].sort((a,b) => Number(b.matches ?? 0) - Number(a.matches ?? 0)).slice(0, 8);
+        const abilityRows = [...abilities].sort((a,b) => Number(b.matches ?? 0) - Number(a.matches ?? 0)).slice(0, 6);
+        const rate = (wins, matches) => Number.isFinite(Number(wins)) && Number(matches) > 0 ? ((Number(wins) / Number(matches))*100).toFixed(1) + "%" : "—";
+        panel.innerHTML =
+          '<div class="matchup-columns"><div><div class="analytics-table-head"><span>BUILD ID</span><span>WIN RATE</span></div>' +
+          (buildRows.length ? buildRows.map(item => '<div class="analytics-table-row"><span>Build ' + esc(item.heroBuildId ?? "—") + '<small class="matchup-meta">' + esc(item.matches ?? "—") + ' matches · ' + esc(item.players ?? "—") + ' players</small></span><strong>' + esc(rate(item.wins,item.matches)) + '</strong></div>').join("") : '<p class="muted">No build statistics returned.</p>') +
+          '</div><div><div class="analytics-table-head"><span>ABILITY ORDER</span><span>WIN RATE</span></div>' +
+          (abilityRows.length ? abilityRows.map(item => '<div class="analytics-table-row"><span>' + esc(item.abilities.join(" → ") || "—") + '<small class="matchup-meta">' + esc(item.matches ?? "—") + ' matches · K/D/A ' + esc([item.totalKills,item.totalDeaths,item.totalAssists].join(" / ")) + '</small></span><strong>' + esc(rate(item.wins,item.matches)) + '</strong></div>').join("") : '<p class="muted">No ability-order statistics returned.</p>') +
+          '</div></div>';
+      } catch (error) {
+        if (isAborted(error)) return;
+        panel.innerHTML = '<p class="muted">Build analytics unavailable.</p>';
+        console.error("Deadlock hero build analytics failed", error);
+      }
+    };
+    buildSelect.addEventListener("change", event => loadHeroBuilds(event.target.value));
+    if (heroRows.length) loadHeroBuilds(heroRows[0].heroId);
     $("#analytics-status").textContent = "LIVE";
     $("#analytics-status").classList.add("online");
     setConnection(true, "API connected");
