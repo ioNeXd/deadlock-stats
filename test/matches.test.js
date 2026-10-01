@@ -20,7 +20,12 @@ test("match wrappers target documented endpoints", async () => {
     include_player_stats: false,
     hero_ids: [1, 2],
     include_item_ids: [101, 202],
+    extra_match_columns: "team_score",
+    extra_player_columns: "stats.player_damage",
+    order_by: "start_time",
+    order_direction: "desc",
     limit: 2,
+    format: "json",
     cache: false,
     dedupe: false,
   });
@@ -39,6 +44,11 @@ test("match wrappers target documented endpoints", async () => {
   assert.equal(calls[4].searchParams.get("hero_ids"), "1,2");
   assert.equal(calls[4].searchParams.get("include_item_ids"), "101,202");
   assert.equal(calls[4].searchParams.get("limit"), "2");
+  assert.equal(calls[4].searchParams.get("extra_match_columns"), "team_score");
+  assert.equal(calls[4].searchParams.get("extra_player_columns"), "stats.player_damage");
+  assert.equal(calls[4].searchParams.get("order_by"), "start_time");
+  assert.equal(calls[4].searchParams.get("order_direction"), "desc");
+  assert.equal(calls[4].searchParams.get("format"), "json");
 });
 
 test("match normalizers preserve documented fields and raw data", () => {
