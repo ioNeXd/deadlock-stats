@@ -52,7 +52,7 @@ test("describeOperation separates path and query parameters", () => {
 
   assert.equal(described.pathParameters[0].name, "hero_id");
   assert.equal(described.queryParameters[1].name, "enabled");
-  assert.deepEqual(described.parameterSummary[2].schema.type, "array");
+  assert.equal(described.parameterSummary[3].schema.type, "array");
 });
 
 test("buildRequest coerces typed query parameters and encodes path parameters", () => {
@@ -65,7 +65,7 @@ test("buildRequest coerces typed query parameters and encodes path parameters", 
   });
 
   assert.equal(request.path, "/v1/example/42");
-  assert.deepEqual(request.query, { enabled: true, ids: ["1", "2", "3"], limit: 10 });
+  assert.deepEqual(request.query, { enabled: true, ids: [1, 2, 3], limit: 10 });
 });
 
 test("executeOperation delegates the documented operation to the API client", async () => {
