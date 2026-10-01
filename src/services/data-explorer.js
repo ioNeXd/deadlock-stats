@@ -274,12 +274,24 @@ function coerceScalar(value, schema) {
   return result;
 }
 
-function coerceParameter(value, schema) {
+function coerceParameter(value, schema, parameter = null) {
   if (value === "" || value === undefined) return undefined;
   if (value === null) return schemaAllowsNull(schema) ? null : undefined;
 
   if (schemaType(schema) === "array") {
-    const values = Array.isArray(value) ? value : String(value).split(",").map(item => item.trim()).filter(Boolean);
+    const style = parameter?.style ?? (parameter?.in === "query" ? "form" : "simple");
+    const explode = parameter?.explode ?? (style === "form");
+    let values;
+
+    if (Array.isArray(value)) {
+      values = value;
+    } else {
+      const text = String(value).trim();
+      if (style === "spaceDelimited") values = text.split(/\s+/).filter(Boolean);
+      else if (style === "pipeDelimited") values = text.split("|").map(item => item.trim()).filter(Boolean);
+      else if (style === "form" && explode && parameter?.in === "query" && !/comma separated/i.test(parameter?.description ?? "")) values = [text];
+      else values = text.split(",").map(item => item.trim()).filter(Boolean);
+    }
     if (schema.minItems !== undefined && values.length < schema.minItems) throw new TypeError("Parameter has fewer items than minItems.");
     if (schema.maxItems !== undefined && values.length > schema.maxItems) throw new TypeError("Parameter has more items than maxItems.");
     return values.map(item => coerceScalar(item, schema?.items ?? {}));
@@ -524,7 +536,7 @@ export function buildRequest(operation, values = {}) {
       }
     }
 
-    const coerced = coerceParameter(value, schema);
+    const coerced = coerceParameter(value, schema, parameter);
 
     if (parameter.in === "path") {
       path = path.replace(`{${parameter.name}}`, serializePathParameter(parameter, coerced));
