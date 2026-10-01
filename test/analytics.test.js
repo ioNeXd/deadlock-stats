@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats } from "../src/api/analytics.js";
-import { normalizeGameStats, normalizeHeroBanStats } from "../src/services/analytics.js";
+import { normalizeGameStats, normalizeHeroBanStats, normalizeHeroStats } from "../src/services/analytics.js";
 import { clearApiCache } from "../src/api/client.js";
 
 const originalFetch = globalThis.fetch;
@@ -90,4 +90,99 @@ test("expanded analytics wrappers use documented paths and preserve query option
   assert.equal(calls[0].searchParams.get("bucket"), "start_time_day");
   assert.equal(calls[0].searchParams.get("min_matches"), "20");
   assert.equal(calls[4].searchParams.get("min_matches"), "20");
+});
+
+test("hero stats normalizer follows the current OpenAPI schema", () => {
+  const result = normalizeHeroStats({
+    data: [{
+      account_id: 11,
+      hero_id: 7,
+      matches_played: 25,
+      last_played: 1788220800,
+      time_played: 72000,
+      wins: 14,
+      ending_level: 10.5,
+      kills: 200,
+      deaths: 100,
+      assists: 300,
+      kills_per_min: 0.25,
+      networth_per_min: 500,
+      accuracy: 0.61,
+      crit_shot_rate: 0.12,
+      mvp_rank_counts: [3, 4, 5],
+      mvp_rated_matches: 20,
+      matches: [1001, 1002],
+      permanent_buffs: 9,
+      permanent_buff_matches: 8,
+      permanent_buffs_per_min: 0.08,
+      avg_first_permanent_buff_time_s: 900,
+      future_metric: "kept",
+    }],
+  });
+
+  assert.deepEqual(result[0], {
+    accountId: 11,
+    heroId: 7,
+    matchesPlayed: 25,
+    lastPlayed: 1788220800,
+    timePlayed: 72000,
+    wins: 14,
+    endingLevel: 10.5,
+    kills: 200,
+    deaths: 100,
+    assists: 300,
+    totalPlayerDamage: null,
+    totalPlayerDamageTaken: null,
+    totalBossDamage: null,
+    totalCreepDamage: null,
+    totalNeutralDamage: null,
+    deniesPerMatch: null,
+    killsPerMin: 0.25,
+    deathsPerMin: null,
+    assistsPerMin: null,
+    deniesPerMin: null,
+    networthPerMin: 500,
+    lastHitsPerMin: null,
+    damagePerMin: null,
+    damagePerSoul: null,
+    damageMitigatedPerMin: null,
+    damageTakenPerMin: null,
+    damageTakenPerSoul: null,
+    creepsPerMin: null,
+    objDamagePerMin: null,
+    objDamagePerSoul: null,
+    accuracy: 0.61,
+    critShotRate: 0.12,
+    mvpRankCounts: [3, 4, 5],
+    mvpRatedMatches: 20,
+    matches: [1001, 1002],
+    permanentBuffs: 9,
+    permanentBuffMatches: 8,
+    permanentBuffsPerMin: 0.08,
+    avgFirstPermanentBuffTimeS: 900,
+    raw: {
+      account_id: 11,
+      hero_id: 7,
+      matches_played: 25,
+      last_played: 1788220800,
+      time_played: 72000,
+      wins: 14,
+      ending_level: 10.5,
+      kills: 200,
+      deaths: 100,
+      assists: 300,
+      kills_per_min: 0.25,
+      networth_per_min: 500,
+      accuracy: 0.61,
+      crit_shot_rate: 0.12,
+      mvp_rank_counts: [3, 4, 5],
+      mvp_rated_matches: 20,
+      matches: [1001, 1002],
+      permanent_buffs: 9,
+      permanent_buff_matches: 8,
+      permanent_buffs_per_min: 0.08,
+      avg_first_permanent_buff_time_s: 900,
+      future_metric: "kept",
+    },
+  });
 });
