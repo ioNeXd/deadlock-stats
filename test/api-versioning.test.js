@@ -17,32 +17,40 @@ test("detectApiVersions finds API versions from OpenAPI paths", () => {
   );
 });
 
-test("v1 becomes legacy only when a newer version exists", () => {
+test("v1 stays current when no matching v2 resource exists", () => {
   const events = [];
   const policy = buildVersionPolicy(
-    { paths: { "/v1/assets/heroes": {}, "/v1/items": {} } },
+    { paths: { "/v1/assets/heroes": {}, "/v2/patches": {} } },
     event => events.push(event),
   );
 
-  assert.equal(policy.currentVersion, "v1");
-  assert.deepEqual(policy.legacyVersions, []);
+  assert.deepEqual(policy.current, [
+    { path: "/v1/assets/heroes", version: "v1" },
+    { path: "/v2/patches", version: "v2" },
+  ]);
+  assert.deepEqual(policy.legacy, []);
   assert.deepEqual(events, []);
 });
 
-test("legacy callback is triggered for v1 when v2 appears", () => {
+test("legacy callback is triggered only for the matching v1 resource", () => {
   const events = [];
   const policy = buildVersionPolicy(
-    { paths: { "/v1/assets/heroes": {}, "/v2/assets/heroes": {} } },
+    { paths: { "/v1/patches": {}, "/v1/assets/heroes": {}, "/v2/patches": {} } },
     event => events.push(event),
   );
 
-  assert.equal(policy.currentVersion, "v2");
-  assert.deepEqual(policy.legacyVersions, ["v1"]);
-  assert.deepEqual(events, [
+  assert.deepEqual(policy.legacy, [
     {
+      path: "/v1/patches",
       version: "v1",
+      currentPath: "/v2/patches",
       currentVersion: "v2",
-      reason: "A newer API version (v2) is present in the OpenAPI contract.",
+      reason: "A newer API version exists for the same resource path.",
     },
+  ]);
+  assert.deepEqual(events, policy.legacy);
+  assert.deepEqual(policy.current, [
+    { path: "/v1/assets/heroes", version: "v1" },
+    { path: "/v2/patches", version: "v2" },
   ]);
 });
