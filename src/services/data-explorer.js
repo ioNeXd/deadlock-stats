@@ -151,10 +151,10 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
         schema: resolveSchema(parameter.schema ?? {}, contract),
       }));
       const requestBody = resolveLocalRef(operation.requestBody, contract) ?? null;
-      const responses = Object.fromEntries(Object.entries(operation.responses ?? {}).map(([status, response]) => [
-        status,
-        response ? {
-          ...response,
+      const responses = Object.fromEntries(Object.entries(operation.responses ?? {}).map(([status, response]) => {
+        const resolvedResponse = resolveLocalRef(response, contract) ?? response;
+        return [status, resolvedResponse ? {
+          ...resolvedResponse,
           headers: Object.fromEntries(Object.entries(response.headers ?? {}).map(([name, header]) => {
             const resolved = resolveLocalRef(header, contract) ?? header;
             return [name, { ...resolved, schema: resolveSchema(resolved.schema ?? null, contract) }];
@@ -162,8 +162,8 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
           content: Object.fromEntries(Object.entries(response.content ?? {}).map(([mediaType, media]) => [
             mediaType, media ? { ...media, schema: resolveSchema(media.schema ?? null, contract) } : media,
           ])),
-        } : response,
-      ]));
+        } : resolvedResponse];
+      }));
       const result = {
         operationId: operation.operationId ?? method.toUpperCase() + " " + path,
         method: method.toUpperCase(), path,
