@@ -380,6 +380,27 @@ test("request body metadata resolves examples and preserves encoding", () => {
   assert.deepEqual(described.requestBodyInfo[0].encoding.payload, { contentType: "application/json" });
 });
 
+test("describeOperation reuses the operation contract for local refs", () => {
+  const operation = listApiOperations({
+    components: { parameters: { Id: { name: "id", in: "path", required: true, schema: { type: "integer" } } } },
+    paths: { "/v1/{id}": { get: { parameters: [{ $ref: "#/components/parameters/Id" }], responses: { "200": { description: "ok" } } } } },
+  })[0];
+  const described = describeOperation(operation);
+  assert.equal(described.parameterSummary[0].type, "integer");
+});
+
+test("buildRequest matches structured suffix media type wildcards", () => {
+  const operation = {
+    method: "POST",
+    path: "/v1/body",
+    parameters: [],
+    requestBody: { content: { "application/vnd.deadlock+json": { schema: { type: "object" } } } },
+  };
+  const request = buildRequest(operation, { __contentType: "application/*+json", __body: '{"ok":true}' });
+  assert.equal(request.mediaType, "application/vnd.deadlock+json");
+  assert.deepEqual(request.body, { ok: true });
+});
+
 test("buildRequest selects compatible JSON media types", () => {
   const operation = {
     operationId: "body_media",
