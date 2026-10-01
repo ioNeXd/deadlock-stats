@@ -356,7 +356,31 @@ For hero data, the application can consume documented fields such as:
 
 The asset layer should not invent replacement artwork when the API provides the corresponding asset.
 
-## 10. UI / View Models
+## 10. Map Explorer / Coordinate Transformation Debt
+
+The Map Explorer consumes the documented `/v1/assets/map` contract and currently renders the official map image, objective positions, neutral camps, entities, and zipline data.
+
+The API contract distinguishes two coordinate representations:
+
+- objective positions are already expressed as relative percentages suitable for CSS placement;
+- neutral camps/entities expose world `[x,y,z]` positions and, where applicable, relative `left`/`top` coordinates;
+- zipline paths expose cubic-spline control-point arrays (`P0_points`, `P1_points`, `P2_points`) in world coordinates.
+
+### Explicit pending item
+
+**Map world-coordinate → minimap-coordinate transformation remains unresolved.**
+
+The current UI must not invent a mathematically incorrect projection. In particular:
+
+- do not treat cubic-spline control points as a simple polyline unless the rendering is explicitly documented as an approximation;
+- do not infer an arbitrary world-to-image transform from `radius` alone;
+- do not silently assume axis orientation, origin, scale, or image bounds.
+
+The next implementation step for the Map Explorer is therefore to determine and verify the coordinate transform from the official API contract/data before making zipline geometry visually authoritative.
+
+If the official contract does not expose enough information for a deterministic transform, keep the raw zipline geometry available and document the limitation instead of fabricating a projection.
+
+## 11. UI / View Models
 
 The UI consumes view-oriented data rather than raw transport responses.
 
@@ -382,7 +406,7 @@ The UI should not:
 - duplicate normalization logic;
 - hardcode API capabilities that belong in the contract/inventory.
 
-## 11. Data Explorer
+## 12. Data Explorer
 
 The Data Explorer is the escape hatch for capabilities without a dedicated page.
 
@@ -411,7 +435,7 @@ A mature Data Explorer should expose, where applicable:
 
 API-only capabilities should remain discoverable here even when they do not justify a dedicated UI.
 
-## 12. Error handling
+## 13. Error handling
 
 Errors should retain enough context for debugging and product feedback.
 
@@ -429,7 +453,7 @@ Where available, preserve:
 
 UI code should convert these into user-facing states without destroying the underlying diagnostic information.
 
-## 13. Testing architecture
+## 14. Testing architecture
 
 Tests live under:
 
@@ -465,7 +489,7 @@ When adding a feature, test:
 7. cache/dedupe behavior where applicable;
 8. version/deprecation behavior where applicable.
 
-## 14. Dependency policy
+## 15. Dependency policy
 
 Prefer platform APIs and the existing project structure.
 
@@ -478,7 +502,7 @@ Avoid dependencies that duplicate:
 - API normalization;
 - simple UI primitives.
 
-## 15. Change workflow
+## 16. Change workflow
 
 Every significant change should follow:
 
@@ -499,7 +523,7 @@ Every significant change should follow:
 
 Never modify `main`.
 
-## 16. Architectural invariants
+## 17. Architectural invariants
 
 The following are project invariants:
 
