@@ -275,7 +275,7 @@ async function loadAnalytics(signal) {
         .slice(0, 10);
       const synergies = matchup.synergies
         .filter(item => String(item.heroId1) === selectedId || String(item.heroId2) === selectedId)
-        .sort((a, b) => Number(b.wins ?? 0) / Math.max(1, Number(b.matchesPlayed ?? 0) - Number(a.wins ?? 0) / Math.max(1, Number(a.matchesPlayed ?? 0)))
+        .sort((a, b) => (Number(b.wins ?? 0) / Math.max(1, Number(b.matchesPlayed ?? 0))) - (Number(a.wins ?? 0) / Math.max(1, Number(a.matchesPlayed ?? 0)))
         .slice(0, 6);
       const heroName = id => {
         const hero = heroesById.get(String(id));
