@@ -74,7 +74,7 @@ test("buildVersionPolicy treats explicitly deprecated OpenAPI operations as lega
     version: "v1",
     currentPath: null,
     currentVersion: null,
-    reason: "The OpenAPI contract marks this operation as deprecated.",
+    reason: "The OpenAPI contract marks this resource as deprecated.",
   }]);
   assert.deepEqual(events, policy.legacy);
 });
@@ -119,6 +119,7 @@ test("reconcileVersionPolicy reports discovered paths and legacy transitions", (
       legacyVersion: "v1",
       currentPath: "/v2/patches",
       currentVersion: "v2",
+      reason: "A newer API version replaced the resource.",
     },
   ]);
   assert.deepEqual(events, result.events);
