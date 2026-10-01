@@ -28,8 +28,23 @@ function filteredQuery(options, allowed) {
   ));
 }
 
+function validateAccountId(accountId, name = "accountId") {
+  if (!Number.isInteger(accountId) || accountId < 0) {
+    throw new RangeError(name + " must be a non-negative integer");
+  }
+  return accountId;
+}
+
+function validateAccountIds(accountIds, max = 1000) {
+  if (!Array.isArray(accountIds) || accountIds.length < 1 || accountIds.length > max) {
+    throw new RangeError("accountIds must contain between 1 and " + max + " account IDs");
+  }
+  accountIds.forEach(accountId => validateAccountId(accountId));
+  return accountIds;
+}
+
 function accountPath(accountId, suffix = "") {
-  return "/v1/players/" + encodeURIComponent(accountId) + suffix;
+  return "/v1/players/" + encodeURIComponent(validateAccountId(accountId)) + suffix;
 }
 
 export function getPlayerHeroStats(options = {}) {
@@ -51,14 +66,16 @@ export function getPlayerRankDistribution(options = {}) {
 }
 
 export function getPlayerRanks(accountIds, options = {}) {
-  if (!Array.isArray(accountIds) || accountIds.length < 1 || accountIds.length > 1000) {
-    throw new RangeError("accountIds must contain between 1 and 1000 account IDs");
-  }
-  const query = { account_ids: Array.isArray(accountIds) ? accountIds.join(",") : accountIds };
+  validateAccountIds(accountIds);
+  const query = { account_ids: accountIds.join(",") };
   return apiGet("/v1/players/rank", { ...options, query });
 }
 
 export function searchSteamProfiles(searchQuery, options = {}) {
+  if (typeof searchQuery !== "string" || searchQuery.trim() === "") throw new TypeError("searchQuery is required");
+  if (options.limit != null && (!Number.isInteger(options.limit) || options.limit < 1 || options.limit > 1000)) {
+    throw new RangeError("limit must be between 1 and 1000");
+  }
   const query = {
     search_query: searchQuery,
     ...(options.limit == null ? {} : { limit: options.limit }),
@@ -70,9 +87,7 @@ export function searchSteamProfiles(searchQuery, options = {}) {
 }
 
 export function getSteamProfiles(accountIds, options = {}) {
-  if (!Array.isArray(accountIds) || accountIds.length < 1 || accountIds.length > 1000) {
-    throw new RangeError("accountIds must contain between 1 and 1000 account IDs");
-  }
+  validateAccountIds(accountIds);
   return apiGet("/v1/players/steam", {
     ...options,
     query: { account_ids: Array.isArray(accountIds) ? accountIds.join(",") : accountIds, ...(options.refresh == null ? {} : { refresh: options.refresh }) },
