@@ -132,6 +132,27 @@ test("listApiOperations resolves local parameter refs", () => {
   assert.equal(buildRequest(operation, { hero_id: "7", __body: "{}" }).path, "/v1/heroes/7");
 });
 
+test("listApiOperations resolves OpenAPI path item refs", () => {
+  const contractWithPathRef = {
+    components: {
+      pathItems: {
+        Hero: {
+          parameters: [{ name: "hero_id", in: "path", required: true, schema: { type: "integer" } }],
+          get: { operationId: "hero_from_ref", responses: { "200": { description: "ok" } } },
+        },
+      },
+    },
+    paths: {
+      "/v1/heroes/{hero_id}": { $ref: "#/components/pathItems/Hero" },
+    },
+  };
+
+  const operation = listApiOperations(contractWithPathRef)[0];
+  assert.equal(operation.operationId, "hero_from_ref");
+  assert.equal(operation.parameters[0].name, "hero_id");
+  assert.equal(buildRequest(operation, { hero_id: "7" }).path, "/v1/heroes/7");
+});
+
 test("describeOperation resolves parameter and request body schema refs", () => {
   const contractWithSchemaRef = {
     components: {
