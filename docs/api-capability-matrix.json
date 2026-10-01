@@ -20,11 +20,28 @@
     "NOT_APPLICABLE"
   ],
   "audit_status": {
-    "endpoint_inventory": "PENDING_MACHINE_GENERATION",
-    "parameter_inventory": "PENDING_MACHINE_GENERATION",
-    "schema_inventory": "PENDING_MACHINE_GENERATION",
-    "content_type_inventory": "CONFIRMED",
-    "authentication_inventory": "CONFIRMED_IN_CONTRACT",
+    "endpoint_inventory": "COMPLETE",
+    "parameter_inventory": "COMPLETE",
+    "schema_inventory": "COMPLETE",
+    "content_type_inventory": "COMPLETE",
+    "authentication_inventory": "COMPLETE",
     "rate_limit_inventory": "CONFIRMED_IN_DESCRIPTIONS"
+  },
+  "inventory": {
+    "path_count": 126,
+    "operation_count": 129,
+    "schema_count": 230,
+    "security_scheme_count": 2,
+    "deprecated_operation_count": 14,
+    "content_types": [
+      "application/json",
+      "application/octet-stream",
+      "image/png",
+      "image/webp",
+      "text/event-stream",
+      "text/html",
+      "text/plain"
+    ],
+    "generated_file": "docs/api-openapi-inventory.json"
   }
 }
