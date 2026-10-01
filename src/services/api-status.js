@@ -8,6 +8,8 @@ export function getApiHealth(options = {}) {
   return apiGet("/v1/info/health", options);
 }
 
+const REQUIRED_SERVICES = ["clickhouse", "postgres", "redis"];
+
 function normalizeServices(data) {
   const services = data?.services;
 
@@ -28,8 +30,11 @@ export async function probeApiStatus(options = {}) {
     });
 
     const services = normalizeServices(result.data);
-    const healthy = services
-      ? Object.values(services).every(value => value === true)
+    const hasCompleteHealth = services
+      ? REQUIRED_SERVICES.every(name => typeof services[name] === "boolean")
+      : false;
+    const healthy = hasCompleteHealth
+      ? REQUIRED_SERVICES.every(name => services[name] === true)
       : null;
 
     return {
