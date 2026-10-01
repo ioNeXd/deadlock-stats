@@ -64,14 +64,22 @@ function stableSerialize(value) {
 function waitForRetry(delayMs, signal) {
   if (!delayMs) return Promise.resolve();
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(resolve, delayMs);
-    if (!signal) return;
-    const abort = () => {
+    let settled = false;
+    const finish = callback => {
+      if (settled) return;
+      settled = true;
       clearTimeout(timer);
-      reject(signal.reason instanceof Error ? signal.reason : new DOMException("Request aborted", "AbortError"));
+      signal?.removeEventListener("abort", abort);
+      callback();
     };
-    if (signal.aborted) abort();
-    else signal.addEventListener("abort", abort, { once: true });
+    const timer = setTimeout(() => finish(resolve), delayMs);
+    const abort = () => finish(() => reject(
+      signal.reason instanceof Error ? signal.reason : new DOMException("Request aborted", "AbortError"),
+    ));
+    if (signal) {
+      if (signal.aborted) abort();
+      else signal.addEventListener("abort", abort, { once: true });
+    }
   });
 }
 
@@ -180,8 +188,13 @@ async function request(path, {
   authorization,
 } = {}) {
   const upperMethod = method.toUpperCase();
-  const effectiveUseCache = useCache === undefined ? upperMethod === "GET" : useCache;
-  const effectiveDedupe = dedupe === undefined ? upperMethod === "GET" : dedupe;
+  const authenticated = Boolean(apiKey || authorization);
+  const effectiveUseCache = authenticated
+    ? false
+    : (useCache === undefined ? upperMethod === "GET" : useCache);
+  const effectiveDedupe = authenticated
+    ? false
+    : (dedupe === undefined ? upperMethod === "GET" : dedupe);
   const url = normalizePath(path, query);
   const requestBody = body == null ? null : typeof body === "string" ? body : JSON.stringify(body);
   const key = cacheKey(upperMethod, url, body == null ? null : body);
