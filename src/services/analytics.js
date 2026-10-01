@@ -1,4 +1,4 @@
-import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats } from "../api/analytics.js";
+import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroBuildStats, getAbilityOrderStats } from "../api/analytics.js";
 
 export async function getAnalyticsSnapshot(options = {}) {
   const { signal, ...requestOptions } = options;
@@ -164,4 +164,52 @@ export async function getHeroMatchupSnapshot(options = {}) {
     counters: normalizeHeroCounterStats(counterResult),
     synergies: normalizeHeroSynergyStats(synergyResult),
   };
+}
+
+
+export function normalizeHeroBuildStats(result) {
+  return normalizeRows(result, item => ({
+    heroId: item?.hero_id ?? null,
+    heroBuildId: item?.hero_build_id ?? null,
+    wins: item?.wins ?? null,
+    losses: item?.losses ?? null,
+    matches: item?.matches ?? null,
+    players: item?.players ?? null,
+    raw: item,
+  }));
+}
+
+export function normalizeAbilityOrderStats(result) {
+  return normalizeRows(result, item => ({
+    abilities: Array.isArray(item?.abilities) ? item.abilities : [],
+    wins: item?.wins ?? null,
+    losses: item?.losses ?? null,
+    matches: item?.matches ?? null,
+    players: item?.players ?? null,
+    totalKills: item?.total_kills ?? null,
+    totalDeaths: item?.total_deaths ?? null,
+    totalAssists: item?.total_assists ?? null,
+    raw: item,
+  }));
+}
+
+export async function getHeroBuildStatsSnapshot(heroId, options = {}) {
+  const { signal, ...requestOptions } = options;
+  const result = await getHeroBuildStats(heroId, {
+    ...requestOptions,
+    min_matches: requestOptions.min_matches ?? 20,
+    signal,
+  });
+  return normalizeHeroBuildStats(result);
+}
+
+export async function getAbilityOrderStatsSnapshot(heroId, options = {}) {
+  const { signal, ...requestOptions } = options;
+  const result = await getAbilityOrderStats({
+    ...requestOptions,
+    hero_id: heroId,
+    min_matches: requestOptions.min_matches ?? 20,
+    signal,
+  });
+  return normalizeAbilityOrderStats(result);
 }
