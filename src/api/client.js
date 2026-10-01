@@ -184,7 +184,7 @@ async function request(path, {
   const effectiveDedupe = dedupe === undefined ? upperMethod === "GET" : dedupe;
   const url = normalizePath(path, query);
   const requestBody = body == null ? null : typeof body === "string" ? body : JSON.stringify(body);
-  const key = cacheKey(upperMethod, url, requestBody);
+  const key = cacheKey(upperMethod, url, body == null ? null : body);
   const now = Date.now();
 
   if (effectiveUseCache) {
