@@ -42,25 +42,29 @@ function parameterSchema(parameter, contract = null) {
 
 function enumValues(schema) {
   if (Array.isArray(schema?.enum)) return schema.enum;
-  if (Array.isArray(schema?.oneOf)) {
-    return schema.oneOf.flatMap(item => Array.isArray(item?.enum) ? item.enum : []);
-  }
-  return [];
+  const variants = [...(schema?.oneOf ?? []), ...(schema?.anyOf ?? [])];
+  const values = variants.flatMap(item => Array.isArray(item?.enum) ? item.enum : item?.const !== undefined ? [item.const] : []);
+  if (schema?.const !== undefined) values.push(schema.const);
+  return [...new Set(values)];
 }
 
 function schemaType(schema) {
   if (typeof schema?.type === "string") return schema.type;
   if (Array.isArray(schema?.type)) return schema.type.find(type => type !== "null") ?? "string";
-  if (Array.isArray(schema?.oneOf)) {
-    return schema.oneOf.map(item => schemaType(item)).find(type => type !== "null") ?? "string";
+  const variants = [...(schema?.oneOf ?? []), ...(schema?.anyOf ?? []), ...(schema?.allOf ?? [])];
+  if (variants.length) return variants.map(item => schemaType(item)).find(type => type !== "null") ?? "string";
+  if (schema?.const !== undefined) {
+    if (schema.const === null) return "null";
+    return typeof schema.const === "boolean" ? "boolean" : typeof schema.const === "number" ? "number" : "string";
   }
   if (schema?.$ref) return "object";
   return "string";
 }
 
 function schemaNullable(schema) {
-  return Array.isArray(schema?.type) && schema.type.includes("null")
-    || Array.isArray(schema?.oneOf) && schema.oneOf.some(item => item?.type === "null");
+  const nullableType = Array.isArray(schema?.type) && schema.type.includes("null");
+  const variants = [...(schema?.oneOf ?? []), ...(schema?.anyOf ?? [])];
+  return nullableType || variants.some(item => item?.type === "null" || item?.const === null);
 }
 
 function parameterDefaults(parameter, contract = null) {
@@ -90,28 +94,32 @@ function mergeParameters(pathItem, operation, contract) {
   return [...merged.values()];
 }
 
-function requestBodyInfo(requestBody) {
+function requestBodyInfo(requestBody, contract = null) {
   const content = requestBody?.content ?? {};
   return Object.entries(content).map(([mediaType, media]) => ({
     mediaType,
     required: requestBody?.required === true,
-    schema: media?.schema ?? null,
+    schema: resolveSchema(media?.schema ?? null, contract),
     example: media?.example,
     examples: media?.examples ?? {},
   }));
 }
 
-function responseInfo(responses) {
+function responseInfo(responses, contract = null) {
   return Object.entries(responses ?? {}).map(([status, response]) => ({
     status,
     description: response?.description ?? "",
     content: Object.entries(response?.content ?? {}).map(([mediaType, media]) => ({
       mediaType,
-      schema: media?.schema ?? null,
+      schema: resolveSchema(media?.schema ?? null, contract),
       example: media?.example,
       examples: media?.examples ?? {},
     })),
-    headers: Object.keys(response?.headers ?? {}),
+    headers: Object.entries(response?.headers ?? {}).map(([name, header]) => ({
+      name,
+      ...resolveLocalRef(header, contract),
+      schema: resolveSchema(resolveLocalRef(header, contract)?.schema ?? null, contract),
+    })),
   }));
 }
 
@@ -139,6 +147,10 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
         status,
         response ? {
           ...response,
+          headers: Object.fromEntries(Object.entries(response.headers ?? {}).map(([name, header]) => {
+            const resolved = resolveLocalRef(header, contract) ?? header;
+            return [name, { ...resolved, schema: resolveSchema(resolved.schema ?? null, contract) }];
+          })),
           content: Object.fromEntries(Object.entries(response.content ?? {}).map(([mediaType, media]) => [
             mediaType, media ? { ...media, schema: resolveSchema(media.schema ?? null, contract) } : media,
           ])),
@@ -160,7 +172,7 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
         servers: operation.servers ?? contract.servers ?? [],
       };
       Object.defineProperty(result, "_contract", { value: contract, enumerable: false });
-      operations.push(result);;
+      operations.push(result);
     }
   }
 
@@ -191,11 +203,8 @@ export function describeOperation(operation, contract = null) {
       enum: enumValues(parameterSchema(parameter, contract)),
       constraints: parameterDefaults(parameter, contract),
     })),
-    requestBodyInfo: requestBodyInfo(resolvedOperation.requestBody).map(item => ({
-      ...item,
-      schema: resolveSchema(item.schema, contract),
-    })),
-    responseInfo: responseInfo(resolvedOperation.responses),
+    requestBodyInfo: requestBodyInfo(resolvedOperation.requestBody, contract),
+    responseInfo: responseInfo(resolvedOperation.responses, contract),
     security: securityInfo(operation, contract),
   };
 }
