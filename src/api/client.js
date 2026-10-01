@@ -88,6 +88,10 @@ function shouldRetry(status) {
   return status === 429 || status === 502 || status === 503 || status === 504;
 }
 
+function isRetryableMethod(method, retryNonIdempotent) {
+  return retryNonIdempotent || method === "GET" || method === "HEAD" || method === "OPTIONS";
+}
+
 function contentTypeOf(response) {
   return response.headers.get("content-type")?.split(";")[0].trim().toLowerCase() || "";
 }
@@ -147,6 +151,7 @@ async function request(path, {
   signal,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   retries = DEFAULT_RETRIES,
+  retryNonIdempotent = false,
   cacheTtlMs = DEFAULT_CACHE_TTL_MS,
   cache: useCache,
   dedupe,
@@ -223,7 +228,7 @@ async function request(path, {
             },
           );
 
-          if (attempt < retries && shouldRetry(response.status)) {
+          if (attempt < retries && isRetryableMethod(upperMethod, retryNonIdempotent) && shouldRetry(response.status)) {
             await new Promise(resolve => setTimeout(resolve, retryDelay(attempt, retryAfterMs)));
             continue;
           }
@@ -263,7 +268,7 @@ async function request(path, {
 
         if (error instanceof ApiError) throw error;
 
-        if (attempt < retries) {
+        if (attempt < retries && isRetryableMethod(upperMethod, retryNonIdempotent)) {
           await new Promise(resolve => setTimeout(resolve, retryDelay(attempt, null)));
           continue;
         }
