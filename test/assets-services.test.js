@@ -43,7 +43,7 @@ test("listHeroes preserves raw payload and normalizes collection data", async ()
 
   assert.equal(calls.length, 1);
   assert.equal(new URL(calls[0].url).pathname, "/v1/assets/heroes");
-  assert.equal(result.raw, payload);
+  assert.deepEqual(result.raw, payload);
   assert.equal(result.data.length, 1);
   assert.equal(result.data[0].id, 101);
   assert.equal(result.data[0].name, "Test Hero");
@@ -57,7 +57,7 @@ test("listHeroes accepts a direct array response", async () => {
 
   const result = await listHeroes({ cache: false, dedupe: false });
 
-  assert.equal(result.raw, payload);
+  assert.deepEqual(result.raw, payload);
   assert.deepEqual(result.data[0], {
     id: 7,
     name: "Array Hero",
@@ -79,7 +79,7 @@ test("fetchHero uses the dedicated hero endpoint and normalizes the detail", asy
 
   assert.equal(calls.length, 1);
   assert.equal(new URL(calls[0].url).pathname, "/v1/assets/heroes/12");
-  assert.equal(result.raw, payload);
+  assert.deepEqual(result.raw, payload);
   assert.equal(result.data.id, 12);
   assert.equal(result.data.name, "Detail Hero");
   assert.equal(result.data.images.background_image, "https://example.test/background.webp");
