@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats, getItemStats, getItemPermutationStats, getItemFlowStats } from "../src/api/analytics.js";
+import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats, getItemStats, getItemPermutationStats, getItemFlowStats, getLaneMatchupStats, getLaneSoulCurve, getPlayerPerformanceCurve, getPlayerStatsMetrics, getHeroScoreboard, getPlayerScoreboard, getKillDeathStats } from "../src/api/analytics.js";
 import { normalizeGameStats, normalizeHeroBanStats, normalizeBadgeDistribution, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats, normalizeItemStats, normalizeItemPermutationStats, normalizeItemFlowStats } from "../src/services/analytics.js";
 import { clearApiCache } from "../src/api/client.js";
 
@@ -528,4 +528,40 @@ test("item analytics wrappers use documented endpoints and normalize current sch
   assert.deepEqual(permutation[0].itemIds, [101, 202]);
   assert.equal(flow.nodes[0].adjustedWinRate, 0.58);
   assert.deepEqual(flow.reachedPerColumn, [120, 80]);
+});
+
+
+test("advanced analytics wrappers use current API paths and filters", async t => {
+  const calls = [];
+  t.mock.method(globalThis, "fetch", async input => {
+    calls.push(new URL(input));
+    return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+  });
+
+  await getLaneMatchupStats({ hero_ids: [1, 2], enemy_hero_ids: [3, 4], assigned_lanes: ["lane_a", "lane_b"], stats: ["kills", "denies"], cache: false, dedupe: false });
+  await getLaneSoulCurve({ hero_ids: [1, 2], group_by: ["assigned_lane", "hero_ids"], cache: false, dedupe: false });
+  await getPlayerPerformanceCurve({ resolution: 0, account_ids: [10, 20], include_item_ids: [30, 40], cache: false, dedupe: false });
+  await getPlayerStatsMetrics({ hero_ids: [1, 2], max_matches: 100, include_buff_metrics: true, cache: false, dedupe: false });
+  await getHeroScoreboard({ sort_by: "wins", sort_direction: "desc", account_ids: [10, 20], cache: false, dedupe: false });
+  await getPlayerScoreboard({ sort_by: "kills", start: 10, limit: 50, cache: false, dedupe: false });
+  await getKillDeathStats({ team: 1, account_ids: [10, 20], min_kills_per_raster: 2, cache: false, dedupe: false });
+
+  assert.equal(calls[0].pathname, "/v1/analytics/lane-matchup-stats");
+  assert.equal(calls[0].searchParams.get("hero_ids"), "1,2");
+  assert.equal(calls[0].searchParams.get("enemy_hero_ids"), "3,4");
+  assert.equal(calls[0].searchParams.get("assigned_lanes"), "lane_a,lane_b");
+  assert.equal(calls[0].searchParams.get("stats"), "kills,denies");
+  assert.equal(calls[1].pathname, "/v1/analytics/lane-soul-curve");
+  assert.equal(calls[1].searchParams.get("group_by"), "assigned_lane,hero_ids");
+  assert.equal(calls[2].pathname, "/v1/analytics/player-performance-curve");
+  assert.equal(calls[2].searchParams.get("account_ids"), "10,20");
+  assert.equal(calls[2].searchParams.get("include_item_ids"), "30,40");
+  assert.equal(calls[3].pathname, "/v1/analytics/player-stats/metrics");
+  assert.equal(calls[3].searchParams.get("include_buff_metrics"), "true");
+  assert.equal(calls[4].pathname, "/v1/analytics/scoreboards/heroes");
+  assert.equal(calls[4].searchParams.get("sort_by"), "wins");
+  assert.equal(calls[5].pathname, "/v1/analytics/scoreboards/players");
+  assert.equal(calls[5].searchParams.get("limit"), "50");
+  assert.equal(calls[6].pathname, "/v1/analytics/kill-death-stats");
+  assert.deepEqual(calls[6].searchParams.getAll("account_ids"), ["10", "20"]);
 });
