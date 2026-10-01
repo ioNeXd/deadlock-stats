@@ -147,6 +147,32 @@ async function loadDashboard(signal) {
   }
 
   if (heroes || snapshot) {
+    
+    const selection = $("#map-selection");
+    const showSelection = (type, title, data) => {
+      selection.innerHTML = '<span class="eyebrow">' + esc(type) + '</span><h4>' + esc(title) + '</h4><pre>' + esc(JSON.stringify(data, null, 2)) + '</pre>';
+    };
+    stage.querySelectorAll(".map-marker").forEach(button => {
+      button.addEventListener("click", () => {
+        showSelection(button.classList.contains("objective-marker") ? "OBJECTIVE" : button.classList.contains("camp-marker") ? "NEUTRAL CAMP" : "ENTITY", button.title, { label: button.title });
+      });
+    });
+    const canvas = stage.querySelector(".map-canvas");
+    let scale = 1;
+    let offsetX = 0, offsetY = 0, dragging = false, startX = 0, startY = 0;
+    const applyTransform = () => {
+      canvas.style.transform = "translate(" + offsetX + "px," + offsetY + "px) scale(" + scale + ")";
+      $("#map-zoom-reset").textContent = Math.round(scale * 100) + "%";
+    };
+    const changeZoom = delta => { scale = Math.min(2.5, Math.max(.75, scale + delta)); applyTransform(); };
+    $("#map-zoom-in").addEventListener("click", () => changeZoom(.25));
+    $("#map-zoom-out").addEventListener("click", () => changeZoom(-.25));
+    $("#map-zoom-reset").addEventListener("click", () => { scale = 1; offsetX = offsetY = 0; applyTransform(); });
+    stage.addEventListener("wheel", event => { event.preventDefault(); changeZoom(event.deltaY < 0 ? .1 : -.1); }, { passive: false });
+    stage.addEventListener("pointerdown", event => { if (event.target.closest(".map-marker")) return; dragging = true; startX = event.clientX - offsetX; startY = event.clientY - offsetY; stage.setPointerCapture(event.pointerId); });
+    stage.addEventListener("pointermove", event => { if (!dragging) return; offsetX = event.clientX - startX; offsetY = event.clientY - startY; applyTransform(); });
+    stage.addEventListener("pointerup", event => { dragging = false; stage.releasePointerCapture?.(event.pointerId); });
+    applyTransform();
     setConnection(true, "API connected");
     $("#api-badge").textContent = snapshot ? "ONLINE" : "PARTIAL";
     $("#api-badge").classList.add("online");
