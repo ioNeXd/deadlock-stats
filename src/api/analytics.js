@@ -28,6 +28,7 @@ const SCOREBOARD_FILTERS = [
   "max_average_badge","min_match_id","max_match_id","account_ids",
 ];
 
+const HERO_SCOREBOARD_FILTERS = SCOREBOARD_FILTERS.filter(key => key !== "max_matches");
 const PLAYER_SCOREBOARD_FILTERS = [...SCOREBOARD_FILTERS, "start", "limit"];
 
 const KILL_DEATH_FILTERS = [
@@ -156,7 +157,7 @@ function requireSortBy(options = {}) {
 }
 
 export function getHeroScoreboard(options = {}) {
-  return apiGet("/v1/analytics/scoreboards/heroes", analyticsOptions(requireSortBy(options), SCOREBOARD_FILTERS));
+  return apiGet("/v1/analytics/scoreboards/heroes", analyticsOptions(requireSortBy(options), HERO_SCOREBOARD_FILTERS));
 }
 
 export function getPlayerScoreboard(options = {}) {
