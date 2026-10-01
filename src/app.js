@@ -607,9 +607,9 @@ function renderBuilds(signal) {
     '<label class="field"><span>Sort by</span><select name="sort_by"><option value="weekly_favorites">Weekly favorites</option><option value="favorites" selected>Favorites</option><option value="updated_at">Updated</option><option value="published_at">Published</option><option value="version">Version</option><option value="ignores">Ignores</option><option value="reports">Reports</option></select></label>' +
     '<label class="field"><span>Direction</span><select name="sort_direction"><option value="desc" selected>Descending</option><option value="asc">Ascending</option></select></label>' +
     '<label class="field"><span>Latest only</span><select name="only_latest"><option value="true" selected>Yes</option><option value="false">No</option></select></label>' +
-    '<label class="field"><span>Limit</span><input name="limit" type="number" min="0" max="100" value="50"></label>' +
+    '<label class="field"><span>Limit</span><input name="limit" type="number" min="0" value="50"></label>' +
     '<button class="primary-button" type="submit">Search builds</button></form></section>' +
-    '<section class="panel"><div class="section-head"><div><span class="eyebrow">CATALOG</span><h2>Published builds</h2></div><b id="build-status">LOADING</b></div><div id="build-list" class="analytics-table"><p class="muted">Loading builds.</p></div></section>';
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">CATALOG</span><h2>Build catalog</h2></div><b id="build-status">LOADING</b></div><div id="build-list" class="analytics-table"><p class="muted">Loading builds.</p></div></section>';
 
   const form = $("#build-filters");
   const list = $("#build-list");
