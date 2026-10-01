@@ -3,11 +3,11 @@ import { getOpenApiContract } from "./services/versioning.js";
 import { probeApiStatus } from "./services/api-status.js";
 import { describeOperation, executeOperation, listApiOperations } from "./services/data-explorer.js";
 import { API_BASE_URL } from "./api/client.js";
+import { resolveAssetImage } from "./adapters/assets.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
 const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
-const imageOf = hero => hero?.images?.hero_card_critical_webp ?? hero?.images?.hero_card_critical ?? hero?.images?.background_image_webp ?? hero?.images?.background_image ?? "";
 const nameOf = hero => hero?.name ?? hero?.display_name ?? hero?.hero_name ?? ("Hero " + (hero?.id ?? "?"));
 const idOf = hero => hero?.id ?? hero?.hero_id ?? hero?.class_name ?? "—";
 
@@ -21,7 +21,7 @@ function renderHeroGrid(data) {
   const heroes = Array.isArray(data) ? data : (data?.data ?? []);
   const grid = $("#hero-grid");
   grid.innerHTML = heroes.slice(0, 8).map(hero => {
-    const image = imageOf(hero);
+    const image = resolveAssetImage(hero, ["hero_card_critical_webp", "hero_card_critical", "background_image_webp", "background_image"]);
     return '<a class="hero-card" href="#/heroes/' + encodeURIComponent(idOf(hero)) + '">' +
       (image ? '<img src="' + esc(image) + '" alt="" loading="lazy">' : "") +
       '<div class="hero-info"><small>HERO ASSET</small><h3>' + esc(nameOf(hero)) + '</h3><p>ID ' + esc(idOf(hero)) + '</p></div></a>';
@@ -63,7 +63,7 @@ function renderAssetCatalog(kind) {
   config.loader().then(result => {
     const catalog = $("#asset-catalog");
     catalog.innerHTML = result.data.map(entity => {
-      const image = config.image(entity);
+      const image = resolveAssetImage(entity);
       return '<article class="asset-card">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy">' : '<div class="asset-placeholder">NO ART</div>') + '<div><small>' + kind.toUpperCase() + '</small><h3>' + esc(entity.name ?? "Unnamed") + '</h3><p>ID ' + esc(entity.id ?? "—") + '</p></div></article>';
     }).join("") || '<div class="panel"><p>No assets returned.</p></div>';
     setConnection(true, "API connected");
