@@ -174,6 +174,17 @@ function coerceParameter(value, schema) {
   return coerceScalar(value, schema);
 }
 
+function serializeQueryParameter(parameter, value) {
+  if (!Array.isArray(value)) return value;
+
+  const style = parameter?.style ?? "form";
+  const explode = parameter?.explode ?? (style === "form");
+  const commaSeparated = /comma separated/i.test(parameter?.description ?? "");
+
+  if (style === "form" && (commaSeparated || explode === false)) return value.join(",");
+  return value;
+}
+
 function selectRequestMediaType(operation, values) {
   const available = requestBodyInfo(operation.requestBody);
   if (!available.length) return null;
@@ -198,7 +209,7 @@ export function buildRequest(operation, values = {}) {
     if (parameter.in === "path") {
       path = path.replace(`{${parameter.name}}`, encodeURIComponent(String(coerced)));
     } else if (parameter.in === "query") {
-      query[parameter.name] = coerced;
+      query[parameter.name] = serializeQueryParameter(parameter, coerced);
     }
   }
 
