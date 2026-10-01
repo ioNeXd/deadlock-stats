@@ -206,7 +206,10 @@ async function request(path, {
   const effectiveUseCache = authenticated || oneShotResponse
     ? false
     : (useCache === undefined ? upperMethod === "GET" : useCache);
-  const effectiveDedupe = authenticated || oneShotResponse
+  // A caller-owned AbortSignal cannot safely share a deduplicated request: aborting one
+  // subscriber would otherwise abort the shared fetch for every subscriber. Requests
+  // without a caller signal remain fully deduplicated.
+  const effectiveDedupe = authenticated || oneShotResponse || signal
     ? false
     : (dedupe === undefined ? upperMethod === "GET" : dedupe);
   const url = normalizePath(path, query);
