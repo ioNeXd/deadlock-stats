@@ -54,7 +54,7 @@ test("analytics wrappers forward top-level filters used by services", async t =>
   assert.equal(new URL(calls[1]).searchParams.get("account_ids"), "7");
   assert.equal(new URL(calls[2]).searchParams.get("hero_id"), "7");
   assert.equal(new URL(calls[2]).searchParams.get("min_ability_upgrades"), "4");
-  assert.equal(new URL(calls[2]).searchParams.get("account_ids"), "7");
+  assert.equal(new URL(calls[2]).searchParams.get("account_ids"), "7,8");
   assert.equal(new URL(calls[3]).searchParams.get("hero_ids"), "7");
   assert.equal(new URL(calls[3]).searchParams.get("enemy_hero_ids"), "8");
   assert.equal(new URL(calls[3]).searchParams.get("corrupted_items"), "include");
@@ -477,8 +477,8 @@ test("analytics wrappers drop filters not documented for each endpoint", async (
   await getHeroBuildStats(7, { query, cache: false, dedupe: false });
   await getBuildItemStats({ query, cache: false, dedupe: false });
 
-  assert.equal(calls[0].searchParams.get("hero_ids"), "7");
-  assert.equal(calls[0].searchParams.get("account_ids"), "123");
+  assert.equal(calls[0].searchParams.get("hero_ids"), "7,8");
+  assert.equal(calls[0].searchParams.get("account_ids"), "123,456");
   assert.equal(calls[0].searchParams.get("is_low_pri_pool"), null);
 
   assert.equal(calls[1].searchParams.get("is_low_pri_pool"), "true");
