@@ -64,10 +64,13 @@ export function getRank(tier, { language, clientVersion, ...options } = {}) {
   return apiGet(`/v1/assets/ranks/${encodeURIComponent(tier)}`, versionedOptions(options, { language, clientVersion }));
 }
 
-export function getRankSubrankImage(tier, subrank, { format, ...options } = {}) {
+export function getRankSubrankImage(tier, subrank, { format, responseType, ...options } = {}) {
   return apiGet(
     `/v1/assets/ranks/${encodeURIComponent(tier)}/${encodeURIComponent(subrank)}/image`,
-    withAssetQuery(options, { format }),
+    {
+      ...withAssetQuery(options, { format }),
+      responseType: responseType ?? "blob",
+    },
   );
 }
 
