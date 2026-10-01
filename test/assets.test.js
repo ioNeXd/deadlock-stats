@@ -127,3 +127,23 @@ test("asset image resolution prefers explicit fields and falls back across offic
     "https://cdn.example/icon.png",
   );
 });
+
+test("map normalization preserves API layers and optional build-specific fields", () => {
+  const raw = {
+    radius: 1234,
+    images: { minimap: "https://cdn.example/minimap.png", mid: "https://cdn.example/mid.png", plain: "https://cdn.example/plain.png", frame: "https://cdn.example/frame.png", background: null },
+    objective_positions: { patron: { left_relative: 0.1, top_relative: 0.2 } },
+    zipline_paths: [{ origin: [1, 2, 3], color: "#fff", color_parsed: { r: 255, g: 255, b: 255, a: 1 }, P0_points: [], P1_points: [], P2_points: [] }],
+    neutral_camps: null,
+    entities: null,
+    future_field: { preserved: true },
+  };
+  const normalized = normalizeMap(raw);
+  assert.equal(normalized.radius, 1234);
+  assert.equal(normalized.images.mid, raw.images.mid);
+  assert.deepEqual(normalized.objectivePositions, raw.objective_positions);
+  assert.equal(normalized.ziplinePaths.length, 1);
+  assert.equal(normalized.neutralCamps, null);
+  assert.equal(normalized.entities, null);
+  assert.deepEqual(normalized.raw.future_field, { preserved: true });
+});
