@@ -8,6 +8,7 @@ import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
 import { listBuilds } from "./services/builds.js";
+import { loadLeaderboard } from "./services/leaderboard.js";
 import { safeExternalUrl } from "./ui/security.js";
 import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
 
@@ -596,6 +597,47 @@ async function loadApiStatus(signal) {
   }
 }
 
+function renderLeaderboard(signal) {
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">GAME / LEADERBOARD</span><h2>Leaderboard</h2><p>Current regional leaderboard data returned by the Deadlock API. The API refreshes this data hourly.</p></section>' +
+    '<section class="panel analytics-filter-panel"><form id="leaderboard-filters" class="analytics-filters">' +
+    '<label class="field"><span>Region</span><select name="region"><option>Europe</option><option>Asia</option><option>NAmerica</option><option>SAmerica</option><option>Oceania</option></select></label>' +
+    '<label class="field"><span>Leaderboard ID</span><input name="leaderboard_id" type="number" min="0" inputmode="numeric" placeholder="Current"></label>' +
+    '<button class="primary-button" type="submit">Load leaderboard</button></form></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">REGIONAL DATA</span><h2>Players</h2></div><b id="leaderboard-status">LOADING</b></div><div id="leaderboard-list" class="analytics-table"><p class="muted">Loading leaderboard.</p></div></section>';
+
+  const form = $("#leaderboard-filters");
+  const list = $("#leaderboard-list");
+  const load = async values => {
+    $("#leaderboard-status").textContent = "LOADING";
+    list.innerHTML = '<p class="muted">Loading leaderboard…</p>';
+    try {
+      const options = {};
+      if (values.leaderboard_id !== "") options.leaderboard_id = Number(values.leaderboard_id);
+      const result = await loadLeaderboard(values.region, { ...options, signal });
+      if (signal.aborted) return;
+      const entries = result.data ?? [];
+      $("#leaderboard-status").textContent = entries.length + " PLAYERS";
+      list.innerHTML = entries.map((entry, index) => {
+        const heroes = Array.isArray(entry.top_hero_ids) ? entry.top_hero_ids.join(", ") : "—";
+        return '<article class="analytics-table-row">' +
+          '<span><strong>#' + esc(index + 1) + ' · ' + esc(entry.account_name ?? "Unknown account") + '</strong><small>Account IDs: ' + esc((entry.possible_account_ids ?? []).join(", ") || "—") + '</small></span>' +
+          '<span><strong>Rank ' + esc(entry.rank ?? "—") + '</strong><small>Top hero IDs: ' + esc(heroes) + '</small></span>' +
+          '</article>';
+      }).join("") || '<p class="muted">No leaderboard entries returned.</p>';
+    } catch (error) {
+      if (isAborted(error)) return;
+      $("#leaderboard-status").textContent = "ERROR";
+      list.innerHTML = '<p class="error-text">' + esc(error.message) + '</p>';
+    }
+  };
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    load(Object.fromEntries(new FormData(form).entries()));
+  });
+  load(Object.fromEntries(new FormData(form).entries()));
+}
+
 function renderBuilds(signal) {
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">GAME / BUILDS</span><h2>Builds</h2><p>Search the live build catalog using filters documented by the current Deadlock API.</p></section>' +
@@ -923,6 +965,7 @@ function route() {
   else if (routeName === "analytics") renderAnalytics(signal);
   else if (routeName === "matches") renderMatches(signal);
   else if (routeName === "builds") renderBuilds(signal);
+  else if (routeName === "leaderboard") renderLeaderboard(signal);
   else if (routeName === "item-analytics") renderItemAnalytics(signal);
   else if (routeName === "data") renderDataExplorer(signal);
   else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
