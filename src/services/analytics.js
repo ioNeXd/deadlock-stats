@@ -387,3 +387,62 @@ export async function getItemFlowSnapshot(options = {}) {
   });
   return normalizeItemFlowStats(result);
 }
+
+
+export function normalizePlayerPerformanceCurve(result) {
+  return normalizeRows(result, item => ({
+    gameTime: item?.game_time ?? null,
+    netWorthAvg: item?.net_worth_avg ?? null,
+    netWorthStd: item?.net_worth_std ?? null,
+    killsAvg: item?.kills_avg ?? null,
+    killsStd: item?.kills_std ?? null,
+    deathsAvg: item?.deaths_avg ?? null,
+    deathsStd: item?.deaths_std ?? null,
+    assistsAvg: item?.assists_avg ?? null,
+    assistsStd: item?.assists_std ?? null,
+    goldPlayerAvg: item?.gold_player_avg ?? null,
+    goldPlayerOrbsAvg: item?.gold_player_orbs_avg ?? null,
+    goldLaneCreepAvg: item?.gold_lane_creep_avg ?? null,
+    goldLaneCreepOrbsAvg: item?.gold_lane_creep_orbs_avg ?? null,
+    goldNeutralCreepAvg: item?.gold_neutral_creep_avg ?? null,
+    goldNeutralCreepOrbsAvg: item?.gold_neutral_creep_orbs_avg ?? null,
+    goldBossAvg: item?.gold_boss_avg ?? null,
+    goldBossOrbAvg: item?.gold_boss_orb_avg ?? null,
+    goldTreasureAvg: item?.gold_treasure_avg ?? null,
+    goldDeniedAvg: item?.gold_denied_avg ?? null,
+    goldDeathLossAvg: item?.gold_death_loss_avg ?? null,
+    goldAssistsAvg: item?.gold_assists_avg ?? null,
+    goldTeamBonusAvg: item?.gold_team_bonus_avg ?? null,
+    goldBreakableAvg: item?.gold_breakable_avg ?? null,
+    goldAbilityAssassinateAvg: item?.gold_ability_assassinate_avg ?? null,
+    goldItemTrophyCollectorAvg: item?.gold_item_trophy_collector_avg ?? null,
+    goldItemCultistSacrificeAvg: item?.gold_item_cultist_sacrifice_avg ?? null,
+    goldItemGooseEggAvg: item?.gold_item_goose_egg_avg ?? null,
+    permanentBuffsAvg: item?.permanent_buffs_avg ?? null,
+    raw: item,
+  }));
+}
+
+export function normalizeHeroScoreboard(result) {
+  return normalizeRows(result, item => ({ rank: item?.rank ?? null, heroId: item?.hero_id ?? null, value: item?.value ?? null, matches: item?.matches ?? null, raw: item }));
+}
+
+export function normalizePlayerScoreboard(result) {
+  return normalizeRows(result, item => ({ rank: item?.rank ?? null, accountId: item?.account_id ?? null, value: item?.value ?? null, matches: item?.matches ?? null, badge: item?.badge ?? null, badgeProgress: item?.badge_progress ?? null, raw: item }));
+}
+
+export function normalizeKillDeathStats(result) {
+  return normalizeRows(result, item => ({ positionX: item?.position_x ?? null, positionY: item?.position_y ?? null, killerTeam: item?.killer_team ?? null, deaths: item?.deaths ?? null, kills: item?.kills ?? null, raw: item }));
+}
+
+export function normalizeLaneMatchupStats(result) {
+  return normalizeRows(result, item => ({ assignedLane: item?.assigned_lane ?? null, heroIds: Array.isArray(item?.hero_ids) ? item.hero_ids : [], enemyHeroIds: Array.isArray(item?.enemy_hero_ids) ? item.enemy_hero_ids : [], wins: item?.wins ?? null, matchesPlayed: item?.matches_played ?? null, sampleTimeS: item?.sample_time_s ?? null, netWorthDiff: item?.net_worth_diff ?? null, sampleMatches: item?.sample_matches ?? null, stats: item?.stats && typeof item.stats === "object" ? item.stats : {}, raw: item }));
+}
+
+export function normalizeLaneSoulCurve(result) {
+  return normalizeRows(result, item => ({ assignedLane: item?.assigned_lane ?? null, heroIds: Array.isArray(item?.hero_ids) ? item.hero_ids : [], enemyHeroIds: Array.isArray(item?.enemy_hero_ids) ? item.enemy_hero_ids : [], sampleTimesS: Array.isArray(item?.sample_times_s) ? item.sample_times_s : [], sampleMatches: Array.isArray(item?.sample_matches) ? item.sample_matches : [], matchesPlayed: item?.matches_played ?? null, netWorthDiff: Array.isArray(item?.net_worth_diff) ? item.net_worth_diff : [], netWorthDiffStd: Array.isArray(item?.net_worth_diff_std) ? item.net_worth_diff_std : [], stats: item?.stats && typeof item.stats === "object" ? item.stats : {}, raw: item }));
+}
+
+export function normalizePlayerStatsMetrics(result) {
+  return { raw: result?.data, data: result?.data ?? null };
+}
