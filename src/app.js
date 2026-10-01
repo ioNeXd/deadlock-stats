@@ -6,7 +6,7 @@ import { API_BASE_URL } from "./api/client.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
-import { getAnalyticsSnapshot, getHeroStatsSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
+import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
@@ -186,14 +186,14 @@ function renderAnalytics(signal) {
     '<section class="page-head"><span class="eyebrow">ANALYTICS / MATCH INTELLIGENCE</span><h2>Analytics</h2><p>Aggregate match and hero-ban statistics from the documented analytics API.</p></section>' +
     '<section class="analytics-grid" id="analytics-summary"><article class="metric-card"><span>MATCHES</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>PLAYERS</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>AVG DURATION</span><strong>—</strong><small>loading</small></article><article class="metric-card"><span>AVG KILLS</span><strong>—</strong><small>loading</small></article></section>' +
     '<section class="panel analytics-hero-panel"><div class="section-head"><div><span class="eyebrow">HERO STATS</span><h2>Performance by hero</h2></div><span class="muted">TOP 16 BY MATCHES</span></div><div class="hero-stats-table"><div class="hero-stat-head"><span>HERO</span><span>MATCHES</span><span>WIN RATE</span><span>K / D / A</span><span>TOTAL DAMAGE</span><span>TOTAL NET WORTH</span></div><div id="hero-stats-list"></div></div></section>' +
-    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">GAME STATS</span><h2>Daily activity</h2></div><b id="analytics-status">LOADING</b></div><div id="game-stats-list" class="analytics-bars"></div></article>' +
+    '<section class="panel analytics-matchup-panel"><div class="section-head"><div><span class="eyebrow">HERO MATCHUPS</span><h2>Counter intelligence</h2></div><select id="matchup-hero-select" class="explorer-select" aria-label="Select hero for matchup analysis"></select></div><div id="hero-matchup-list" class="analytics-matchups"><p class="muted">Loading matchup data.</p></div></section><section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">GAME STATS</span><h2>Daily activity</h2></div><b id="analytics-status">LOADING</b></div><div id="game-stats-list" class="analytics-bars"></div></article>' +
     '<article class="panel"><div class="section-head"><div><span class="eyebrow">HERO BANS</span><h2>Ban activity</h2></div></div><div id="hero-ban-list" class="analytics-table"></div></article></section>';
   loadAnalytics(signal);
 }
 
 async function loadAnalytics(signal) {
   try {
-    const [snapshotResult, heroStats] = await Promise.all([
+    const [snapshotResult, heroStats, matchup] = await Promise.all([
       getAnalyticsSnapshot({
         ...assetVersion.options(),
         bucket: "start_time_day",
@@ -260,6 +260,36 @@ async function loadAnalytics(signal) {
         }).join("")
       : '<p class="muted">No hero statistics returned.</p>';
 
+    const heroOptions = heroRows
+      .map(item => {
+        const hero = heroesById.get(String(item.heroId));
+        return '<option value="' + esc(item.heroId) + '">' + esc(hero ? nameOf(hero) : "Hero " + item.heroId) + '</option>';
+      }).join("");
+    const matchupSelect = $("#matchup-hero-select");
+    matchupSelect.innerHTML = heroOptions;
+    const renderMatchups = heroId => {
+      const selectedId = String(heroId);
+      const counters = matchup.counters
+        .filter(item => String(item.heroId) === selectedId)
+        .sort((a, b) => Number(a.wins ?? 0) / Math.max(1, Number(a.matchesPlayed ?? 0)) - Number(b.wins ?? 0) / Math.max(1, Number(b.matchesPlayed ?? 0)))
+        .slice(0, 10);
+      const synergies = matchup.synergies
+        .filter(item => String(item.heroId1) === selectedId || String(item.heroId2) === selectedId)
+        .sort((a, b) => Number(b.wins ?? 0) / Math.max(1, Number(b.matchesPlayed ?? 0) - Number(a.wins ?? 0) / Math.max(1, Number(a.matchesPlayed ?? 0)))
+        .slice(0, 6);
+      const heroName = id => {
+        const hero = heroesById.get(String(id));
+        return hero ? nameOf(hero) : "Hero " + id;
+      };
+      $("#hero-matchup-list").innerHTML =
+        '<div class="matchup-columns"><div><div class="analytics-table-head"><span>COUNTER</span><span>WIN RATE</span></div>' +
+        (counters.length ? counters.map(item => '<div class="analytics-table-row"><span>' + esc(heroName(item.enemyHeroId)) + '<small class="matchup-meta">' + esc(item.matchesPlayed ?? "—") + ' matches</small></span><strong>' + esc(Number.isFinite(Number(item.wins)) && Number(item.matchesPlayed) > 0 ? ((Number(item.wins) / Number(item.matchesPlayed)) * 100).toFixed(1) + "%" : "—") + '</strong></div>').join("") : '<p class="muted">No counter data returned.</p>') +
+        '</div><div><div class="analytics-table-head"><span>SYNERGY</span><span>WIN RATE</span></div>' +
+        (synergies.length ? synergies.map(item => { const other = String(item.heroId1) === selectedId ? item.heroId2 : item.heroId1; return '<div class="analytics-table-row"><span>' + esc(heroName(other)) + '<small class="matchup-meta">' + esc(item.matchesPlayed ?? "—") + ' matches</small></span><strong>' + esc(Number.isFinite(Number(item.wins)) && Number(item.matchesPlayed) > 0 ? ((Number(item.wins) / Number(item.matchesPlayed)) * 100).toFixed(1) + "%" : "—") + '</strong></div>'; }).join("") : '<p class="muted">No synergy data returned.</p>') +
+        '</div></div>';
+    };
+    matchupSelect.addEventListener("change", event => renderMatchups(event.target.value));
+    if (heroRows.length) renderMatchups(heroRows[0].heroId);
     $("#analytics-status").textContent = "LIVE";
     $("#analytics-status").classList.add("online");
     setConnection(true, "API connected");
