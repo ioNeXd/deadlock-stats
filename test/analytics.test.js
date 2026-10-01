@@ -488,7 +488,7 @@ test("analytics wrappers drop filters not documented for each endpoint", async (
   assert.equal(calls[2].searchParams.get("match_mode"), "ranked");
   assert.equal(calls[2].searchParams.get("hero_ids"), null);
   assert.equal(calls[2].searchParams.get("min_networth"), null);
-  assert.equal(calls[2].searchParams.get("account_ids"), "123");
+  assert.equal(calls[2].searchParams.get("account_ids"), "123,456");
 
   assert.equal(calls[3].searchParams.get("hero_id"), null);
   assert.equal(calls[3].searchParams.get("min_networth"), null);
