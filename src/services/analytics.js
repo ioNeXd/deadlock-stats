@@ -84,3 +84,71 @@ export async function getHeroStatsSnapshot(options = {}) {
   });
   return normalizeHeroStats(result);
 }
+
+
+function normalizeRows(result, normalize) {
+  const data = Array.isArray(result?.data) ? result.data : [];
+  return data.map(normalize);
+}
+
+export function normalizeHeroCounterStats(result) {
+  return normalizeRows(result, item => ({
+    heroId: item?.hero_id ?? null,
+    enemyHeroId: item?.enemy_hero_id ?? null,
+    wins: item?.wins ?? null,
+    matchesPlayed: item?.matches_played ?? null,
+    kills: item?.kills ?? null,
+    enemyKills: item?.enemy_kills ?? null,
+    deaths: item?.deaths ?? null,
+    enemyDeaths: item?.enemy_deaths ?? null,
+    assists: item?.assists ?? null,
+    enemyAssists: item?.enemy_assists ?? null,
+    denies: item?.denies ?? null,
+    enemyDenies: item?.enemy_denies ?? null,
+    lastHits: item?.last_hits ?? null,
+    enemyLastHits: item?.enemy_last_hits ?? null,
+    networth: item?.networth ?? null,
+    enemyNetworth: item?.enemy_networth ?? null,
+    objDamage: item?.obj_damage ?? null,
+    enemyObjDamage: item?.enemy_obj_damage ?? null,
+    creeps: item?.creeps ?? null,
+    enemyCreeps: item?.enemy_creeps ?? null,
+    raw: item,
+  }));
+}
+
+export function normalizeHeroSynergyStats(result) {
+  return normalizeRows(result, item => ({
+    heroId1: item?.hero_id1 ?? null,
+    heroId2: item?.hero_id2 ?? null,
+    wins: item?.wins ?? null,
+    matchesPlayed: item?.matches_played ?? null,
+    kills1: item?.kills1 ?? null,
+    kills2: item?.kills2 ?? null,
+    deaths1: item?.deaths1 ?? null,
+    deaths2: item?.deaths2 ?? null,
+    assists1: item?.assists1 ?? null,
+    assists2: item?.assists2 ?? null,
+    denies1: item?.denies1 ?? null,
+    denies2: item?.denies2 ?? null,
+    lastHits1: item?.last_hits1 ?? null,
+    lastHits2: item?.last_hits2 ?? null,
+    networth1: item?.networth1 ?? null,
+    networth2: item?.networth2 ?? null,
+    objDamage1: item?.obj_damage1 ?? null,
+    objDamage2: item?.obj_damage2 ?? null,
+    creeps1: item?.creeps1 ?? null,
+    creeps2: item?.creeps2 ?? null,
+    raw: item,
+  }));
+}
+
+export function normalizeHeroCombStats(result) {
+  return normalizeRows(result, item => ({
+    heroIds: Array.isArray(item?.hero_ids) ? item.hero_ids : [],
+    wins: item?.wins ?? null,
+    losses: item?.losses ?? null,
+    matches: item?.matches ?? null,
+    raw: item,
+  }));
+}
