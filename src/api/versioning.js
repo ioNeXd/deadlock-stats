@@ -129,7 +129,7 @@ export function reconcileVersionPolicy(previousOpenApi, nextOpenApi, callbacks =
     const previous = previousState.get(resourcePath);
     if (!previous) continue;
 
-    const versionChanged = Number(next.version.slice(1)) > Number(previous.version.slice(1));
+    const versionChanged = next.versionNumber > previous.versionNumber;
     const newlyDeprecated = next.deprecated && !previous.deprecated;
 
     if (versionChanged || newlyDeprecated) {
