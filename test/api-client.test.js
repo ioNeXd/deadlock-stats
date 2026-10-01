@@ -35,6 +35,41 @@ test("apiGet normalizes query parameters and parses JSON", async () => {
   assert.equal(result.headers["x-test"], "yes");
 });
 
+test("caller-owned abort signals do not share deduplicated requests", async () => {
+  let calls = 0;
+  let resolveFirst;
+  mockFetch(async () => {
+    calls += 1;
+    if (calls === 1) {
+      await new Promise(resolve => { resolveFirst = resolve; });
+    }
+    return new Response(JSON.stringify({ calls }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  const firstController = new AbortController();
+  const secondController = new AbortController();
+  const first = apiGet("/v1/abort-isolation", {
+    signal: firstController.signal,
+    cache: false,
+  });
+  const second = apiGet("/v1/abort-isolation", {
+    signal: secondController.signal,
+    cache: false,
+  });
+
+  firstController.abort();
+
+  await assert.rejects(first, error => error.code === "ABORTED");
+  resolveFirst();
+
+  const result = await second;
+  assert.equal(calls, 2);
+  assert.deepEqual(result.data, { calls: 2 });
+});
+
 test("GET requests are cached and deduplicated", async () => {
   let calls = 0;
   mockFetch(async () => {
