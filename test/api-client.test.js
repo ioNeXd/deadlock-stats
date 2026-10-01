@@ -127,6 +127,31 @@ test("429 honors Retry-After before retrying", async () => {
   assert.ok(Date.now() - started >= 5);
 });
 
+test("retryable GET timeouts retry before surfacing timeout", async () => {
+  let calls = 0;
+  mockFetch(async (_url, init) => {
+    calls += 1;
+    if (calls === 1) {
+      await new Promise((_, reject) => {
+        init.signal.addEventListener("abort", () => reject(new DOMException("timed out", "TimeoutError")), { once: true });
+      });
+    }
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  const result = await apiGet("/v1/timeout-retry", {
+    timeoutMs: 5,
+    retries: 1,
+    cache: false,
+  });
+
+  assert.equal(calls, 2);
+  assert.deepEqual(result.data, { ok: true });
+});
+
 test("binary and stream response types are supported", async () => {
   mockFetch(async () => new Response(new Uint8Array([1, 2, 3]), {
     status: 200,
