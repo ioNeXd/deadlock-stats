@@ -316,3 +316,31 @@ test("retry backoff removes its abort listener after resolving", async () => {
   assert.equal(calls, 2);
   assert.equal(listeners, 0);
 });
+
+
+test("GET cache keys isolate response representations", async () => {
+  let calls = 0;
+  globalThis.fetch = async (_url, init) => {
+    calls += 1;
+    const accept = init.headers.get("Accept");
+    if (accept === "*/*") {
+      return new Response(new Uint8Array([1, 2]), {
+        status: 200,
+        headers: { "content-type": "application/octet-stream" },
+      });
+    }
+    return new Response(JSON.stringify({ calls }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  const json = await apiGet("/v1/representation", { cache: true, dedupe: false });
+  const binary = await apiGet("/v1/representation", { responseType: "arrayBuffer", cache: true, dedupe: false });
+  const jsonAgain = await apiGet("/v1/representation", { cache: true, dedupe: false });
+
+  assert.deepEqual(json.data, { calls: 1 });
+  assert.deepEqual([...new Uint8Array(binary.data)], [1, 2]);
+  assert.equal(calls, 2);
+  assert.deepEqual(jsonAgain.data, { calls: 1 });
+});
