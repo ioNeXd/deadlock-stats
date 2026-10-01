@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   getPlayerHeroStats,
   getPlayerRanks,
+  getPlayerRankDistribution,
   searchSteamProfiles,
   getPlayerMatchHistory,
   getPlayerRankImage,
@@ -55,6 +56,28 @@ test("batch player ranks and Steam search use current documented endpoints", asy
   }
 });
 
+test("rank distribution forwards only documented filters", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async url => {
+    calls.push(new URL(url));
+    return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    await getPlayerRankDistribution({
+      min_unix_timestamp: 10,
+      is_new_player_pool: true,
+      unsupported: "drop",
+    });
+    assert.equal(calls[0].pathname, "/v1/players/rank/distribution");
+    assert.equal(calls[0].searchParams.get("min_unix_timestamp"), "10");
+    assert.equal(calls[0].searchParams.get("is_new_player_pool"), "true");
+    assert.equal(calls[0].searchParams.has("unsupported"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("player match history preserves force_refetch and rank images stay binary", async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
@@ -67,9 +90,10 @@ test("player match history preserves force_refetch and rank images stay binary",
   };
   try {
     await getPlayerMatchHistory(123, { force_refetch: true });
-    await getPlayerRankImage(123, "webp");
+    await getPlayerRankImage([123, 456], "webp");
     assert.equal(calls[0].searchParams.get("force_refetch"), "true");
-    assert.equal(calls[1].pathname, "/v1/players/123/rank/image");
+    assert.equal(calls[1].pathname, "/v1/players/rank/image");
+    assert.equal(calls[1].searchParams.get("account_ids"), "123,456");
     assert.equal(calls[1].searchParams.get("format"), "webp");
   } finally {
     globalThis.fetch = originalFetch;
