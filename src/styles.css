@@ -29,3 +29,7 @@
 @media (max-width:720px){.matchup-columns{grid-template-columns:1fr;gap:20px}}
 
 .analytics-builds{margin-top:4px}.analytics-builds .analytics-table-row{min-height:52px}
+
+.analytics-filter-panel{margin-bottom:10px}.analytics-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.analytics-filters .field{min-width:0}.analytics-filters .primary-button,.analytics-filters .secondary-button{align-self:end;min-height:38px}.secondary-button{border:1px solid var(--line);background:transparent;color:var(--muted);padding:8px 12px;font:9px "DM Mono";letter-spacing:.08em;text-transform:uppercase;cursor:pointer}.secondary-button:hover{color:var(--text);border-color:var(--gold)}
+@media (max-width:900px){.analytics-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.analytics-filters{grid-template-columns:1fr}}
