@@ -5,6 +5,7 @@ import {
   buildVersionPolicy,
   detectApiVersions,
   reconcileVersionPolicy,
+  versionedPath,
 } from "../src/api/versioning.js";
 
 test("detectApiVersions finds API versions from OpenAPI paths", () => {
@@ -159,7 +160,6 @@ test("reconcileVersionPolicy reports an explicit deprecation transition", () => 
 
 
 test("versioned resource paths remove the version segment without changing the resource", () => {
-  const { versionedPath } = requireVersioningForTest();
   assert.deepEqual(versionedPath("/v1/assets/heroes"), {
     version: 1,
     resourcePath: "/assets/heroes",
@@ -185,13 +185,3 @@ test("a path is not deprecated when a sibling operation remains current", () => 
   assert.deepEqual(events, []);
 });
 
-function requireVersioningForTest() {
-  return {
-    versionedPath: path => {
-      const match = path.match(/\/v(\d+)(?=\/|$)/);
-      return match
-        ? { version: Number(match[1]), resourcePath: path.replace(/\/v(\d+)(?=\/|$)/, "") || "/" }
-        : null;
-    },
-  };
-}
