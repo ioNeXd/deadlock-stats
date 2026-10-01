@@ -1069,6 +1069,7 @@ function renderMaps(signal) {
     '<label><input type="checkbox" data-map-layer="objectives" checked> Objectives</label>' +
     '<label><input type="checkbox" data-map-layer="camps" checked> Neutral camps</label>' +
     '<label><input type="checkbox" data-map-layer="entities" checked> Entities</label>' +
+    '<label><input type="checkbox" data-map-layer="ziplines" checked> Ziplines</label>' +
     '</div></section>' +
     '<section class="map-layout"><article class="panel map-panel"><div class="map-controls"><button type="button" id="map-zoom-out" aria-label="Zoom out">−</button><button type="button" id="map-zoom-reset">100%</button><button type="button" id="map-zoom-in" aria-label="Zoom in">+</button></div><div id="map-stage" class="map-stage" aria-live="polite"><div class="map-loading">Loading map data…</div></div></article>' +
     '<aside class="panel map-legend"><span class="eyebrow">MAP INDEX</span><h3>Live layers</h3><div id="map-summary" class="map-summary"></div><div id="map-details" class="map-details"></div><div id="map-selection" class="map-selection" aria-live="polite"><span class="eyebrow">SELECTION</span><p>Choose a marker to inspect its API data.</p></div></aside></section>';
@@ -1147,7 +1148,7 @@ function renderMaps(signal) {
       '</div>';
 
     const setMarkerGroup = (name, visible) => {
-      const node = stage.querySelector(".map-markers.map-" + name);
+      const node = name === "ziplines" ? stage.querySelector(".map-ziplines") : stage.querySelector(".map-markers.map-" + name);
       if (node) node.hidden = !visible;
     };
     document.querySelectorAll("[data-map-layer]").forEach(input => {
@@ -1158,11 +1159,33 @@ function renderMaps(signal) {
     const showSelection = (type, title, data) => {
       selection.innerHTML = '<span class="eyebrow">' + esc(type) + '</span><h4>' + esc(title) + '</h4><pre>' + esc(JSON.stringify(data, null, 2)) + '</pre>';
     };
-    stage.querySelectorAll(".map-marker").forEach(button => button.addEventListener("click", () => showSelection(
-      button.classList.contains("objective-marker") ? "OBJECTIVE" : button.classList.contains("camp-marker") ? "NEUTRAL CAMP" : "ENTITY",
-      button.title,
-      { label: button.title },
-    )));
+    const markerData = [
+      ...Object.entries(map.objectivePositions ?? {}).map(([name, data]) => ({
+        selector: ".objective-marker",
+        type: "OBJECTIVE",
+        title: name.replaceAll("_", " "),
+        data,
+      })),
+      ...camps.map(camp => ({
+        selector: ".camp-marker",
+        type: "NEUTRAL CAMP",
+        title: camp.name + " · " + camp.kind,
+        data: camp,
+      })),
+      ...entityGroups.map(({ group, entity, index }) => ({
+        selector: ".entity-marker",
+        type: "ENTITY",
+        title: group.replaceAll("_", " ") + " #" + (index + 1),
+        data: entity,
+      })),
+    ];
+    const markerButtons = stage.querySelectorAll(".map-marker");
+    markerButtons.forEach((button, index) => {
+      const item = markerData[index];
+      if (item) {
+        button.addEventListener("click", () => showSelection(item.type, item.title, item.data));
+      }
+    });
     const canvas = stage.querySelector(".map-canvas");
     let scale = 1, offsetX = 0, offsetY = 0, dragging = false, startX = 0, startY = 0;
     const applyTransform = () => {
