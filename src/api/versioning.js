@@ -89,6 +89,7 @@ function stateMap(openApi) {
       map.set(key, {
         path: entry.path,
         version: `v${entry.version}`,
+        deprecated: entry.deprecated,
       });
     }
   }
@@ -119,16 +120,22 @@ export function reconcileVersionPolicy(previousOpenApi, nextOpenApi, callbacks =
 
   for (const [resourcePath, next] of nextState) {
     const previous = previousState.get(resourcePath);
-    if (!previous || previous.version === next.version) continue;
+    if (!previous) continue;
 
-    if (Number(next.version.slice(1)) > Number(previous.version.slice(1))) {
+    const versionChanged = Number(next.version.slice(1)) > Number(previous.version.slice(1));
+    const newlyDeprecated = next.deprecated && !previous.deprecated;
+
+    if (versionChanged || newlyDeprecated) {
       const event = {
         type: "entered_legacy",
         resourcePath,
-        legacyPath: previous.path,
-        legacyVersion: previous.version,
-        currentPath: next.path,
-        currentVersion: next.version,
+        legacyPath: versionChanged ? previous.path : next.path,
+        legacyVersion: versionChanged ? previous.version : next.version,
+        currentPath: versionChanged ? next.path : null,
+        currentVersion: versionChanged ? next.version : null,
+        reason: newlyDeprecated
+          ? "The OpenAPI contract marked the resource as deprecated."
+          : "A newer API version replaced the resource.",
       };
 
       events.push(event);
