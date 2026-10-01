@@ -34,10 +34,14 @@ function accountPath(accountId, suffix = "") {
 
 export function getPlayerHeroStats(options = {}) {
   const query = filteredQuery(options, HERO_STATS_FILTERS);
-  if (Array.isArray(query.account_ids)) query.account_ids = query.account_ids.join(",");
-  if (query.account_ids == null || (Array.isArray(query.account_ids) && query.account_ids.length === 0)) {
-    throw new TypeError("account_ids is required");
+  if (query.account_ids == null) throw new TypeError("account_ids is required");
+  if (Array.isArray(query.account_ids)) {
+    if (query.account_ids.length < 1 || query.account_ids.length > 1000) {
+      throw new RangeError("account_ids must contain between 1 and 1000 account IDs");
+    }
+    query.account_ids = query.account_ids.join(",");
   }
+  if (query.account_ids === "") throw new TypeError("account_ids is required");
   return apiGet("/v1/players/hero-stats", { ...options, query });
 }
 
@@ -106,11 +110,14 @@ export function getPlayerMateStats(accountId, options = {}) {
   return apiGet(accountPath(accountId, "/mate-stats"), { ...options, query });
 }
 
-export function getPlayerRankImage(accountIds, format = "webp", options = {}) {
+export function getPlayerRankImage(accountIds, format = "png", options = {}) {
   if (!Array.isArray(accountIds) || accountIds.length < 1 || accountIds.length > 12) {
     throw new RangeError("accountIds must contain between 1 and 12 account IDs");
   }
-  const imageFormat = format === "png" ? "png" : "webp";
+  if (format !== "png" && format !== "webp") {
+    throw new RangeError("format must be png or webp");
+  }
+  const imageFormat = format;
   return apiGet("/v1/players/rank/image", {
     ...options,
     query: { account_ids: accountIds.join(","), format: imageFormat },
