@@ -95,7 +95,6 @@ function stateMap(openApi) {
     if (!existing || entry.version > existing.versionNumber) {
       map.set(key, {
         path: entry.path,
-        version: `v${entry.version}`,
         versionNumber: entry.version,
         deprecated: entry.deprecated,
       });
@@ -165,9 +164,17 @@ export function reconcileVersionPolicy(previousOpenApi, nextOpenApi, callbacks =
     }
   }
 
+  const publicState = state => Object.fromEntries(
+    [...state.entries()].map(([key, value]) => [key, {
+      path: value.path,
+      version: `v${value.versionNumber}`,
+      deprecated: value.deprecated,
+    }]),
+  );
+
   return {
     events,
-    previous: Object.fromEntries(previousState),
-    current: Object.fromEntries(nextState),
+    previous: publicState(previousState),
+    current: publicState(nextState),
   };
 }
