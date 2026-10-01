@@ -347,6 +347,17 @@ async function request(path, {
 
         if (error instanceof ApiError) throw error;
 
+        // Response parsing/decoding failures are deterministic and retrying the same
+        // payload cannot make malformed JSON become valid.
+        if (error instanceof SyntaxError) {
+          throw new ApiError(error.message || "Failed to parse API response", {
+            cause: error,
+            url: url.toString(),
+            method: upperMethod,
+            code: "RESPONSE_PARSE_ERROR",
+          });
+        }
+
         if (attempt < retries && isRetryableMethod(upperMethod, retryNonIdempotent)) {
           await waitForRetry(retryDelay(attempt, null), signal);
           continue;
