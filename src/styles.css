@@ -27,3 +27,5 @@
 
 .analytics-matchup-panel{margin-bottom:10px}.analytics-matchup-panel .explorer-select{min-width:190px}.matchup-columns{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:18px}.matchup-meta{display:block;margin-top:3px;color:var(--muted);font:8px "DM Mono"}.matchup-columns .analytics-table-row{min-height:48px}
 @media (max-width:720px){.matchup-columns{grid-template-columns:1fr;gap:20px}}
+
+.analytics-builds{margin-top:4px}.analytics-builds .analytics-table-row{min-height:52px}
