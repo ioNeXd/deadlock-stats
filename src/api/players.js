@@ -28,6 +28,7 @@ function accountPath(accountId, suffix = "") {
 
 export function getPlayerHeroStats(options = {}) {
   const query = filteredQuery(options, HERO_STATS_FILTERS);
+  if (Array.isArray(query.account_ids)) query.account_ids = query.account_ids.join(",");
   if (query.account_ids == null || (Array.isArray(query.account_ids) && query.account_ids.length === 0)) {
     throw new TypeError("account_ids is required");
   }
@@ -38,7 +39,7 @@ export function getPlayerRanks(accountIds, options = {}) {
   if (!Array.isArray(accountIds) || accountIds.length < 1 || accountIds.length > 1000) {
     throw new RangeError("accountIds must contain between 1 and 1000 account IDs");
   }
-  const query = { account_ids: accountIds };
+  const query = { account_ids: Array.isArray(accountIds) ? accountIds.join(",") : accountIds };
   return apiGet("/v1/players/rank", { ...options, query });
 }
 
@@ -56,7 +57,7 @@ export function searchSteamProfiles(searchQuery, options = {}) {
 export function getSteamProfiles(accountIds, options = {}) {
   return apiGet("/v1/players/steam", {
     ...options,
-    query: { account_ids: accountIds, ...(options.refresh == null ? {} : { refresh: options.refresh }) },
+    query: { account_ids: Array.isArray(accountIds) ? accountIds.join(",") : accountIds, ...(options.refresh == null ? {} : { refresh: options.refresh }) },
   });
 }
 
