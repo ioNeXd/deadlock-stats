@@ -77,3 +77,5 @@
 :where(a,button,input,select,textarea):focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+.skip-link{position:fixed;top:8px;left:8px;z-index:100;padding:10px 14px;transform:translateY(-160%);border:1px solid var(--gold);background:var(--surface);color:var(--gold2);font:10px ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;transition:transform .15s ease}.skip-link:focus{transform:translateY(0)}
