@@ -491,6 +491,54 @@ test("buildRequest validates oneOf and additionalProperties in JSON bodies", () 
   assert.throws(() => buildRequest(operation, { __body: '{"id":7,"unknown":true}' }), /oneOf/);
 });
 
+test("request body validation separates oneOf and anyOf", () => {
+  const oneOf = {
+    method: "POST", path: "/v1/body", parameters: [],
+    requestBody: { content: { "application/json": { schema: {
+      oneOf: [{ type: "object", properties: { a: { type: "string" } } }, { type: "object", properties: { b: { type: "string" } } }],
+    } } } },
+  };
+  assert.throws(() => buildRequest(oneOf, { __body: { a: "x", b: "y" } }), /oneOf requires exactly one/);
+
+  const anyOf = {
+    ...oneOf,
+    requestBody: { content: { "application/json": { schema: {
+      anyOf: [{ type: "object", required: ["a"], properties: { a: { type: "string" } } }, { type: "object", required: ["b"], properties: { b: { type: "string" } } }],
+    } } } },
+  };
+  assert.doesNotThrow(() => buildRequest(anyOf, { __body: { a: "x", b: "y" } }));
+});
+
+test("request body validation supports structural enum, exclusive bounds, multipleOf, and pattern", () => {
+  const operation = {
+    method: "POST", path: "/v1/body", parameters: [],
+    requestBody: { content: { "application/json": { schema: {
+      type: "object",
+      properties: {
+        mode: { enum: [{ kind: "ranked" }] },
+        score: { type: "number", exclusiveMinimum: 0, exclusiveMaximum: 10, multipleOf: 0.5 },
+        name: { type: "string", pattern: "^[A-Z]+$" },
+      },
+    } } } },
+  };
+
+  assert.doesNotThrow(() => buildRequest(operation, {
+    __body: { mode: { kind: "ranked" }, score: 2.5, name: "OK" },
+  }));
+  assert.throws(() => buildRequest(operation, {
+    __body: { mode: { kind: "other" }, score: 2.5, name: "OK" },
+  }), /enum/);
+  assert.throws(() => buildRequest(operation, {
+    __body: { mode: { kind: "ranked" }, score: 0, name: "OK" },
+  }), /exclusiveMinimum/);
+  assert.throws(() => buildRequest(operation, {
+    __body: { mode: { kind: "ranked" }, score: 2.3, name: "OK" },
+  }), /multipleOf/);
+  assert.throws(() => buildRequest(operation, {
+    __body: { mode: { kind: "ranked" }, score: 2.5, name: "bad" },
+  }), /pattern/);
+});
+
 test("buildRequest rejects unsupported request content types", () => {
   const operation = {
     method: "POST",
