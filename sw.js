@@ -14,6 +14,17 @@ self.addEventListener("activate", event => {
   );
 });
 
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request);
+    if (response.ok && response.type === "basic") await cache.put(request, response.clone());
+    return response;
+  } catch {
+    return (await cache.match(request)) || Response.error();
+  }
+}
+
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
@@ -43,6 +54,7 @@ self.addEventListener("fetch", event => {
   }
 
   if (STATIC_TYPES.has(request.destination)) {
-    event.respondWith(staleWhileRevalidate(request));
+    const networkPreferred = request.destination === "script" || request.destination === "style";
+    event.respondWith(networkPreferred ? networkFirst(request) : staleWhileRevalidate(request));
   }
 });
