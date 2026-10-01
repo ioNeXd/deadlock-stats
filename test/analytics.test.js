@@ -81,18 +81,18 @@ test("analytics wrappers forward top-level filters used by services", async t =>
   await getAbilityOrderStats({ hero_id: 7, min_ability_upgrades: 4, account_ids: [7, 8], cache: false, dedupe: false });
   await getItemStats({ hero_ids: [7], enemy_hero_ids: [8], corrupted_items: "include", cache: false, dedupe: false });
 
-  assert.equal(calls[0].searchParams.get("game_mode"), "normal");
-  assert.equal(calls[0].searchParams.get("min_duration_s"), "600");
-  assert.equal(calls[0].searchParams.get("hero_ids"), "7");
-  assert.equal(calls[1].searchParams.get("same_lane_filter"), "true");
-  assert.equal(calls[1].searchParams.get("min_matches"), "20");
-  assert.equal(calls[1].searchParams.get("account_ids"), "7");
-  assert.equal(calls[2].searchParams.get("hero_id"), "7");
-  assert.equal(calls[2].searchParams.get("min_ability_upgrades"), "4");
-  assert.equal(calls[2].searchParams.get("account_ids"), "7");
-  assert.equal(calls[3].searchParams.get("hero_ids"), "7");
-  assert.equal(calls[3].searchParams.get("enemy_hero_ids"), "8");
-  assert.equal(calls[3].searchParams.get("corrupted_items"), "include");
+  assert.equal(new URL(calls[0]).searchParams.get("game_mode"), "normal");
+  assert.equal(new URL(calls[0]).searchParams.get("min_duration_s"), "600");
+  assert.equal(new URL(calls[0]).searchParams.get("hero_ids"), "7");
+  assert.equal(new URL(calls[1]).searchParams.get("same_lane_filter"), "true");
+  assert.equal(new URL(calls[1]).searchParams.get("min_matches"), "20");
+  assert.equal(new URL(calls[1]).searchParams.get("account_ids"), "7");
+  assert.equal(new URL(calls[2]).searchParams.get("hero_id"), "7");
+  assert.equal(new URL(calls[2]).searchParams.get("min_ability_upgrades"), "4");
+  assert.equal(new URL(calls[2]).searchParams.get("account_ids"), "7");
+  assert.equal(new URL(calls[3]).searchParams.get("hero_ids"), "7");
+  assert.equal(new URL(calls[3]).searchParams.get("enemy_hero_ids"), "8");
+  assert.equal(new URL(calls[3]).searchParams.get("corrupted_items"), "include");
 });
 
 test("analytics normalizers preserve unknown source fields", () => {
