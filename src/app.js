@@ -222,11 +222,11 @@ function renderItemAnalytics(signal) {
     '<label class="field"><span>Min matches</span><input name="min_matches" type="number" min="1" value="20"></label>' +
     '<label class="field"><span>Item bucket</span><select name="bucket"><option value="no_bucket" selected>Overall</option><option value="hero">Hero</option><option value="team">Team</option><option value="game_time_min">Game minute</option><option value="game_time_normalized_percentage">Game time %</option><option value="net_worth_by_1000">Net worth / 1000</option><option value="net_worth_by_5000">Net worth / 5000</option></select></label>' +
     '<label class="field"><span>Corrupted items</span><select name="corrupted_items"><option value="exclude" selected>Exclude</option><option value="include">Include</option><option value="only">Only</option></select></label>' +
-    '<label class="field"><span>Permutation size</span><input name="comb_size" type="number" min="2" max="12" value="2"></label>' +
+    '<label class="field"><span>Permutation size</span><input name="comb_size" type="number" min="2" max="12" value="2"></label><label class="field"><span>Locked item IDs</span><input name="locked_item_ids" type="text" inputmode="numeric" placeholder="item IDs"></label><label class="field"><span>Locked columns</span><input name="locked_columns" type="text" inputmode="numeric" placeholder="0, 1"></label>' +
     '<button class="primary-button" type="submit">Apply filters</button></form></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">ITEM STATS</span><h2>Purchase performance</h2></div></div><div id="item-stats-list" class="analytics-item-grid"><p class="muted">Loading item statistics.</p></div></article>' +
     '<article class="panel"><div class="section-head"><div><span class="eyebrow">PERMUTATIONS</span><h2>Item combinations</h2></div></div><div id="item-permutation-list" class="analytics-table"><p class="muted">Loading item combinations.</p></div></article></section>' +
-    '<section class="panel item-flow-panel"><div class="section-head"><div><span class="eyebrow">ITEM FLOW</span><h2>Build progression</h2></div><span class="muted">PHASE NODES + TRANSITIONS</span></div><div id="item-flow-summary" class="analytics-grid"></div><div id="item-flow-list" class="item-flow-grid"><p class="muted">Loading item flow.</p></div></section>';
+    '<section class="panel item-flow-panel"><div class="section-head"><div><span class="eyebrow">ITEM FLOW</span><h2>Build progression</h2></div><span class="muted">PHASE NODES + TRANSITIONS</span></div><div id="item-flow-summary" class="analytics-grid"></div><div id="item-flow-list" class="item-flow-grid"><p class="muted">Loading item flow.</p></div><div class="section-head item-flow-transitions-head"><div><span class="eyebrow">TRANSITIONS</span><h3>Next-stage purchases</h3></div></div><div id="item-flow-edges" class="analytics-table"><p class="muted">Loading transitions.</p></div></section>';
 
   const form = $("#item-analytics-filters");
   const from = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
@@ -239,7 +239,7 @@ function renderItemAnalytics(signal) {
       if (result[key]) result[key] = Math.floor(new Date(result[key] + "T00:00:00Z").getTime() / 1000);
       else delete result[key];
     }
-    for (const key of ["hero_ids", "enemy_hero_ids"]) {
+    for (const key of ["hero_ids", "enemy_hero_ids", "locked_item_ids", "locked_columns"]) {
       if (result[key]) result[key] = String(result[key]).split(",").map(value => Number(value.trim())).filter(Number.isInteger).join(",");
       else delete result[key];
     }
@@ -297,6 +297,12 @@ function renderItemAnalytics(signal) {
           return '<div class="item-flow-node">' + (itemImage.get(Number(node.itemId)) ? '<img src="' + esc(itemImage.get(Number(node.itemId))) + '" alt="" loading="lazy" decoding="async">' : '') + '<div><strong>' + esc(itemName.get(Number(node.itemId)) ?? "Item " + node.itemId) + '</strong><small>' + (rate == null ? "—" : rate.toFixed(1) + "% WR") + ' · ' + esc(node.matches ?? 0) + ' matches</small>' + (node.adjustedWinRate == null ? '' : '<small>ADJ ' + (Number(node.adjustedWinRate) * 100).toFixed(1) + '%</small>') + '</div></div>';
         }).join("") + '</section>';
       }).join("") || '<p class="muted">No flow nodes returned.</p>';
+
+      $("#item-flow-edges").innerHTML = (flow.edges ?? []).slice().sort((a,b) => Number(b.matches ?? 0) - Number(a.matches ?? 0)).slice(0, 40).map(edge => {
+        const from = itemName.get(Number(edge.fromItemId)) ?? "Item " + edge.fromItemId;
+        const to = itemName.get(Number(edge.toItemId)) ?? "Item " + edge.toItemId;
+        return '<div class="analytics-table-row"><span>' + esc(from) + ' → ' + esc(to) + '<small class="matchup-meta">PHASE ' + esc(Number(edge.fromColumn ?? 0) + 1) + ' → NEXT</small></span><strong>' + esc(edge.matches ?? 0) + ' matches</strong></div>';
+      }).join("") || '<p class="muted">No item transitions returned.</p>';
 
       const summary = flow.summary ?? {};
       $("#item-flow-summary").innerHTML = [
