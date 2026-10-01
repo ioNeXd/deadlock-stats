@@ -63,7 +63,17 @@ async function loadAssetVersionContext() {
   await applyAssetColors();
 }
 
-function isAborted(error) {\n  return error?.code === "ABORTED" || error?.name === "AbortError";\n}\n\nfunction beginRoute() {\n  routeController?.abort();\n  routeController = new AbortController();\n  return routeController.signal;\n}\n\nfunction renderDashboard(signal) {
+function isAborted(error) {
+  return error?.code === "ABORTED" || error?.name === "AbortError";
+}
+
+function beginRoute() {
+  routeController?.abort();
+  routeController = new AbortController();
+  return routeController.signal;
+}
+
+function renderDashboard(signal) {
   el.content.innerHTML = '<section class="hero-banner"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA</span><h2>The city never sleeps.</h2><p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p><div class="pills"><span>API-FIRST</span><span>OPENAPI</span></div></div></section>' +
     '<section class="section"><div class="section-head"><div><span class="eyebrow">ROSTER</span><h2>Heroes in the city</h2></div><a href="#/heroes">View all →</a></div><div id="hero-grid" class="hero-grid" aria-live="polite"></div></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(API_BASE_URL.replace("https://", "")) + '</strong></div><div class="metric"><span>Hero assets</span><strong id="asset-count">—</strong></div><div class="metric"><span>Response</span><strong id="api-latency">—</strong></div></article><article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article></section>';
