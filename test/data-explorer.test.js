@@ -6,6 +6,8 @@ import {
   describeOperation,
   buildRequest,
   executeOperation,
+  schemaType,
+  schemaNullable,
 } from "../src/services/data-explorer.js";
 
 const originalFetch = globalThis.fetch;
@@ -83,4 +85,66 @@ test("executeOperation delegates the documented operation to the API client", as
   assert.equal(url.pathname, "/v1/example/7");
   assert.equal(url.searchParams.get("limit"), "5");
   assert.equal(result.data.ok, true);
+});
+
+
+test("schema helpers support nullable and union types", () => {
+  assert.equal(schemaType({ type: ["integer", "null"] }), "integer");
+  assert.equal(schemaNullable({ type: ["integer", "null"] }), true);
+  assert.equal(schemaType({ oneOf: [{ type: "string" }, { type: "null" }] }), "string");
+});
+
+test("listApiOperations merges path-level parameters and preserves security metadata", () => {
+  const extended = {
+    openapi: "3.1.0",
+    security: [{ apiKeyAuth: [] }],
+    paths: {
+      "/v1/example/{hero_id}": {
+        parameters: [{ name: "hero_id", in: "path", required: true, schema: { type: "integer" } }],
+        get: {
+          operationId: "merged",
+          parameters: [{ name: "limit", in: "query", schema: { type: "integer" } }],
+          responses: { "200": { description: "ok" } },
+        },
+      },
+    },
+  };
+
+  const operation = listApiOperations(extended)[0];
+  assert.equal(operation.parameters.length, 2);
+  assert.deepEqual(operation.security, [{ apiKeyAuth: [] }]);
+});
+
+test("buildRequest coerces array items according to their schema", () => {
+  const operation = listApiOperations(contract, { includeDeprecated: false })[0];
+  const request = buildRequest(operation, { hero_id: "7", ids: "1,2,3" });
+  assert.deepEqual(request.query.ids, [1, 2, 3]);
+});
+
+test("executeOperation applies the documented request media type", async () => {
+  let captured;
+  globalThis.fetch = async (input, init) => {
+    captured = { input: String(input), init };
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  const operation = {
+    operationId: "body",
+    method: "POST",
+    path: "/v1/body",
+    parameters: [],
+    requestBody: {
+      required: true,
+      content: {
+        "application/json": { schema: { type: "object" } },
+      },
+    },
+    responses: { "200": { description: "ok" } },
+  };
+
+  await executeOperation(operation, { __body: JSON.stringify({ hello: "world" }) });
+  assert.equal(captured.init.headers.get("Content-Type"), "application/json");
 });
