@@ -434,6 +434,63 @@ test("buildRequest applies OpenAPI parameter defaults", () => {
   assert.deepEqual(buildRequest(operation, {}).query, { limit: 20 });
 });
 
+test("buildRequest validates JSON request bodies against their schema", () => {
+  const operation = {
+    method: "POST",
+    path: "/v1/body",
+    parameters: [],
+    requestBody: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            required: ["hero_id", "mode"],
+            properties: {
+              hero_id: { type: "integer", minimum: 1 },
+              mode: { type: "string", enum: ["ranked", "normal"] },
+              ids: { type: "array", minItems: 1, items: { type: "integer" } },
+            },
+          },
+        },
+      },
+    },
+  };
+
+  assert.deepEqual(
+    buildRequest(operation, { __body: '{"hero_id":7,"mode":"ranked","ids":[1,2]}' }).body,
+    { hero_id: 7, mode: "ranked", ids: [1, 2] },
+  );
+  assert.throws(() => buildRequest(operation, { __body: '{"mode":"ranked"}' }), /hero_id/);
+  assert.throws(() => buildRequest(operation, { __body: '{"hero_id":0,"mode":"ranked"}' }), /minimum/);
+  assert.throws(() => buildRequest(operation, { __body: '{"hero_id":7,"mode":"casual"}' }), /enum/);
+  assert.throws(() => buildRequest(operation, { __body: '{"hero_id":7,"mode":"ranked","ids":[]}' }), /minItems/);
+});
+
+test("buildRequest validates oneOf and additionalProperties in JSON bodies", () => {
+  const operation = {
+    method: "POST",
+    path: "/v1/body",
+    parameters: [],
+    requestBody: {
+      content: {
+        "application/json": {
+          schema: {
+            oneOf: [
+              { type: "object", required: ["id"], properties: { id: { type: "integer" } }, additionalProperties: false },
+              { type: "object", required: ["name"], properties: { name: { type: "string" } }, additionalProperties: false },
+            ],
+          },
+        },
+      },
+    },
+  };
+
+  assert.equal(buildRequest(operation, { __body: '{"id":7}' }).body.id, 7);
+  assert.throws(() => buildRequest(operation, { __body: '{"unknown":true}' }), /oneOf/);
+  assert.throws(() => buildRequest(operation, { __body: '{"id":7,"unknown":true}' }), /oneOf/);
+});
+
 test("buildRequest selects compatible JSON media types", () => {
   const operation = {
     operationId: "body_media",
