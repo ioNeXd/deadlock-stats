@@ -1091,11 +1091,31 @@ function renderMaps(signal) {
       '<button type="button" class="map-marker ' + className + '" style="left:' + (Number(left) * 100) + '%;top:' + (Number(top) * 100) + '%" title="' + esc(title) + '" aria-label="' + esc(title) + '">' +
       (icon ? '<img src="' + esc(icon) + '" alt="" loading="lazy" decoding="async">' : '<span>' + esc(extra || "•") + '</span>') + '</button>';
 
+    
+    const pathPoint = point => {
+      if (Array.isArray(point)) {
+        const x = Number(point[0]), y = Number(point[1]);
+        return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
+      }
+      if (point && typeof point === "object") {
+        const x = Number(point.x ?? point[0]), y = Number(point.y ?? point[1]);
+        return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
+      }
+      return null;
+    };
+    const ziplineSvg = ziplinePaths.map((path, index) => {
+      const candidates = ["P0_points", "P1_points", "P2_points"].flatMap(key => Array.isArray(path?.[key]) ? path[key] : []);
+      const points = candidates.map(pathPoint).filter(Boolean);
+      if (points.length < 2) return "";
+      const d = points.map(([x,y], i) => (i ? "L" : "M") + " " + x + " " + y).join(" ");
+      return '<path class="map-zipline-path" data-zipline="' + index + '" d="' + esc(d) + '" vector-effect="non-scaling-stroke"></path>';
+    }).join("");
     const objectiveHtml = Object.entries(map.objectivePositions ?? {}).map(([name, position]) =>
       marker("objective-marker", position?.left_relative, position?.top_relative, name.replaceAll("_", " "), null, "◆")
     ).join("");
 
-    const camps = Array.isArray(map.neutral_camps) ? map.neutral_camps : [];
+    const camps = Array.isArray(map.neutralCamps) ? map.neutralCamps : [];
+    const ziplinePaths = Array.isArray(map.ziplinePaths) ? map.ziplinePaths : [];
     const campsHtml = camps.map(camp =>
       marker("camp-marker camp-" + esc(camp.kind), camp.left_relative, camp.top_relative, camp.name + " · " + camp.kind, camp.icon)
     ).join("");
@@ -1112,6 +1132,7 @@ function renderMaps(signal) {
       '<div class="map-canvas">' +
       (base ? '<img class="map-layer map-base" src="' + esc(base) + '" alt="Deadlock map base layer" draggable="false">' : "") +
       layers.map(([name, url]) => '<img class="map-layer map-' + esc(name) + '" src="' + esc(url) + '" alt="" aria-hidden="true" draggable="false">').join("") +
+      '<svg class="map-ziplines" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">' + ziplineSvg + '</svg>' +
       '<div class="map-markers map-objectives">' + objectiveHtml + '</div>' +
       '<div class="map-markers map-camps">' + campsHtml + '</div>' +
       '<div class="map-markers map-entities">' + entitiesHtml + '</div>' +
@@ -1142,7 +1163,7 @@ function renderMaps(signal) {
       '<div><span>OBJECTIVES</span><strong>' + Object.keys(map.objectivePositions ?? {}).length + '</strong></div>' +
       '<div><span>NEUTRAL CAMPS</span><strong>' + camps.length + '</strong></div>' +
       '<div><span>ENTITIES</span><strong>' + entityGroups.length + '</strong></div>' +
-      '<div><span>ZIPLINES</span><strong>' + (Array.isArray(map.zipline_paths) ? map.zipline_paths.length : 0) + '</strong></div>';
+      '<div><span>ZIPLINES</span><strong>' + ziplinePaths.length + '</strong></div>';
 
     const entityNames = entityGroups.reduce((counts, item) => {
       counts[item.group] = (counts[item.group] ?? 0) + 1;
@@ -1154,7 +1175,7 @@ function renderMaps(signal) {
       (Object.entries(entityNames).map(([name, count]) => esc(name.replaceAll("_", " ")) + " × " + count).join(" · ") || "No extracted entities for this build.") +
       '</p></div>' +
       '<div class="map-detail"><span class="eyebrow">DATA AVAILABILITY</span><p>' +
-      (map.neutral_camps == null ? "Neutral camps are not available for this asset build." : "Neutral camp positions are available.") +
+      (map.neutralCamps == null ? "Neutral camps are not available for this asset build." : "Neutral camp positions are available.") +
       " " + (map.entities == null ? "Map entity extraction is not available." : "Map entity extraction is available.") +
       '</p></div>';
 
