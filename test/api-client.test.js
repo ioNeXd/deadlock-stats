@@ -38,10 +38,13 @@ test("apiGet normalizes query parameters and parses JSON", async () => {
 test("caller-owned abort signals do not share deduplicated requests", async () => {
   let calls = 0;
   let resolveFirst;
-  mockFetch(async () => {
+  mockFetch(async (_url, init) => {
     calls += 1;
     if (calls === 1) {
-      await new Promise(resolve => { resolveFirst = resolve; });
+      await new Promise((resolve, reject) => {
+        resolveFirst = resolve;
+        init.signal.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")), { once: true });
+      });
     }
     return new Response(JSON.stringify({ calls }), {
       status: 200,
