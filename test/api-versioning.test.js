@@ -203,3 +203,8 @@ test("reconcileVersionPolicy reports removed resources with their version", () =
   }]);
   assert.deepEqual(events, result.events);
 });
+
+
+test("version detection ignores non-version path segments", () => {
+  assert.equal(versionedPath("/foo/v1/assets"), null);
+});
