@@ -25,7 +25,7 @@ export function normalizeColorValue(color) {
 }
 
 export function colorToCss(color) {
-  if (typeof color === "string") return color;
+  if (typeof color === "string") return /^#[0-9a-f]{3,8}$/i.test(color.trim()) ? color.trim() : "";
   const rgba = normalizeColorValue(color);
   if (!rgba) return "";
   const [r, g, b, a = 255] = rgba;
