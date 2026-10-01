@@ -1091,7 +1091,7 @@ function renderMaps(signal) {
       '<button type="button" class="map-marker ' + className + '" style="left:' + (Number(left) * 100) + '%;top:' + (Number(top) * 100) + '%" title="' + esc(title) + '" aria-label="' + esc(title) + '">' +
       (icon ? '<img src="' + esc(icon) + '" alt="" loading="lazy" decoding="async">' : '<span>' + esc(extra || "•") + '</span>') + '</button>';
 
-    const objectiveHtml = Object.entries(map.objective_positions ?? {}).map(([name, position]) =>
+    const objectiveHtml = Object.entries(map.objectivePositions ?? {}).map(([name, position]) =>
       marker("objective-marker", position?.left_relative, position?.top_relative, name.replaceAll("_", " "), null, "◆")
     ).join("");
 
@@ -1139,7 +1139,7 @@ function renderMaps(signal) {
     $("#map-build").textContent = options.clientVersion ? "BUILD " + options.clientVersion : "LATEST BUILD";
     $("#map-summary").innerHTML =
       '<div><span>RADIUS</span><strong>' + esc(map.radius ?? "—") + '</strong></div>' +
-      '<div><span>OBJECTIVES</span><strong>' + Object.keys(map.objective_positions ?? {}).length + '</strong></div>' +
+      '<div><span>OBJECTIVES</span><strong>' + Object.keys(map.objectivePositions ?? {}).length + '</strong></div>' +
       '<div><span>NEUTRAL CAMPS</span><strong>' + camps.length + '</strong></div>' +
       '<div><span>ENTITIES</span><strong>' + entityGroups.length + '</strong></div>' +
       '<div><span>ZIPLINES</span><strong>' + (Array.isArray(map.zipline_paths) ? map.zipline_paths.length : 0) + '</strong></div>';
