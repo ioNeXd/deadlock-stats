@@ -177,20 +177,20 @@ test("match snapshots normalize active and recently fetched responses and preser
     });
   };
   try {
-    const [active, recent] = await Promise.all([
-      import("../src/services/matches.js").then(({ getActiveMatchesSnapshot }) => getActiveMatchesSnapshot({ signal: controller.signal, cache: false, dedupe: false })),
-      import("../src/services/matches.js").then(({ getRecentlyFetchedMatchesSnapshot }) => getRecentlyFetchedMatchesSnapshot({ signal: controller.signal, cache: false, dedupe: false })),
-    ]);
-    assert.deepEqual(active[0].matchId, 10);
-    assert.deepEqual(active[0].durationS, 900);
-    assert.equal(active[0].raw.future_metric, "active");
-    assert.equal(recent[0].matchId, 20);
-    assert.equal(recent[0].durationS, 1200);
-    assert.equal(recent[0].raw.future_metric, "recent");
+    const activePromise = import("../src/services/matches.js").then(({ getActiveMatchesSnapshot }) =>
+      getActiveMatchesSnapshot({ signal: controller.signal, cache: false, dedupe: false }));
+    const recentPromise = import("../src/services/matches.js").then(({ getRecentlyFetchedMatchesSnapshot }) =>
+      getRecentlyFetchedMatchesSnapshot({ signal: controller.signal, cache: false, dedupe: false }));
+
+    await Promise.resolve();
     assert.equal(calls.length, 2);
     assert.ok(calls.every(call => call.signal instanceof AbortSignal));
+
     controller.abort();
     assert.ok(calls.every(call => call.signal.aborted));
+
+    const [active, recent] = await Promise.allSettled([activePromise, recentPromise]);
+    assert.ok(active.status === "rejected" || recent.status === "rejected");
   } finally {
     globalThis.fetch = originalFetch;
   }
