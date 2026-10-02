@@ -1,5 +1,5 @@
 import { getActiveMatchesSnapshot, getRecentlyFetchedMatchesSnapshot, getBulkMatchMetadataSnapshot } from "./services/matches.js";
-import { listHeroes, listItems, listRanks, listMiscEntities, listBuildTags } from "./services/assets.js";
+import { listHeroes, listItems, listItemsByHeroId, listItemsBySlotType, listItemsByType, fetchItem, listRanks, listMiscEntities, listBuildTags, buildItemDetailViewModel } from "./services/assets.js";
 import { getOpenApiContract } from "./services/versioning.js";
 import { probeApiStatus } from "./services/api-status.js";
 import { buildRequestExamples, buildSchemaFormModel, buildSchemaViewModel, describeOperation, executeOperation, listApiOperations, parseSchemaFormValue } from "./services/data-explorer.js";
@@ -387,10 +387,113 @@ function renderHeroes(signal) {
   load(Object.fromEntries(new FormData(form).entries()));
 }
 
+function renderItemDetail(itemId, signal) {
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">GAME / ITEMS / DETAIL</span><h2 id="item-detail-name">Item</h2><p>Item definition and assets returned by the current Deadlock API.</p></section>' +
+    '<section class="panel"><div id="item-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching item…</span></div><div id="item-detail-summary"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">ASSET DATA</span><h2>Images</h2></div></div><div id="item-detail-images"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">RAW API</span><h2>Definition</h2></div></div><pre id="item-detail-raw" class="code-block"></pre></section>';
+
+  fetchItem(itemId, { ...assetVersion.options(), signal }).then(result => {
+    if (signal.aborted) return;
+    const model = buildItemDetailViewModel(result.data);
+    if (!model.id && !model.name) {
+      $("#item-detail-status").innerHTML = '<span class="eyebrow">NOT FOUND</span><span>Item was not returned by the API.</span>';
+      return;
+    }
+    $("#item-detail-name").textContent = model.name ?? ("Item " + itemId);
+    $("#item-detail-summary").innerHTML =
+      '<div class="match-detail-summary">' +
+      '<div class="metric"><span>ID</span><strong>' + esc(model.id ?? itemId) + '</strong></div>' +
+      '<div class="metric"><span>Class</span><strong>' + esc(model.className ?? "—") + '</strong></div>' +
+      '<div class="metric"><span>Type</span><strong>' + esc(model.type ?? "—") + '</strong></div>' +
+      '<div class="metric"><span>Slot</span><strong>' + esc(model.slotType ?? "—") + '</strong></div>' +
+      '</div>';
+    const images = Object.entries(model.images).filter(([, value]) => typeof value === "string" && value);
+    $("#item-detail-images").innerHTML = images.map(([key, value]) =>
+      '<div class="analytics-table-row"><span><strong>' + esc(key) + '</strong></span><span><a href="' + esc(safeExternalUrl(value)) + '" target="_blank" rel="noreferrer">Open asset</a></span></div>'
+    ).join("") || '<p class="muted">No image assets returned.</p>';
+    $("#item-detail-raw").textContent = JSON.stringify(model.raw, null, 2);
+    $("#item-detail-status").innerHTML = '<span class="eyebrow">LOADED</span><span>Item definition received from the API.</span>';
+  }).catch(error => {
+    if (isAborted(error)) return;
+    $("#item-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span>' + esc(error.message) + '</span>';
+  });
+}
+
 function renderAssetCatalog(kind, signal) {
+  if (kind === "items") {
+    el.content.innerHTML =
+      '<section class="page-head"><span class="eyebrow">GAME / ITEMS</span><h2>Items</h2><p>Item, ability, weapon and upgrade definitions from the current Deadlock API.</p></section>' +
+      '<section class="panel analytics-filter-panel"><form id="item-catalog-filters" class="analytics-filters">' +
+      '<label class="field"><span>Search</span><input name="search" type="search" placeholder="Item name or class"></label>' +
+      '<label class="field"><span>Source</span><select name="scope"><option value="all">All items</option><option value="hero">By hero</option><option value="slot">By slot type</option><option value="type">By type</option></select></label>' +
+      '<label class="field"><span>Hero ID</span><input name="hero_id" type="number" min="0" disabled></label>' +
+      '<label class="field"><span>Slot type</span><input name="slot_type" type="text" disabled></label>' +
+      '<label class="field"><span>Type</span><input name="type" type="text" disabled></label>' +
+      '<button class="primary-button" type="submit">Load items</button></form></section>' +
+      '<section class="panel"><div class="section-head"><div><span class="eyebrow">CATALOG</span><h2>Item definitions</h2></div><b id="asset-catalog-status">LOADING</b></div><div class="asset-catalog" id="asset-catalog"><div class="panel"><p>Loading assets…</p></div></div></section>';
+
+    const form = $("#item-catalog-filters");
+    const scope = form.elements.scope;
+    const updateFields = () => {
+      form.elements.hero_id.disabled = scope.value !== "hero";
+      form.elements.slot_type.disabled = scope.value !== "slot";
+      form.elements.type.disabled = scope.value !== "type";
+    };
+    scope.addEventListener("change", updateFields);
+    updateFields();
+
+    const load = async values => {
+      $("#asset-catalog-status").textContent = "LOADING";
+      const catalog = $("#asset-catalog");
+      catalog.innerHTML = '<div class="panel"><p>Loading assets…</p></div>';
+      try {
+        const search = String(values.search ?? "").trim().toLowerCase();
+        const options = { ...assetVersion.options(), signal };
+        let result;
+        if (values.scope === "hero") {
+          if (values.hero_id === "") throw new TypeError("Hero ID is required for hero-scoped items.");
+          result = await listItemsByHeroId(Number(values.hero_id), options);
+        } else if (values.scope === "slot") {
+          if (!values.slot_type.trim()) throw new TypeError("Slot type is required for slot-scoped items.");
+          result = await listItemsBySlotType(values.slot_type.trim(), options);
+        } else if (values.scope === "type") {
+          if (!values.type.trim()) throw new TypeError("Item type is required for type-scoped items.");
+          result = await listItemsByType(values.type.trim(), options);
+        } else {
+          result = await listItems(options);
+        }
+        if (signal.aborted) return;
+        const items = (result.data ?? []).filter(item => {
+          if (!search) return true;
+          return String(item?.name ?? "").toLowerCase().includes(search) || String(item?.className ?? "").toLowerCase().includes(search);
+        });
+        $("#asset-catalog-status").textContent = items.length + " FOUND";
+        catalog.innerHTML = items.map(entity => {
+          const image = resolveAssetImage(entity);
+          const href = Number.isInteger(Number(entity.id)) ? "#/items/" + encodeURIComponent(entity.id) : null;
+          return '<article class="asset-card">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') +
+            '<div>' + (href ? '<a href="' + href + '">' : '') + '<small>ITEM</small><h3>' + esc(entity.name ?? "Unnamed") + '</h3>' + (href ? '</a>' : '') +
+            '<p>ID ' + esc(entity.id ?? "—") + ' · ' + esc(entity.type ?? "—") + '</p></div></article>';
+        }).join("") || '<div class="panel"><p>No items matched the current filters.</p></div>';
+        setConnection(true, "API connected");
+      } catch (error) {
+        if (isAborted(error)) return;
+        $("#asset-catalog-status").textContent = "ERROR";
+        catalog.innerHTML = '<div class="panel"><p class="error-text">Item request failed: ' + esc(error.message) + '</p></div>';
+      }
+    };
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      load(Object.fromEntries(new FormData(form).entries()));
+    });
+    load(Object.fromEntries(new FormData(form).entries()));
+    return;
+  }
+
   const config = {
     heroes: { title: "Heroes", eyebrow: "GAME / HEROES", description: "Hero metadata and real game assets from the current Deadlock API contract.", loader: listHeroes },
-    items: { title: "Items", eyebrow: "GAME / ITEMS", description: "Items, abilities, weapons and upgrades published by the current game data.", loader: listItems },
     ranks: { title: "Ranks", eyebrow: "GAME / RANKS", description: "Rank metadata, names and badge assets published by the API.", loader: listRanks },
   }[kind];
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">' + config.eyebrow + '</span><h2>' + config.title + '</h2><p>' + config.description + '</p></section><section class="asset-catalog" id="asset-catalog"><div class="panel"><p>Loading assets…</p></div></section>';
@@ -1962,6 +2065,7 @@ function route() {
   else if (routeName === "graphql") renderGraphql(signal);
   else if (routeName === "heroes" && routeParts[1]) renderHeroDetail(routeParts[1], signal);
   else if (routeName === "heroes") renderHeroes(signal);
+  else if (routeName === "items" && routeParts[1]) renderItemDetail(routeParts[1], signal);
   else if (routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
   else renderNotFound(routeName);
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName)));
