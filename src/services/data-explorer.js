@@ -312,6 +312,7 @@ function coerceScalar(value, schema) {
   }
 
   const type = schemaType(schema);
+  if (type === "null") throw new TypeError("Value must be null.");
   if (type === "integer" || type === "number") {
     const number = Number(value);
     if (!Number.isFinite(number)) throw new TypeError("Parameter must be a finite number.");
@@ -342,6 +343,37 @@ function coerceScalar(value, schema) {
 
 function coerceParameter(value, schema, parameter = null) {
   if (value === "" || value === undefined) return undefined;
+  if (schema?.oneOf?.length) {
+    const matches = [];
+    for (const variant of schema.oneOf) {
+      try {
+        matches.push(coerceParameter(value, resolveSchema(variant, parameter?._contract), parameter));
+      } catch {}
+    }
+    if (matches.length !== 1) {
+      throw new TypeError(matches.length === 0
+        ? "Parameter does not match any oneOf schema."
+        : "Parameter matches multiple oneOf schemas.");
+    }
+    return matches[0];
+  }
+  if (schema?.anyOf?.length) {
+    const matches = [];
+    for (const variant of schema.anyOf) {
+      try {
+        matches.push(coerceParameter(value, resolveSchema(variant, parameter?._contract), parameter));
+      } catch {}
+    }
+    if (!matches.length) throw new TypeError("Parameter does not match any anyOf schema.");
+    return matches[0];
+  }
+  if (schema?.allOf?.length) {
+    let result = value;
+    for (const variant of schema.allOf) {
+      result = coerceParameter(result, resolveSchema(variant, parameter?._contract), parameter);
+    }
+    return result;
+  }
   if (value === null) return schemaAllowsNull(schema) ? null : undefined;
 
   if (schemaType(schema) === "array") {
