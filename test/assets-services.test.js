@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { listHeroes, fetchHero, findHeroByName, listRanks, fetchRank, listItems, listItemsByHeroId, listItemsBySlotType, listItemsByType, fetchItem, fetchRankSubrankImage } from "../src/services/assets.js";
+import { listHeroes, fetchHero, findHeroByName, listRanks, fetchRank, listItems, listItemsByHeroId, listItemsBySlotType, listItemsByType, fetchItem, fetchRankSubrankImage, buildItemDetailViewModel } from "../src/services/assets.js";
 import { clearApiCache } from "../src/api/client.js";
 
 const originalFetch = globalThis.fetch;
@@ -133,4 +133,33 @@ test("expanded hero, item, rank and binary asset services use documented paths",
   calls = mockFetch(new Uint8Array([1, 2, 3]), { contentType: "image/png" });
   await fetchRankSubrankImage(3, 2, { cache: false, dedupe: false });
   assert.equal(new URL(calls[0].url).pathname, "/v1/assets/ranks/3/2/image");
+});
+
+
+test("buildItemDetailViewModel exposes normalized item metadata and raw payload", () => {
+  const raw = {
+    item_id: 55,
+    item_name: "Test Item",
+    class_name: "item_test",
+    type: "upgrade",
+    item_slot_type: "weapon",
+    icon: "https://example.test/item.png",
+    future_field: true,
+  };
+  const result = buildItemDetailViewModel({
+    id: 55,
+    name: "Test Item",
+    className: "item_test",
+    type: "upgrade",
+    slotType: "weapon",
+    images: { icon: "https://example.test/item.png" },
+    raw,
+  });
+
+  assert.equal(result.id, 55);
+  assert.equal(result.className, "item_test");
+  assert.equal(result.type, "upgrade");
+  assert.equal(result.slotType, "weapon");
+  assert.equal(result.images.icon, "https://example.test/item.png");
+  assert.equal(result.raw.future_field, true);
 });
