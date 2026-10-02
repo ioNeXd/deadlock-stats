@@ -917,9 +917,132 @@ export function buildRequestExamples(bodyInfo) {
       value: schema.default,
       source: "schema.default",
     });
+    return examples;
+  }
+
+  const generated = buildGeneratedSchemaExample(schema);
+  if (generated !== undefined) {
+    examples.push({
+      name: "Generated example",
+      summary: "Generated from schema constraints",
+      value: generated,
+      source: "generated",
+    });
   }
 
   return examples;
+}
+
+function generatedScalar(schema) {
+  const values = enumValues(schema);
+  if (values.length) return values[0];
+  if (schema?.const !== undefined) return schema.const;
+
+  const type = schemaType(schema);
+  if (type === "null") return null;
+  if (type === "boolean") return false;
+  if (type === "integer" || type === "number") {
+    if (typeof schema.minimum === "number") return schema.exclusiveMinimum === true ? schema.minimum + 1 : schema.minimum;
+    if (typeof schema.exclusiveMinimum === "number") return schema.exclusiveMinimum + (type === "integer" ? 1 : Number.EPSILON);
+    if (typeof schema.maximum === "number" && schema.maximum < 0) return schema.maximum;
+    return 0;
+  }
+
+  if (type === "string") {
+    const format = schema.format;
+    if (format === "email") return "example@example.com";
+    if (format === "uuid") return "00000000-0000-4000-8000-000000000000";
+    if (format === "date") return "2026-01-01";
+    if (format === "date-time") return "2026-01-01T00:00:00Z";
+    const length = Math.max(1, schema.minLength ?? 1);
+    return "x".repeat(length);
+  }
+
+  return undefined;
+}
+
+function buildGeneratedSchemaValue(schema, depth = 0) {
+  if (!schema || typeof schema !== "object" || depth > 12) return undefined;
+  if (schema.default !== undefined) return schema.default;
+  if (schema.example !== undefined) return schema.example;
+  if (Array.isArray(schema.examples) && schema.examples.length) return schema.examples[0];
+  if (schema.const !== undefined) return schema.const;
+
+  if (schema.oneOf?.length) {
+    for (const variant of schema.oneOf) {
+      const value = buildGeneratedSchemaValue(variant, depth + 1);
+      if (value !== undefined) return value;
+    }
+    return undefined;
+  }
+
+  if (schema.anyOf?.length) {
+    for (const variant of schema.anyOf) {
+      const value = buildGeneratedSchemaValue(variant, depth + 1);
+      if (value !== undefined) return value;
+    }
+    return undefined;
+  }
+
+  if (schema.allOf?.length) {
+    const merged = { ...schema, oneOf: undefined, anyOf: undefined, allOf: undefined, properties: { ...(schema.properties ?? {}) } };
+    const required = new Set(schema.required ?? []);
+    for (const variant of schema.allOf) {
+      if (variant?.properties) Object.assign(merged.properties, variant.properties);
+      for (const name of variant?.required ?? []) required.add(name);
+    }
+    if (required.size) merged.required = [...required];
+    return buildGeneratedSchemaValue(merged, depth + 1);
+  }
+
+  const type = schemaType(schema);
+  if (type === "object") {
+    const value = {};
+    const properties = schema.properties ?? {};
+    for (const name of schema.required ?? []) {
+      if (!(name in properties)) return undefined;
+      const generated = buildGeneratedSchemaValue(properties[name], depth + 1);
+      if (generated === undefined) return undefined;
+      value[name] = generated;
+    }
+
+    if (schema.minProperties !== undefined && Object.keys(value).length < schema.minProperties) {
+      for (const [name, propertySchema] of Object.entries(properties)) {
+        if (name in value) continue;
+        const generated = buildGeneratedSchemaValue(propertySchema, depth + 1);
+        if (generated === undefined) continue;
+        value[name] = generated;
+        if (Object.keys(value).length >= schema.minProperties) break;
+      }
+    }
+
+    return value;
+  }
+
+  if (type === "array") {
+    if (!schema.items) return schema.minItems ? undefined : [];
+    const count = schema.minItems ?? 0;
+    const values = [];
+    for (let index = 0; index < count; index += 1) {
+      const generated = buildGeneratedSchemaValue(schema.items, depth + 1);
+      if (generated === undefined) return undefined;
+      values.push(generated);
+    }
+    return values;
+  }
+
+  return generatedScalar(schema);
+}
+
+export function buildGeneratedSchemaExample(schema) {
+  const generated = buildGeneratedSchemaValue(schema);
+  if (generated === undefined) return undefined;
+  try {
+    validateRequestBody(generated, schema);
+    return generated;
+  } catch {
+    return undefined;
+  }
 }
 
 export function buildSchemaFormModel(schema) {
