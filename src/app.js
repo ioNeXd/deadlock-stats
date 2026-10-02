@@ -2,7 +2,7 @@ import { getActiveMatchesSnapshot, getRecentlyFetchedMatchesSnapshot, getBulkMat
 import { listHeroes, listItems, listRanks, listMiscEntities } from "./services/assets.js";
 import { getOpenApiContract } from "./services/versioning.js";
 import { probeApiStatus } from "./services/api-status.js";
-import { describeOperation, executeOperation, listApiOperations } from "./services/data-explorer.js";
+import { buildSchemaFormModel, describeOperation, executeOperation, listApiOperations, parseSchemaFormValue } from "./services/data-explorer.js";
 import { API_BASE_URL } from "./api/client.js";
 import { loadGraphqlPlayground } from "./services/graphql.js";
 import { resolveAssetImage } from "./adapters/assets.js";
@@ -1115,6 +1115,99 @@ async function renderExplorerResponse(result, target, signal) {
   if (signal?.aborted) return;
 }
 
+function schemaFormNodes(node) {
+  if (!node) return [];
+  const children = node.type === "object" ? (node.properties ?? []).flatMap(schemaFormNodes) : [];
+  return node.type === "array" || (node.type !== "object" && node.type !== "array") ? [node, ...children] : children;
+}
+
+function schemaFieldControl(node) {
+  const required = node.required ? " required" : "";
+  const nullable = node.nullable ? " · nullable" : "";
+  const meta = (node.required ? "required" : "optional") + nullable;
+  const constraints = [];
+  if (node.minimum != null) constraints.push("min " + node.minimum);
+  if (node.maximum != null) constraints.push("max " + node.maximum);
+  if (node.minLength != null) constraints.push("min length " + node.minLength);
+  if (node.maxLength != null) constraints.push("max length " + node.maxLength);
+  if (node.minItems != null) constraints.push("min items " + node.minItems);
+  if (node.maxItems != null) constraints.push("max items " + node.maxItems);
+
+  if (node.type === "object") {
+    return '<fieldset class="schema-object"><legend>' + esc(node.label) + ' <small>' + esc(meta) + '</small></legend>' +
+      (node.description ? '<p class="muted">' + esc(node.description) + '</p>' : '') +
+      (node.properties?.length ? node.properties.map(schemaFieldControl).join("") : '<p class="muted">No declared properties.</p>') +
+      '</fieldset>';
+  }
+
+  if (node.type === "array") {
+    const placeholder = node.items?.type === "object" || node.items?.type === "array" ? '[ ]' : '["value"]';
+    return '<label class="field schema-field"><span>' + esc(node.label) + ' <small>array · ' + esc(meta) + '</small></span>' +
+      (node.description ? '<small class="muted">' + esc(node.description) + '</small>' : '') +
+      '<textarea data-body-field="' + esc(node.path) + '" rows="3" placeholder="' + esc(placeholder) + '"' + required + '>' +
+      (node.default !== undefined ? esc(JSON.stringify(node.default)) : '') + '</textarea>' +
+      (constraints.length ? '<small class="muted">' + esc(constraints.join(" · ")) + '</small>' : '') +
+      '</label>';
+  }
+
+  const values = node.enum;
+  let control;
+  if (values.length || node.type === "boolean") {
+    const options = [];
+    if (!node.required || node.nullable) options.push('<option value="">—</option>');
+    if (node.nullable) options.push('<option value="null">null</option>');
+    if (node.type === "boolean" && !values.length) {
+      options.push('<option value="true">true</option><option value="false">false</option>');
+    } else {
+      values.forEach(value => options.push('<option value="' + esc(typeof value === "object" ? JSON.stringify(value) : String(value)) + '">' + esc(typeof value === "object" ? JSON.stringify(value) : String(value)) + '</option>'));
+    }
+    control = '<select data-body-field="' + esc(node.path) + '"' + required + '>' + options.join("") + '</select>';
+  } else {
+    const inputType = node.type === "integer" || node.type === "number" ? "number" : "text";
+    const step = node.type === "integer" ? "1" : node.type === "number" ? "any" : null;
+    control = '<input data-body-field="' + esc(node.path) + '" type="' + inputType + '" placeholder="' + esc(node.default !== undefined ? String(node.default) : node.type) + '"' +
+      (step ? ' step="' + step + '"' : '') + required +
+      (node.default !== undefined ? ' value="' + esc(node.default) + '"' : '') + '>';
+  }
+
+  return '<label class="field schema-field"><span>' + esc(node.label) + ' <small>' + esc(node.type + ' · ' + meta) + '</small></span>' +
+    (node.description ? '<small class="muted">' + esc(node.description) + '</small>' : '') +
+    control +
+    (constraints.length ? '<small class="muted">' + esc(constraints.join(" · ")) + '</small>' : '') +
+    '</label>';
+}
+
+function setSchemaPath(root, path, value) {
+  const parts = path.replace(/^__body\./, "").split(".").filter(Boolean);
+  if (!parts.length) return value;
+  let target = root;
+  for (let index = 0; index < parts.length - 1; index += 1) {
+    if (!target[parts[index]] || typeof target[parts[index]] !== "object") target[parts[index]] = {};
+    target = target[parts[index]];
+  }
+  target[parts[parts.length - 1]] = value;
+  return root;
+}
+
+function buildStructuredBody(form, model) {
+  if (!model) return undefined;
+  if (model.type !== "object") {
+    const field = form.querySelector('[data-body-field="' + CSS.escape(model.path) + '"]');
+    if (!field) return undefined;
+    return parseSchemaFormValue(field.value, model.schema, "$");
+  }
+  const body = {};
+  for (const field of form.querySelectorAll("[data-body-field]")) {
+    const path = field.dataset.bodyField;
+    const node = schemaFormNodes(model).find(item => item.path === path);
+    if (!node) continue;
+    const value = parseSchemaFormValue(field.value, node.schema, "$." + path.replace(/^__body\./, ""));
+    if (value !== undefined) setSchemaPath(body, path, value);
+  }
+  return Object.keys(body).length ? body : undefined;
+}
+
+
 function renderOperation(operation, signal, contract = null) {
   const detail = describeOperation(operation, contract);
   $("#explorer-empty").hidden = true;
@@ -1146,12 +1239,18 @@ function renderOperation(operation, signal, contract = null) {
   }).join("");
 
   const bodyTypes = detail.requestBodyInfo ?? [];
+  const initialBody = bodyTypes[0];
+  const bodyModel = initialBody?.schema ? buildSchemaFormModel(initialBody.schema) : null;
   const bodyField = bodyTypes.length
-    ? '<label class="field"><span>Request body <small>' + (bodyTypes[0].required ? "required · " : "") + "body</small></span>" +
-      '<select name="__contentType">' +
-      bodyTypes.map(item => '<option value="' + esc(item.mediaType) + '">' + esc(item.mediaType) + "</option>").join("") +
-      "</select><textarea name="__body" rows="8" placeholder="' + (bodyTypes[0].mediaType?.includes("json") ? "{ }" : "Request payload") + '"></textarea></label>'
+    ? '<section class="schema-body-editor"><div class="schema-body-head"><div><span class="eyebrow">REQUEST BODY</span><h3>Schema-driven payload</h3></div>' +
+      '<span class="muted">' + esc(initialBody.required ? "required" : "optional") + '</span></div>' +
+      '<label class="field"><span>Content type <small>OpenAPI</small></span><select name="__contentType" id="explorer-content-type">' +
+      bodyTypes.map(item => '<option value="' + esc(item.mediaType) + '">' + esc(item.mediaType) + '</option>').join("") +
+      '</select></label>' +
+      '<div id="schema-body-editor">' + (bodyModel ? schemaFieldControl(bodyModel) : '<label class="field"><span>Payload</span><textarea name="__body" rows="8" placeholder="Request payload"></textarea></label>') + '</div>' +
+      '<p class="muted schema-body-note">Fields, defaults and constraints are derived from the current OpenAPI request schema. Arrays and free-form objects accept JSON.</p></section>'
     : "";
+
 
   const responseSummary = detail.responseInfo.map(response =>
     '<div class="metric"><span>' + esc(response.status) + "</span><strong>" +
@@ -1178,6 +1277,10 @@ function renderOperation(operation, signal, contract = null) {
   $("#operation-form").addEventListener("submit", async event => {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
+    if (bodyModel) {
+      const structuredBody = buildStructuredBody(event.currentTarget, bodyModel);
+      if (structuredBody !== undefined) values.__body = structuredBody;
+    }
     const resultBox = $("#operation-result");
     resultBox.innerHTML = '<span class="eyebrow">RESPONSE INSPECTOR</span><p class="muted">Executing request…</p>';
     try {
@@ -1195,7 +1298,16 @@ function renderOperation(operation, signal, contract = null) {
         "</div>" +
         '<pre class="error-text">' + esc(error.message) + "</pre>";
     }
+  })
+  const contentTypeSelect = $("#explorer-content-type");
+  const bodyEditor = $("#schema-body-editor");
+  contentTypeSelect?.addEventListener("change", () => {
+    const selected = bodyTypes.find(item => item.mediaType === contentTypeSelect.value);
+    const selectedModel = selected?.schema ? buildSchemaFormModel(selected.schema) : null;
+    bodyEditor.innerHTML = selectedModel ? schemaFieldControl(selectedModel) : '<label class="field"><span>Payload</span><textarea data-body-field="__body" rows="8" placeholder="Request payload"></textarea></label>';
   });
+
+;
 }
 
 function bindVersionControl() {
