@@ -1132,9 +1132,9 @@ async function renderBuildDetail(heroId, buildId, signal) {
 
   const render = async () => {
     try {
-      const [snapshot, heroCatalog, tagCatalog] = await Promise.all([
+      const [snapshot, heroResult, tagCatalog] = await Promise.all([
         analytics.getBuildDetailSnapshot(numericHeroId, numericBuildId, { ...assetVersion.options(), signal }),
-        assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
+        assetsRuntime.fetchHero(numericHeroId, { ...assetVersion.options(), signal }),
         assetsRuntime.listBuildTags({ ...assetVersion.options(), signal }),
       ]);
       if (signal.aborted) return;
@@ -1145,7 +1145,7 @@ async function renderBuildDetail(heroId, buildId, signal) {
         return;
       }
 
-      const hero = (heroCatalog.data ?? []).find(item => Number(item?.id) === numericHeroId);
+      const hero = heroResult?.data ?? null;
       const tags = new Map((tagCatalog.data ?? []).map(tag => [Number(tag?.id), tag]));
       const model = buildsRuntime.buildBuildDetailViewModel(detail, snapshot.performance);
       $("#build-detail-name").textContent = model.name ?? ("Build #" + numericBuildId);
