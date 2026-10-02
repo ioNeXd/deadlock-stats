@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { searchBuilds } from "../src/api/builds.js";
-import { getBuild } from "../src/services/builds.js";
+import { buildBuildDetailViewModel, getBuild } from "../src/services/builds.js";
 
 test("searchBuilds forwards only documented build filters", async () => {
   const originalFetch = globalThis.fetch;
@@ -74,4 +74,30 @@ test("normalizeBuildDetail preserves build metadata and mod categories", async (
   assert.equal(result.categories[0].name, "Weapon");
   assert.equal(result.categories[0].mods[0].abilityId, 9001);
   assert.equal(result.categories[0].mods[0].annotation, "Core");
+});
+
+
+test("buildBuildDetailViewModel combines build metadata with performance", () => {
+  const result = buildBuildDetailViewModel({
+    heroBuildId: 42,
+    heroId: 7,
+    name: "Core build",
+    version: 3,
+    tags: [10],
+    categories: [{
+      name: "Weapon",
+      optional: false,
+      mods: [{ abilityId: 9001 }, { abilityId: 9002 }],
+    }],
+  }, {
+    wins: 60,
+    losses: 40,
+    matches: 100,
+    players: 88,
+  });
+
+  assert.equal(result.modCount, 2);
+  assert.equal(result.performance.matches, 100);
+  assert.equal(result.performance.winRate, 60);
+  assert.deepEqual(result.tags, [10]);
 });
