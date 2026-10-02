@@ -849,30 +849,76 @@ export function buildSchemaViewModel(schema) {
 
 export function buildRequestExamples(bodyInfo) {
   if (!bodyInfo || typeof bodyInfo !== "object") return [];
+
   const examples = [];
+  const addExample = (example) => {
+    if (!example || example.value === undefined) return;
+    examples.push(example);
+  };
+
+  // OpenAPI Media Type Object examples are mutually exclusive. If either
+  // representation is present, it takes precedence over schema examples.
   if (bodyInfo.example !== undefined) {
-    examples.push({ name: "Default example", summary: "Media type example", value: bodyInfo.example, source: "example" });
+    addExample({
+      name: "Default example",
+      summary: "Media type example",
+      value: bodyInfo.example,
+      source: "example",
+    });
+    return examples;
   }
-  for (const [name, example] of Object.entries(bodyInfo.examples ?? {})) {
-    if (!example || example.value === undefined) continue;
-    examples.push({
-      name,
-      summary: example.summary ?? example.description ?? name,
-      value: example.value,
-      source: "examples",
+
+  const mediaExamples = bodyInfo.examples ?? {};
+  if (Object.keys(mediaExamples).length) {
+    for (const [name, example] of Object.entries(mediaExamples)) {
+      addExample({
+        name,
+        summary: example?.summary ?? example?.description ?? name,
+        value: example?.value,
+        source: "examples",
+      });
+    }
+    return examples;
+  }
+
+  const schema = bodyInfo.schema;
+  if (!schema || typeof schema !== "object") return examples;
+
+  // Schema examples are representation-independent; the media type examples
+  // above intentionally override them when supplied.
+  if (schema.example !== undefined) {
+    addExample({
+      name: "Schema example",
+      summary: "Schema example",
+      value: schema.example,
+      source: "schema.example",
+    });
+    return examples;
+  }
+
+  if (Array.isArray(schema.examples) && schema.examples.length) {
+    schema.examples.forEach((value, index) => {
+      addExample({
+        name: "Schema example " + (index + 1),
+        summary: "Schema examples",
+        value,
+        source: "schema.examples",
+      });
+    });
+    return examples;
+  }
+
+  // A default documents receiver behavior rather than an example, but it is
+  // still useful as an explicit fallback preset in a request editor.
+  if (schema.default !== undefined) {
+    addExample({
+      name: "Schema default",
+      summary: "Schema default",
+      value: schema.default,
+      source: "schema.default",
     });
   }
-  if (!examples.length && bodyInfo.schema?.example !== undefined) {
-    examples.push({ name: "Schema example", summary: "Schema example", value: bodyInfo.schema.example, source: "schema.example" });
-  }
-  if (!examples.length && Array.isArray(bodyInfo.schema?.examples)) {
-    bodyInfo.schema.examples.forEach((value, index) => {
-      examples.push({ name: "Schema example " + (index + 1), summary: "Schema examples", value, source: "schema.examples" });
-    });
-  }
-  if (!examples.length && bodyInfo.schema?.default !== undefined) {
-    examples.push({ name: "Schema default", summary: "Schema default", value: bodyInfo.schema.default, source: "schema.default" });
-  }
+
   return examples;
 }
 
