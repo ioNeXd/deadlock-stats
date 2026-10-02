@@ -15,7 +15,7 @@ import { loadLeaderboard } from "./services/leaderboard.js";
 import { searchPlayers, loadPlayerRank, loadPlayerHeroStats, loadPlayerMatchHistory } from "./services/players.js";
 import { safeExternalUrl } from "./ui/security.js";
 import { listUserRequestPresets, saveUserRequestPreset, deleteUserRequestPreset } from "./services/data-explorer-presets.js";
-import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
+import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroDetailSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
@@ -181,6 +181,82 @@ function renderGraphql(signal) {
     if (status) { status.textContent = "UNAVAILABLE"; status.classList.add("offline"); }
     console.error("GraphQL playground probe failed", error);
   });
+}
+
+function renderHeroDetail(heroId, signal) {
+  const numericHeroId = Number(heroId);
+  if (!Number.isInteger(numericHeroId) || numericHeroId < 0) {
+    renderNotFound("heroes/" + heroId);
+    return;
+  }
+
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">HERO / DETAIL</span><h2 id="hero-detail-name">Hero #' + esc(numericHeroId) + '</h2><p>Performance, matchups, builds and ability orders from the Deadlock analytics API.</p></section>' +
+    '<section class="panel"><div id="hero-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching hero intelligence…</span></div><div id="hero-detail-summary"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">MATCHUPS</span><h2>Counters & synergies</h2></div></div><div id="hero-detail-matchups"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">BUILDS</span><h2>Hero builds</h2></div></div><div id="hero-detail-builds"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">ABILITIES</span><h2>Ability orders</h2></div></div><div id="hero-detail-abilities"></div></section>';
+
+  const options = { ...assetVersion.options(), signal };
+  getHeroDetailSnapshot(numericHeroId, options).then(snapshot => {
+    if (signal.aborted) return;
+    const hero = (awaitHeroCatalog(numericHeroId)) || null;
+    if (hero) {
+      $("#hero-detail-name").textContent = nameOf(hero);
+    }
+
+    const stat = snapshot.stats[0];
+    const matches = Number(stat?.matches);
+    const wins = Number(stat?.wins);
+    const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? wins / matches * 100 : null;
+    const summary = [
+      ["MATCHES", Number.isFinite(matches) ? matches.toLocaleString() : "—"],
+      ["WIN RATE", winRate == null ? "—" : winRate.toFixed(1) + "%"],
+      ["K / D / A", [stat?.totalKills, stat?.totalDeaths, stat?.totalAssists].map(Number).every(Number.isFinite) ? [stat.totalKills, stat.totalDeaths, stat.totalAssists].join(" / ") : "—"],
+      ["PLAYER DAMAGE", Number.isFinite(Number(stat?.totalPlayerDamage)) ? Number(stat.totalPlayerDamage).toLocaleString() : "—"],
+      ["LAST HITS", Number.isFinite(Number(stat?.totalLastHits)) ? Number(stat.totalLastHits).toLocaleString() : "—"],
+      ["DENIES", Number.isFinite(Number(stat?.totalDenies)) ? Number(stat.totalDenies).toLocaleString() : "—"],
+    ];
+    $("#hero-detail-summary").innerHTML = summary.map(([label,value]) => '<span><small>' + esc(label) + '</small><strong>' + esc(value) + '</strong></span>').join("");
+
+    const counterRows = snapshot.counters
+      .filter(row => Number(row.matchesPlayed) > 0)
+      .sort((a,b) => Number(b.matchesPlayed) - Number(a.matchesPlayed))
+      .slice(0, 20);
+    const synergyRows = snapshot.synergies
+      .filter(row => Number(row.matchesPlayed) > 0)
+      .sort((a,b) => Number(b.matchesPlayed) - Number(a.matchesPlayed))
+      .slice(0, 20);
+    $("#hero-detail-matchups").innerHTML =
+      '<p>COUNTERS: ' + counterRows.length + ' · SYNERGIES: ' + synergyRows.length + '</p>' +
+      '<pre>' + esc(JSON.stringify({ counters: counterRows, synergies: synergyRows }, null, 2)) + '</pre>';
+
+    const builds = snapshot.builds.slice().sort((a,b) => Number(b.matches) - Number(a.matches)).slice(0, 20);
+    $("#hero-detail-builds").innerHTML = builds.length
+      ? '<pre>' + esc(JSON.stringify(builds, null, 2)) + '</pre>'
+      : '<p class="muted">No hero build statistics returned for this filter.</p>';
+
+    const abilities = snapshot.abilityOrders.slice().sort((a,b) => Number(b.matches) - Number(a.matches)).slice(0, 20);
+    $("#hero-detail-abilities").innerHTML = abilities.length
+      ? '<pre>' + esc(JSON.stringify(abilities, null, 2)) + '</pre>'
+      : '<p class="muted">No ability order statistics returned for this filter.</p>';
+
+    $("#hero-detail-status").innerHTML = '<span class="eyebrow">API CONNECTED</span><span>Hero analytics loaded</span>';
+    setConnection(true, "API connected");
+  }).catch(error => {
+    if (isAborted(error)) return;
+    $("#hero-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span class="error-text">' + esc(error.message) + '</span>';
+    setConnection(false, "API unavailable");
+  });
+
+  let cachedHero = null;
+  function awaitHeroCatalog(id) {
+    if (cachedHero) return Promise.resolve(cachedHero);
+    return listHeroes({ ...assetVersion.options(), signal }).then(result => {
+      cachedHero = (result.data ?? []).find(hero => String(idOf(hero)) === String(id)) ?? null;
+      return cachedHero;
+    });
+  }
 }
 
 function renderHeroes(signal) {
@@ -1760,7 +1836,8 @@ function renderNotFound(routeName) {
 
 function route() {
   const signal = beginRoute();
-  const routeName = location.hash.replace(/^#\/?/, "").split("/")[0] || "dashboard";
+  const routeParts = location.hash.replace(/^#\/?/, "").split("/");
+  const routeName = routeParts[0] || "dashboard";
   if (routeName === "api") renderApiStatus(signal);
   else if (routeName === "analytics") renderAnalytics(signal);
   else if (routeName === "matches") renderMatches(signal);
@@ -1771,7 +1848,7 @@ function route() {
   else if (routeName === "maps") renderMaps(signal);
   else if (routeName === "data") renderDataExplorer(signal);
   else if (routeName === "graphql") renderGraphql(signal);
-  else if (routeName === "heroes") renderHeroes(signal);\n  else if (routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
+  else if (routeName === "heroes" && routeParts[1]) renderHeroDetail(routeParts[1], signal);\n  else if (routeName === "heroes") renderHeroes(signal);\n  else if (routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
   else renderNotFound(routeName);
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName)));
   bindVersionControl();
