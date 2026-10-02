@@ -1,4 +1,26 @@
-import { getActiveMatches, getRecentlyFetchedMatches, getMatchMetadata, getMatchSalts, getBulkMatchMetadata } from "../api/matches.js";
+import {
+  getActiveMatches,
+  getActiveMatchesRaw,
+  getRecentlyFetchedMatches,
+  getMatchMetadata,
+  getRawMatchMetadata,
+  getMatchLiveUrl,
+  getMatchSalts,
+  getBulkMatchMetadata,
+  createCustomMatch,
+  leaveCustomMatch,
+  readyCustomMatch,
+  startCustomMatch,
+  unreadyCustomMatch,
+  getCustomMatchId,
+  getLiveQuery,
+  submitDemoQuery,
+  getDemoQueryStatus,
+  getDemoSchema,
+  getLiveUrls,
+  ingestLiveUrls,
+  ingestMatchSalts,
+} from "../api/matches.js";
 
 function rows(result) {
   return Array.isArray(result) ? result : Array.isArray(result?.data) ? result.data : [];
@@ -32,28 +54,91 @@ export function normalizeMatchMetadata(result) {
   return result;
 }
 
-export async function getActiveMatchesSnapshot(options = {}) {
+async function passthrough(loader, options = {}) {
   const { signal, ...requestOptions } = options;
-  return normalizeMatchInfo(await getActiveMatches({ ...requestOptions, signal }));
+  return loader({ ...requestOptions, signal });
+}
+
+export async function getActiveMatchesSnapshot(options = {}) {
+  return normalizeMatchInfo(await passthrough(getActiveMatches, options));
 }
 
 export async function getRecentlyFetchedMatchesSnapshot(options = {}) {
-  const { signal, ...requestOptions } = options;
-  return normalizeMatchInfo(await getRecentlyFetchedMatches({ ...requestOptions, signal }));
+  return normalizeMatchInfo(await passthrough(getRecentlyFetchedMatches, options));
 }
 
 export async function getMatchMetadataSnapshot(matchId, options = {}) {
-  const { signal, ...requestOptions } = options;
-  return normalizeMatchMetadata(await getMatchMetadata(matchId, { ...requestOptions, signal }));
+  return normalizeMatchMetadata(await getMatchMetadata(matchId, options));
+}
+
+export async function getRawMatchMetadataSnapshot(matchId, options = {}) {
+  return passthrough(getRawMatchMetadata, { ...options, matchId });
+}
+
+export async function getActiveMatchesRawSnapshot(options = {}) {
+  return passthrough(getActiveMatchesRaw, options);
+}
+
+export async function getMatchLiveUrlSnapshot(matchId, options = {}) {
+  return getMatchLiveUrl(matchId, options);
 }
 
 export async function getMatchSaltsSnapshot(matchId, options = {}) {
-  const { signal, ...requestOptions } = options;
-  return getMatchSalts(matchId, { ...requestOptions, signal });
+  return getMatchSalts(matchId, options);
 }
 
 export async function getBulkMatchMetadataSnapshot(options = {}) {
-  const { signal, ...requestOptions } = options;
-  const result = await getBulkMatchMetadata({ ...requestOptions, signal });
-  return normalizeMatchMetadata(result);
+  return normalizeMatchMetadata(await getBulkMatchMetadata(options));
+}
+
+export function createCustomMatchSnapshot(body, options = {}) {
+  return createCustomMatch(body, options);
+}
+
+export function leaveCustomMatchSnapshot(lobbyId, options = {}) {
+  return leaveCustomMatch(lobbyId, options);
+}
+
+export function readyCustomMatchSnapshot(lobbyId, options = {}) {
+  return readyCustomMatch(lobbyId, options);
+}
+
+export function startCustomMatchSnapshot(lobbyId, options = {}) {
+  return startCustomMatch(lobbyId, options);
+}
+
+export function unreadyCustomMatchSnapshot(lobbyId, options = {}) {
+  return unreadyCustomMatch(lobbyId, options);
+}
+
+export function getCustomMatchIdSnapshot(partyId, options = {}) {
+  return getCustomMatchId(partyId, options);
+}
+
+export function getLiveQuerySnapshot(options = {}) {
+  return getLiveQuery(options);
+}
+
+export function submitDemoQuerySnapshot(body, options = {}) {
+  return submitDemoQuery(body, options);
+}
+
+export function getDemoQueryStatusSnapshot(jobId, options = {}) {
+  return getDemoQueryStatus(jobId, options);
+}
+
+export function getDemoSchemaSnapshot(matchId, options = {}) {
+  return getDemoSchema(matchId, options);
+}
+
+export function getLiveUrlsSnapshot(options = {}) {
+  return getLiveUrls(options);
+}
+
+export function ingestLiveUrlsSnapshot(body, options = {}) {
+  return ingestLiveUrls(body, options);
+}
+
+export function ingestMatchSaltsSnapshot(body, options = {}) {
+  return ingestMatchSalts(body, options);
 }
