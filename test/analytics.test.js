@@ -560,6 +560,37 @@ test("analytics wrappers drop filters not documented for each endpoint", async (
 });
 
 
+test("buildItemDetailAnalyticsViewModel composes item performance, combinations and flow", () => {
+  const model = buildItemDetailAnalyticsViewModel(
+    { id: 101, name: "Test Item", type: "upgrade", images: {}, raw: { item_id: 101 } },
+    [
+      { itemId: 101, wins: 60, losses: 40, matches: 100, players: 90, avgBuyTimeS: 420, avgSellTimeS: 900, avgBuyTimeRelative: 0.25, avgSellTimeRelative: 0.5 },
+      { itemId: 202, wins: 10, losses: 10, matches: 20 },
+    ],
+    [
+      { itemIds: [101, 202], wins: 30, losses: 20, matches: 50 },
+      { itemIds: [202, 303], wins: 8, losses: 12, matches: 20 },
+    ],
+    {
+      nodes: [
+        { column: 0, itemId: 101, matches: 100 },
+        { column: 1, itemId: 101, matches: 40 },
+      ],
+      edges: [
+        { fromItemId: 101, toItemId: 202, matches: 30 },
+        { fromItemId: 303, toItemId: 101, matches: 25 },
+      ],
+    },
+  );
+
+  assert.equal(model.performance.winRate, 60);
+  assert.equal(model.performance.matches, 100);
+  assert.equal(model.permutations.length, 1);
+  assert.deepEqual(model.permutations[0].itemIds, [101, 202]);
+  assert.deepEqual(model.flowNodes.map(row => row.column), [0, 1]);
+  assert.deepEqual(model.flowEdges.map(row => row.direction), ["out", "in"]);
+});
+
 test("item analytics wrappers use documented endpoints and normalize current schemas", async () => {
   const calls = [];
   globalThis.fetch = async input => {
