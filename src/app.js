@@ -147,7 +147,7 @@ async function loadDashboard(signal) {
   }
 
   if (heroes || snapshot) {
-    setConnection(      '<svg class="map-ziplines" viewBox="0 0 1 1" preserveAspectRatio="none">', "API connected");
+    setConnection(true, "API connected");
     $("#api-badge").textContent = snapshot ? "ONLINE" : "PARTIAL";
     $("#api-badge").classList.add("online");
   } else {
