@@ -286,6 +286,25 @@ function validateEnum(value, schema) {
   if (!valid) throw new TypeError("Value is not allowed by the parameter enum.");
 }
 
+function validateNumericConstraints(number, schema) {
+  if (schema.minimum !== undefined && number < schema.minimum) throw new TypeError("Parameter is below the minimum.");
+  if (schema.maximum !== undefined && number > schema.maximum) throw new TypeError("Parameter exceeds the maximum.");
+  if (schema.exclusiveMinimum !== undefined) {
+    const minimum = typeof schema.exclusiveMinimum === "number" ? schema.exclusiveMinimum : schema.minimum;
+    if (minimum !== undefined && number <= minimum) throw new TypeError("Parameter is below exclusiveMinimum.");
+  }
+  if (schema.exclusiveMaximum !== undefined) {
+    const maximum = typeof schema.exclusiveMaximum === "number" ? schema.exclusiveMaximum : schema.maximum;
+    if (maximum !== undefined && number >= maximum) throw new TypeError("Parameter exceeds exclusiveMaximum.");
+  }
+  if (schema.multipleOf !== undefined) {
+    const quotient = number / schema.multipleOf;
+    if (!Number.isFinite(quotient) || Math.abs(quotient - Math.round(quotient)) > 1e-10) {
+      throw new TypeError("Parameter is not a multipleOf value.");
+    }
+  }
+}
+
 function coerceScalar(value, schema) {
   if (value === null) {
     if (schemaAllowsNull(schema)) return null;
@@ -298,8 +317,7 @@ function coerceScalar(value, schema) {
     if (!Number.isFinite(number)) throw new TypeError("Parameter must be a finite number.");
     if (type === "integer" && !Number.isInteger(number)) throw new TypeError("Parameter must be an integer.");
     validateEnum(number, schema);
-    if (schema.minimum !== undefined && number < schema.minimum) throw new TypeError("Parameter is below the minimum.");
-    if (schema.maximum !== undefined && number > schema.maximum) throw new TypeError("Parameter exceeds the maximum.");
+    validateNumericConstraints(number, schema);
     return number;
   }
 
@@ -597,12 +615,15 @@ export function buildRequest(operation, values = {}) {
         query[parameter.name] = serialized;
       }
     } else if (parameter.in === "header") {
-      const serialized = serializeQueryParameter(parameter, coerced);
-      if (serialized && typeof serialized === "object" && !Array.isArray(serialized)) {
-        for (const [name, item] of Object.entries(serialized)) headers.set(name, String(item));
-      } else if (serialized !== undefined && serialized !== null) {
-        headers.set(parameter.name, Array.isArray(serialized) ? serialized.join(",") : String(serialized));
+      let serialized;
+      if (Array.isArray(coerced)) {
+        serialized = coerced.join(",");
+      } else if (coerced && typeof coerced === "object") {
+        serialized = Object.entries(coerced).map(([name, item]) => `${name}=${item}`).join(",");
+      } else {
+        serialized = coerced;
       }
+      if (serialized !== undefined && serialized !== null) headers.set(parameter.name, String(serialized));
     } else if (parameter.in === "cookie") {
       throw new TypeError("Cookie parameters are not supported in the browser Data Explorer.");
     }
