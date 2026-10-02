@@ -42,3 +42,8 @@ test("asset version service avoids eager asset service dependency", async () => 
   assert.doesNotMatch(source, /from ["']\.\/assets\.js["']/);
   assert.match(source, /from ["']\.\.\/api\/assets\.js["']/);
 });
+
+test("app defers dashboard runtime", () => {
+  assert.doesNotMatch(appSource, /from ["']\.\/services\/dashboard\.js["']/);
+  assert.match(appSource, /import\(\s*["']\.\/services\/dashboard\.js["']/);
+});
