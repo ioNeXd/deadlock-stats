@@ -261,10 +261,10 @@ async function renderHeroDetail(heroId, signal) {
   const options = { ...assetVersion.options(), signal };
   Promise.all([
     analytics.getHeroDetailSnapshot(numericHeroId, options),
-    assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
+    assetsRuntime.fetchHero(numericHeroId, { ...assetVersion.options(), signal }),
   ]).then(([snapshot, heroResult]) => {
     if (signal.aborted) return;
-    const hero = (heroResult.data ?? []).find(item => String(idOf(item)) === String(numericHeroId)) ?? null;
+    const hero = heroResult?.data ?? null;
     if (hero) $("#hero-detail-name").textContent = nameOf(hero);
 
     const model = analytics.buildHeroDetailViewModel(snapshot, hero);
@@ -287,8 +287,7 @@ async function renderHeroDetail(heroId, signal) {
       .sort((a,b) => Number(b.matchesPlayed) - Number(a.matchesPlayed))
       .slice(0, 20);
     const heroName = id => {
-      const match = (heroResult.data ?? []).find(item => String(idOf(item)) === String(id));
-      return match ? nameOf(match) : "Hero #" + id;
+      return String(id) === String(numericHeroId) && hero ? nameOf(hero) : "Hero #" + id;
     };
     const percent = (wins, matches) => {
       const w = Number(wins);
