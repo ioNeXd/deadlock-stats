@@ -91,3 +91,33 @@
 .graphql-frame{width:100%;min-height:720px;border:1px solid var(--line,#2a2622);border-radius:14px;background:#fff;margin-top:1rem}
 .panel-actions{display:flex;gap:.75rem;align-items:center}
 .button{display:inline-flex;align-items:center;justify-content:center;padding:.65rem 1rem;border:1px solid var(--line,#2a2622);border-radius:999px;text-decoration:none}
+
+
+.explorer-result{display:grid;gap:12px}
+.explorer-response-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.explorer-response-meta>div,.explorer-error-grid>div{padding:10px;border:1px solid var(--line);background:rgba(13,12,11,.45)}
+.explorer-response-meta span,.explorer-error-grid span,.explorer-request-grid span{display:block;color:var(--gold);font:8px "DM Mono";letter-spacing:.08em}
+.explorer-response-meta strong,.explorer-error-grid strong{display:block;margin-top:5px;color:var(--text);font:12px "DM Mono"}
+.explorer-good{color:var(--green)!important}.explorer-bad{color:#c98a8e!important}
+.explorer-details{border-top:1px solid var(--line);padding-top:12px}
+.explorer-details summary{cursor:pointer;color:var(--gold2);font:9px "DM Mono";letter-spacing:.08em}
+.explorer-request-grid{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:12px}
+.explorer-request-grid>div{padding:10px;border:1px solid var(--line);background:rgba(13,12,11,.45)}
+.explorer-request-grid code,.explorer-headers code{font:8px "DM Mono";word-break:break-all;color:var(--text)}
+.explorer-detail-section{margin-top:12px}
+.explorer-detail-section pre,.explorer-response-body{max-height:320px;overflow:auto;margin:7px 0 0;padding:11px;border:1px solid var(--line);background:#0c0b0a;color:#cfc5b7;font:8px/1.6 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;white-space:pre-wrap;word-break:break-word}
+.explorer-headers{display:grid;margin-top:10px;border:1px solid var(--line)}
+.explorer-headers>div{display:grid;grid-template-columns:minmax(130px,1fr) 2fr;gap:12px;padding:9px 10px;border-bottom:1px solid var(--line)}
+.explorer-headers>div:last-child{border-bottom:0}
+.explorer-headers span{font:8px/1.5 "DM Mono";color:var(--muted);word-break:break-word}
+.explorer-response-content{border-top:1px solid var(--line);padding-top:14px}
+.explorer-response-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.explorer-response-body{max-height:500px;margin-top:8px}
+.explorer-response-placeholder{padding:18px;border:1px dashed var(--line);background:rgba(13,12,11,.45)}
+.explorer-response-placeholder strong{color:var(--gold);font:10px "DM Mono";letter-spacing:.12em}
+.explorer-response-placeholder p{margin:8px 0 0;color:var(--muted);font-size:10px;line-height:1.6}
+.explorer-image-preview{display:grid;place-items:center;min-height:220px;margin-top:8px;padding:12px;border:1px solid var(--line);background:#090807}
+.explorer-image-preview img{display:block;max-width:100%;max-height:520px;object-fit:contain}
+.explorer-hex{display:block;margin-top:12px;padding:12px;overflow:auto;border:1px solid var(--line);background:#090807;color:var(--muted);font:8px/1.7 "DM Mono";word-break:break-all}
+.explorer-error-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+@media(max-width:720px){.explorer-response-meta{grid-template-columns:repeat(2,minmax(0,1fr))}.explorer-request-grid,.explorer-headers>div{grid-template-columns:1fr}.explorer-error-grid{grid-template-columns:1fr}}
