@@ -243,10 +243,31 @@ function renderHeroDetail(heroId, signal) {
       '</tbody></table></div>';
 
     const builds = model.builds.slice(0, 20);
+    const buildDetailsById = new Map(model.buildDetails.map(detail => [String(detail.heroBuildId), detail]));
+    const buildRows = builds.map(row => {
+      const detail = buildDetailsById.get(String(row.heroBuildId));
+      return '<tr><td>' + esc(row.heroBuildId ?? "—") + '</td><td>' + esc(detail?.name ?? "Unnamed build") + '</td><td>' + esc(row.matches ?? "—") + '</td><td>' + esc(percent(row.wins, row.matches)) + '</td><td>' + esc(row.players ?? "—") + '</td></tr>';
+    }).join("");
+    const detailBlocks = model.buildDetails.map(detail => {
+      const categories = detail.categories.flatMap(category =>
+        category.mods.map(mod => ({
+          category: category.name ?? "Unnamed category",
+          abilityId: mod.abilityId,
+          annotation: mod.annotation,
+        }))
+      );
+      return '<section class="panel"><div class="section-head"><div><span class="eyebrow">BUILD ' + esc(detail.heroBuildId) + '</span><h3>' + esc(detail.name ?? "Unnamed build") + '</h3></div><span class="muted">VERSION ' + esc(detail.version ?? "—") + '</span></div>' +
+        (detail.description ? '<p>' + esc(detail.description) + '</p>' : '') +
+        (categories.length
+          ? '<div class="data-table-wrap"><table><thead><tr><th>Category</th><th>Ability / Mod ID</th><th>Annotation</th></tr></thead><tbody>' +
+            categories.map(mod => '<tr><td>' + esc(mod.category) + '</td><td>' + esc(mod.abilityId ?? "—") + '</td><td>' + esc(mod.annotation ?? "—") + '</td></tr>').join("") +
+            '</tbody></table></div>'
+          : '<p class="muted">This build has no mod categories in the API response.</p>') +
+        '</section>';
+    }).join("");
     $("#hero-detail-builds").innerHTML = builds.length
-      ? '<div class="data-table-wrap"><table><thead><tr><th>Build ID</th><th>Matches</th><th>Win rate</th><th>Players</th></tr></thead><tbody>' +
-        builds.map(row => '<tr><td>' + esc(row.heroBuildId ?? "—") + '</td><td>' + esc(row.matches ?? "—") + '</td><td>' + esc(percent(row.wins, row.matches)) + '</td><td>' + esc(row.players ?? "—") + '</td></tr>').join("") +
-        '</tbody></table></div>'
+      ? '<div class="data-table-wrap"><table><thead><tr><th>Build ID</th><th>Name</th><th>Matches</th><th>Win rate</th><th>Players</th></tr></thead><tbody>' + buildRows + '</tbody></table></div>' +
+        (detailBlocks || '<p class="muted">Build detail records were not returned.</p>')
       : '<p class="muted">No hero build statistics returned for this filter.</p>';
 
     const abilities = model.abilityOrders.slice(0, 20);
