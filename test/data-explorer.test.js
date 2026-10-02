@@ -991,3 +991,38 @@ test("buildRequest selects compatible JSON media types", () => {
   assert.equal(request.mediaType, "application/vnd.deadlock+json");
   assert.deepEqual(request.body, { ok: true });
 });
+
+
+test("buildSchemaFormModel derives nested request fields from OpenAPI schema", () => {
+  const model = buildSchemaFormModel({
+    type: "object",
+    required: ["hero_id"],
+    properties: {
+      hero_id: { type: "integer", minimum: 1, default: 7 },
+      mode: { type: "string", enum: ["ranked", "normal"] },
+      enabled: { type: "boolean" },
+      ids: { type: "array", minItems: 1, items: { type: "integer" } },
+      nested: {
+        type: "object",
+        properties: { label: { type: "string", minLength: 2 } },
+      },
+    },
+  });
+
+  assert.equal(model.type, "object");
+  assert.equal(model.properties.find(item => item.name === "hero_id").required, true);
+  assert.deepEqual(model.properties.find(item => item.name === "mode").enum, ["ranked", "normal"]);
+  assert.equal(model.properties.find(item => item.name === "enabled").type, "boolean");
+  assert.equal(model.properties.find(item => item.name === "ids").type, "array");
+  assert.equal(model.properties.find(item => item.name === "nested").properties[0].path, "__body.nested.label");
+});
+
+test("parseSchemaFormValue coerces primitive structured fields and validates constraints", () => {
+  assert.equal(parseSchemaFormValue("7", { type: "integer", minimum: 1 }), 7);
+  assert.equal(parseSchemaFormValue("true", { type: "boolean" }), true);
+  assert.equal(parseSchemaFormValue("ranked", { type: "string", enum: ["ranked", "normal"] }), "ranked");
+  assert.deepEqual(parseSchemaFormValue("[1,2]", { type: "array", items: { type: "integer" } }), [1, 2]);
+  assert.throws(() => parseSchemaFormValue("0", { type: "integer", minimum: 1 }), /minimum/);
+  assert.throws(() => parseSchemaFormValue("yes", { type: "boolean" }), /boolean/);
+});
+
