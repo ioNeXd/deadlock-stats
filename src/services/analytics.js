@@ -465,6 +465,43 @@ export function normalizeItemFlowStats(result) {
   };
 }
 
+export function buildItemDetailAnalyticsViewModel(item, stats = [], permutations = [], flow = null) {
+  const itemId = Number(item?.id);
+  const stat = (stats ?? []).find(row => Number(row?.itemId) === itemId) ?? null;
+  const matches = Number(stat?.matches);
+  const wins = Number(stat?.wins);
+  const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? (wins / matches) * 100 : null;
+  const relatedPermutations = (permutations ?? [])
+    .filter(row => row?.itemIds?.some(id => Number(id) === itemId))
+    .sort((a, b) => Number(b.matches ?? 0) - Number(a.matches ?? 0));
+  const flowNodes = (flow?.nodes ?? [])
+    .filter(row => Number(row?.itemId) === itemId)
+    .sort((a, b) => Number(a.column ?? 0) - Number(b.column ?? 0));
+  const flowEdges = [
+    ...(flow?.edges ?? []).filter(row => Number(row?.fromItemId) === itemId).map(row => ({ ...row, direction: "out" })),
+    ...(flow?.edges ?? []).filter(row => Number(row?.toItemId) === itemId).map(row => ({ ...row, direction: "in" })),
+  ].sort((a, b) => Number(b.matches ?? 0) - Number(a.matches ?? 0));
+
+  return {
+    item: item ?? null,
+    itemId: Number.isFinite(itemId) ? itemId : null,
+    performance: stat ? {
+      matches: Number.isFinite(matches) ? matches : null,
+      wins: Number.isFinite(wins) ? wins : null,
+      losses: Number.isFinite(Number(stat.losses)) ? Number(stat.losses) : null,
+      players: stat.players ?? null,
+      winRate,
+      avgBuyTimeS: stat.avgBuyTimeS ?? null,
+      avgSellTimeS: stat.avgSellTimeS ?? null,
+      avgBuyTimeRelative: stat.avgBuyTimeRelative ?? null,
+      avgSellTimeRelative: stat.avgSellTimeRelative ?? null,
+    } : null,
+    permutations: relatedPermutations,
+    flowNodes,
+    flowEdges,
+  };
+}
+
 export async function getItemStatsSnapshot(options = {}) {
   const { signal, ...requestOptions } = options;
   const result = await getItemStats({
