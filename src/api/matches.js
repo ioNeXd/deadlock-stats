@@ -16,14 +16,13 @@ function bulkMetadataOptions(options = {}) {
   const source = queryToObject(query);
   const topLevel = Object.fromEntries(Object.entries(rest).filter(([key]) => BULK_METADATA_KEYS.includes(key)));
   const merged = { ...source, ...topLevel };
-  return {
-    ...rest,
-    query: Object.fromEntries(
-      Object.entries(merged).filter(([key, value]) =>
-        BULK_METADATA_KEYS.includes(key) && value !== undefined && value !== null
-      ),
+  const filtered = Object.fromEntries(
+    Object.entries(merged).filter(([key, value]) =>
+      BULK_METADATA_KEYS.includes(key) && value !== undefined && value !== null
     ),
-  };
+  );
+  if (Array.isArray(filtered.match_ids)) filtered.match_ids = filtered.match_ids.join(",");
+  return { ...rest, query: filtered };
 }
 
 function validateNumericId(value, name) {
@@ -44,7 +43,11 @@ function partyMatchPath(partyId) {
 }
 
 export function getActiveMatches(options = {}) {
-  return apiGet("/v1/matches/active", options);
+  const { query, ...rest } = options;
+  const normalized = queryToObject(query);
+  if (Array.isArray(normalized.account_ids)) normalized.account_ids = normalized.account_ids.join(",");
+  else if (normalized.account_ids != null) normalized.account_ids = String(normalized.account_ids);
+  return apiGet("/v1/matches/active", { ...rest, query: normalized });
 }
 
 export function getActiveMatchesRaw(options = {}) {
