@@ -1,11 +1,7 @@
 import { getActiveMatchesSnapshot, getRecentlyFetchedMatchesSnapshot, getBulkMatchMetadataSnapshot } from "./services/matches.js";
-import { listHeroes, listRanks, listItems, listItemsByHeroId, listItemsBySlotType, listItemsByType, fetchItem, listRanks, listMiscEntities, listBuildTags, buildItemDetailViewModel } from "./services/assets.js";
-import { getOpenApiContract } from "./services/versioning.js";
+import { listHeroes, listRanks, listItems, listItemsByHeroId, listItemsBySlotType, listItemsByType, fetchItem, listMiscEntities, listBuildTags, buildItemDetailViewModel } from "./services/assets.js";
 import { probeApiStatus } from "./services/api-status.js";
-import { buildRequestExamples, buildSchemaFormModel, buildSchemaViewModel, describeOperation, executeOperation, listApiOperations, parseSchemaFormValue } from "./services/data-explorer.js";
-import { renderSchemaViewer } from "./ui/schema-viewer.js";
 import { API_BASE_URL } from "./api/client.js";
-import { loadGraphqlPlayground } from "./services/graphql.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
@@ -14,13 +10,30 @@ import { fetchMap } from "./services/assets.js";
 import { loadLeaderboard } from "./services/leaderboard.js";
 import { searchPlayers, loadPlayerRank, loadPlayerHeroStats, loadPlayerMatchHistory, loadSteamProfiles, getPlayerDetailSnapshot, buildPlayerDetailViewModel } from "./services/players.js";
 import { safeExternalUrl } from "./ui/security.js";
-import { listUserRequestPresets, saveUserRequestPreset, deleteUserRequestPreset } from "./services/data-explorer-presets.js";
 import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroDetailSnapshot, getBuildDetailSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats, buildHeroDetailViewModel, buildItemDetailAnalyticsViewModel } from "./services/analytics.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
 const assetVersion = createAssetVersionContext();
 let routeController = null;
+let dataExplorerRuntimePromise = null;
+
+function loadDataExplorerRuntime() {
+  if (!dataExplorerRuntimePromise) {
+    dataExplorerRuntimePromise = Promise.all([
+      import("./services/versioning.js"),
+      import("./services/data-explorer.js"),
+      import("./services/data-explorer-presets.js"),
+      import("./ui/schema-viewer.js"),
+    ]).then(([versioning, explorer, presets, schemaViewer]) => ({
+      ...versioning,
+      ...explorer,
+      ...presets,
+      ...schemaViewer,
+    }));
+  }
+  return dataExplorerRuntimePromise;
+}
 const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 const nameOf = hero => hero?.name ?? hero?.display_name ?? hero?.hero_name ?? ("Hero " + (hero?.id ?? "?"));
 const idOf = hero => hero?.id ?? hero?.hero_id ?? hero?.class_name ?? "—";
@@ -171,7 +184,7 @@ function renderGraphql(signal) {
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">TOOLS / GRAPHQL</span><h2>GraphQL Explorer</h2><p>The current API exposes an official GraphiQL playground at <code>/v1/graphql</code>. This view verifies the endpoint and opens the API-hosted playground without embedding or rewriting its content.</p></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">OFFICIAL ENDPOINT</span><h2>GraphiQL</h2></div><b id="graphql-status">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(playgroundUrl) + '</strong></div><p class="panel-actions"><a class="button" href="' + esc(playgroundUrl) + '" target="_blank" rel="noopener noreferrer">Open official playground ↗</a></p><iframe class="graphql-frame" title="Deadlock API GraphQL Playground" src="' + esc(playgroundUrl) + '"></iframe></article></section>';
-  loadGraphqlPlayground({ signal }).then(() => {
+  import("./services/graphql.js").then(({ loadGraphqlPlayground }) => loadGraphqlPlayground({ signal })).then(() => {
     if (signal.aborted) return;
     const status = $("#graphql-status");
     if (status) { status.textContent = "ONLINE"; status.classList.add("online"); }
@@ -1374,9 +1387,10 @@ function renderDataExplorer(signal) {
 
 async function loadExplorer(signal) {
   try {
-    const contractResult = await getOpenApiContract({ cacheTtlMs: 5 * 60_000, signal });
+    const runtime = await loadDataExplorerRuntime();
+    const contractResult = await runtime.getOpenApiContract({ cacheTtlMs: 5 * 60_000, signal });
     if (signal.aborted) return;
-    const operations = listApiOperations(contractResult.data);
+    const operations = runtime.listApiOperations(contractResult.data);
     const list = $("#operation-list");
     const filter = $("#operation-filter");
     const renderList = () => {
@@ -1613,7 +1627,7 @@ function setSchemaPath(root, path, value) {
   return root;
 }
 
-function buildStructuredBody(form, model) {
+function buildStructuredBody(form, model, parseSchemaFormValue) {
   if (!model) return undefined;
   if (model.type !== "object") {
     const field = form.querySelector('[data-body-field="' + CSS.escape(model.path) + '"]');
@@ -1656,7 +1670,21 @@ function applySchemaExample(form, model, example) {
   }
 }
 
-function renderOperation(operation, signal, contract = null) {
+async function renderOperation(operation, signal, contract = null) {
+  const runtime = await loadDataExplorerRuntime();
+  if (signal?.aborted) return;
+  const {
+    describeOperation,
+    buildSchemaFormModel,
+    buildRequestExamples,
+    executeOperation,
+    parseSchemaFormValue,
+    listUserRequestPresets,
+    saveUserRequestPreset,
+    deleteUserRequestPreset,
+    buildSchemaViewModel,
+    renderSchemaViewer,
+  } = runtime;
   const detail = describeOperation(operation, contract);
   $("#explorer-empty").hidden = true;
   const target = $("#operation-detail");
@@ -1733,7 +1761,7 @@ function renderOperation(operation, signal, contract = null) {
     const activeBodyType = bodyTypes.find(item => item.mediaType === event.currentTarget.elements.__contentType?.value) ?? initialBody;
     const activeBodyModel = activeBodyType?.schema ? buildSchemaFormModel(activeBodyType.schema) : null;
     if (activeBodyModel) {
-      const structuredBody = buildStructuredBody(event.currentTarget, activeBodyModel);
+      const structuredBody = buildStructuredBody(event.currentTarget, activeBodyModel, runtime.parseSchemaFormValue);
       if (structuredBody !== undefined) values.__body = structuredBody;
     }
     const resultBox = $("#operation-result");
@@ -1797,7 +1825,7 @@ function renderOperation(operation, signal, contract = null) {
     const model = selected?.schema ? buildSchemaFormModel(selected.schema) : null;
     const form = $("#operation-form");
     if (!form) return undefined;
-    if (model) return buildStructuredBody(form, model);
+    if (model) return buildStructuredBody(form, model, parseSchemaFormValue);
     const raw = form.elements.__body?.value ?? "";
     if (!raw.trim()) return undefined;
     try { return JSON.parse(raw); } catch { return raw; }
