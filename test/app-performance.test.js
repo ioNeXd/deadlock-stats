@@ -11,8 +11,10 @@ test("app defers non-critical explorer and GraphQL modules", () => {
 });
 
 test("app defers asset version network context outside dashboard and maps", () => {
-  const routeSource = appSource.slice(appSource.indexOf("function route()"));
-  assert.doesNotMatch(appSource.slice(0, appSource.indexOf("function route(")), /loadAssetVersionContext\(\)\.then\(/);
+  const routeStart = appSource.indexOf("function route()");
+  assert.notEqual(routeStart, -1);
+  const routeSource = appSource.slice(routeStart);
+  assert.doesNotMatch(appSource.slice(0, routeStart), /loadAssetVersionContext\(\)\.then\(/);
   assert.match(routeSource, /const initialSelectedVersion = assetVersion\.get\(\);\s*loadAssetVersionContext\(\)\.then\(/);
   assert.match(appSource, /if \(routeName === "dashboard" \|\| routeName === "maps"\)\s*\{/);
 });
@@ -21,7 +23,6 @@ test("app defers analytics runtime until analytics routes", () => {
   assert.doesNotMatch(appSource, /from ["']\.\/services\/analytics\.js["']/);
   assert.match(appSource, /import\(\s*["']\.\/services\/analytics\.js["']/);
 });
-
 
 test("app defers route-specific service runtimes", () => {
   assert.doesNotMatch(appSource, /from ["']\.\/services\/(matches|players|builds|leaderboard)\.js["']/);
