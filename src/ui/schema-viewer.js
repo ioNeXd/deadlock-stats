@@ -25,17 +25,9 @@ function schemaNodeHtml(node) {
   ].filter(Boolean).join(" · ");
 
   const constraints = [];
-  if (node.minimum != null) constraints.push("min " + node.minimum);
-  if (node.maximum != null) constraints.push("max " + node.maximum);
-  if (node.exclusiveMinimum != null) constraints.push("exclusive min " + node.exclusiveMinimum);
-  if (node.exclusiveMaximum != null) constraints.push("exclusive max " + node.exclusiveMaximum);
-  if (node.multipleOf != null) constraints.push("multiple of " + node.multipleOf);
-  if (node.minLength != null) constraints.push("min length " + node.minLength);
-  if (node.maxLength != null) constraints.push("max length " + node.maxLength);
-  if (node.pattern) constraints.push("pattern " + node.pattern);
-  if (node.minItems != null) constraints.push("min items " + node.minItems);
-  if (node.maxItems != null) constraints.push("max items " + node.maxItems);
-  if (node.uniqueItems) constraints.push("unique items");
+  for (const [label, value] of Object.entries(node.constraints ?? {})) {
+    if (value != null && value !== false) constraints.push(label + " " + value);
+  }
 
   const enumHtml = node.enum?.length
     ? '<div class="schema-view-enum"><span>ENUM</span><code>' + escapeHtml(node.enum.map(value => schemaExampleValue(value)).join(" · ")) + '</code></div>'
