@@ -2,7 +2,7 @@ import { getActiveMatchesSnapshot, getRecentlyFetchedMatchesSnapshot, getBulkMat
 import { listHeroes, listItems, listRanks, listMiscEntities } from "./services/assets.js";
 import { getOpenApiContract } from "./services/versioning.js";
 import { probeApiStatus } from "./services/api-status.js";
-import { buildSchemaFormModel, describeOperation, executeOperation, listApiOperations, parseSchemaFormValue } from "./services/data-explorer.js";
+import { buildRequestExamples, buildSchemaFormModel, buildSchemaViewModel, describeOperation, executeOperation, listApiOperations, parseSchemaFormValue } from "./services/data-explorer.js";
 import { API_BASE_URL } from "./api/client.js";
 import { loadGraphqlPlayground } from "./services/graphql.js";
 import { resolveAssetImage } from "./adapters/assets.js";
@@ -1208,6 +1208,90 @@ function buildStructuredBody(form, model) {
 }
 
 
+function schemaExampleValue(value) {
+  if (value === undefined) return "";
+  if (value === null) return "null";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
+function schemaNodeHtml(node) {
+  if (!node) return "";
+  const typeMeta = [
+    node.type,
+    node.format,
+    node.required ? "required" : "optional",
+    node.nullable ? "nullable" : "",
+  ].filter(Boolean).join(" · ");
+  const constraints = [];
+  if (node.minimum != null) constraints.push("min " + node.minimum);
+  if (node.maximum != null) constraints.push("max " + node.maximum);
+  if (node.exclusiveMinimum != null) constraints.push("exclusive min " + node.exclusiveMinimum);
+  if (node.exclusiveMaximum != null) constraints.push("exclusive max " + node.exclusiveMaximum);
+  if (node.multipleOf != null) constraints.push("multiple of " + node.multipleOf);
+  if (node.minLength != null) constraints.push("min length " + node.minLength);
+  if (node.maxLength != null) constraints.push("max length " + node.maxLength);
+  if (node.pattern) constraints.push("pattern " + node.pattern);
+  if (node.minItems != null) constraints.push("min items " + node.minItems);
+  if (node.maxItems != null) constraints.push("max items " + node.maxItems);
+  if (node.uniqueItems) constraints.push("unique items");
+
+  const enumHtml = node.enum?.length
+    ? '<div class="schema-view-enum"><span>ENUM</span><code>' + esc(node.enum.map(value => schemaExampleValue(value)).join(" · ")) + '</code></div>'
+    : "";
+  const example = node.example !== undefined ? '<div class="schema-view-example"><span>EXAMPLE</span><code>' + esc(schemaExampleValue(node.example)) + '</code></div>' : "";
+  const defaultValue = node.default !== undefined ? '<div class="schema-view-example"><span>DEFAULT</span><code>' + esc(schemaExampleValue(node.default)) + '</code></div>' : "";
+  const variants = ["oneOf", "anyOf", "allOf"].flatMap(keyword =>
+    (node[keyword] ?? []).map(variant => '<div class="schema-view-variant"><span>' + keyword.toUpperCase() + '</span>' + schemaNodeHtml(variant) + '</div>')
+  ).join("");
+
+  const children = node.type === "object"
+    ? (node.properties ?? []).map(schemaNodeHtml).join("")
+    : node.type === "array" && node.items
+      ? '<div class="schema-view-item"><span>ITEMS</span>' + schemaNodeHtml(node.items) + '</div>'
+      : "";
+
+  const additional = node.type === "object" && node.additionalProperties && typeof node.additionalProperties === "object"
+    ? '<div class="schema-view-item"><span>ADDITIONAL PROPERTIES</span>' + schemaNodeHtml(schemaViewNodeFallback(node.additionalProperties)) + '</div>'
+    : "";
+
+  return '<div class="schema-view-node" style="--schema-depth:' + Math.min(node.depth ?? 0, 8) + '">' +
+    '<div class="schema-view-title"><strong>' + esc(node.name) + '</strong><span>' + esc(typeMeta) + '</span></div>' +
+    (node.description ? '<p class="muted">' + esc(node.description) + '</p>' : '') +
+    (constraints.length ? '<div class="schema-view-constraints">' + esc(constraints.join(" · ")) + '</div>' : '') +
+    enumHtml + defaultValue + example + children + additional + variants +
+    '</div>';
+}
+
+function schemaViewNodeFallback(schema) {
+  const model = buildSchemaViewModel(schema);
+  return model ?? { name: "value", path: "$", depth: 0, type: "object", nullable: false, enum: [] };
+}
+
+function schemaViewerHtml(schema, title) {
+  const model = buildSchemaViewModel(schema);
+  if (!model) return "";
+  return '<details class="schema-viewer"><summary><span class="eyebrow">SCHEMA</span><strong>' + esc(title) + '</strong></summary>' +
+    '<div class="schema-view-body">' + schemaNodeHtml(model) + '</div></details>';
+}
+
+function formValueAtPath(value, path) {
+  if (!path || path === "__body") return value;
+  return path.replace(/^__body\./, "").split(".").reduce((current, key) => current?.[key], value);
+}
+
+function applySchemaExample(form, model, example) {
+  if (!model) return;
+  const fields = model.type === "object" ? schemaFormNodes(model) : [model];
+  for (const node of fields) {
+    const field = form.querySelector('[data-body-field="' + CSS.escape(node.path) + '"]');
+    if (!field) continue;
+    const value = formValueAtPath(example, node.path);
+    if (value === undefined) continue;
+    field.value = schemaExampleValue(value);
+  }
+}
+
 function renderOperation(operation, signal, contract = null) {
   const detail = describeOperation(operation, contract);
   $("#explorer-empty").hidden = true;
@@ -1241,14 +1325,17 @@ function renderOperation(operation, signal, contract = null) {
   const bodyTypes = detail.requestBodyInfo ?? [];
   const initialBody = bodyTypes[0];
   const bodyModel = initialBody?.schema ? buildSchemaFormModel(initialBody.schema) : null;
+  const initialExamples = buildRequestExamples(initialBody);
   const bodyField = bodyTypes.length
     ? '<section class="schema-body-editor"><div class="schema-body-head"><div><span class="eyebrow">REQUEST BODY</span><h3>Schema-driven payload</h3></div>' +
       '<span class="muted">' + esc(initialBody.required ? "required" : "optional") + '</span></div>' +
       '<label class="field"><span>Content type <small>OpenAPI</small></span><select name="__contentType" id="explorer-content-type">' +
       bodyTypes.map(item => '<option value="' + esc(item.mediaType) + '">' + esc(item.mediaType) + '</option>').join("") +
       '</select></label>' +
+      (initialExamples.length ? '<label class="field"><span>Example / preset <small>OpenAPI</small></span><select id="explorer-body-example"><option value="">— choose documented example —</option>' +
+        initialExamples.map((example, index) => '<option value="' + index + '">' + esc(example.name) + '</option>').join("") + '</select></label>' : '') +
       '<div id="schema-body-editor">' + (bodyModel ? schemaFieldControl(bodyModel) : '<label class="field"><span>Payload</span><textarea name="__body" rows="8" placeholder="Request payload"></textarea></label>') + '</div>' +
-      '<p class="muted schema-body-note">Fields, defaults and constraints are derived from the current OpenAPI request schema. Arrays and free-form objects accept JSON.</p></section>'
+      '<p class="muted schema-body-note">Fields, defaults, constraints and examples are derived from the current OpenAPI contract. Arrays and free-form objects accept JSON.</p></section>'
     : "";
 
 
@@ -1303,12 +1390,46 @@ function renderOperation(operation, signal, contract = null) {
   });
   const contentTypeSelect = $("#explorer-content-type");
   const bodyEditor = $("#schema-body-editor");
-  contentTypeSelect?.addEventListener("change", () => {
-    const selected = bodyTypes.find(item => item.mediaType === contentTypeSelect.value);
+  const rebuildBodyEditor = selected => {
     const selectedModel = selected?.schema ? buildSchemaFormModel(selected.schema) : null;
     bodyEditor.innerHTML = selectedModel ? schemaFieldControl(selectedModel) : '<label class="field"><span>Payload</span><textarea data-body-field="__body" rows="8" placeholder="Request payload"></textarea></label>';
+    const examples = buildRequestExamples(selected);
+    const exampleSelect = $("#explorer-body-example");
+    if (exampleSelect) {
+      exampleSelect.innerHTML = '<option value="">— choose documented example —</option>' +
+        examples.map((example, index) => '<option value="' + index + '">' + esc(example.name) + '</option>').join("");
+      exampleSelect.hidden = !examples.length;
+      exampleSelect.dataset.examples = JSON.stringify(examples);
+    }
+  };
+  contentTypeSelect?.addEventListener("change", () => {
+    rebuildBodyEditor(bodyTypes.find(item => item.mediaType === contentTypeSelect.value) ?? initialBody);
   });
+  const exampleSelect = $("#explorer-body-example");
+  if (exampleSelect) {
+    exampleSelect.dataset.examples = JSON.stringify(initialExamples);
+    exampleSelect.addEventListener("change", () => {
+      const index = Number(exampleSelect.value);
+      const examples = JSON.parse(exampleSelect.dataset.examples || "[]");
+      if (!Number.isInteger(index) || !examples[index]) return;
+      const selected = bodyTypes.find(item => item.mediaType === contentTypeSelect?.value) ?? initialBody;
+      const model = selected?.schema ? buildSchemaFormModel(selected.schema) : null;
+      applySchemaExample($("#operation-form"), model, examples[index].value);
+    });
+  }
 
+  const requestSchemaHtml = bodyTypes.map(item => item.schema
+    ? schemaViewerHtml(item.schema, "Request · " + item.mediaType)
+    : "").join("");
+  const responseSchemaHtml = detail.responseInfo.flatMap(response =>
+    (response.content ?? []).filter(content => content.schema).map(content =>
+      schemaViewerHtml(content.schema, "Response " + response.status + " · " + content.mediaType)
+    )
+  ).join("");
+  const schemaContainer = document.createElement("div");
+  schemaContainer.className = "explorer-schemas";
+  schemaContainer.innerHTML = requestSchemaHtml + responseSchemaHtml;
+  target.querySelector("#operation-result")?.after(schemaContainer);
 ;
 }
 
