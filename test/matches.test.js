@@ -36,9 +36,8 @@ test("match wrappers target documented endpoints", async () => {
     "/v1/matches/123/salts",
     "/v1/matches/metadata",
   ]);
-  assert.equal(calls[0].searchParams.get("account_ids"), "7");
-  assert.equal(calls[0].searchParams.getAll("account_ids").length, 2);
-  assert.deepEqual(calls[4].searchParams.getAll("match_ids"), ["123", "456"]);
+  assert.equal(calls[0].searchParams.get("account_ids"), "7,8");
+  assert.equal(calls[4].searchParams.get("match_ids"), "123,456");
   assert.equal(calls[2].searchParams.get("is_custom"), "true");
   assert.equal(calls[2].searchParams.get("disable_steam"), "true");
   assert.equal(calls[3].searchParams.get("disable_steam"), "true");
