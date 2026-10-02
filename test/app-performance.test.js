@@ -16,3 +16,8 @@ test("app defers asset version network context outside dashboard and maps", () =
   assert.match(routeSource, /const initialSelectedVersion = assetVersion\.get\(\);\s*loadAssetVersionContext\(\)\.then\(/);
   assert.match(appSource, /if \(routeName === "dashboard" \|\| routeName === "maps"\)\s*\{/);
 });
+
+test("app defers analytics runtime until analytics routes", () => {
+  assert.doesNotMatch(appSource, /from ["']\.\/services\/analytics\.js["']/);
+  assert.match(appSource, /import\(\s*["']\.\/services\/analytics\.js["']/);
+});\n
