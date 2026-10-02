@@ -225,18 +225,35 @@ function renderHeroDetail(heroId, signal) {
       .filter(row => Number(row.matchesPlayed) > 0)
       .sort((a,b) => Number(b.matchesPlayed) - Number(a.matchesPlayed))
       .slice(0, 20);
+    const heroName = id => {
+      const match = (heroResult.data ?? []).find(item => String(idOf(item)) === String(id));
+      return match ? nameOf(match) : "Hero #" + id;
+    };
+    const percent = (wins, matches) => {
+      const w = Number(wins);
+      const m = Number(matches);
+      return Number.isFinite(w) && Number.isFinite(m) && m > 0 ? (w / m * 100).toFixed(1) + "%" : "—";
+    };
     $("#hero-detail-matchups").innerHTML =
-      '<p>COUNTERS: ' + counterRows.length + ' · SYNERGIES: ' + synergyRows.length + '</p>' +
-      '<pre>' + esc(JSON.stringify({ counters: counterRows, synergies: synergyRows }, null, 2)) + '</pre>';
+      '<div class="data-table-wrap"><table><caption>' + counterRows.length + ' counters returned</caption><thead><tr><th>Hero</th><th>Matches</th><th>Win rate</th><th>K / D / A</th><th>Net worth</th></tr></thead><tbody>' +
+      counterRows.map(row => '<tr><td><a href="#/heroes/' + esc(row.enemyHeroId) + '">' + esc(heroName(row.enemyHeroId)) + '</a></td><td>' + esc(row.matchesPlayed ?? "—") + '</td><td>' + esc(percent(row.wins, row.matchesPlayed)) + '</td><td>' + esc([row.kills, row.deaths, row.assists].map(value => value ?? "—").join(" / ")) + '</td><td>' + esc(row.networth ?? "—") + '</td></tr>').join("") +
+      '</tbody></table></div>' +
+      '<div class="data-table-wrap"><table><caption>' + synergyRows.length + ' synergies returned</caption><thead><tr><th>Partner</th><th>Matches</th><th>Win rate</th><th>K / D / A</th></tr></thead><tbody>' +
+      synergyRows.map(row => { const partner = String(row.heroId1) === String(numericHeroId) ? row.heroId2 : row.heroId1; const kills = String(row.heroId1) === String(numericHeroId) ? row.kills1 : row.kills2; const deaths = String(row.heroId1) === String(numericHeroId) ? row.deaths1 : row.deaths2; const assists = String(row.heroId1) === String(numericHeroId) ? row.assists1 : row.assists2; return '<tr><td><a href="#/heroes/' + esc(partner) + '">' + esc(heroName(partner)) + '</a></td><td>' + esc(row.matchesPlayed ?? "—") + '</td><td>' + esc(percent(row.wins, row.matchesPlayed)) + '</td><td>' + esc([kills, deaths, assists].map(value => value ?? "—").join(" / ")) + '</td></tr>'; }).join("") +
+      '</tbody></table></div>';
 
-    const builds = model.builds.slice().sort((a,b) => Number(b.matches) - Number(a.matches)).slice(0, 20);
+    const builds = model.builds.slice(0, 20);
     $("#hero-detail-builds").innerHTML = builds.length
-      ? '<pre>' + esc(JSON.stringify(builds, null, 2)) + '</pre>'
+      ? '<div class="data-table-wrap"><table><thead><tr><th>Build ID</th><th>Matches</th><th>Win rate</th><th>Players</th></tr></thead><tbody>' +
+        builds.map(row => '<tr><td>' + esc(row.heroBuildId ?? "—") + '</td><td>' + esc(row.matches ?? "—") + '</td><td>' + esc(percent(row.wins, row.matches)) + '</td><td>' + esc(row.players ?? "—") + '</td></tr>').join("") +
+        '</tbody></table></div>'
       : '<p class="muted">No hero build statistics returned for this filter.</p>';
 
-    const abilities = model.abilityOrders.slice().sort((a,b) => Number(b.matches) - Number(a.matches)).slice(0, 20);
+    const abilities = model.abilityOrders.slice(0, 20);
     $("#hero-detail-abilities").innerHTML = abilities.length
-      ? '<pre>' + esc(JSON.stringify(abilities, null, 2)) + '</pre>'
+      ? '<div class="data-table-wrap"><table><thead><tr><th>Ability order</th><th>Matches</th><th>Win rate</th><th>K / D / A</th></tr></thead><tbody>' +
+        abilities.map(row => '<tr><td>' + esc(Array.isArray(row.abilities) ? row.abilities.join(" → ") : "—") + '</td><td>' + esc(row.matches ?? "—") + '</td><td>' + esc(percent(row.wins, row.matches)) + '</td><td>' + esc([row.totalKills, row.totalDeaths, row.totalAssists].map(value => value ?? "—").join(" / ")) + '</td></tr>').join("") +
+        '</tbody></table></div>'
       : '<p class="muted">No ability order statistics returned for this filter.</p>';
 
     $("#hero-detail-status").innerHTML = '<span class="eyebrow">API CONNECTED</span><span>Hero analytics loaded</span>';
