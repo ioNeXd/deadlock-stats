@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats, getItemStats, getItemPermutationStats, getItemFlowStats, getLaneMatchupStats, getLaneSoulCurve, getPlayerPerformanceCurve, getPlayerStatsMetrics, getHeroScoreboard, getPlayerScoreboard, getKillDeathStats } from "../src/api/analytics.js";
-import { normalizeGameStats, normalizeHeroBanStats, normalizeBadgeDistribution, normalizeHeroStats, getHeroDetailSnapshot, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats, normalizeItemStats, normalizeItemPermutationStats, normalizeItemFlowStats, normalizePlayerPerformanceCurve, normalizeHeroScoreboard, normalizePlayerScoreboard, normalizeKillDeathStats, normalizeLaneMatchupStats, normalizeLaneSoulCurve, normalizePlayerStatsMetrics } from "../src/services/analytics.js";
+import { normalizeGameStats, normalizeHeroBanStats, normalizeBadgeDistribution, normalizeHeroStats, getHeroDetailSnapshot, buildHeroDetailViewModel, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats, normalizeItemStats, normalizeItemPermutationStats, normalizeItemFlowStats, normalizePlayerPerformanceCurve, normalizeHeroScoreboard, normalizePlayerScoreboard, normalizeKillDeathStats, normalizeLaneMatchupStats, normalizeLaneSoulCurve, normalizePlayerStatsMetrics } from "../src/services/analytics.js";
 import { clearApiCache } from "../src/api/client.js";
 
 const originalFetch = globalThis.fetch;
@@ -242,6 +242,36 @@ test("hero detail snapshot composes current hero analytics sources", async t => 
   assert.equal(snapshot.synergies.length, 0);
   assert.equal(snapshot.builds.length, 0);
   assert.equal(snapshot.abilityOrders.length, 0);
+});
+
+test("hero detail view model derives overview and ordered collections", () => {
+  const model = buildHeroDetailViewModel({
+    heroId: 7,
+    stats: [{ heroId: 7, wins: 12, losses: 8, matches: 20, totalKills: 100, totalDeaths: 50, totalAssists: 150, totalNetWorth: 200000, totalLastHits: 800, totalDenies: 100, totalPlayerDamage: 500000, totalPlayerDamageTaken: 300000 }],
+    counters: [
+      { heroId: 7, enemyHeroId: 8, matchesPlayed: 5 },
+      { heroId: 7, enemyHeroId: 9, matchesPlayed: 20 },
+    ],
+    synergies: [
+      { heroId1: 7, heroId2: 10, matchesPlayed: 4 },
+      { heroId1: 11, heroId2: 7, matchesPlayed: 30 },
+    ],
+    builds: [
+      { heroBuildId: 1, matches: 10 },
+      { heroBuildId: 2, matches: 40 },
+    ],
+    abilityOrders: [
+      { abilities: [1, 2], matches: 5 },
+      { abilities: [2, 1], matches: 25 },
+    ],
+  }, { id: 7, name: "Test Hero" });
+
+  assert.equal(model.hero.name, "Test Hero");
+  assert.equal(model.overview.winRate, 60);
+  assert.deepEqual(model.counters.map(item => item.enemyHeroId), [9, 8]);
+  assert.deepEqual(model.synergies.map(item => item.heroId2), [7, 10]);
+  assert.deepEqual(model.builds.map(item => item.heroBuildId), [2, 1]);
+  assert.deepEqual(model.abilityOrders.map(item => item.matches), [25, 5]);
 });
 
 test("hero matchup normalizers follow the current OpenAPI schemas", () => {
