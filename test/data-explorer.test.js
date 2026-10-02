@@ -340,8 +340,14 @@ test("executeOperation preserves explicit authentication for operations without 
     });
   };
 
-  const operation = listApiOperations(contract, { includeDeprecated: false })[0];
-  await executeOperation(operation, {}, { apiKey: "secret-key" });
+  const publicOperation = {
+    operationId: "public",
+    method: "GET",
+    path: "/v1/public",
+    parameters: [],
+    requestBody: null,
+  };
+  await executeOperation(publicOperation, {}, { apiKey: "secret-key" });
   assert.equal(captured.init.headers.get("X-API-KEY"), "secret-key");
 });
 
@@ -549,7 +555,7 @@ test("buildRequest validates numeric, boolean, enum and array constraints", () =
       { name: "count", in: "query", schema: { type: "integer", minimum: 1, maximum: 10 } },
       { name: "enabled", in: "query", schema: { type: "boolean" } },
       { name: "mode", in: "query", schema: { type: "string", enum: ["ranked", "normal"] } },
-      { name: "ids", in: "query", schema: { type: "array", minItems: 2, maxItems: 3, items: { type: "integer" } } },
+      { name: "ids", in: "query", description: "Comma separated list of ids", schema: { type: "array", minItems: 2, maxItems: 3, items: { type: "integer" } } },
     ],
     requestBody: null,
   };
