@@ -157,3 +157,34 @@ test("match API exposes current advanced endpoints and JSON request bodies", asy
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("match snapshots normalize active and recently fetched responses and preserve signal", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  const controller = new AbortController();
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(input);
+    calls.push({ path: url.pathname, signal: init.signal });
+    const payload = url.pathname.endsWith("/active")
+      ? { data: [{ match_id: 10, duration_s: 900, players: [], future_metric: "active" }] }
+      : [{ match_id: 20, duration_s: 1200, players: [], future_metric: "recent" }];
+    return new Response(JSON.stringify(payload), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const [active, recent] = await Promise.all([
+      import("../src/services/matches.js").then(({ getActiveMatchesSnapshot }) => getActiveMatchesSnapshot({ signal: controller.signal, cache: false, dedupe: false })),
+      import("../src/services/matches.js").then(({ getRecentlyFetchedMatchesSnapshot }) => getRecentlyFetchedMatchesSnapshot({ signal: controller.signal, cache: false, dedupe: false })),
+    ]);
+    assert.deepEqual(active[0].matchId, 10);
+    assert.deepEqual(active[0].durationS, 900);
+    assert.equal(active[0].raw.future_metric, "active");
+    assert.equal(recent[0].matchId, 20);
+    assert.equal(recent[0].durationS, 1200);
+    assert.equal(recent[0].raw.future_metric, "recent");
+    assert.equal(calls.length, 2);
+    assert.ok(calls.every(call => call.signal === controller.signal));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
