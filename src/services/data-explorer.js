@@ -739,6 +739,7 @@ function schemaFormNode(schema, name, required = false, label = name, path = nam
   const enumOptions = enumValues(resolved);
   const node = {
     name, path, label, depth, type, required,
+    schema: resolved,
     nullable: schemaNullable(resolved),
     default: resolved.default,
     description: resolved.description ?? "",
