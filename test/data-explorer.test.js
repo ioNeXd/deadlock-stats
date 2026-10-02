@@ -1015,7 +1015,7 @@ test("buildSchemaFormModel derives nested request fields from OpenAPI schema", (
 
   assert.equal(model.type, "object");
   assert.equal(model.properties.find(item => item.name === "hero_id").required, true);
-  assert.deepEqual(model.properties.find(item => item.name === "mode").enum, ["ranked", "normal"]);
+  assert.deepEqual(model.properties.find(item => item.name === "mode").enum, ["ranked", "normal"]);\n  assert.deepEqual(model.properties.find(item => item.name === "mode").examples, ["ranked"]);
   assert.equal(model.properties.find(item => item.name === "enabled").type, "boolean");
   assert.equal(model.properties.find(item => item.name === "ids").type, "array");
   assert.equal(model.properties.find(item => item.name === "nested").properties[0].path, "__body.nested.label");
@@ -1039,7 +1039,7 @@ test("buildSchemaViewModel describes nested schema metadata and composition", ()
     required: ["hero_id"],
     properties: {
       hero_id: { type: "integer", format: "int32", minimum: 1, example: 7 },
-      mode: { type: "string", enum: ["ranked", "normal"], default: "ranked" },
+      mode: { type: "string", enum: ["ranked", "normal"], default: "ranked", examples: ["ranked"] },
       nested: {
         type: "object",
         properties: { enabled: { type: "boolean", nullable: true } },
