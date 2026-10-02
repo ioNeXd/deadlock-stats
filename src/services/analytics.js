@@ -188,6 +188,8 @@ export function buildHeroDetailViewModel(snapshot, hero = null) {
     .filter(item => Number(item?.matches) > 0)
     .sort((a, b) => Number(b.matches) - Number(a.matches));
 
+  const buildDetails = Array.isArray(snapshot?.buildDetails) ? snapshot.buildDetails : [];
+
   const abilityOrders = (snapshot?.abilityOrders ?? [])
     .filter(item => Number(item?.matches) > 0)
     .sort((a, b) => Number(b.matches) - Number(a.matches));
