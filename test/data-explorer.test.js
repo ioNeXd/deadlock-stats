@@ -1125,7 +1125,6 @@ test("buildRequestExamples falls back to a generated example only after document
     }],
   );
 });
-});
 
 test("buildRequestExamples respects OpenAPI media and schema example precedence", () => {
   assert.deepEqual(
