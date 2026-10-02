@@ -372,6 +372,11 @@ function coerceParameter(value, schema, parameter = null) {
     for (const [name, propertySchema] of Object.entries(properties)) {
       if (result[name] !== undefined) result[name] = coerceParameter(result[name], propertySchema);
     }
+    if (schema.additionalProperties && typeof schema.additionalProperties === "object") {
+      for (const name of Object.keys(result)) {
+        if (!(name in properties)) result[name] = coerceParameter(result[name], schema.additionalProperties);
+      }
+    }
     for (const name of schema.required ?? []) {
       if (result[name] === undefined) throw new TypeError("Missing required object property: " + name);
     }
