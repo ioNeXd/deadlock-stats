@@ -812,8 +812,12 @@ export async function executeOperation(operation, values = {}, options = {}) {
     if (!headers.has(name)) headers.set(name, value);
   }
 
-  if (request.mediaType && !headers.has("Content-Type")) {
-    headers.set("Content-Type", request.mediaType);
+  if (request.mediaType) {
+    const contentType = headers.get("Content-Type");
+    if (contentType && !mediaTypeMatches(request.mediaType, contentType)) {
+      throw new TypeError(`Content-Type ${contentType} conflicts with selected request media type ${request.mediaType}.`);
+    }
+    if (!contentType) headers.set("Content-Type", request.mediaType);
   }
 
   const result = await apiRequest(request.path, {
