@@ -440,3 +440,4 @@ For API-related work:
 Deadlock Stats is an independent project. The Deadlock API states that `deadlock-api.com` is not endorsed by Valve and does not reflect the views or opinions of Valve or anyone officially involved in producing or managing Valve properties.
 
 Deadlock and associated properties are trademarks or registered trademarks of Valve Corporation.
+\n### User request presets\n\nThe Data Explorer also supports local user-created request presets. Presets are stored in the browser using `localStorage`, scoped by HTTP operation key and request media type, and kept separate from OpenAPI-derived documented/generated examples. Users can save the current structured payload, reuse it later, overwrite a preset by name, and delete a selected saved preset. Corrupt or unavailable browser storage is treated as empty rather than breaking the explorer.\n
