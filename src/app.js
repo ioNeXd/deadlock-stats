@@ -1239,7 +1239,9 @@ function schemaNodeHtml(node) {
   const enumHtml = node.enum?.length
     ? '<div class="schema-view-enum"><span>ENUM</span><code>' + esc(node.enum.map(value => schemaExampleValue(value)).join(" · ")) + '</code></div>'
     : "";
-  const example = node.example !== undefined ? '<div class="schema-view-example"><span>EXAMPLE</span><code>' + esc(schemaExampleValue(node.example)) + '</code></div>' : "";
+  const example = node.example !== undefined
+    ? '<div class="schema-view-example"><span>EXAMPLE</span><code>' + esc(schemaExampleValue(node.example)) + '</code></div>'
+    : (node.examples?.length ? '<div class="schema-view-example"><span>EXAMPLES</span><code>' + esc(node.examples.map(schemaExampleValue).join(" · ")) + '</code></div>' : "");
   const defaultValue = node.default !== undefined ? '<div class="schema-view-example"><span>DEFAULT</span><code>' + esc(schemaExampleValue(node.default)) + '</code></div>' : "";
   const variants = ["oneOf", "anyOf", "allOf"].flatMap(keyword =>
     (node[keyword] ?? []).map(variant => '<div class="schema-view-variant"><span>' + keyword.toUpperCase() + '</span>' + schemaNodeHtml(variant) + '</div>')
