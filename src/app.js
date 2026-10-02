@@ -15,7 +15,7 @@ import { loadLeaderboard } from "./services/leaderboard.js";
 import { searchPlayers, loadPlayerRank, loadPlayerHeroStats, loadPlayerMatchHistory } from "./services/players.js";
 import { safeExternalUrl } from "./ui/security.js";
 import { listUserRequestPresets, saveUserRequestPreset, deleteUserRequestPreset } from "./services/data-explorer-presets.js";
-import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroDetailSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
+import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroDetailSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats, buildHeroDetailViewModel } from "./services/analytics.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
@@ -206,25 +206,22 @@ function renderHeroDetail(heroId, signal) {
     const hero = (heroResult.data ?? []).find(item => String(idOf(item)) === String(numericHeroId)) ?? null;
     if (hero) $("#hero-detail-name").textContent = nameOf(hero);
 
-    const stat = snapshot.stats[0];
-    const matches = Number(stat?.matches);
-    const wins = Number(stat?.wins);
-    const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? wins / matches * 100 : null;
+    const model = buildHeroDetailViewModel(snapshot, hero);
     const summary = [
-      ["MATCHES", Number.isFinite(matches) ? matches.toLocaleString() : "—"],
-      ["WIN RATE", winRate == null ? "—" : winRate.toFixed(1) + "%"],
-      ["K / D / A", [stat?.totalKills, stat?.totalDeaths, stat?.totalAssists].map(Number).every(Number.isFinite) ? [stat.totalKills, stat.totalDeaths, stat.totalAssists].join(" / ") : "—"],
-      ["PLAYER DAMAGE", Number.isFinite(Number(stat?.totalPlayerDamage)) ? Number(stat.totalPlayerDamage).toLocaleString() : "—"],
-      ["LAST HITS", Number.isFinite(Number(stat?.totalLastHits)) ? Number(stat.totalLastHits).toLocaleString() : "—"],
-      ["DENIES", Number.isFinite(Number(stat?.totalDenies)) ? Number(stat.totalDenies).toLocaleString() : "—"],
+      ["MATCHES", model.overview.matches == null ? "—" : model.overview.matches.toLocaleString()],
+      ["WIN RATE", model.overview.winRate == null ? "—" : model.overview.winRate.toFixed(1) + "%"],
+      ["K / D / A", [model.overview.kills, model.overview.deaths, model.overview.assists].map(Number).every(Number.isFinite) ? [model.overview.kills, model.overview.deaths, model.overview.assists].join(" / ") : "—"],
+      ["PLAYER DAMAGE", Number.isFinite(Number(model.overview.playerDamage)) ? Number(model.overview.playerDamage).toLocaleString() : "—"],
+      ["LAST HITS", Number.isFinite(Number(model.overview.lastHits)) ? Number(model.overview.lastHits).toLocaleString() : "—"],
+      ["DENIES", Number.isFinite(Number(model.overview.denies)) ? Number(model.overview.denies).toLocaleString() : "—"],
     ];
     $("#hero-detail-summary").innerHTML = summary.map(([label,value]) => '<span><small>' + esc(label) + '</small><strong>' + esc(value) + '</strong></span>').join("");
 
-    const counterRows = snapshot.counters
+    const counterRows = model.counters
       .filter(row => Number(row.matchesPlayed) > 0)
       .sort((a,b) => Number(b.matchesPlayed) - Number(a.matchesPlayed))
       .slice(0, 20);
-    const synergyRows = snapshot.synergies
+    const synergyRows = model.synergies
       .filter(row => Number(row.matchesPlayed) > 0)
       .sort((a,b) => Number(b.matchesPlayed) - Number(a.matchesPlayed))
       .slice(0, 20);
@@ -232,12 +229,12 @@ function renderHeroDetail(heroId, signal) {
       '<p>COUNTERS: ' + counterRows.length + ' · SYNERGIES: ' + synergyRows.length + '</p>' +
       '<pre>' + esc(JSON.stringify({ counters: counterRows, synergies: synergyRows }, null, 2)) + '</pre>';
 
-    const builds = snapshot.builds.slice().sort((a,b) => Number(b.matches) - Number(a.matches)).slice(0, 20);
+    const builds = model.builds.slice().sort((a,b) => Number(b.matches) - Number(a.matches)).slice(0, 20);
     $("#hero-detail-builds").innerHTML = builds.length
       ? '<pre>' + esc(JSON.stringify(builds, null, 2)) + '</pre>'
       : '<p class="muted">No hero build statistics returned for this filter.</p>';
 
-    const abilities = snapshot.abilityOrders.slice().sort((a,b) => Number(b.matches) - Number(a.matches)).slice(0, 20);
+    const abilities = model.abilityOrders.slice().sort((a,b) => Number(b.matches) - Number(a.matches)).slice(0, 20);
     $("#hero-detail-abilities").innerHTML = abilities.length
       ? '<pre>' + esc(JSON.stringify(abilities, null, 2)) + '</pre>'
       : '<p class="muted">No ability order statistics returned for this filter.</p>';
