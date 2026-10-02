@@ -119,3 +119,33 @@ export function loadPlayerRankPredictImage(accountId, format, options = {}) {
 export function loadPlayerRankPredictBatchImage(accountIds, format, options = {}) {
   return getPlayerRankPredictBatchImage(accountIds, format, options);
 }
+
+export function buildPlayerDetailViewModel(snapshot, profile = null) {
+  const rank = snapshot?.rank?.data ?? snapshot?.rank?.raw ?? snapshot?.rank ?? {};
+  const heroes = Array.isArray(snapshot?.heroStats) ? snapshot.heroStats : [];
+  const history = Array.isArray(snapshot?.matchHistory) ? snapshot.matchHistory : [];
+  const enemies = Array.isArray(snapshot?.enemyStats) ? snapshot.enemyStats : [];
+  const mates = Array.isArray(snapshot?.mateStats) ? snapshot.mateStats : [];
+
+  return {
+    accountId: Number.isInteger(Number(snapshot?.accountId)) ? Number(snapshot.accountId) : null,
+    profile: profile ?? null,
+    rank,
+    heroStats: heroes.slice().sort((a, b) => Number(b?.matches_played ?? 0) - Number(a?.matches_played ?? 0)),
+    matchHistory: history,
+    enemyStats: enemies.slice().sort((a, b) => Number(b?.matches_played ?? 0) - Number(a?.matches_played ?? 0)),
+    mateStats: mates.slice().sort((a, b) => Number(b?.matches_played ?? 0) - Number(a?.matches_played ?? 0)),
+    raw: snapshot ?? null,
+  };
+}
+
+export async function getPlayerDetailSnapshot(accountId, options = {}) {
+  const [rank, heroStats, matchHistory, enemyStats, mateStats] = await Promise.all([
+    loadPlayerRank(accountId, options),
+    loadPlayerHeroStats({ ...options, account_ids: [Number(accountId)] }),
+    loadPlayerMatchHistory(accountId, options),
+    loadPlayerEnemyStats(accountId, options),
+    loadPlayerMateStats(accountId, options),
+  ]);
+  return { accountId, rank, heroStats: heroStats.data, matchHistory: matchHistory.data, enemyStats: enemyStats.data, mateStats: mateStats.data };
+}
