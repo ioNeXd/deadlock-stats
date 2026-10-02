@@ -1275,9 +1275,9 @@ function renderOperation(operation, signal, contract = null) {
       bodyTypes.map(item => '<option value="' + esc(item.mediaType) + '">' + esc(item.mediaType) + '</option>').join("") +
       '</select></label>' +
       '<label class="field"><span>Example / preset <small>contract + saved</small></span><select id="explorer-body-example"' + (initialExamples.length ? "" : " hidden") + '><option value="">— choose example —</option>' +
-        initialExamples.map((example, index) => '<option value="contract:' + index + '">' + esc(example.name) + (example.source === "generated" ? " · generated" : "") + '</option>').join("") + '</select>' +
+        initialExamples.map((example, index) => '<option value="contract:' + index + '">' + esc(example.name) + (example.source === "generated" ? " · generated" : "") + '</option></label>' +
       '<div class="panel-actions explorer-preset-actions"><input id="explorer-preset-name" class="explorer-input" type="text" maxlength="80" placeholder="Saved preset name" aria-label="Saved preset name">' +
-      '<button type="button" class="secondary-button" id="explorer-save-preset">Save current</button><button type="button" class="secondary-button" id="explorer-delete-preset" disabled>Delete saved</button></div></label>' +
+      '<button type="button" class="secondary-button" id="explorer-save-preset">Save current</button><button type="button" class="secondary-button" id="explorer-delete-preset" disabled>Delete saved</button></div>' +
       '<div id="schema-body-editor">' + (bodyModel ? schemaFieldControl(bodyModel) : '<label class="field"><span>Payload</span><textarea name="__body" rows="8" placeholder="Request payload"></textarea></label>') + '</div>' +
       '<p class="muted schema-body-note">Fields, defaults, constraints and examples are derived from the current OpenAPI contract. Arrays and free-form objects accept JSON.</p></section>'
     : "";
@@ -1416,12 +1416,15 @@ function renderOperation(operation, signal, contract = null) {
       return;
     }
 
+    const value = currentBodyValue();
+    if (value === undefined) return;
+
     try {
       const preset = saveUserRequestPreset({
         operationKey: operation.operationKey,
         mediaType: selected?.mediaType ?? "application/json",
         name,
-        value: currentBodyValue(),
+        value,
       });
       if (!preset) return;
       renderRequestPresets(selected);
