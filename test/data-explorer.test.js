@@ -407,6 +407,41 @@ test("buildRequest coerces array items according to their schema", () => {
   assert.equal(request.query.ids, "1,2,3");
 });
 
+test("buildRequest enforces oneOf, anyOf, and allOf parameter schemas", () => {
+  const oneOfOperation = {
+    method: "GET",
+    path: "/v1/test",
+    parameters: [{
+      name: "value", in: "query",
+      schema: { oneOf: [{ type: "integer" }, { type: "string", pattern: "^hero$" }] },
+    }],
+  };
+  assert.equal(buildRequest(oneOfOperation, { value: "42" }).query.value, 42);
+  assert.equal(buildRequest(oneOfOperation, { value: "hero" }).query.value, "hero");
+  assert.throws(() => buildRequest(oneOfOperation, { value: "other" }), /oneOf/);
+
+  const anyOfOperation = {
+    method: "GET",
+    path: "/v1/test",
+    parameters: [{
+      name: "value", in: "query",
+      schema: { anyOf: [{ type: "integer" }, { type: "string", minLength: 4 }] },
+    }],
+  };
+  assert.equal(buildRequest(anyOfOperation, { value: "rank" }).query.value, "rank");
+
+  const allOfOperation = {
+    method: "GET",
+    path: "/v1/test",
+    parameters: [{
+      name: "value", in: "query",
+      schema: { allOf: [{ type: "integer" }, { minimum: 10 }] },
+    }],
+  };
+  assert.equal(buildRequest(allOfOperation, { value: "12" }).query.value, 12);
+  assert.throws(() => buildRequest(allOfOperation, { value: "8" }), /minimum/);
+});
+
 test("buildRequest coerces additional object properties from their schema", () => {
   const operation = {
     method: "GET",
