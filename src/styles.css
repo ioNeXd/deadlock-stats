@@ -131,3 +131,82 @@
 .schema-object legend small{color:var(--muted);font:8px "DM Mono";letter-spacing:0}
 .schema-field{min-width:0}
 .schema-body-note{margin:0;padding-top:4px}
+
+
+.schema-body-editor {
+  display: grid;
+  gap: 1rem;
+}
+.explorer-schemas {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.schema-viewer {
+  border: 1px solid var(--line, rgba(255,255,255,.08));
+  background: var(--panel, rgba(0,0,0,.14));
+}
+.schema-viewer > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .9rem 1rem;
+}
+.schema-viewer > summary::-webkit-details-marker { display: none; }
+.schema-viewer > summary::before {
+  content: "▸";
+  transition: transform .15s ease;
+}
+.schema-viewer[open] > summary::before { transform: rotate(90deg); }
+.schema-view-body {
+  padding: 0 1rem 1rem;
+  overflow-x: auto;
+}
+.schema-view-node {
+  margin-left: calc(var(--schema-depth, 0) * .75rem);
+  padding: .7rem 0 .7rem 1rem;
+  border-left: 1px solid var(--line, rgba(255,255,255,.08));
+}
+.schema-view-title {
+  display: flex;
+  align-items: baseline;
+  gap: .65rem;
+  flex-wrap: wrap;
+}
+.schema-view-title > span,
+.schema-view-enum > span,
+.schema-view-example > span,
+.schema-view-variant > span,
+.schema-view-item > span {
+  font-size: .68rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .68;
+}
+.schema-view-constraints {
+  margin-top: .35rem;
+  font-size: .78rem;
+  opacity: .72;
+}
+.schema-view-enum,
+.schema-view-example {
+  display: flex;
+  gap: .6rem;
+  margin-top: .4rem;
+  flex-wrap: wrap;
+}
+.schema-view-enum code,
+.schema-view-example code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.schema-view-item,
+.schema-view-variant {
+  margin-top: .65rem;
+}
+.schema-view-variant > .schema-view-node,
+.schema-view-item > .schema-view-node {
+  margin-top: .25rem;
+}
