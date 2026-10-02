@@ -94,6 +94,9 @@ function normalizeHeaders(headers = {}) {
 
 function cacheKey(method, url, body, responseType = "auto", headers = {}) {
   const normalizedHeaders = normalizeHeaders(headers);
+  if (!normalizedHeaders.some(([key]) => key === "accept")) {
+    normalizedHeaders.push(["accept", acceptHeaderFor(responseType)]);
+  }
 
   return JSON.stringify({
     method: method.toUpperCase(),
