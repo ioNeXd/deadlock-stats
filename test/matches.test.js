@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getActiveMatches, getRecentlyFetchedMatches, getMatchMetadata, getMatchSalts, getBulkMatchMetadata } from "../src/api/matches.js";
+import { getActiveMatches, getActiveMatchesRaw, getRecentlyFetchedMatches, getMatchMetadata, getRawMatchMetadata, getMatchLiveUrl, getMatchSalts, getBulkMatchMetadata, createCustomMatch, readyCustomMatch, getCustomMatchId, getLiveQuery, submitDemoQuery, getDemoQueryStatus, getDemoSchema, getLiveUrls, ingestLiveUrls, ingestMatchSalts } from "../src/api/matches.js";
 import { normalizeMatchInfo, normalizeMatchMetadata } from "../src/services/matches.js";
 
 test("match wrappers target documented endpoints", async () => {
@@ -103,4 +103,53 @@ test("bulk match metadata preserves repeated URLSearchParams filters", async () 
 
   assert.deepEqual(requestedUrl.searchParams.getAll("match_ids"), ["123", "456"]);
   assert.deepEqual(requestedUrl.searchParams.getAll("account_ids"), ["7", "8"]);
+});
+
+
+test("match API exposes current advanced endpoints and JSON request bodies", async () => {
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(input);
+    calls.push({ url, method: init.method, body: init.body, contentType: new Headers(init.headers).get("content-type") });
+    return new Response("{}" , { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    await getActiveMatchesRaw({ cache: false, dedupe: false });
+    await getRawMatchMetadata(123, { cache: false, dedupe: false });
+    await getMatchLiveUrl(123, { cache: false, dedupe: false });
+    await createCustomMatch({ game_mode: "normal" }, { cache: false, dedupe: false });
+    await readyCustomMatch(77, { cache: false, dedupe: false });
+    await getCustomMatchId(88, { cache: false, dedupe: false });
+    await getLiveQuery({ query: "select 1", match_id: 123, broadcast_url: "https://example.test/live", cache: false, dedupe: false });
+    await submitDemoQuery({ query: "select 1", match_id: 123 }, { cache: false, dedupe: false });
+    await getDemoQueryStatus("job-1", { cache: false, dedupe: false });
+    await getDemoSchema(123, { cache: false, dedupe: false });
+    await getLiveUrls({ cache: false, dedupe: false });
+    await ingestLiveUrls([{ url: "https://example.test/live" }], { cache: false, dedupe: false });
+    await ingestMatchSalts([{ match_id: 123 }], { cache: false, dedupe: false });
+
+    assert.equal(calls[0].url.pathname, "/v1/matches/active/raw");
+    assert.equal(calls[0].method, "GET");
+    assert.equal(calls[1].url.pathname, "/v1/matches/123/metadata/raw");
+    assert.equal(calls[2].url.pathname, "/v1/matches/123/live/url");
+    assert.equal(calls[3].url.pathname, "/v1/matches/custom/create");
+    assert.equal(calls[3].method, "POST");
+    assert.equal(calls[3].contentType, "application/json");
+    assert.deepEqual(JSON.parse(calls[3].body), { game_mode: "normal" });
+    assert.equal(calls[4].url.pathname, "/v1/matches/custom/77/ready");
+    assert.equal(calls[5].url.pathname, "/v1/matches/custom/88/match-id");
+    assert.equal(calls[6].url.pathname, "/v1/matches/demo/live/query");
+    assert.equal(calls[7].url.pathname, "/v1/matches/demo/query");
+    assert.equal(calls[8].url.pathname, "/v1/matches/demo/query/job-1");
+    assert.equal(calls[9].url.pathname, "/v1/matches/demo/schema");
+    assert.equal(calls[9].url.searchParams.get("match_id"), "123");
+    assert.equal(calls[10].url.pathname, "/v1/matches/live/urls");
+    assert.equal(calls[11].url.pathname, "/v1/matches/live/urls");
+    assert.equal(calls[11].method, "POST");
+    assert.equal(calls[12].url.pathname, "/v1/matches/salts");
+    assert.equal(calls[12].method, "POST");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
