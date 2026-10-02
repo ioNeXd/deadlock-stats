@@ -249,6 +249,7 @@ export async function getHeroDetailSnapshot(heroId, options = {}) {
     counters: matchup.counters.filter(item => String(item.heroId) === String(heroId)),
     synergies: matchup.synergies.filter(item => String(item.heroId1) === String(heroId) || String(item.heroId2) === String(heroId)),
     builds,
+    buildDetails: Array.isArray(snapshot?.buildDetails) ? snapshot.buildDetails : [],
     abilityOrders,
   };
 }
