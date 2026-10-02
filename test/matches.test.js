@@ -103,7 +103,7 @@ test("bulk match metadata preserves repeated URLSearchParams filters", async () 
 
   await getBulkMatchMetadata({ query, cache: false, dedupe: false });
 
-  assert.deepEqual(requestedUrl.searchParams.getAll("match_ids"), ["123", "456"]);
+  assert.equal(requestedUrl.searchParams.get("match_ids"), "123,456");
   assert.deepEqual(requestedUrl.searchParams.getAll("account_ids"), ["7", "8"]);
 });
 
