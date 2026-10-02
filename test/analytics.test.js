@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats, getItemStats, getItemPermutationStats, getItemFlowStats, getLaneMatchupStats, getLaneSoulCurve, getPlayerPerformanceCurve, getPlayerStatsMetrics, getHeroScoreboard, getPlayerScoreboard, getKillDeathStats } from "../src/api/analytics.js";
-import { normalizeGameStats, normalizeHeroBanStats, normalizeBadgeDistribution, normalizeHeroStats, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats, normalizeItemStats, normalizeItemPermutationStats, normalizeItemFlowStats, normalizePlayerPerformanceCurve, normalizeHeroScoreboard, normalizePlayerScoreboard, normalizeKillDeathStats, normalizeLaneMatchupStats, normalizeLaneSoulCurve, normalizePlayerStatsMetrics } from "../src/services/analytics.js";
+import { normalizeGameStats, normalizeHeroBanStats, normalizeBadgeDistribution, normalizeHeroStats, getHeroDetailSnapshot, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats, normalizeItemStats, normalizeItemPermutationStats, normalizeItemFlowStats, normalizePlayerPerformanceCurve, normalizeHeroScoreboard, normalizePlayerScoreboard, normalizeKillDeathStats, normalizeLaneMatchupStats, normalizeLaneSoulCurve, normalizePlayerStatsMetrics } from "../src/services/analytics.js";
 import { clearApiCache } from "../src/api/client.js";
 
 const originalFetch = globalThis.fetch;
@@ -207,6 +207,40 @@ test("hero stats normalizer follows the current OpenAPI schema", () => {
       future_metric: "kept",
     },
   });
+});
+
+test("hero detail snapshot composes current hero analytics sources", async t => {
+  const calls = [];
+  t.mock.method(globalThis, "fetch", async input => {
+    const url = new URL(input);
+    calls.push(url);
+    const payload = url.pathname === "/v1/analytics/hero-stats"
+      ? [{ hero_id: 7, matches: 20, wins: 12 }]
+      : [];
+    return new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  const snapshot = await getHeroDetailSnapshot(7, {
+    game_mode: "normal",
+    cache: false,
+    dedupe: false,
+  });
+
+  assert.equal(calls.length, 4);
+  assert.deepEqual(calls.map(url => url.pathname).sort(), [
+    "/v1/analytics/ability-order-stats",
+    "/v1/analytics/hero-build-stats/7",
+    "/v1/analytics/hero-counter-stats",
+    "/v1/analytics/hero-stats",
+  ]);
+  assert.deepEqual(snapshot.stats, [{ heroId: 7, bucket: null, wins: 12, losses: null, matches: 20, matchesPerBucket: null, totalKills: null, totalDeaths: null, totalAssists: null, totalNetWorth: null, totalLastHits: null, totalDenies: null, totalPlayerDamage: null, totalPlayerDamageTaken: null, totalBossDamage: null, totalCreepDamage: null, totalNeutralDamage: null, totalMaxHealth: null, totalShotsHit: null, totalShotsMissed: null, totalPermanentBuffs: null, permanentBuffMatches: null, totalFirstPermanentBuffTimeS: null, permanentBuffTimingMatches: null, raw: { hero_id: 7, matches: 20, wins: 12 } }]);
+  assert.equal(snapshot.counters.length, 0);
+  assert.equal(snapshot.synergies.length, 0);
+  assert.equal(snapshot.builds.length, 0);
+  assert.equal(snapshot.abilityOrders.length, 0);
 });
 
 test("hero matchup normalizers follow the current OpenAPI schemas", () => {
