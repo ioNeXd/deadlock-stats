@@ -1059,27 +1059,52 @@ test("buildSchemaViewModel describes nested schema metadata and composition", ()
   assert.equal(model.oneOf.length, 2);
 });
 
-test("buildRequestExamples uses only documented OpenAPI examples/defaults", () => {
-  const examples = buildRequestExamples({
-    example: { hero_id: 7 },
-    examples: {
-      ranked: { summary: "Ranked preset", value: { mode: "ranked" } },
-      ignored: { summary: "No value" },
-    },
-    schema: { example: { ignored: true }, default: { fallback: true } },
-  });
-
-  assert.deepEqual(examples, [
-    { name: "Default example", summary: "Media type example", value: { hero_id: 7 }, source: "example" },
-    { name: "ranked", summary: "Ranked preset", value: { mode: "ranked" }, source: "examples" },
-  ]);
-
+test("buildRequestExamples respects OpenAPI media and schema example precedence", () => {
   assert.deepEqual(
-    buildRequestExamples({ schema: { example: { hero_id: 7 } } })[0].value,
-    { hero_id: 7 },
+    buildRequestExamples({
+      example: { hero_id: 7 },
+      examples: {
+        ranked: { summary: "Ranked preset", value: { mode: "ranked" } },
+      },
+      schema: { example: { ignored: true }, default: { fallback: true } },
+    }),
+    [
+      { name: "Default example", summary: "Media type example", value: { hero_id: 7 }, source: "example" },
+    ],
   );
+
   assert.deepEqual(
-    buildRequestExamples({ schema: { default: { hero_id: 8 } } })[0].value,
-    { hero_id: 8 },
+    buildRequestExamples({
+      examples: {
+        ranked: { summary: "Ranked preset", value: { mode: "ranked" } },
+        ignored: { summary: "No value" },
+      },
+      schema: { example: { ignored: true }, default: { fallback: true } },
+    }),
+    [
+      { name: "ranked", summary: "Ranked preset", value: { mode: "ranked" }, source: "examples" },
+    ],
+  );
+
+  assert.deepEqual(
+    buildRequestExamples({ schema: { example: { hero_id: 7 }, default: { fallback: true } } }),
+    [
+      { name: "Schema example", summary: "Schema example", value: { hero_id: 7 }, source: "schema.example" },
+    ],
+  );
+
+  assert.deepEqual(
+    buildRequestExamples({ schema: { examples: [{ hero_id: 7 }, { hero_id: 8 }] } }),
+    [
+      { name: "Schema example 1", summary: "Schema examples", value: { hero_id: 7 }, source: "schema.examples" },
+      { name: "Schema example 2", summary: "Schema examples", value: { hero_id: 8 }, source: "schema.examples" },
+    ],
+  );
+
+  assert.deepEqual(
+    buildRequestExamples({ schema: { default: { hero_id: 8 } } }),
+    [
+      { name: "Schema default", summary: "Schema default", value: { hero_id: 8 }, source: "schema.default" },
+    ],
   );
 });
