@@ -7,10 +7,23 @@ const BUILD_FILTERS = [
   "build_language","build_id","version","hero_id","tag","rollup_category","author_id",
 ];
 
+const BUILD_SORTS = new Set(["weekly_favorites","favorites","ignores","reports","updated_at","published_at","version"]);
+const BUILD_DIRECTIONS = new Set(["desc","asc"]);
+
+function validateId(value, name) {
+  if (!Number.isInteger(value) || value < 0) throw new RangeError(name + " must be a non-negative integer");
+  return value;
+}
+
 function buildOptions(options = {}) {
   const { query, ...rest } = options;
   const source = { ...queryToObject(query), ...Object.fromEntries(Object.entries(rest).filter(([key]) => BUILD_FILTERS.includes(key))) };
   const filtered = Object.fromEntries(Object.entries(source).filter(([key, value]) => BUILD_FILTERS.includes(key) && value !== undefined && value !== null && value !== ""));
+  if (filtered.sort_by != null && !BUILD_SORTS.has(filtered.sort_by)) throw new RangeError("Unsupported build sort_by");
+  if (filtered.sort_direction != null && !BUILD_DIRECTIONS.has(filtered.sort_direction)) throw new RangeError("Unsupported build sort_direction");
+  for (const key of ["start","limit","build_id","version","hero_id","tag","rollup_category","author_id"]) {
+    if (filtered[key] != null) validateId(Number(filtered[key]), key);
+  }
   return { ...rest, query: filtered };
 }
 
@@ -19,10 +32,13 @@ export function searchBuilds(options = {}) {
 }
 
 export function fetchBuildsByAuthor(accountId, options = {}) {
+  validateId(accountId, "accountId");
   return apiGet("/v1/builds/by-author/" + encodeURIComponent(accountId), options);
 }
 
 export function fetchBuild(heroId, buildId, options = {}) {
+  validateId(heroId, "heroId");
+  validateId(buildId, "buildId");
   const query = queryToObject(options.query);
   return apiGet("/v1/builds/" + encodeURIComponent(heroId) + "/" + encodeURIComponent(buildId), {
     ...options,
