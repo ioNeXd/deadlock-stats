@@ -159,3 +159,16 @@ export async function listSteamInfo(options = {}) {
 export async function listLootTables(options = {}) {
   return withNormalized(await getLootTables(options), normalizeAsset);
 }
+
+
+export function buildItemDetailViewModel(item) {
+  return {
+    id: item?.id ?? null,
+    name: item?.name ?? null,
+    className: item?.className ?? null,
+    type: item?.type ?? null,
+    slotType: item?.slotType ?? null,
+    images: item?.images && typeof item.images === "object" ? item.images : {},
+    raw: item?.raw ?? item ?? null,
+  };
+}
