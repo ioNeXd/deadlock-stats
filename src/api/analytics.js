@@ -122,16 +122,16 @@ export function getBuildItemStats(options = {}) {
 }
 
 export function getItemFlowStats(options = {}) {
-  return apiGet("/v1/analytics/item-flow-stats", analyticsOptions(options, ANALYTICS_FILTER_KEYS.itemFlow, ["hero_ids"]));
+  return apiGet("/v1/analytics/item-flow-stats", analyticsOptions(options, ANALYTICS_FILTER_KEYS.itemFlow));
 }
 
 export function getItemPermutationStats(options = {}) {
-  return apiGet("/v1/analytics/item-permutation-stats", analyticsOptions(options, ANALYTICS_FILTER_KEYS.itemPermutation, ["hero_ids"]));
+  return apiGet("/v1/analytics/item-permutation-stats", analyticsOptions(options, ANALYTICS_FILTER_KEYS.itemPermutation));
 }
 
 export function getItemStats(options = {}) {
   return apiGet("/v1/analytics/item-stats", {
-    ...analyticsOptions(options, ANALYTICS_FILTER_KEYS.itemStats, ["hero_ids", "enemy_hero_ids"]),
+    ...analyticsOptions(options, ANALYTICS_FILTER_KEYS.itemStats),
     cacheTtlMs: options.cacheTtlMs ?? ITEM_STATS_CACHE_TTL_MS,
   });
 }
