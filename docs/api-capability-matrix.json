@@ -173,7 +173,7 @@
           "name": "account_id",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
@@ -764,7 +764,7 @@
           "name": "account_id",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
@@ -936,7 +936,7 @@
           "name": "account_id",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
@@ -1080,7 +1080,7 @@
           "name": "account_id",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
@@ -1252,7 +1252,7 @@
           "name": "account_id",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
@@ -1382,7 +1382,7 @@
           "name": "account_id",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
@@ -1628,7 +1628,7 @@
           "name": "hero_id",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
@@ -1705,7 +1705,7 @@
           "name": "account_id",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
@@ -1779,7 +1779,7 @@
           "name": "hero_id",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
@@ -1933,7 +1933,7 @@
           "name": "account_id",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
@@ -1975,7 +1975,7 @@
           "name": "include_corrupted_items",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         }
       ]
@@ -2867,7 +2867,7 @@
           "name": "account_id",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
@@ -3975,7 +3975,7 @@
           "name": "language",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
@@ -4710,7 +4710,7 @@
           "name": "account_id",
           "in": "query",
           "required": false,
-          "classification": "SUPPORTED_UI",
+          "classification": "DEPRECATED",
           "deprecated": true
         },
         {
