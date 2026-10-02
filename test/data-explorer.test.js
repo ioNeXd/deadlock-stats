@@ -9,6 +9,7 @@ import {
   enumValues,
   schemaType,
   schemaNullable,
+  resolveSchema,
 } from "../src/services/data-explorer.js";
 
 const originalFetch = globalThis.fetch;
