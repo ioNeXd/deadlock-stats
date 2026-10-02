@@ -43,6 +43,8 @@ const contract = {
 test("listApiOperations enumerates documented HTTP operations", () => {
   const operations = listApiOperations(contract);
   assert.equal(operations.length, 2);
+  assert.equal(operations[0].operationKey, "GET /v1/deprecated");
+  assert.equal(operations[1].operationKey, "GET /v1/example/{hero_id}");
   assert.equal(operations[0].method, "GET");
   assert.equal(operations[0].path, "/v1/deprecated");
   assert.equal(listApiOperations(contract, { includeDeprecated: false }).length, 1);
