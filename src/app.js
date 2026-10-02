@@ -10,7 +10,6 @@ import { fetchMap } from "./services/assets.js";
 import { loadLeaderboard } from "./services/leaderboard.js";
 import { searchPlayers, loadPlayerRank, loadPlayerHeroStats, loadPlayerMatchHistory, loadSteamProfiles, getPlayerDetailSnapshot, buildPlayerDetailViewModel } from "./services/players.js";
 import { safeExternalUrl } from "./ui/security.js";
-import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroDetailSnapshot, getBuildDetailSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats, buildHeroDetailViewModel, buildItemDetailAnalyticsViewModel } from "./services/analytics.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
@@ -18,6 +17,12 @@ const assetVersion = createAssetVersionContext();
 let routeController = null;
 let dataExplorerRuntimePromise = null;
 let assetVersionContextPromise = null;
+let analyticsRuntimePromise = null;
+
+function loadAnalyticsRuntime() {
+  if (!analyticsRuntimePromise) analyticsRuntimePromise = import("./services/analytics.js");
+  return analyticsRuntimePromise;
+}
 
 function loadDataExplorerRuntime() {
   if (!dataExplorerRuntimePromise) {
@@ -202,7 +207,8 @@ function renderGraphql(signal) {
   });
 }
 
-function renderHeroDetail(heroId, signal) {
+async function renderHeroDetail(heroId, signal) {
+  const analytics = await loadAnalyticsRuntime();
   const numericHeroId = Number(heroId);
   if (!Number.isInteger(numericHeroId) || numericHeroId < 0) {
     renderNotFound("heroes/" + heroId);
@@ -218,14 +224,14 @@ function renderHeroDetail(heroId, signal) {
 
   const options = { ...assetVersion.options(), signal };
   Promise.all([
-    getHeroDetailSnapshot(numericHeroId, options),
+    analytics.getHeroDetailSnapshot(numericHeroId, options),
     listHeroes({ ...assetVersion.options(), signal }),
   ]).then(([snapshot, heroResult]) => {
     if (signal.aborted) return;
     const hero = (heroResult.data ?? []).find(item => String(idOf(item)) === String(numericHeroId)) ?? null;
     if (hero) $("#hero-detail-name").textContent = nameOf(hero);
 
-    const model = buildHeroDetailViewModel(snapshot, hero);
+    const model = analytics.buildHeroDetailViewModel(snapshot, hero);
     const summary = [
       ["MATCHES", model.overview.matches == null ? "—" : model.overview.matches.toLocaleString()],
       ["WIN RATE", model.overview.winRate == null ? "—" : model.overview.winRate.toFixed(1) + "%"],
@@ -369,7 +375,7 @@ function renderHeroes(signal) {
       const filters = normalizeAnalyticsFilters(values);
       const [heroCatalog, heroStats] = await Promise.all([
         listHeroes({ ...assetVersion.options(), signal }),
-        getHeroStatsSnapshot({ ...assetVersion.options(), ...filters, signal }),
+        analytics.getHeroStatsSnapshot({ ...assetVersion.options(), ...filters, signal }),
       ]);
       if (signal.aborted) return;
       catalog = heroCatalog.data ?? [];
@@ -406,7 +412,7 @@ function renderHeroes(signal) {
   load(Object.fromEntries(new FormData(form).entries()));
 }
 
-function renderItemDetail(itemId, signal) {
+async function renderItemDetail(itemId, signal) {
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">GAME / ITEMS / DETAIL</span><h2 id="item-detail-name">Item</h2><p>Item definition and assets returned by the current Deadlock API.</p></section>' +
     '<section class="panel"><div id="item-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching item…</span></div><div id="item-detail-summary"></div></section>' +
@@ -415,12 +421,12 @@ function renderItemDetail(itemId, signal) {
 
   Promise.all([
     fetchItem(itemId, { ...assetVersion.options(), signal }),
-    getItemStatsSnapshot({ ...assetVersion.options(), signal, include_item_ids: [Number(itemId)], min_matches: 20 }),
-    getItemPermutationSnapshot({ ...assetVersion.options(), signal, item_ids: [Number(itemId)], min_matches: 20, comb_size: 2 }),
-    getItemFlowSnapshot({ ...assetVersion.options(), signal, include_item_ids: [Number(itemId)], min_matches: 20 }),
+    analytics.getItemStatsSnapshot({ ...assetVersion.options(), signal, include_item_ids: [Number(itemId)], min_matches: 20 }),
+    analytics.getItemPermutationSnapshot({ ...assetVersion.options(), signal, item_ids: [Number(itemId)], min_matches: 20, comb_size: 2 }),
+    analytics.getItemFlowSnapshot({ ...assetVersion.options(), signal, include_item_ids: [Number(itemId)], min_matches: 20 }),
   ]).then(([itemResult, stats, permutations, flow]) => {
     if (signal.aborted) return;
-    const model = buildItemDetailAnalyticsViewModel(itemResult.data, stats, permutations, flow);
+    const model = analytics.buildItemDetailAnalyticsViewModel(itemResult.data, stats, permutations, flow);
     const item = model.item;
     if (!item?.id && !item?.name) {
       $("#item-detail-status").innerHTML = '<span class="eyebrow">NOT FOUND</span><span>Item was not returned by the API.</span>';
@@ -595,7 +601,8 @@ function formatDuration(seconds) {
   return Math.floor(value / 60) + "m " + Math.round(value % 60) + "s";
 }
 
-function renderItemAnalytics(signal) {
+async function renderItemAnalytics(signal) {
+  const analytics = await loadAnalyticsRuntime();
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">ANALYTICS / ITEM INTELLIGENCE</span><h2>Item Intelligence</h2><p>Purchase performance, permutations and phase-to-phase build flow from the documented Deadlock analytics API.</p></section>' +
     '<section class="panel analytics-filter-panel"><div class="section-head"><div><span class="eyebrow">SCOPE</span><h2>Item analytics filters</h2></div><b id="item-analytics-status">LOADING</b></div><form id="item-analytics-filters" class="analytics-filters">' +
@@ -652,9 +659,9 @@ function renderItemAnalytics(signal) {
     try {
       const [items, stats, permutations, flow] = await Promise.all([
         listItems({ ...assetVersion.options(), signal }),
-        getItemStatsSnapshot({ ...assetVersion.options(), ...filters, signal }),
-        getItemPermutationSnapshot({ ...assetVersion.options(), ...filters, signal }),
-        getItemFlowSnapshot({ ...assetVersion.options(), ...filters, signal }),
+        analytics.getItemStatsSnapshot({ ...assetVersion.options(), ...filters, signal }),
+        analytics.getItemPermutationSnapshot({ ...assetVersion.options(), ...filters, signal }),
+        analytics.getItemFlowSnapshot({ ...assetVersion.options(), ...filters, signal }),
       ]);
       if (signal.aborted) return;
       for (const item of items.data ?? []) {
@@ -715,7 +722,8 @@ function renderItemAnalytics(signal) {
   load(normalize(Object.fromEntries(new FormData(form).entries())));
 }
 
-function renderAnalytics(signal) {
+async function renderAnalytics(signal) {
+  const analytics = await loadAnalyticsRuntime();
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">ANALYTICS / MATCH INTELLIGENCE</span><h2>Analytics</h2><p>Aggregate match and hero-ban statistics from the documented analytics API.</p></section>' +
     '<section class="panel analytics-filter-panel"><div class="section-head"><div><span class="eyebrow">FILTERS</span><h2>Analytics scope</h2></div><button id="analytics-reset" class="secondary-button" type="button">Reset</button></div><form id="analytics-filters" class="analytics-filters"><label class="field"><span>Game mode</span><select name="game_mode"><option value="normal" selected>Normal</option><option value="street_brawl">Street Brawl</option></select></label><label class="field"><span>Match mode</span><select name="match_mode"><option value="ranked,unranked" selected>Ranked + Unranked</option><option value="ranked">Ranked</option><option value="unranked">Unranked</option><option value="private_lobby">Private Lobby</option><option value="hero_labs">Hero Labs</option></select></label><label class="field"><span>From</span><input name="min_unix_timestamp" type="date"></label><label class="field"><span>To</span><input name="max_unix_timestamp" type="date"></label><label class="field"><span>Min badge</span><input name="min_average_badge" type="number" min="0" max="116" placeholder="0"></label><label class="field"><span>Max badge</span><input name="max_average_badge" type="number" min="0" max="116" placeholder="116"></label><label class="field"><span>Min duration</span><input name="min_duration_s" type="number" min="0" max="7000" placeholder="seconds"></label><label class="field"><span>Max duration</span><input name="max_duration_s" type="number" min="0" max="7000" placeholder="seconds"></label><label class="field"><span>Min net worth</span><input name="min_networth" type="number" min="0" placeholder="gold"></label><label class="field"><span>Max net worth</span><input name="max_networth" type="number" min="0" placeholder="gold"></label><label class="field"><span>High skill parties</span><select name="is_high_skill_range_parties"><option value="">Any</option><option value="true">Yes</option><option value="false">No</option></select></label><label class="field"><span>Low priority pool</span><select name="is_low_pri_pool"><option value="">Any</option><option value="true">Yes</option><option value="false">No</option></select></label><label class="field"><span>New player pool</span><select name="is_new_player_pool"><option value="">Any</option><option value="true">Yes</option><option value="false">No</option></select></label><label class="field"><span>Hero IDs</span><input name="hero_ids" type="text" inputmode="numeric" placeholder="1, 2, 3"></label><label class="field"><span>Account IDs</span><input name="account_ids" type="text" inputmode="numeric" placeholder="123, 456"></label><label class="field"><span>Include items</span><input name="include_item_ids" type="text" inputmode="numeric" placeholder="item IDs"></label><label class="field"><span>Exclude items</span><input name="exclude_item_ids" type="text" inputmode="numeric" placeholder="item IDs"></label><label class="field"><span>Ability order prefix</span><input name="ability_order_prefix" type="text" inputmode="numeric" placeholder="ability IDs"></label><label class="field"><span>Unlock prefix</span><input name="ability_unlock_order_prefix" type="text" inputmode="numeric" placeholder="ability IDs"></label><label class="field"><span>Combo size</span><select name="comb_size"><option value="2">2 heroes</option><option value="3">3 heroes</option><option value="4">4 heroes</option><option value="5">5 heroes</option><option value="6" selected>6 heroes</option></select></label><button class="primary-button" type="submit">Apply filters</button></form></section>' +
@@ -750,20 +758,21 @@ function renderAnalytics(signal) {
 }
 
 async function loadAnalytics(signal, filters = {}) {
+  const analytics = await loadAnalyticsRuntime();
   try {
     const [snapshotResult, heroStats, matchup, comboStats, buffStats, badgeDistribution] = await Promise.all([
-      getAnalyticsSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), bucket: "start_time_day", signal }),
-      getHeroStatsSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
-      getHeroMatchupSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, signal }),
-      getHeroComboSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, comb_size: Number(filters.comb_size) || 6, signal }),
-      getBuffSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
-      getBadgeDistributionSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
+      analytics.getAnalyticsSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), bucket: "start_time_day", signal }),
+      analytics.getHeroStatsSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
+      analytics.getHeroMatchupSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, signal }),
+      analytics.getHeroComboSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, comb_size: Number(filters.comb_size) || 6, signal }),
+      analytics.getBuffSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
+      analytics.getBadgeDistributionSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
     ]);
     const result = snapshotResult;
     if (signal.aborted) return;
 
-    const game = normalizeGameStats(result.gameStats);
-    const bans = normalizeHeroBanStats(result.heroBanStats);
+    const game = analytics.normalizeGameStats(result.gameStats);
+    const bans = analytics.normalizeHeroBanStats(result.heroBanStats);
     const latest = game.at(-1);
     const summary = $("#analytics-summary");
     const values = [
@@ -895,14 +904,14 @@ async function loadAnalytics(signal, filters = {}) {
       panel.innerHTML = '<p class="muted">Loading builds and ability orders…</p>';
       try {
         const [builds, abilities] = await Promise.all([
-          getHeroBuildStatsSnapshot(heroId, { ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, signal }),
-          getAbilityOrderStatsSnapshot(heroId, { ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, signal }),
+          analytics.getHeroBuildStatsSnapshot(heroId, { ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, signal }),
+          analytics.getAbilityOrderStatsSnapshot(heroId, { ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, signal }),
         ]);
         if (signal.aborted || requestId !== buildRequestId) return;
         const buildRows = [...builds].sort((a,b) => Number(b.matches ?? 0) - Number(a.matches ?? 0)).slice(0, 8);
         const abilityRows = [...abilities].sort((a,b) => Number(b.matches ?? 0) - Number(a.matches ?? 0)).slice(0, 6);
         const rate = (wins, matches) => Number.isFinite(Number(wins)) && Number(matches) > 0 ? ((Number(wins) / Number(matches))*100).toFixed(1) + "%" : "—";
-        const itemRows = await getBuildItemSnapshot(heroId, { ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal });
+        const itemRows = await analytics.getBuildItemSnapshot(heroId, { ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal });
         if (signal.aborted || requestId !== buildRequestId) return;
         const items = [...itemRows].sort((a,b) => Number(b.builds ?? 0) - Number(a.builds ?? 0)).slice(0, 8);
         $("#build-item-list").innerHTML = items.length
@@ -1090,7 +1099,7 @@ function renderBuildDetail(heroId, buildId, signal) {
   const render = async () => {
     try {
       const [snapshot, heroCatalog, tagCatalog] = await Promise.all([
-        getBuildDetailSnapshot(numericHeroId, numericBuildId, { ...assetVersion.options(), signal }),
+        analytics.getBuildDetailSnapshot(numericHeroId, numericBuildId, { ...assetVersion.options(), signal }),
         listHeroes({ ...assetVersion.options(), signal }),
         listBuildTags({ ...assetVersion.options(), signal }),
       ]);
