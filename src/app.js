@@ -134,7 +134,6 @@ function beginRoute() {
 }
 
 async function renderDashboard(signal) {
-  const assetsRuntime = await loadAssetsRuntime();
   el.content.innerHTML = '<section class="hero-banner"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA</span><h2>The city never sleeps.</h2><p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p><div class="pills"><span>API-FIRST</span><span>OPENAPI</span><span>LIVE CONTRACT</span></div></div></section>' +
     '<section class="dashboard-metrics">' +
       '<article class="metric-card"><span>FETCHED MATCHES / 24H</span><strong id="matches-per-day">—</strong><small>API info</small></article>' +
@@ -148,6 +147,7 @@ async function renderDashboard(signal) {
 }
 
 async function loadDashboard(signal) {
+  const assetsRuntime = await loadAssetsRuntime();
   const options = { ...assetVersion.options(), signal };
   const [heroesResult, snapshotResult] = await Promise.allSettled([
     assetsRuntime.listHeroes(options),
