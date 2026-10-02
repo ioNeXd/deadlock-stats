@@ -763,6 +763,90 @@ function schemaFormNode(schema, name, required = false, label = name, path = nam
   return node;
 }
 
+function schemaViewNode(schema, name = "root", path = "$", depth = 0, required = false) {
+  const resolved = schema ?? {};
+  const type = schemaType(resolved);
+  const node = {
+    name,
+    path,
+    depth,
+    type,
+    format: resolved.format ?? null,
+    required,
+    nullable: schemaNullable(resolved),
+    description: resolved.description ?? "",
+    title: resolved.title ?? null,
+    default: resolved.default,
+    example: resolved.example,
+    enum: enumValues(resolved),
+    minimum: resolved.minimum,
+    maximum: resolved.maximum,
+    exclusiveMinimum: resolved.exclusiveMinimum,
+    exclusiveMaximum: resolved.exclusiveMaximum,
+    multipleOf: resolved.multipleOf,
+    minLength: resolved.minLength,
+    maxLength: resolved.maxLength,
+    pattern: resolved.pattern,
+    minItems: resolved.minItems,
+    maxItems: resolved.maxItems,
+    uniqueItems: resolved.uniqueItems,
+    additionalProperties: resolved.additionalProperties,
+  };
+
+  if (type === "object") {
+    node.properties = Object.entries(resolved.properties ?? {}).map(([propertyName, propertySchema]) =>
+      schemaViewNode(
+        propertySchema,
+        propertyName,
+        path + "." + propertyName,
+        depth + 1,
+        (resolved.required ?? []).includes(propertyName),
+      )
+    );
+  } else if (type === "array") {
+    node.items = schemaViewNode(resolved.items ?? {}, "items", path + "[]", depth + 1);
+  }
+
+  for (const keyword of ["oneOf", "anyOf", "allOf"]) {
+    if (Array.isArray(resolved[keyword]) && resolved[keyword].length) {
+      node[keyword] = resolved[keyword].map((variant, index) =>
+        schemaViewNode(variant, keyword + "[" + index + "]", path + "." + keyword + "[" + index + "]", depth + 1)
+      );
+    }
+  }
+
+  return node;
+}
+
+export function buildSchemaViewModel(schema) {
+  if (!schema || typeof schema !== "object") return null;
+  return schemaViewNode(schema, schema.title ?? "Schema");
+}
+
+export function buildRequestExamples(bodyInfo) {
+  if (!bodyInfo || typeof bodyInfo !== "object") return [];
+  const examples = [];
+  if (bodyInfo.example !== undefined) {
+    examples.push({ name: "Default example", summary: "Media type example", value: bodyInfo.example, source: "example" });
+  }
+  for (const [name, example] of Object.entries(bodyInfo.examples ?? {})) {
+    if (!example || example.value === undefined) continue;
+    examples.push({
+      name,
+      summary: example.summary ?? example.description ?? name,
+      value: example.value,
+      source: "examples",
+    });
+  }
+  if (!examples.length && bodyInfo.schema?.example !== undefined) {
+    examples.push({ name: "Schema example", summary: "Schema example", value: bodyInfo.schema.example, source: "schema.example" });
+  }
+  if (!examples.length && bodyInfo.schema?.default !== undefined) {
+    examples.push({ name: "Schema default", summary: "Schema default", value: bodyInfo.schema.default, source: "schema.default" });
+  }
+  return examples;
+}
+
 export function buildSchemaFormModel(schema) {
   if (!schema || typeof schema !== "object") return null;
   return schemaFormNode(schema, "__body", false, schema.title ?? "Request body", "__body", 0);
