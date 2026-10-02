@@ -132,6 +132,14 @@ Parameters are to be classified from the OpenAPI contract using:
 No parameter should be manually assumed to be supported. The Data Explorer should expose API-only parameters without forcing them into specialized pages.
 
 ## Audit status
-The current contract review confirms that the API is materially broader than the current application.
+The endpoint, parameter, schema, content-type and authentication inventories are now generated from the official OpenAPI contract and checked into the repository:
 
-The next implementation step is to generate the machine-readable endpoint/parameter/schema inventory directly from the OpenAPI document, then use that inventory to complete the per-parameter classifications without duplicating the contract by hand.
+- `docs/api-openapi-inventory.json` contains 126 paths, 129 operations and 230 schemas.
+- `docs/api-capability-matrix.json` contains classifications for all 129 operations and their 704 parameters.
+- Deprecated parameters are classified as `DEPRECATED` rather than being exposed as supported UI inputs.
+- The current contract contains one duplicate `operationId`: `feed` is used by both `GET /v1/patches` and `GET /v2/patches`. Operation identity in the Data Explorer therefore uses `METHOD + PATH` via `operationKey`; `operationId` remains display/search metadata.
+- The current contract uses OpenAPI 3.1 composition (`oneOf`, `anyOf`, `allOf`), nullable union types, `const`, enums, numeric/string/array/object constraints and `propertyNames`. The latter is currently present in response/data schemas; the documented request-body schemas do not currently require `propertyNames` validation.
+- A targeted audit found no current request-body usage of `patternProperties`, `prefixItems`, `contains`, `dependentRequired` or `not`. These are therefore not being implemented speculatively in the Data Explorer validator.
+- Current request bodies are JSON in the public contract, including feedback, custom matches, demo queries, live URL ingestion, match-salt ingestion and patron Steam-account operations. No current `multipart/form-data` or `application/x-www-form-urlencoded` request body is documented.
+
+The remaining work in this layer is regression testing and coverage of any newly introduced API schema constructs, not rebuilding the inventory manually.
