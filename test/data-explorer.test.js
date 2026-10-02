@@ -1063,7 +1063,8 @@ test("buildSchemaViewModel describes nested schema metadata and composition", ()
   assert.deepEqual(model.properties.find(item => item.name === "mode").enum, ["ranked", "normal"]);
   assert.equal(model.properties.find(item => item.name === "nested").properties[0].nullable, true);
   assert.equal(model.properties.find(item => item.name === "ids").items.type, "integer");
-  assert.equa
+  assert.equaassert.equal(model.oneOf.length, 2);
+});
 
 test("buildGeneratedSchemaExample creates a validated minimal request example", () => {
   assert.deepEqual(
