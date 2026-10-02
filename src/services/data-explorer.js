@@ -413,20 +413,25 @@ function serializeQueryParameter(parameter, value) {
   return value;
 }
 
+function encodePathComponent(value) {
+  return encodeURIComponent(String(value));
+}
+
 function serializePathParameter(parameter, value) {
   const style = parameter?.style ?? "simple";
   if (Array.isArray(value)) {
-    if (style === "label") return "." + value.join(".");
-    if (style === "matrix") return ";" + parameter.name + "=" + value.join(",");
-    return value.join(",");
+    const items = value.map(encodePathComponent);
+    if (style === "label") return "." + items.join(".");
+    if (style === "matrix") return ";" + parameter.name + "=" + items.join(",");
+    return items.join(",");
   }
   if (value && typeof value === "object") {
-    const pairs = Object.entries(value);
+    const pairs = Object.entries(value).map(([key, item]) => [encodePathComponent(key), encodePathComponent(item)]);
     if (style === "label") return "." + pairs.map(([key, item]) => key + "=" + item).join(",");
     if (style === "matrix") return ";" + pairs.map(([key, item]) => key + "=" + item).join(",");
     return pairs.map(([key, item]) => key + "," + item).join(",");
   }
-  return String(value);
+  return encodePathComponent(value);
 }
 
 function mediaTypeMatches(available, requested) {
