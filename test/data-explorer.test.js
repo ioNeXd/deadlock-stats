@@ -615,6 +615,16 @@ test("buildRequest matches structured suffix media type wildcards", () => {
   assert.deepEqual(request.body, { ok: true });
 });
 
+test("enumValues deduplicates structural object and array values", () => {
+  assert.deepEqual(enumValues({
+    oneOf: [
+      { enum: [{ mode: "ranked" }, { mode: "ranked" }] },
+      { const: { mode: "ranked" } },
+      { enum: [[1, 2], [1, 2]] },
+    ],
+  }), [{ mode: "ranked" }, [1, 2]]);
+});
+
 test("buildRequest validates OpenAPI numeric exclusive and multipleOf constraints", () => {
   const operation = {
     method: "GET", path: "/v1/validate", parameters: [
