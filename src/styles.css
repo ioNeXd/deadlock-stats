@@ -86,3 +86,8 @@
 .map-ziplines{position:absolute;inset:0;width:100%;height:100%;z-index:4;overflow:visible;pointer-events:none}.map-zipline-path{fill:none;stroke:var(--zipline-color,var(--gold));stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:.58;filter:drop-shadow(0 0 3px rgba(201,167,107,.35))}.map-zipline-path:hover{opacity:.95}
 
 .map-panel{position:relative}.map-controls{position:absolute;z-index:20;top:18px;right:18px;display:flex;gap:4px}.map-controls button{min-width:34px;height:32px;border:1px solid var(--line);background:rgba(10,9,8,.9);color:var(--text);font:10px "DM Mono";cursor:pointer}.map-controls button:hover{border-color:var(--gold);color:var(--gold2)}.map-stage{cursor:grab}.map-stage:active{cursor:grabbing}.map-canvas{transform-origin:center center}.map-selection{margin-top:18px;padding-top:15px;border-top:1px solid var(--line)}.map-selection h4{margin:7px 0 10px;font-size:14px}.map-selection p{color:var(--muted);font:9px/1.7 "DM Mono"}.map-selection pre{max-height:230px;overflow:auto;margin:0;padding:10px;background:#090807;border:1px solid var(--line);color:var(--muted);font:8px/1.6 "DM Mono";white-space:pre-wrap;word-break:break-word}
+
+
+.graphql-frame{width:100%;min-height:720px;border:1px solid var(--line,#2a2622);border-radius:14px;background:#fff;margin-top:1rem}
+.panel-actions{display:flex;gap:.75rem;align-items:center}
+.button{display:inline-flex;align-items:center;justify-content:center;padding:.65rem 1rem;border:1px solid var(--line,#2a2622);border-radius:999px;text-decoration:none}
