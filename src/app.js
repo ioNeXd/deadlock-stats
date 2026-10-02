@@ -1300,7 +1300,7 @@ function renderOperation(operation, signal, contract = null) {
         "</div>" +
         '<pre class="error-text">' + esc(error.message) + "</pre>";
     }
-  })
+  });
   const contentTypeSelect = $("#explorer-content-type");
   const bodyEditor = $("#schema-body-editor");
   contentTypeSelect?.addEventListener("change", () => {
