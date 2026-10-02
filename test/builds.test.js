@@ -47,3 +47,31 @@ test("getBuild preserves the documented single-build object response", async () 
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("normalizeBuildDetail preserves build metadata and mod categories", async () => {
+  const { normalizeBuildDetail } = await import("../src/services/builds.js");
+  const result = normalizeBuildDetail({
+    hero_build: {
+      hero_build_id: 42,
+      hero_id: 7,
+      author_account_id: 123,
+      name: "Test build",
+      language: 0,
+      version: 3,
+      origin_build_id: 41,
+      details: {
+        mod_categories: [{
+          name: "Weapon",
+          optional: false,
+          mods: [{ ability_id: 9001, annotation: "Core" }],
+        }],
+      },
+    },
+  });
+  assert.equal(result.heroBuildId, 42);
+  assert.equal(result.heroId, 7);
+  assert.equal(result.categories[0].name, "Weapon");
+  assert.equal(result.categories[0].mods[0].abilityId, 9001);
+  assert.equal(result.categories[0].mods[0].annotation, "Core");
+});
