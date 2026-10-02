@@ -16,9 +16,6 @@ function queryParameters(operation) {
   return (operation?.parameters ?? []).filter(parameter => parameter?.in === "query");
 }
 
-function headerParameters(operation) {
-  return (operation?.parameters ?? []).filter(parameter => parameter?.in === "header");
-}
 
 function resolveSchema(value, contract, seen = new Set()) {
   if (!value || typeof value !== "object" || !contract) return value;
