@@ -1,4 +1,3 @@
-import { probeApiStatus } from "./services/api-status.js";
 import { API_BASE_URL } from "./api/client.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
@@ -12,6 +11,12 @@ let dataExplorerRuntimePromise = null;
 let assetVersionContextPromise = null;
 let assetsRuntimePromise = null;
 let dashboardRuntimePromise = null;
+let apiStatusRuntimePromise = null;
+
+function loadApiStatusRuntime() {
+  if (!apiStatusRuntimePromise) apiStatusRuntimePromise = import("./services/api-status.js");
+  return apiStatusRuntimePromise;
+}
 
 function loadDashboardRuntime() {
   if (!dashboardRuntimePromise) dashboardRuntimePromise = import("./services/dashboard.js");
@@ -983,6 +988,7 @@ n class="eyebrow">SYSTEM / API</span><h2>API Status</h2><p>Live health probe for
 
 async function loadApiStatus(signal) {
   try {
+    const { probeApiStatus } = await loadApiStatusRuntime();
     const result = await probeApiStatus({ signal });
     if (signal.aborted) return;
   const badge = $("#status-badge");
