@@ -418,6 +418,7 @@ test("buildRequest enforces oneOf, anyOf, and allOf parameter schemas", () => {
   };
   assert.equal(buildRequest(oneOfOperation, { value: "42" }).query.value, 42);
   assert.equal(buildRequest(oneOfOperation, { value: "hero" }).query.value, "hero");
+  assert.throws(() => buildRequest(oneOfOperation, { value: "her" }), /oneOf/);
   assert.throws(() => buildRequest(oneOfOperation, { value: "other" }), /oneOf/);
 
   const anyOfOperation = {
