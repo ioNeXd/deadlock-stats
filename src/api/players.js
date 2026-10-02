@@ -77,6 +77,15 @@ export function searchSteamProfiles(searchQuery, options = {}) {
   if (options.limit != null && (!Number.isInteger(options.limit) || options.limit < 1 || options.limit > 1000)) {
     throw new RangeError("limit must be between 1 and 1000");
   }
+  if (options.min_matches_played_last_30d != null && (!Number.isInteger(options.min_matches_played_last_30d) || options.min_matches_played_last_30d < 0)) {
+    throw new RangeError("min_matches_played_last_30d must be a non-negative integer");
+  }
+  if (options.min_last_team_avg_badge != null && (!Number.isInteger(options.min_last_team_avg_badge) || options.min_last_team_avg_badge < 0)) {
+    throw new RangeError("min_last_team_avg_badge must be a non-negative integer");
+  }
+  if (options.matches_played_weight != null && (typeof options.matches_played_weight !== "number" || !Number.isFinite(options.matches_played_weight) || options.matches_played_weight < 0)) {
+    throw new RangeError("matches_played_weight must be a non-negative number");
+  }
   const query = {
     search_query: searchQuery,
     ...(options.limit == null ? {} : { limit: options.limit }),
