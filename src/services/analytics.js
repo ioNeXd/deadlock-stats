@@ -217,6 +217,30 @@ export function buildHeroDetailViewModel(snapshot, hero = null) {
   };
 }
 
+export async function getBuildDetailSnapshot(heroId, buildId, options = {}) {
+  const { signal, ...requestOptions } = options;
+  const [detailResult, performance] = await Promise.all([
+    getBuildDetail(heroId, buildId, { ...requestOptions, signal }),
+    getHeroBuildStatsSnapshot(heroId, {
+      ...requestOptions,
+      hero_build_id: buildId,
+      signal,
+    }),
+  ]);
+
+  const detail = detailResult?.data ?? null;
+  const matchingPerformance = (performance ?? []).find(
+    item => String(item?.heroBuildId) === String(buildId),
+  ) ?? null;
+
+  return {
+    heroId,
+    buildId,
+    detail,
+    performance: matchingPerformance,
+  };
+}
+
 export async function getHeroBuildDetailsSnapshot(heroId, builds, options = {}) {
   const candidates = (builds ?? [])
     .filter(item => String(item?.heroId) === String(heroId) && Number.isInteger(Number(item?.heroBuildId)))
@@ -249,7 +273,7 @@ export async function getHeroDetailSnapshot(heroId, options = {}) {
     counters: matchup.counters.filter(item => String(item.heroId) === String(heroId)),
     synergies: matchup.synergies.filter(item => String(item.heroId1) === String(heroId) || String(item.heroId2) === String(heroId)),
     builds,
-    buildDetails: Array.isArray(snapshot?.buildDetails) ? snapshot.buildDetails : [],
+    buildDetails,
     abilityOrders,
   };
 }
