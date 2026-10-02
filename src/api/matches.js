@@ -1,4 +1,4 @@
-import { apiGet } from "./client.js";
+import { apiGet, apiRequest } from "./client.js";
 import { queryToObject } from "./query.js";
 
 const BULK_METADATA_KEYS = [
@@ -16,17 +16,39 @@ function bulkMetadataOptions(options = {}) {
   const source = queryToObject(query);
   const topLevel = Object.fromEntries(Object.entries(rest).filter(([key]) => BULK_METADATA_KEYS.includes(key)));
   const merged = { ...source, ...topLevel };
-  for (const key of ["match_ids","account_ids"]) {
-    if (Array.isArray(merged[key])) merged[key] = merged[key];
-  }
-  for (const key of ["hero_ids","include_item_ids","exclude_item_ids"]) {
-    if (Array.isArray(merged[key])) merged[key] = merged[key].join(",");
-  }
-  return { ...rest, query: Object.fromEntries(Object.entries(merged).filter(([key]) => BULK_METADATA_KEYS.includes(key) && merged[key] !== undefined && merged[key] !== null)) };
+  return {
+    ...rest,
+    query: Object.fromEntries(
+      Object.entries(merged).filter(([key, value]) =>
+        BULK_METADATA_KEYS.includes(key) && value !== undefined && value !== null
+      ),
+    ),
+  };
+}
+
+function validateNumericId(value, name) {
+  if (!Number.isInteger(value) || value < 0) throw new RangeError(name + " must be a non-negative integer");
+  return value;
+}
+
+function matchPath(matchId, suffix = "") {
+  return "/v1/matches/" + encodeURIComponent(validateNumericId(matchId, "matchId")) + suffix;
+}
+
+function lobbyPath(lobbyId, action) {
+  return "/v1/matches/custom/" + encodeURIComponent(String(lobbyId)) + "/" + action;
+}
+
+function partyMatchPath(partyId) {
+  return "/v1/matches/custom/" + encodeURIComponent(String(partyId)) + "/match-id";
 }
 
 export function getActiveMatches(options = {}) {
   return apiGet("/v1/matches/active", options);
+}
+
+export function getActiveMatchesRaw(options = {}) {
+  return apiGet("/v1/matches/active/raw", { ...options, responseType: "arrayBuffer" });
 }
 
 export function getRecentlyFetchedMatches(options = {}) {
@@ -34,13 +56,92 @@ export function getRecentlyFetchedMatches(options = {}) {
 }
 
 export function getMatchMetadata(matchId, options = {}) {
-  return apiGet(`/v1/matches/${encodeURIComponent(matchId)}/metadata`, options);
+  return apiGet(matchPath(matchId, "/metadata"), options);
+}
+
+export function getRawMatchMetadata(matchId, options = {}) {
+  return apiGet(matchPath(matchId, "/metadata/raw"), options);
+}
+
+export function getMatchLiveUrl(matchId, options = {}) {
+  return apiGet(matchPath(matchId, "/live/url"), options);
 }
 
 export function getMatchSalts(matchId, options = {}) {
-  return apiGet(`/v1/matches/${encodeURIComponent(matchId)}/salts`, options);
+  return apiGet(matchPath(matchId, "/salts"), options);
 }
 
 export function getBulkMatchMetadata(options = {}) {
   return apiGet("/v1/matches/metadata", bulkMetadataOptions(options));
+}
+
+export function createCustomMatch(body, options = {}) {
+  return apiRequest("/v1/matches/custom/create", {
+    ...options,
+    method: "POST",
+    body,
+  });
+}
+
+export function leaveCustomMatch(lobbyId, options = {}) {
+  return apiRequest(lobbyPath(lobbyId, "leave"), { ...options, method: "POST" });
+}
+
+export function readyCustomMatch(lobbyId, options = {}) {
+  return apiRequest(lobbyPath(lobbyId, "ready"), { ...options, method: "POST" });
+}
+
+export function startCustomMatch(lobbyId, options = {}) {
+  return apiRequest(lobbyPath(lobbyId, "start"), { ...options, method: "POST" });
+}
+
+export function unreadyCustomMatch(lobbyId, options = {}) {
+  return apiRequest(lobbyPath(lobbyId, "unready"), { ...options, method: "POST" });
+}
+
+export function getCustomMatchId(partyId, options = {}) {
+  return apiGet(partyMatchPath(partyId), options);
+}
+
+export function getLiveQuery(options = {}) {
+  return apiGet("/v1/matches/demo/live/query", options);
+}
+
+export function submitDemoQuery(body, options = {}) {
+  return apiRequest("/v1/matches/demo/query", {
+    ...options,
+    method: "POST",
+    body,
+  });
+}
+
+export function getDemoQueryStatus(jobId, options = {}) {
+  return apiGet("/v1/matches/demo/query/" + encodeURIComponent(String(jobId)), options);
+}
+
+export function getDemoSchema(matchId, options = {}) {
+  return apiGet("/v1/matches/demo/schema", {
+    ...options,
+    query: { ...(options.query ?? {}), match_id: validateNumericId(matchId, "matchId") },
+  });
+}
+
+export function getLiveUrls(options = {}) {
+  return apiGet("/v1/matches/live/urls", options);
+}
+
+export function ingestLiveUrls(body, options = {}) {
+  return apiRequest("/v1/matches/live/urls", {
+    ...options,
+    method: "POST",
+    body,
+  });
+}
+
+export function ingestMatchSalts(body, options = {}) {
+  return apiRequest("/v1/matches/salts", {
+    ...options,
+    method: "POST",
+    body,
+  });
 }
