@@ -210,3 +210,21 @@
 .schema-view-item > .schema-view-node {
   margin-top: .25rem;
 }
+
+
+.explorer-preset-actions {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-top: .6rem;
+  flex-wrap: wrap;
+}
+
+.explorer-preset-actions .explorer-input {
+  flex: 1 1 14rem;
+  min-width: 12rem;
+}
+
+.explorer-preset-actions button {
+  white-space: nowrap;
+}
