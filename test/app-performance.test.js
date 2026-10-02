@@ -47,3 +47,8 @@ test("app defers dashboard runtime", () => {
   assert.doesNotMatch(appSource, /from ["']\.\/services\/dashboard\.js["']/);
   assert.match(appSource, /import\(\s*["']\.\/services\/dashboard\.js["']/);
 });
+
+test("app defers API status runtime", () => {
+  assert.doesNotMatch(appSource, /from ["']\.\/services\/api-status\.js["']/);
+  assert.match(appSource, /import\(\s*["']\.\/services\/api-status\.js["']/);
+});
