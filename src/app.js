@@ -14,6 +14,7 @@ import { fetchMap } from "./services/assets.js";
 import { loadLeaderboard } from "./services/leaderboard.js";
 import { searchPlayers, loadPlayerRank, loadPlayerHeroStats, loadPlayerMatchHistory } from "./services/players.js";
 import { safeExternalUrl } from "./ui/security.js";
+import { listUserRequestPresets, saveUserRequestPreset, deleteUserRequestPreset } from "./services/data-explorer-presets.js";
 import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats } from "./services/analytics.js";
 
 const $ = selector => document.querySelector(selector);
@@ -1273,8 +1274,10 @@ function renderOperation(operation, signal, contract = null) {
       '<label class="field"><span>Content type <small>OpenAPI</small></span><select name="__contentType" id="explorer-content-type">' +
       bodyTypes.map(item => '<option value="' + esc(item.mediaType) + '">' + esc(item.mediaType) + '</option>').join("") +
       '</select></label>' +
-      '<label class="field"><span>Example / preset <small>contract</small></span><select id="explorer-body-example"' + (initialExamples.length ? "" : " hidden") + '><option value="">— choose example —</option>' +
-        initialExamples.map((example, index) => '<option value="' + index + '">' + esc(example.name) + (example.source === "generated" ? " · generated" : "") + '</option>').join("") + '</select></label>' +
+      '<label class="field"><span>Example / preset <small>contract + saved</small></span><select id="explorer-body-example"' + (initialExamples.length ? "" : " hidden") + '><option value="">— choose example —</option>' +
+        initialExamples.map((example, index) => '<option value="contract:' + index + '">' + esc(example.name) + (example.source === "generated" ? " · generated" : "") + '</option>').join("") + '</select>' +
+      '<div class="panel-actions explorer-preset-actions"><input id="explorer-preset-name" class="explorer-input" type="text" maxlength="80" placeholder="Saved preset name" aria-label="Saved preset name">' +
+      '<button type="button" class="secondary-button" id="explorer-save-preset">Save current</button><button type="button" class="secondary-button" id="explorer-delete-preset" disabled>Delete saved</button></div></label>' +
       '<div id="schema-body-editor">' + (bodyModel ? schemaFieldControl(bodyModel) : '<label class="field"><span>Payload</span><textarea name="__body" rows="8" placeholder="Request payload"></textarea></label>') + '</div>' +
       '<p class="muted schema-body-note">Fields, defaults, constraints and examples are derived from the current OpenAPI contract. Arrays and free-form objects accept JSON.</p></section>'
     : "";
@@ -1331,33 +1334,121 @@ function renderOperation(operation, signal, contract = null) {
   });
   const contentTypeSelect = $("#explorer-content-type");
   const bodyEditor = $("#schema-body-editor");
+  const presetState = { selectedId: null, presets: [] };
+  const renderRequestPresets = selected => {
+    const examples = buildRequestExamples(selected);
+    const presets = listUserRequestPresets(operation.operationKey, selected?.mediaType);
+    presetState.presets = presets;
+    presetState.selectedId = null;
+    const exampleSelect = $("#explorer-body-example");
+    if (!exampleSelect) return;
+
+    const options = examples.map((example, index) =>
+      '<option value="contract:' + index + '">' + esc(example.name) +
+      (example.source === "generated" ? " · generated" : "") + '</option>'
+    );
+    if (presets.length) {
+      options.push('<optgroup label="Saved">' +
+        presets.map(preset => '<option value="user:' + esc(preset.id) + '">' + esc(preset.name) + '</option>').join("") +
+        '</optgroup>');
+    }
+    exampleSelect.innerHTML = '<option value="">— choose example —</option>' + options.join("");
+    exampleSelect.hidden = !examples.length && !presets.length;
+    exampleSelect.dataset.examples = JSON.stringify(examples);
+  };
+
   const rebuildBodyEditor = selected => {
     const selectedModel = selected?.schema ? buildSchemaFormModel(selected.schema) : null;
     bodyEditor.innerHTML = selectedModel ? schemaFieldControl(selectedModel) : '<label class="field"><span>Payload</span><textarea data-body-field="__body" rows="8" placeholder="Request payload"></textarea></label>';
-    const examples = buildRequestExamples(selected);
-    const exampleSelect = $("#explorer-body-example");
-    if (exampleSelect) {
-      exampleSelect.innerHTML = '<option value="">— choose documented example —</option>' +
-        examples.map((example, index) => '<option value="' + index + '">' + esc(example.name) + '</option>').join("");
-      exampleSelect.hidden = !examples.length;
-      exampleSelect.dataset.examples = JSON.stringify(examples);
-    }
+    renderRequestPresets(selected);
   };
   contentTypeSelect?.addEventListener("change", () => {
     rebuildBodyEditor(bodyTypes.find(item => item.mediaType === contentTypeSelect.value) ?? initialBody);
   });
   const exampleSelect = $("#explorer-body-example");
-  if (exampleSelect) {
-    exampleSelect.dataset.examples = JSON.stringify(initialExamples);
-    exampleSelect.addEventListener("change", () => {
-      const index = Number(exampleSelect.value);
+  const presetNameInput = $("#explorer-preset-name");
+  const savePresetButton = $("#explorer-save-preset");
+  const deletePresetButton = $("#explorer-delete-preset");
+
+  const currentBodyValue = () => {
+    const selected = bodyTypes.find(item => item.mediaType === contentTypeSelect?.value) ?? initialBody;
+    const model = selected?.schema ? buildSchemaFormModel(selected.schema) : null;
+    const form = $("#operation-form");
+    if (!form) return undefined;
+    if (model) return buildStructuredBody(form, model);
+    const raw = form.elements.__body?.value ?? "";
+    if (!raw.trim()) return undefined;
+    try { return JSON.parse(raw); } catch { return raw; }
+  };
+
+  exampleSelect?.addEventListener("change", () => {
+    const selected = bodyTypes.find(item => item.mediaType === contentTypeSelect?.value) ?? initialBody;
+    const model = selected?.schema ? buildSchemaFormModel(selected.schema) : null;
+    const value = exampleSelect.value;
+    if (value.startsWith("contract:")) {
+      const index = Number(value.slice("contract:".length));
       const examples = JSON.parse(exampleSelect.dataset.examples || "[]");
-      if (!Number.isInteger(index) || !examples[index]) return;
+      if (Number.isInteger(index) && examples[index]) applySchemaExample($("#operation-form"), model, examples[index].value);
+      presetState.selectedId = null;
+      if (deletePresetButton) deletePresetButton.disabled = true;
+      return;
+    }
+
+    if (value.startsWith("user:")) {
+      const preset = presetState.presets.find(item => item.id === value.slice("user:".length));
+      if (!preset) return;
+      applySchemaExample($("#operation-form"), model, preset.value);
+      presetState.selectedId = preset.id;
+      if (deletePresetButton) deletePresetButton.disabled = false;
+      if (presetNameInput) presetNameInput.value = preset.name;
+      return;
+    }
+
+    presetState.selectedId = null;
+    if (deletePresetButton) deletePresetButton.disabled = true;
+  });
+
+  savePresetButton?.addEventListener("click", () => {
+    const selected = bodyTypes.find(item => item.mediaType === contentTypeSelect?.value) ?? initialBody;
+    const name = presetNameInput?.value.trim() ?? "";
+    if (!name) {
+      presetNameInput?.focus();
+      return;
+    }
+
+    try {
+      const preset = saveUserRequestPreset({
+        operationKey: operation.operationKey,
+        mediaType: selected?.mediaType ?? "application/json",
+        name,
+        value: currentBodyValue(),
+      });
+      if (!preset) return;
+      renderRequestPresets(selected);
+      exampleSelect.value = "user:" + preset.id;
+      presetState.selectedId = preset.id;
+      if (deletePresetButton) deletePresetButton.disabled = false;
+    } catch (error) {
+      console.warn("Deadlock request preset could not be saved", error);
+    }
+  });
+
+  deletePresetButton?.addEventListener("click", () => {
+    if (!presetState.selectedId) return;
+    try {
+      if (!deleteUserRequestPreset(presetState.selectedId)) return;
       const selected = bodyTypes.find(item => item.mediaType === contentTypeSelect?.value) ?? initialBody;
-      const model = selected?.schema ? buildSchemaFormModel(selected.schema) : null;
-      applySchemaExample($("#operation-form"), model, examples[index].value);
-    });
-  }
+      renderRequestPresets(selected);
+      if (presetNameInput) presetNameInput.value = "";
+      presetState.selectedId = null;
+      deletePresetButton.disabled = true;
+      exampleSelect.value = "";
+    } catch (error) {
+      console.warn("Deadlock request preset could not be deleted", error);
+    }
+  });
+
+  renderRequestPresets(initialBody);
 
   const requestSchemaHtml = bodyTypes.map(item => item.schema
     ? renderSchemaViewer(buildSchemaViewModel(item.schema), "Request · " + item.mediaType)
