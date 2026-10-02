@@ -15,7 +15,7 @@ import { loadLeaderboard } from "./services/leaderboard.js";
 import { searchPlayers, loadPlayerRank, loadPlayerHeroStats, loadPlayerMatchHistory } from "./services/players.js";
 import { safeExternalUrl } from "./ui/security.js";
 import { listUserRequestPresets, saveUserRequestPreset, deleteUserRequestPreset } from "./services/data-explorer-presets.js";
-import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroDetailSnapshot, getBuildDetailSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats, buildHeroDetailViewModel } from "./services/analytics.js";
+import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroDetailSnapshot, getBuildDetailSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats, buildHeroDetailViewModel, buildItemDetailAnalyticsViewModel } from "./services/analytics.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
@@ -392,29 +392,54 @@ function renderItemDetail(itemId, signal) {
     '<section class="page-head"><span class="eyebrow">GAME / ITEMS / DETAIL</span><h2 id="item-detail-name">Item</h2><p>Item definition and assets returned by the current Deadlock API.</p></section>' +
     '<section class="panel"><div id="item-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching item…</span></div><div id="item-detail-summary"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">ASSET DATA</span><h2>Images</h2></div></div><div id="item-detail-images"></div></section>' +
-    '<section class="panel"><div class="section-head"><div><span class="eyebrow">RAW API</span><h2>Definition</h2></div></div><pre id="item-detail-raw" class="code-block"></pre></section>';
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">INTELLIGENCE</span><h2>Item performance & progression</h2></div></div><div id="item-detail-intelligence"></div></section>' + '<section class="panel"><div class="section-head"><div><span class="eyebrow">RAW API</span><h2>Definition</h2></div></div><pre id="item-detail-raw" class="code-block"></pre></section>';
 
-  fetchItem(itemId, { ...assetVersion.options(), signal }).then(result => {
+  Promise.all([
+    fetchItem(itemId, { ...assetVersion.options(), signal }),
+    getItemStatsSnapshot({ ...assetVersion.options(), signal, min_matches: 20 }),
+    getItemPermutationSnapshot({ ...assetVersion.options(), signal, min_matches: 20, comb_size: 2 }),
+    getItemFlowSnapshot({ ...assetVersion.options(), signal, min_matches: 20 }),
+  ]).then(([itemResult, stats, permutations, flow]) => {
     if (signal.aborted) return;
-    const model = buildItemDetailViewModel(result.data);
-    if (!model.id && !model.name) {
+    const model = buildItemDetailAnalyticsViewModel(itemResult.data, stats, permutations, flow);
+    const item = model.item;
+    if (!item?.id && !item?.name) {
       $("#item-detail-status").innerHTML = '<span class="eyebrow">NOT FOUND</span><span>Item was not returned by the API.</span>';
       return;
     }
-    $("#item-detail-name").textContent = model.name ?? ("Item " + itemId);
+    $("#item-detail-name").textContent = item.name ?? ("Item " + itemId);
+    const performance = model.performance;
     $("#item-detail-summary").innerHTML =
       '<div class="match-detail-summary">' +
-      '<div class="metric"><span>ID</span><strong>' + esc(model.id ?? itemId) + '</strong></div>' +
-      '<div class="metric"><span>Class</span><strong>' + esc(model.className ?? "—") + '</strong></div>' +
-      '<div class="metric"><span>Type</span><strong>' + esc(model.type ?? "—") + '</strong></div>' +
-      '<div class="metric"><span>Slot</span><strong>' + esc(model.slotType ?? "—") + '</strong></div>' +
+      '<div class="metric"><span>ID</span><strong>' + esc(model.itemId ?? itemId) + '</strong></div>' +
+      '<div class="metric"><span>TYPE</span><strong>' + esc(item.type ?? "—") + '</strong></div>' +
+      '<div class="metric"><span>WIN RATE</span><strong>' + esc(performance?.winRate == null ? "—" : performance.winRate.toFixed(1) + "%") + '</strong></div>' +
+      '<div class="metric"><span>MATCHES</span><strong>' + esc(performance?.matches == null ? "—" : performance.matches.toLocaleString()) + '</strong></div>' +
+      '<div class="metric"><span>AVG BUY</span><strong>' + esc(formatDuration(performance?.avgBuyTimeS)) + '</strong></div>' +
+      '<div class="metric"><span>AVG SELL</span><strong>' + esc(formatDuration(performance?.avgSellTimeS)) + '</strong></div>' +
       '</div>';
-    const images = Object.entries(model.images).filter(([, value]) => typeof value === "string" && value);
+    const images = Object.entries(item.images ?? {}).filter(([, value]) => typeof value === "string" && value);
     $("#item-detail-images").innerHTML = images.map(([key, value]) =>
       '<div class="analytics-table-row"><span><strong>' + esc(key) + '</strong></span><span><a href="' + esc(safeExternalUrl(value)) + '" target="_blank" rel="noreferrer">Open asset</a></span></div>'
     ).join("") || '<p class="muted">No image assets returned.</p>';
-    $("#item-detail-raw").textContent = JSON.stringify(model.raw, null, 2);
-    $("#item-detail-status").innerHTML = '<span class="eyebrow">LOADED</span><span>Item definition received from the API.</span>';
+    $("#item-detail-raw").textContent = JSON.stringify(item.raw ?? item, null, 2);
+
+    const permutationList = model.permutations.slice(0, 20).map(row => {
+      const names = row.itemIds.map(id => String(id) === String(model.itemId) ? (item.name ?? "Current item") : "Item " + id);
+      const rate = Number(row.matches) > 0 ? Number(row.wins) / Number(row.matches) * 100 : null;
+      return '<div class="analytics-table-row"><span>' + esc(names.join(" + ")) + '<small class="matchup-meta">IDs ' + esc(row.itemIds.join(", ")) + '</small></span><strong>' + esc(rate == null ? "—" : rate.toFixed(1) + "%") + ' · ' + esc(row.matches ?? 0) + '</strong></div>';
+    }).join("");
+    const flowList = model.flowNodes.map(node =>
+      '<div class="analytics-table-row"><span><strong>PHASE ' + esc(Number(node.column ?? 0) + 1) + '</strong><small class="matchup-meta">' + esc(node.itemId) + '</small></span><strong>' + esc(node.matches ?? 0) + ' matches</strong></div>'
+    ).join("");
+    const flowEdges = model.flowEdges.slice(0, 20).map(edge => {
+      const other = edge.direction === "out" ? edge.toItemId : edge.fromItemId;
+      return '<div class="analytics-table-row"><span>' + esc(edge.direction === "out" ? "→ Item " + other : "Item " + other + " →") + '</span><strong>' + esc(edge.matches ?? 0) + ' matches</strong></div>';
+    }).join("");
+    $("#item-detail-intelligence").innerHTML =
+      '<section><div class="section-head"><div><span class="eyebrow">COMBINATIONS</span><h3>Frequent item pairs</h3></div></div>' + (permutationList || '<p class="muted">No qualifying combinations returned.</p>') + '</section>' +
+      '<section><div class="section-head"><div><span class="eyebrow">FLOW</span><h3>Purchase progression</h3></div></div>' + (flowList || '<p class="muted">No qualifying flow nodes returned.</p>') + (flowEdges ? '<div class="section-head"><div><span class="eyebrow">TRANSITIONS</span><h3>Adjacent purchases</h3></div></div>' + flowEdges : '') + '</section>';
+    $("#item-detail-status").innerHTML = '<span class="eyebrow">LOADED</span><span>Definition and analytics received from the API.</span>';
   }).catch(error => {
     if (isAborted(error)) return;
     $("#item-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span>' + esc(error.message) + '</span>';
