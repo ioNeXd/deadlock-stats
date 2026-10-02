@@ -15,7 +15,7 @@ test("GraphQL playground targets the official API endpoint", async () => {
   try {
     const result = await getGraphqlPlayground();
     assert.equal(request.pathname, "/v1/graphql");
-    assert.match(result, /GraphiQL/);
+    assert.match(result.data, /GraphiQL/);
   } finally {
     globalThis.fetch = originalFetch;
   }
