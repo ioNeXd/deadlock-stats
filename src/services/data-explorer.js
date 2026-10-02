@@ -569,6 +569,29 @@ function validateRequestBody(value, schema, path = "$") {
     throw new TypeError(`Invalid request body at ${path}: value is not in enum.`);
   }
 
+  if (typeof value === "number") {
+    validateNumericConstraints(value, schema);
+  }
+  if (typeof value === "string") {
+    if (schema.minLength !== undefined && value.length < schema.minLength) {
+      throw new TypeError(`Invalid request body at ${path}: shorter than minLength.`);
+    }
+    if (schema.maxLength !== undefined && value.length > schema.maxLength) {
+      throw new TypeError(`Invalid request body at ${path}: exceeds maxLength.`);
+    }
+    if (schema.pattern !== undefined) {
+      let pattern;
+      try {
+        pattern = new RegExp(schema.pattern);
+      } catch {
+        throw new TypeError(`Invalid request body at ${path}: schema contains an invalid pattern.`);
+      }
+      if (!pattern.test(value)) {
+        throw new TypeError(`Invalid request body at ${path}: pattern mismatch.`);
+      }
+    }
+  }
+
   const type = schemaType(schema);
   if (type === "object") {
     if (typeof value !== "object" || Array.isArray(value)) {
