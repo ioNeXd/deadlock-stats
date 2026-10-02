@@ -142,18 +142,17 @@ test("match API exposes current advanced endpoints and JSON request bodies", asy
     assert.deepEqual(JSON.parse(calls[3].body), { game_mode: "normal" });
     assert.equal(calls[4].url.pathname, "/v1/matches/custom/77/ready");
     assert.equal(calls[5].url.pathname, "/v1/matches/custom/88/match-id");
-    assert.equal(calls[6].url.pathname, "/v1/matches/demo/live/query");
-    assert.equal(calls[7].url.pathname, "/v1/matches/demo/query");
-    assert.equal(calls[8].url.pathname, "/v1/matches/demo/query/job-1");
-    assert.equal(calls[9].url.pathname, "/v1/matches/demo/schema");
-    assert.equal(calls[9].url.searchParams.get("match_id"), "123");
-    assert.equal(calls[9].url.searchParams.get("format"), "json");
-    assert.equal(calls[10].url.pathname, "/v1/matches/demo/live/query");
-    assert.equal(calls[10].method, "GET");
-    assert.equal(calls[12].url.pathname, "/v1/matches/live/urls");
+    assert.equal(calls[6].url.pathname, "/v1/matches/demo/query");
+    assert.equal(calls[7].url.pathname, "/v1/matches/demo/query/job-1");
+    assert.equal(calls[8].url.pathname, "/v1/matches/demo/schema");
+    assert.equal(calls[8].url.searchParams.get("match_id"), "123");
+    assert.equal(calls[8].url.searchParams.get("format"), "json");
+    assert.equal(calls[9].url.pathname, "/v1/matches/demo/live/query");
+    assert.equal(calls[9].method, "GET");
+    assert.equal(calls[10].url.pathname, "/v1/matches/live/urls");
     assert.equal(calls[11].url.pathname, "/v1/matches/live/urls");
-    assert.equal(calls[13].method, "POST");
-    assert.equal(calls[13].url.pathname, "/v1/matches/salts");
+    assert.equal(calls[11].method, "POST");
+    assert.equal(calls[12].url.pathname, "/v1/matches/salts");
     assert.equal(calls[12].method, "POST");
   } finally {
     globalThis.fetch = originalFetch;
