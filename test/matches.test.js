@@ -182,7 +182,7 @@ test("match snapshots normalize active and recently fetched responses and preser
     const recentPromise = import("../src/services/matches.js").then(({ getRecentlyFetchedMatchesSnapshot }) =>
       getRecentlyFetchedMatchesSnapshot({ signal: controller.signal, cache: false, dedupe: false }));
 
-    await Promise.resolve();
+    await new Promise(resolve => setImmediate(resolve));
     assert.equal(calls.length, 2);
     assert.ok(calls.every(call => call.signal instanceof AbortSignal));
 
