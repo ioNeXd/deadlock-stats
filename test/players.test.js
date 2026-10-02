@@ -59,6 +59,9 @@ test("batch player ranks and Steam search use current documented endpoints", asy
     assert.throws(() => searchSteamProfiles(""), TypeError);
     assert.throws(() => searchSteamProfiles("detective", { limit: 0 }), RangeError);
     assert.throws(() => searchSteamProfiles("detective", { limit: 1001 }), RangeError);
+    assert.throws(() => searchSteamProfiles("detective", { min_matches_played_last_30d: -1 }), RangeError);
+    assert.throws(() => searchSteamProfiles("detective", { min_last_team_avg_badge: -1 }), RangeError);
+    assert.throws(() => searchSteamProfiles("detective", { matches_played_weight: -0.1 }), RangeError);
     await getPlayerRanks([1, 2]);
     await searchSteamProfiles("detective", { limit: 25, unsupported: "drop" });
     assert.equal(calls[0].pathname, "/v1/players/rank");
