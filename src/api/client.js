@@ -126,7 +126,7 @@ function retryDelay(attempt, retryAfter) {
 }
 
 function shouldRetry(status) {
-  return status === 429 || status === 502 || status === 503 || status === 504;
+  return status === 408 || status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
 }
 
 function isRetryableMethod(method, retryNonIdempotent) {
