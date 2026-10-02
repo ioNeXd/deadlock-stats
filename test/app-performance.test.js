@@ -11,6 +11,8 @@ test("app defers non-critical explorer and GraphQL modules", () => {
 });
 
 test("app defers asset version network context outside dashboard and maps", () => {
-  assert.doesNotMatch(appSource, /const initialSelectedVersion = assetVersion\.get\(\);\s*loadAssetVersionContext\(\)\.then\(/);
+  const routeSource = appSource.slice(appSource.indexOf("function route("));
+  assert.doesNotMatch(appSource.slice(0, appSource.indexOf("function route(")), /loadAssetVersionContext\(\)/);
+  assert.match(routeSource, /const initialSelectedVersion = assetVersion\.get\(\);\s*loadAssetVersionContext\(\)\.then\(/);
   assert.match(appSource, /if \(routeName === "dashboard" \|\| routeName === "maps"\)\s*\{/);
 });
