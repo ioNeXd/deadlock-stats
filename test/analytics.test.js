@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroCombStats, getHeroBuildStats, getAbilityOrderStats, getBadgeDistribution, getBuffStats, getBuildItemStats, getItemStats, getItemPermutationStats, getItemFlowStats, getLaneMatchupStats, getLaneSoulCurve, getPlayerPerformanceCurve, getPlayerStatsMetrics, getHeroScoreboard, getPlayerScoreboard, getKillDeathStats } from "../src/api/analytics.js";
-import { normalizeGameStats, normalizeHeroBanStats, normalizeBadgeDistribution, normalizeHeroStats, getHeroDetailSnapshot, buildHeroDetailViewModel, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats, normalizeItemStats, normalizeItemPermutationStats, normalizeItemFlowStats, normalizePlayerPerformanceCurve, normalizeHeroScoreboard, normalizePlayerScoreboard, normalizeKillDeathStats, normalizeLaneMatchupStats, normalizeLaneSoulCurve, normalizePlayerStatsMetrics } from "../src/services/analytics.js";
+import { normalizeGameStats, normalizeHeroBanStats, normalizeBadgeDistribution, normalizeHeroStats, getHeroDetailSnapshot, buildHeroDetailViewModel, normalizeHeroCounterStats, normalizeHeroSynergyStats, normalizeHeroCombStats, normalizeHeroBuildStats, normalizeAbilityOrderStats, normalizeHeroCombAnalytics, normalizeBuildItemStats, normalizeBuffStats, normalizeItemStats, normalizeItemPermutationStats, normalizeItemFlowStats, normalizePlayerPerformanceCurve, normalizeHeroScoreboard, normalizePlayerScoreboard, normalizeKillDeathStats, normalizeLaneMatchupStats, normalizeLaneSoulCurve, normalizePlayerStatsMetrics, getBuildDetailSnapshot } from "../src/services/analytics.js";
 import { clearApiCache } from "../src/api/client.js";
 
 const originalFetch = globalThis.fetch;
@@ -11,6 +11,43 @@ test.afterEach(() => {
   globalThis.fetch = originalFetch;
   clearApiCache();
 });
+
+test("build detail snapshot composes build metadata with scoped performance", async () => {
+  const calls = [];
+  globalThis.fetch = async input => {
+    const url = new URL(input);
+    calls.push(url);
+    if (url.pathname === "/v1/builds/7/42") {
+      return new Response(JSON.stringify({
+        hero_build: {
+          hero_build_id: 42,
+          hero_id: 7,
+          name: "Core build",
+          version: 3,
+          details: { mod_categories: [] },
+        },
+      }), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    if (url.pathname === "/v1/analytics/hero-build-stats/7") {
+      return new Response(JSON.stringify([
+        { hero_id: 7, hero_build_id: 42, wins: 60, losses: 40, matches: 100, players: 88 },
+        { hero_id: 7, hero_build_id: 99, wins: 10, losses: 10, matches: 20, players: 18 },
+      ]), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    return new Response("[]", { status: 404, headers: { "content-type": "application/json" } });
+  };
+
+  const snapshot = await getBuildDetailSnapshot(7, 42, { cache: false, dedupe: false });
+
+  assert.deepEqual(calls.map(url => url.pathname).sort(), [
+    "/v1/analytics/hero-build-stats/7",
+    "/v1/builds/7/42",
+  ]);
+  assert.equal(snapshot.detail.heroBuildId, 42);
+  assert.equal(snapshot.performance.heroBuildId, 42);
+  assert.equal(snapshot.performance.matches, 100);
+});
+
 
 test("analytics API wrappers use documented endpoints and query parameters", async () => {
   const calls = [];
