@@ -778,6 +778,7 @@ function schemaViewNode(schema, name = "root", path = "$", depth = 0, required =
     title: resolved.title ?? null,
     default: resolved.default,
     example: resolved.example,
+    examples: Array.isArray(resolved.examples) ? resolved.examples : [],
     enum: enumValues(resolved),
     minimum: resolved.minimum,
     maximum: resolved.maximum,
@@ -840,6 +841,11 @@ export function buildRequestExamples(bodyInfo) {
   }
   if (!examples.length && bodyInfo.schema?.example !== undefined) {
     examples.push({ name: "Schema example", summary: "Schema example", value: bodyInfo.schema.example, source: "schema.example" });
+  }
+  if (!examples.length && Array.isArray(bodyInfo.schema?.examples)) {
+    bodyInfo.schema.examples.forEach((value, index) => {
+      examples.push({ name: "Schema example " + (index + 1), summary: "Schema examples", value, source: "schema.examples" });
+    });
   }
   if (!examples.length && bodyInfo.schema?.default !== undefined) {
     examples.push({ name: "Schema default", summary: "Schema default", value: bodyInfo.schema.default, source: "schema.default" });
