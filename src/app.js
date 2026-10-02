@@ -1,5 +1,5 @@
 import { getActiveMatchesSnapshot, getRecentlyFetchedMatchesSnapshot, getBulkMatchMetadataSnapshot } from "./services/matches.js";
-import { listHeroes, listItems, listRanks, listMiscEntities } from "./services/assets.js";
+import { listHeroes, listItems, listRanks, listMiscEntities, listBuildTags } from "./services/assets.js";
 import { getOpenApiContract } from "./services/versioning.js";
 import { probeApiStatus } from "./services/api-status.js";
 import { buildRequestExamples, buildSchemaFormModel, buildSchemaViewModel, describeOperation, executeOperation, listApiOperations, parseSchemaFormValue } from "./services/data-explorer.js";
@@ -9,13 +9,13 @@ import { loadGraphqlPlayground } from "./services/graphql.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
-import { listBuilds } from "./services/builds.js";
+import { listBuilds, buildBuildDetailViewModel } from "./services/builds.js";
 import { fetchMap } from "./services/assets.js";
 import { loadLeaderboard } from "./services/leaderboard.js";
 import { searchPlayers, loadPlayerRank, loadPlayerHeroStats, loadPlayerMatchHistory } from "./services/players.js";
 import { safeExternalUrl } from "./ui/security.js";
 import { listUserRequestPresets, saveUserRequestPreset, deleteUserRequestPreset } from "./services/data-explorer-presets.js";
-import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroDetailSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats, buildHeroDetailViewModel } from "./services/analytics.js";
+import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroDetailSnapshot, getBuildDetailSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats, buildHeroDetailViewModel } from "./services/analytics.js";
 
 const $ = selector => document.querySelector(selector);
 const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-status") };
@@ -899,8 +899,14 @@ function renderBuilds(signal) {
         const details = hero.details ?? {};
         const categories = Array.isArray(details.mod_categories) ? details.mod_categories.length : 0;
         const tags = Array.isArray(hero.tags) ? hero.tags.length : 0;
+        const heroId = hero.hero_id;
+        const buildId = hero.hero_build_id ?? build.build_id;
+        const href = Number.isInteger(Number(heroId)) && Number.isInteger(Number(buildId))
+          ? '#/builds/' + encodeURIComponent(heroId) + '/' + encodeURIComponent(buildId)
+          : null;
         return '<article class="analytics-table-row">' +
-          '<span><strong>' + esc(hero.name ?? "Unnamed build") + '</strong><small>Build #' + esc(hero.hero_build_id ?? build.build_id ?? "—") + ' · Hero ' + esc(hero.hero_id ?? "—") + '</small></span>' +
+          '<span>' + (href ? '<a href="' + href + '"><strong>' : '<strong>') + esc(hero.name ?? "Unnamed build") + (href ? '</strong></a>' : '</strong>') +
+          '<small>Build #' + esc(buildId ?? "—") + ' · Hero ' + esc(heroId ?? "—") + '</small></span>' +
           '<span><strong>v' + esc(hero.version ?? "—") + '</strong><small>Author ' + esc(hero.author_account_id ?? "—") + ' · ' + esc(categories) + ' categories · ' + esc(tags) + ' tags</small></span>' +
           '<span><small>Favorites ' + esc(build.num_favorites ?? 0) + '</small><small>Weekly ' + esc(build.num_weekly_favorites ?? 0) + '</small></span>' +
           '</article>';
@@ -916,6 +922,83 @@ function renderBuilds(signal) {
     load(Object.fromEntries(new FormData(form).entries()));
   });
   load(Object.fromEntries(new FormData(form).entries()));
+}
+
+function renderBuildDetail(heroId, buildId, signal) {
+  const numericHeroId = Number(heroId);
+  const numericBuildId = Number(buildId);
+  if (!Number.isInteger(numericHeroId) || numericHeroId < 0 || !Number.isInteger(numericBuildId) || numericBuildId < 0) {
+    renderNotFound("builds/" + heroId + "/" + buildId);
+    return;
+  }
+
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">BUILDS / DETAIL</span><h2 id="build-detail-name">Build #' + esc(numericBuildId) + '</h2><p>Build definition and performance from the current Deadlock API.</p></section>' +
+    '<section class="panel"><div id="build-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching build data…</span></div><div id="build-detail-summary"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">MOD CATEGORIES</span><h2>Build contents</h2></div></div><div id="build-detail-categories"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">ABILITY ORDER</span><h2>Currency changes</h2></div></div><div id="build-detail-ability-order"></div></section>';
+
+  const render = async () => {
+    try {
+      const [snapshot, heroCatalog, tagCatalog] = await Promise.all([
+        getBuildDetailSnapshot(numericHeroId, numericBuildId, { ...assetVersion.options(), signal }),
+        listHeroes({ ...assetVersion.options(), signal }),
+        listBuildTags({ ...assetVersion.options(), signal }),
+      ]);
+      if (signal.aborted) return;
+
+      const detail = snapshot.detail;
+      if (!detail) {
+        $("#build-detail-status").innerHTML = '<span class="eyebrow">NOT FOUND</span><span>Build was not returned by the API.</span>';
+        return;
+      }
+
+      const hero = (heroCatalog.data ?? []).find(item => Number(item?.id) === numericHeroId);
+      const tags = new Map((tagCatalog.data ?? []).map(tag => [Number(tag?.id), tag]));
+      const model = buildBuildDetailViewModel(detail, snapshot.performance);
+      $("#build-detail-name").textContent = model.name ?? ("Build #" + numericBuildId);
+
+      const tagLabels = model.tags.map(id => tags.get(Number(id))?.label ?? ("Tag " + id));
+      const performance = model.performance;
+      $("#build-detail-summary").innerHTML =
+        '<div class="match-detail-summary">' +
+          '<div class="metric"><span>Hero</span><strong>' + esc(hero?.name ?? model.heroId ?? "—") + '</strong></div>' +
+          '<div class="metric"><span>Version</span><strong>' + esc(model.version ?? "—") + '</strong></div>' +
+          '<div class="metric"><span>Author</span><strong>' + esc(model.authorAccountId ?? "—") + '</strong></div>' +
+          '<div class="metric"><span>Mods</span><strong>' + esc(model.modCount) + '</strong></div>' +
+          '<div class="metric"><span>Matches</span><strong>' + esc(performance?.matches ?? "—") + '</strong></div>' +
+          '<div class="metric"><span>Win rate</span><strong>' + (performance?.winRate != null ? esc(performance.winRate.toFixed(1)) + "%" : "—") + '</strong></div>' +
+        '</div>' +
+        '<div class="metric"><span>Tags</span><strong>' + esc(tagLabels.join(", ") || "No tags returned") + '</strong></div>' +
+        (model.description ? '<p>' + esc(model.description) + '</p>' : '');
+
+      $("#build-detail-categories").innerHTML = model.categories.map(category =>
+        '<section><div class="section-head"><div><span class="eyebrow">CATEGORY</span><h3>' + esc(category.name ?? "Unnamed") + '</h3></div><span class="muted">' + esc(category.modCount) + ' mods' + (category.optional ? ' · optional' : '') + '</span></div>' +
+        (category.description ? '<p class="muted">' + esc(category.description) + '</p>' : '') +
+        '<div class="analytics-table">' +
+          (category.mods.map(mod =>
+            '<div class="analytics-table-row"><span><strong>Ability / Mod ID ' + esc(mod.abilityId ?? "—") + '</strong><small>' + esc(mod.annotation ?? "No annotation") + '</small></span>' +
+            '<span><small>Imbue target: ' + esc(mod.imbueTargetAbilityId ?? "—") + '</small><small>Flex slots: ' + esc(mod.requiredFlexSlots ?? "—") + '</small></span>' +
+            '<span><small>Sell priority: ' + esc(mod.sellPriority ?? "—") + '</small></span></div>'
+          ).join("") || '<p class="muted">No mods returned in this category.</p>') +
+        '</div></section>'
+      ).join("") || '<p class="muted">No mod categories returned.</p>';
+
+      const changes = model.abilityOrder?.currencyChanges ?? [];
+      $("#build-detail-ability-order").innerHTML = changes.length
+        ? '<div class="analytics-table">' + changes.map(change =>
+            '<div class="analytics-table-row"><span><strong>Ability / Mod ID ' + esc(change.abilityId ?? "—") + '</strong><small>' + esc(change.annotation ?? "No annotation") + '</small></span><span><small>Currency type ' + esc(change.currencyType ?? "—") + '</small><small>Delta ' + esc(change.delta ?? "—") + '</small></span></div>'
+          ).join("") + '</div>'
+        : '<p class="muted">No currency changes returned by the build definition.</p>';
+
+      $("#build-detail-status").innerHTML = '<span class="eyebrow">LOADED</span><span>Build data received from the API.</span>';
+    } catch (error) {
+      if (isAborted(error)) return;
+      $("#build-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span>' + esc(error.message) + '</span>';
+    }
+  };
+
+  render();
 }
 
 function renderMatches(signal) {
@@ -1870,6 +1953,7 @@ function route() {
   else if (routeName === "analytics") renderAnalytics(signal);
   else if (routeName === "matches") renderMatches(signal);
   else if (routeName === "players") renderPlayers(signal);
+  else if (routeName === "builds" && routeParts[1] && routeParts[2]) renderBuildDetail(routeParts[1], routeParts[2], signal);
   else if (routeName === "builds") renderBuilds(signal);
   else if (routeName === "leaderboard") renderLeaderboard(signal);
   else if (routeName === "item-analytics") renderItemAnalytics(signal);
