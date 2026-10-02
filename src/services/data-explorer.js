@@ -377,9 +377,20 @@ function coerceParameter(value, schema, parameter = null) {
     return matches[0];
   }
   if (schema?.allOf?.length) {
-    let result = value;
-    for (const variant of schema.allOf) {
-      result = coerceParameter(result, resolveSchema(variant, parameter?._contract), parameter);
+    const variants = schema.allOf.map((variant) => resolveSchema(variant, parameter?._contract));
+    const coercionSchema = variants.find((variant) => (
+      typeof variant?.type === "string"
+      || Array.isArray(variant?.type)
+      || variant?.oneOf?.length
+      || variant?.anyOf?.length
+      || variant?.const !== undefined
+      || variant?.enum !== undefined
+    ));
+    let result = coercionSchema
+      ? coerceParameter(value, coercionSchema, parameter)
+      : value;
+    for (const variant of variants) {
+      validateRequestBody(result, variant);
     }
     return result;
   }
