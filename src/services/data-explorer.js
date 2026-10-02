@@ -42,11 +42,11 @@ function parameterSchema(parameter, contract = null) {
 }
 
 function enumValues(schema) {
-  if (Array.isArray(schema?.enum)) return schema.enum;
+  if (Array.isArray(schema?.enum)) return [...schema.enum];
   const variants = [...(schema?.oneOf ?? []), ...(schema?.anyOf ?? [])];
   const values = variants.flatMap(item => Array.isArray(item?.enum) ? item.enum : item?.const !== undefined ? [item.const] : []);
   if (schema?.const !== undefined) values.push(schema.const);
-  return [...new Set(values)];
+  return values.filter((value, index) => values.findIndex(candidate => deepEqual(candidate, value)) === index);
 }
 
 function schemaType(schema) {
