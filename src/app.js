@@ -295,11 +295,11 @@ function renderHeroes(signal) {
       const kdaText = kda.every(Number.isFinite) ? kda.join(" / ") : "—";
       const image = hero ? resolveAssetImage(hero, ["hero_card_critical_webp", "hero_card_critical", "icon_hero_card_webp", "icon_hero_card"]) : "";
       const accent = colorToCss(hero?.colors?.ui);
-      return '<article class="hero-performance-card"' + (accent ? ' style="--hero-accent:' + esc(accent) + '"' : "") + '>' +
+      return '<a class="hero-performance-card" href="#/heroes/' + encodeURIComponent(item.heroId) + '"' + (accent ? ' style="--hero-accent:' + esc(accent) + '"' : "") + '>' +
         '<div class="hero-performance-art">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') + '</div>' +
         '<div class="hero-performance-body"><div class="hero-performance-title"><div><small>HERO ' + esc(item.heroId) + '</small><h3>' + esc(nameOf(hero)) + '</h3></div><strong>' + esc(winRate == null ? "—" : winRate.toFixed(1) + "%") + '<small>WIN RATE</small></strong></div>' +
         '<div class="hero-performance-metrics"><span><small>MATCHES</small><b>' + esc(Number.isFinite(matches) ? matches.toLocaleString() : "—") + '</b></span><span><small>K / D / A</small><b>' + esc(kdaText) + '</b></span><span><small>DAMAGE</small><b>' + esc(Number.isFinite(Number(item.totalPlayerDamage)) ? Number(item.totalPlayerDamage).toLocaleString() : "—") + '</b></span><span><small>NET WORTH</small><b>' + esc(Number.isFinite(Number(item.totalNetWorth)) ? Number(item.totalNetWorth).toLocaleString() : "—") + '</b></span></div></div>' +
-      '</article>';
+      '</a>';
     }).join("") || '<p class="muted">No heroes matched the current filters.</p>';
 
     $("#heroes-status").textContent = rows.length + " HEROES";
