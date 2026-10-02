@@ -201,7 +201,7 @@ test("listApiOperations resolves nested schema refs for request and response sch
   assert.equal(buildRequest(operation, { hero_id: "7" }).path, "/v1/nested/7");
 });
 
-test("resolveLocalRef decodes JSON Pointer escaped keys", () => {
+test("resolveSchema decodes JSON Pointer escaped keys", () => {
   const contract = {
     components: {
       schemas: {
@@ -210,8 +210,8 @@ test("resolveLocalRef decodes JSON Pointer escaped keys", () => {
       },
     },
   };
-  assert.equal(resolveLocalRef({ $ref: "#/components/schemas/hero~1name" }, contract).type, "string");
-  assert.equal(resolveLocalRef({ $ref: "#/components/schemas/tilde~0name" }, contract).type, "integer");
+  assert.equal(resolveSchema({ $ref: "#/components/schemas/hero~1name" }, contract).type, "string");
+  assert.equal(resolveSchema({ $ref: "#/components/schemas/tilde~0name" }, contract).type, "integer");
 });
 
 test("listApiOperations resolves response header refs and schemas", () => {
