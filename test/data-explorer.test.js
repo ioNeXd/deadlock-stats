@@ -5,6 +5,8 @@ import {
   listApiOperations,
   describeOperation,
   buildSchemaFormModel,
+  buildSchemaViewModel,
+  buildRequestExamples,
   parseSchemaFormValue,
   buildRequest,
   executeOperation,
@@ -1028,3 +1030,55 @@ test("parseSchemaFormValue coerces primitive structured fields and validates con
   assert.throws(() => parseSchemaFormValue("yes", { type: "boolean" }), /boolean/);
 });
 
+
+
+test("buildSchemaViewModel describes nested schema metadata and composition", () => {
+  const model = buildSchemaViewModel({
+    title: "Payload",
+    type: "object",
+    required: ["hero_id"],
+    properties: {
+      hero_id: { type: "integer", format: "int32", minimum: 1, example: 7 },
+      mode: { type: "string", enum: ["ranked", "normal"], default: "ranked" },
+      nested: {
+        type: "object",
+        properties: { enabled: { type: "boolean", nullable: true } },
+      },
+      ids: { type: "array", minItems: 1, items: { type: "integer" } },
+    },
+    oneOf: [{ type: "object" }, { type: "null" }],
+  });
+
+  assert.equal(model.title, "Payload");
+  assert.equal(model.properties.find(item => item.name === "hero_id").required, true);
+  assert.equal(model.properties.find(item => item.name === "hero_id").example, 7);
+  assert.deepEqual(model.properties.find(item => item.name === "mode").enum, ["ranked", "normal"]);
+  assert.equal(model.properties.find(item => item.name === "nested").properties[0].nullable, true);
+  assert.equal(model.properties.find(item => item.name === "ids").items.type, "integer");
+  assert.equal(model.oneOf.length, 2);
+});
+
+test("buildRequestExamples uses only documented OpenAPI examples/defaults", () => {
+  const examples = buildRequestExamples({
+    example: { hero_id: 7 },
+    examples: {
+      ranked: { summary: "Ranked preset", value: { mode: "ranked" } },
+      ignored: { summary: "No value" },
+    },
+    schema: { example: { ignored: true }, default: { fallback: true } },
+  });
+
+  assert.deepEqual(examples, [
+    { name: "Default example", summary: "Media type example", value: { hero_id: 7 }, source: "example" },
+    { name: "ranked", summary: "Ranked preset", value: { mode: "ranked" }, source: "examples" },
+  ]);
+
+  assert.deepEqual(
+    buildRequestExamples({ schema: { example: { hero_id: 7 } } })[0].value,
+    { hero_id: 7 },
+  );
+  assert.deepEqual(
+    buildRequestExamples({ schema: { default: { hero_id: 8 } } })[0].value,
+    { hero_id: 8 },
+  );
+});
