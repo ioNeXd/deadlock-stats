@@ -3,6 +3,7 @@ import { listHeroes, listItems, listRanks, listMiscEntities } from "./services/a
 import { getOpenApiContract } from "./services/versioning.js";
 import { probeApiStatus } from "./services/api-status.js";
 import { buildRequestExamples, buildSchemaFormModel, buildSchemaViewModel, describeOperation, executeOperation, listApiOperations, parseSchemaFormValue } from "./services/data-explorer.js";
+import { renderSchemaViewer } from "./ui/schema-viewer.js";
 import { API_BASE_URL } from "./api/client.js";
 import { loadGraphqlPlayground } from "./services/graphql.js";
 import { resolveAssetImage } from "./adapters/assets.js";
@@ -1215,68 +1216,6 @@ function schemaExampleValue(value) {
   return String(value);
 }
 
-function schemaNodeHtml(node) {
-  if (!node) return "";
-  const typeMeta = [
-    node.type,
-    node.format,
-    node.required ? "required" : "optional",
-    node.nullable ? "nullable" : "",
-  ].filter(Boolean).join(" · ");
-  const constraints = [];
-  if (node.minimum != null) constraints.push("min " + node.minimum);
-  if (node.maximum != null) constraints.push("max " + node.maximum);
-  if (node.exclusiveMinimum != null) constraints.push("exclusive min " + node.exclusiveMinimum);
-  if (node.exclusiveMaximum != null) constraints.push("exclusive max " + node.exclusiveMaximum);
-  if (node.multipleOf != null) constraints.push("multiple of " + node.multipleOf);
-  if (node.minLength != null) constraints.push("min length " + node.minLength);
-  if (node.maxLength != null) constraints.push("max length " + node.maxLength);
-  if (node.pattern) constraints.push("pattern " + node.pattern);
-  if (node.minItems != null) constraints.push("min items " + node.minItems);
-  if (node.maxItems != null) constraints.push("max items " + node.maxItems);
-  if (node.uniqueItems) constraints.push("unique items");
-
-  const enumHtml = node.enum?.length
-    ? '<div class="schema-view-enum"><span>ENUM</span><code>' + esc(node.enum.map(value => schemaExampleValue(value)).join(" · ")) + '</code></div>'
-    : "";
-  const example = node.example !== undefined
-    ? '<div class="schema-view-example"><span>EXAMPLE</span><code>' + esc(schemaExampleValue(node.example)) + '</code></div>'
-    : (node.examples?.length ? '<div class="schema-view-example"><span>EXAMPLES</span><code>' + esc(node.examples.map(schemaExampleValue).join(" · ")) + '</code></div>' : "");
-  const defaultValue = node.default !== undefined ? '<div class="schema-view-example"><span>DEFAULT</span><code>' + esc(schemaExampleValue(node.default)) + '</code></div>' : "";
-  const variants = ["oneOf", "anyOf", "allOf"].flatMap(keyword =>
-    (node[keyword] ?? []).map(variant => '<div class="schema-view-variant"><span>' + keyword.toUpperCase() + '</span>' + schemaNodeHtml(variant) + '</div>')
-  ).join("");
-
-  const children = node.type === "object"
-    ? (node.properties ?? []).map(schemaNodeHtml).join("")
-    : node.type === "array" && node.items
-      ? '<div class="schema-view-item"><span>ITEMS</span>' + schemaNodeHtml(node.items) + '</div>'
-      : "";
-
-  const additional = node.type === "object" && node.additionalProperties && typeof node.additionalProperties === "object"
-    ? '<div class="schema-view-item"><span>ADDITIONAL PROPERTIES</span>' + schemaNodeHtml(schemaViewNodeFallback(node.additionalProperties)) + '</div>'
-    : "";
-
-  return '<div class="schema-view-node" style="--schema-depth:' + Math.min(node.depth ?? 0, 8) + '">' +
-    '<div class="schema-view-title"><strong>' + esc(node.name) + '</strong><span>' + esc(typeMeta) + '</span></div>' +
-    (node.description ? '<p class="muted">' + esc(node.description) + '</p>' : '') +
-    (constraints.length ? '<div class="schema-view-constraints">' + esc(constraints.join(" · ")) + '</div>' : '') +
-    enumHtml + defaultValue + example + children + additional + variants +
-    '</div>';
-}
-
-function schemaViewNodeFallback(schema) {
-  const model = buildSchemaViewModel(schema);
-  return model ?? { name: "value", path: "$", depth: 0, type: "object", nullable: false, enum: [] };
-}
-
-function schemaViewerHtml(schema, title) {
-  const model = buildSchemaViewModel(schema);
-  if (!model) return "";
-  return '<details class="schema-viewer"><summary><span class="eyebrow">SCHEMA</span><strong>' + esc(title) + '</strong></summary>' +
-    '<div class="schema-view-body">' + schemaNodeHtml(model) + '</div></details>';
-}
-
 function formValueAtPath(value, path) {
   if (!path || path === "__body") return value;
   return path.replace(/^__body\./, "").split(".").reduce((current, key) => current?.[key], value);
@@ -1421,11 +1360,11 @@ function renderOperation(operation, signal, contract = null) {
   }
 
   const requestSchemaHtml = bodyTypes.map(item => item.schema
-    ? schemaViewerHtml(item.schema, "Request · " + item.mediaType)
+    ? renderSchemaViewer(buildSchemaViewModel(item.schema), "Request · " + item.mediaType)
     : "").join("");
   const responseSchemaHtml = detail.responseInfo.flatMap(response =>
     (response.content ?? []).filter(content => content.schema).map(content =>
-      schemaViewerHtml(content.schema, "Response " + response.status + " · " + content.mediaType)
+      renderSchemaViewer(buildSchemaViewModel(content.schema), "Response " + response.status + " · " + content.mediaType)
     )
   ).join("");
   const schemaContainer = document.createElement("div");
