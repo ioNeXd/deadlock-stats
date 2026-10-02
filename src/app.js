@@ -183,6 +183,106 @@ function renderGraphql(signal) {
   });
 }
 
+function renderHeroes(signal) {
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">GAME / HERO INTELLIGENCE</span><h2>Heroes</h2><p>Hero roster, performance and combat statistics from the live Deadlock analytics API.</p></section>' +
+    '<section class="panel analytics-filter-panel"><div class="section-head"><div><span class="eyebrow">SCOPE</span><h2>Hero statistics</h2></div><b id="heroes-status">LOADING</b></div>' +
+    '<form id="heroes-filters" class="analytics-filters">' +
+      '<label class="field"><span>Search hero</span><input name="search" type="search" placeholder="Abrams, Infernus…"></label>' +
+      '<label class="field"><span>Game mode</span><select name="game_mode"><option value="normal" selected>Normal</option><option value="street_brawl">Street Brawl</option></select></label>' +
+      '<label class="field"><span>Match mode</span><select name="match_mode"><option value="ranked,unranked" selected>Ranked + Unranked</option><option value="ranked">Ranked</option><option value="unranked">Unranked</option></select></label>' +
+      '<label class="field"><span>From</span><input name="min_unix_timestamp" type="date"></label>' +
+      '<label class="field"><span>To</span><input name="max_unix_timestamp" type="date"></label>' +
+      '<label class="field"><span>Minimum hero matches</span><input name="min_hero_matches" type="number" min="0" placeholder="0"></label>' +
+      '<button class="primary-button" type="submit">Apply filters</button></form></section>' +
+    '<section class="analytics-grid" id="heroes-summary">' +
+      '<article class="metric-card"><span>HEROES WITH DATA</span><strong>—</strong><small>filtered roster</small></article>' +
+      '<article class="metric-card"><span>TOTAL HERO APPEARANCES</span><strong>—</strong><small>returned by API</small></article>' +
+      '<article class="metric-card"><span>TOP WIN RATE</span><strong>—</strong><small>minimum sample respected</small></article>' +
+      '<article class="metric-card"><span>DATA WINDOW</span><strong>30D</strong><small>API default scope</small></article>' +
+    '</section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">ROSTER PERFORMANCE</span><h2>Hero statistics</h2></div><span class="muted">SORTED BY MATCHES</span></div><div id="heroes-list" class="hero-performance-grid"><p class="muted">Loading hero statistics.</p></div></section>';
+
+  const form = $("#heroes-filters");
+  const defaultFrom = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  const defaultTo = new Date().toISOString().slice(0, 10);
+  form.elements.min_unix_timestamp.value = defaultFrom;
+  form.elements.max_unix_timestamp.value = defaultTo;
+
+  let catalog = [];
+  let stats = [];
+  const renderRows = search => {
+    const query = String(search ?? "").trim().toLocaleLowerCase();
+    const heroesById = new Map(catalog.map(hero => [String(idOf(hero)), hero]));
+    const rows = stats
+      .filter(item => item?.heroId != null)
+      .map(item => ({ item, hero: heroesById.get(String(item.heroId)) }))
+      .filter(({ hero }) => !query || nameOf(hero).toLocaleLowerCase().includes(query))
+      .sort((a, b) => Number(b.item.matches ?? 0) - Number(a.item.matches ?? 0));
+
+    const list = $("#heroes-list");
+    list.innerHTML = rows.map(({ item, hero }) => {
+      const matches = Number(item.matches);
+      const wins = Number(item.wins);
+      const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? (wins / matches) * 100 : null;
+      const kda = [item.totalKills, item.totalDeaths, item.totalAssists].map(Number);
+      const kdaText = kda.every(Number.isFinite) ? kda.join(" / ") : "—";
+      const image = hero ? resolveAssetImage(hero, ["hero_card_critical_webp", "hero_card_critical", "icon_hero_card_webp", "icon_hero_card"]) : "";
+      const accent = colorToCss(hero?.colors?.ui);
+      return '<article class="hero-performance-card"' + (accent ? ' style="--hero-accent:' + esc(accent) + '"' : "") + '>' +
+        '<div class="hero-performance-art">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') + '</div>' +
+        '<div class="hero-performance-body"><div class="hero-performance-title"><div><small>HERO ' + esc(item.heroId) + '</small><h3>' + esc(nameOf(hero)) + '</h3></div><strong>' + esc(winRate == null ? "—" : winRate.toFixed(1) + "%") + '<small>WIN RATE</small></strong></div>' +
+        '<div class="hero-performance-metrics"><span><small>MATCHES</small><b>' + esc(Number.isFinite(matches) ? matches.toLocaleString() : "—") + '</b></span><span><small>K / D / A</small><b>' + esc(kdaText) + '</b></span><span><small>DAMAGE</small><b>' + esc(Number.isFinite(Number(item.totalPlayerDamage)) ? Number(item.totalPlayerDamage).toLocaleString() : "—") + '</b></span><span><small>NET WORTH</small><b>' + esc(Number.isFinite(Number(item.totalNetWorth)) ? Number(item.totalNetWorth).toLocaleString() : "—") + '</b></span></div></div>' +
+      '</article>';
+    }).join("") || '<p class="muted">No heroes matched the current filters.</p>';
+
+    $("#heroes-status").textContent = rows.length + " HEROES";
+  };
+
+  const load = async values => {
+    $("#heroes-status").textContent = "LOADING";
+    $("#heroes-list").innerHTML = '<p class="muted">Loading hero statistics…</p>';
+    try {
+      const filters = normalizeAnalyticsFilters(values);
+      const [heroCatalog, heroStats] = await Promise.all([
+        listHeroes({ ...assetVersion.options(), signal }),
+        getHeroStatsSnapshot({ ...assetVersion.options(), ...filters, signal }),
+      ]);
+      if (signal.aborted) return;
+      catalog = heroCatalog.data ?? [];
+      stats = heroStats ?? [];
+      const active = stats.filter(item => item?.heroId != null);
+      const appearances = active.reduce((sum, item) => sum + (Number(item.matches) || 0), 0);
+      const validRates = active
+        .map(item => Number(item.matches) > 0 ? Number(item.wins) / Number(item.matches) * 100 : NaN)
+        .filter(Number.isFinite);
+      const topRate = validRates.length ? Math.max(...validRates) : null;
+      $("#heroes-summary").innerHTML = [
+        ["HEROES WITH DATA", active.length.toLocaleString(), "filtered roster"],
+        ["TOTAL HERO APPEARANCES", appearances.toLocaleString(), "returned by API"],
+        ["TOP WIN RATE", topRate == null ? "—" : topRate.toFixed(1) + "%", "minimum sample respected"],
+        ["DATA WINDOW", values.min_unix_timestamp && values.max_unix_timestamp ? "CUSTOM" : "30D", "analytics scope"],
+      ].map(([label, value, note]) => '<article class="metric-card"><span>' + label + '</span><strong>' + esc(value) + '</strong><small>' + esc(note) + '</small></article>').join("");
+      renderRows(values.search);
+      setConnection(true, "API connected");
+    } catch (error) {
+      if (isAborted(error)) return;
+      $("#heroes-status").textContent = "ERROR";
+      $("#heroes-list").innerHTML = '<p class="error-text">Hero statistics failed: ' + esc(error.message) + '</p>';
+      setConnection(false, "API unavailable");
+    }
+  };
+
+  form.addEventListener("input", event => {
+    if (event.target.name === "search") renderRows(event.target.value);
+  });
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    load(Object.fromEntries(new FormData(form).entries()));
+  });
+  load(Object.fromEntries(new FormData(form).entries()));
+}
+
 function renderAssetCatalog(kind, signal) {
   const config = {
     heroes: { title: "Heroes", eyebrow: "GAME / HEROES", description: "Hero metadata and real game assets from the current Deadlock API contract.", loader: listHeroes },
@@ -1671,7 +1771,7 @@ function route() {
   else if (routeName === "maps") renderMaps(signal);
   else if (routeName === "data") renderDataExplorer(signal);
   else if (routeName === "graphql") renderGraphql(signal);
-  else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
+  else if (routeName === "heroes") renderHeroes(signal);\n  else if (routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
   else renderNotFound(routeName);
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName)));
   bindVersionControl();
