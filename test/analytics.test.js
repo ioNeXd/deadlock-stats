@@ -563,7 +563,7 @@ test("advanced analytics wrappers use current API paths and filters", async t =>
   assert.equal(calls[5].pathname, "/v1/analytics/scoreboards/players");
   assert.equal(calls[5].searchParams.get("limit"), "50");
   assert.equal(calls[6].pathname, "/v1/analytics/kill-death-stats");
-  assert.equal(calls[6].searchParams.get("account_ids"), "10,20");
+  assert.deepEqual(calls[6].searchParams.getAll("account_ids"), ["10", "20"]);
 });
 
 
