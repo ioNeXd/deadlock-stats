@@ -338,6 +338,15 @@ function coerceScalar(value, schema) {
   validateEnum(result, schema);
   if (schema.minLength !== undefined && result.length < schema.minLength) throw new TypeError("Parameter is shorter than minLength.");
   if (schema.maxLength !== undefined && result.length > schema.maxLength) throw new TypeError("Parameter exceeds maxLength.");
+  if (schema.pattern !== undefined) {
+    let pattern;
+    try {
+      pattern = new RegExp(schema.pattern);
+    } catch {
+      throw new TypeError("Parameter schema contains an invalid pattern.");
+    }
+    if (!pattern.test(result)) throw new TypeError("Parameter does not match the required pattern.");
+  }
   return result;
 }
 
