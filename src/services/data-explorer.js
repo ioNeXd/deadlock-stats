@@ -406,7 +406,19 @@ function coerceParameter(value, schema, parameter = null) {
         }
         continue;
       }
-      if (variant.type === undefined) continue;
+      if (variant.type === undefined) {
+        if (typeof result === "number") validateNumericConstraints(result, variant);
+        if (typeof result === "string") {
+          if (variant.minLength !== undefined && result.length < variant.minLength) throw new TypeError("Parameter is shorter than minLength.");
+          if (variant.maxLength !== undefined && result.length > variant.maxLength) throw new TypeError("Parameter exceeds maxLength.");
+          if (variant.pattern !== undefined) {
+            let pattern;
+            try { pattern = new RegExp(variant.pattern); } catch { throw new TypeError("Parameter schema contains an invalid pattern."); }
+            if (!pattern.test(result)) throw new TypeError("Parameter does not match the required pattern.");
+          }
+        }
+        continue;
+      }
       if (variantType === "integer" && (!Number.isInteger(result) || typeof result !== "number")) {
         throw new TypeError("Parameter does not satisfy allOf integer constraint.");
       }
