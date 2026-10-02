@@ -16,6 +16,10 @@ function queryParameters(operation) {
   return (operation?.parameters ?? []).filter(parameter => parameter?.in === "query");
 }
 
+function headerParameters(operation) {
+  return (operation?.parameters ?? []).filter(parameter => parameter?.in === "header");
+}
+
 function resolveSchema(value, contract, seen = new Set()) {
   if (!value || typeof value !== "object" || !contract) return value;
   if (Array.isArray(value)) return value.map(item => resolveSchema(item, contract, seen));
@@ -571,6 +575,7 @@ function deepEqual(left, right) {
 export function buildRequest(operation, values = {}) {
   let path = operation.path;
   const query = {};
+  const headers = new Headers();
 
   for (const parameter of operation.parameters) {
     const schema = parameterSchema(parameter, operation?._contract);
@@ -594,6 +599,15 @@ export function buildRequest(operation, values = {}) {
       } else {
         query[parameter.name] = serialized;
       }
+    } else if (parameter.in === "header") {
+      const serialized = serializeQueryParameter(parameter, coerced);
+      if (serialized && typeof serialized === "object" && !Array.isArray(serialized)) {
+        for (const [name, item] of Object.entries(serialized)) headers.set(name, String(item));
+      } else if (serialized !== undefined && serialized !== null) {
+        headers.set(parameter.name, Array.isArray(serialized) ? serialized.join(",") : String(serialized));
+      }
+    } else if (parameter.in === "cookie") {
+      throw new TypeError("Cookie parameters are not supported in the browser Data Explorer.");
     }
   }
 
@@ -626,6 +640,7 @@ export function buildRequest(operation, values = {}) {
     path,
     method: operation.method,
     query,
+    headers,
     body,
     mediaType,
   };
@@ -635,6 +650,9 @@ export async function executeOperation(operation, values = {}, options = {}) {
   const request = buildRequest(operation, values);
   const secured = applySecurity(operation, request, options);
   const headers = secured.headers;
+  for (const [name, value] of request.headers.entries()) {
+    if (!headers.has(name)) headers.set(name, value);
+  }
 
   if (request.mediaType && !headers.has("Content-Type")) {
     headers.set("Content-Type", request.mediaType);
@@ -652,7 +670,14 @@ export async function executeOperation(operation, values = {}, options = {}) {
     authorization: securityInfo(operation, operation?._contract).length ? undefined : options.authorization,
   });
 
-  return { ...result, request: { ...request, query: secured.query } };
+  return {
+    ...result,
+    request: {
+      ...request,
+      headers: Object.fromEntries([...headers.entries()].map(([name, value]) => [name, /authorization|api[-_]?key|cookie/i.test(name) ? "[REDACTED]" : value])),
+      query: Object.fromEntries(Object.entries(secured.query).map(([name, value]) => [name, /api[-_]?key|authorization|token/i.test(name) ? "[REDACTED]" : value])),
+    },
+  };
 }
 
 export {
