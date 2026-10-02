@@ -165,3 +165,23 @@ test("player MMR and rank prediction endpoints use current API paths and constra
     globalThis.fetch = originalFetch;
   }
 });
+
+import { getPlayerDetailSnapshot, buildPlayerDetailViewModel } from "../src/services/players.js";
+
+test("player detail snapshot composes rank, heroes, history and relationships", async () => {
+  const snapshot = {
+    accountId: 7,
+    rank: { data: { badge: 10, rank: 2, subrank: 3 } },
+    heroStats: { data: [{ hero_id: 2, matches_played: 5 }, { hero_id: 1, matches_played: 20 }] },
+    matchHistory: { data: [{ match_id: 99 }] },
+    enemyStats: { data: [{ enemy_hero_id: 8, matches_played: 30 }] },
+    mateStats: { data: [{ mate_account_id: 9, matches_played: 40 }] },
+  };
+  const model = buildPlayerDetailViewModel(snapshot);
+  assert.equal(model.accountId, 7);
+  assert.equal(model.rank.badge, 10);
+  assert.deepEqual(model.heroStats.map(row => row.hero_id), [1, 2]);
+  assert.equal(model.matchHistory[0].match_id, 99);
+  assert.equal(model.enemyStats[0].enemy_hero_id, 8);
+  assert.equal(model.mateStats[0].mate_account_id, 9);
+});
