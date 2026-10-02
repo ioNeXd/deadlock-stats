@@ -471,6 +471,28 @@ test("retry backoff removes its abort listener after resolving", async () => {
 });
 
 
+test("GET cache keys treat implicit and explicit default Accept as the same request", async () => {
+  let calls = 0;
+  mockFetch(async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ calls }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  const implicit = await apiGet("/v1/accept-key", { cache: true, dedupe: false });
+  const explicit = await apiGet("/v1/accept-key", {
+    cache: true,
+    dedupe: false,
+    headers: { Accept: "application/json" },
+  });
+
+  assert.equal(calls, 1);
+  assert.deepEqual(implicit.data, { calls: 1 });
+  assert.deepEqual(explicit.data, { calls: 1 });
+});
+
 test("GET cache keys isolate response representations", async () => {
   let calls = 0;
   globalThis.fetch = async (_url, init) => {
