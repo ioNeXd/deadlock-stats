@@ -186,7 +186,7 @@ The documented-value precedence is:
 
 Generated values are intentionally conservative. The generator currently uses supported schema constraints such as required properties, defaults, enums, consts, primitive formats, array minimums, and simple compositions. If it cannot produce a validated value, no generated preset is exposed.
 
-The current implementation does **not** provide persistent user-created preset storage. Generated values and user presets should remain distinguishable from values explicitly documented by the API.
+User-created request presets are persisted locally in the browser, scoped by HTTP operation and request media type. Generated values, user presets, and values explicitly documented by the API remain distinguishable.
 
 ## Schema support
 
