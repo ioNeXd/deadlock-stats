@@ -74,3 +74,44 @@ export async function getBuildDetail(heroId, buildId, options = {}) {
   const result = await getBuild(heroId, buildId, options);
   return { ...result, data: normalizeBuildDetail(result.data) };
 }
+
+export function buildBuildDetailViewModel(detail, performance = null) {
+  const categories = Array.isArray(detail?.categories) ? detail.categories : [];
+  const mods = categories.flatMap(category => Array.isArray(category?.mods) ? category.mods : []);
+  const wins = Number(performance?.wins);
+  const matches = Number(performance?.matches);
+  const winRate = Number.isFinite(wins) && Number.isFinite(matches) && matches > 0
+    ? (wins / matches) * 100
+    : null;
+
+  return {
+    heroBuildId: detail?.heroBuildId ?? null,
+    heroId: detail?.heroId ?? null,
+    name: detail?.name ?? null,
+    description: detail?.description ?? null,
+    language: detail?.language ?? null,
+    version: detail?.version ?? null,
+    authorAccountId: detail?.authorAccountId ?? null,
+    originBuildId: detail?.originBuildId ?? null,
+    publishTimestamp: detail?.publishTimestamp ?? null,
+    lastUpdatedTimestamp: detail?.lastUpdatedTimestamp ?? null,
+    tags: Array.isArray(detail?.tags) ? detail.tags : [],
+    categories: categories.map(category => ({
+      name: category?.name ?? null,
+      description: category?.description ?? null,
+      optional: category?.optional ?? null,
+      modCount: Array.isArray(category?.mods) ? category.mods.length : 0,
+      mods: Array.isArray(category?.mods) ? category.mods : [],
+    })),
+    modCount: mods.length,
+    abilityOrder: detail?.abilityOrder ?? null,
+    performance: performance ? {
+      wins: Number.isFinite(wins) ? wins : null,
+      losses: Number.isFinite(Number(performance?.losses)) ? Number(performance.losses) : null,
+      matches: Number.isFinite(matches) ? matches : null,
+      players: Number.isFinite(Number(performance?.players)) ? Number(performance.players) : null,
+      winRate,
+    } : null,
+    raw: detail?.raw ?? null,
+  };
+}
