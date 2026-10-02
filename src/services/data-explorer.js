@@ -769,6 +769,9 @@ export function buildRequest(operation, values = {}) {
   let body;
   const mediaType = selectRequestMediaType(operation, values);
   const hasBody = values.__body !== undefined && values.__body !== "";
+  if (hasBody && !operation.requestBody) {
+    throw new TypeError("Request body is not declared for this operation.");
+  }
   if (operation.requestBody?.required && !hasBody) {
     throw new TypeError("Missing required request body");
   }
