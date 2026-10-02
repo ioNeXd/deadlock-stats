@@ -198,12 +198,13 @@ function renderHeroDetail(heroId, signal) {
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">ABILITIES</span><h2>Ability orders</h2></div></div><div id="hero-detail-abilities"></div></section>';
 
   const options = { ...assetVersion.options(), signal };
-  getHeroDetailSnapshot(numericHeroId, options).then(snapshot => {
+  Promise.all([
+    getHeroDetailSnapshot(numericHeroId, options),
+    listHeroes({ ...assetVersion.options(), signal }),
+  ]).then(([snapshot, heroResult]) => {
     if (signal.aborted) return;
-    const hero = (awaitHeroCatalog(numericHeroId)) || null;
-    if (hero) {
-      $("#hero-detail-name").textContent = nameOf(hero);
-    }
+    const hero = (heroResult.data ?? []).find(item => String(idOf(item)) === String(numericHeroId)) ?? null;
+    if (hero) $("#hero-detail-name").textContent = nameOf(hero);
 
     const stat = snapshot.stats[0];
     const matches = Number(stat?.matches);
@@ -249,14 +250,6 @@ function renderHeroDetail(heroId, signal) {
     setConnection(false, "API unavailable");
   });
 
-  let cachedHero = null;
-  function awaitHeroCatalog(id) {
-    if (cachedHero) return Promise.resolve(cachedHero);
-    return listHeroes({ ...assetVersion.options(), signal }).then(result => {
-      cachedHero = (result.data ?? []).find(hero => String(idOf(hero)) === String(id)) ?? null;
-      return cachedHero;
-    });
-  }
 }
 
 function renderHeroes(signal) {
@@ -1848,7 +1841,9 @@ function route() {
   else if (routeName === "maps") renderMaps(signal);
   else if (routeName === "data") renderDataExplorer(signal);
   else if (routeName === "graphql") renderGraphql(signal);
-  else if (routeName === "heroes" && routeParts[1]) renderHeroDetail(routeParts[1], signal);\n  else if (routeName === "heroes") renderHeroes(signal);\n  else if (routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
+  else if (routeName === "heroes" && routeParts[1]) renderHeroDetail(routeParts[1], signal);
+  else if (routeName === "heroes") renderHeroes(signal);
+  else if (routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
   else renderNotFound(routeName);
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName)));
   bindVersionControl();
