@@ -26,6 +26,7 @@ The current branch already contains:
 - request validation against documented schemas and constraints;
 - request-body media type handling;
 - documented request examples/defaults with OpenAPI-aware precedence;
+- validated best-effort generated request examples when documented examples are unavailable;
 - API status and transport diagnostics;
 - deterministic unit tests for the client, services, adapters, versioning, analytics, and Data Explorer.
 
@@ -172,19 +173,20 @@ The current implementation is contract-driven and includes:
 
 ### Request examples
 
-Request examples are currently derived from documented OpenAPI metadata.
+Request examples start with documented OpenAPI metadata and may fall back to a validated generated example when no documented value is available.
 
-The current precedence is:
+The documented-value precedence is:
 
 1. Media Type `example`;
 2. Media Type `examples`;
 3. Schema `example`;
 4. Schema `examples`;
-5. Schema `default`.
+5. Schema `default`;
+6. generated schema example, only when the generator can build a payload that passes the existing request-body validator.
 
-This feature currently consumes documented values. It does **not** yet claim to generate arbitrary valid request payloads from every schema, nor does the current implementation provide persistent user-created preset storage.
+Generated values are intentionally conservative. The generator currently uses supported schema constraints such as required properties, defaults, enums, consts, primitive formats, array minimums, and simple compositions. If it cannot produce a validated value, no generated preset is exposed.
 
-That distinction is intentional: generated values and user presets should remain distinguishable from values explicitly documented by the API.
+The current implementation does **not** provide persistent user-created preset storage. Generated values and user presets should remain distinguishable from values explicitly documented by the API.
 
 ## Schema support
 
@@ -412,7 +414,7 @@ The project intentionally does not claim that every planned capability is finish
 In particular:
 
 - the Data Explorer is the primary generic surface for API capabilities that do not yet have dedicated product UI;
-- automatic generation of arbitrary schema-valid request examples is not yet implemented as a general feature;
+- generated request examples are best-effort and intentionally conservative rather than a complete JSON Schema example generator;
 - persistent user-created request presets are not yet implemented;
 - advanced API capabilities are exposed only where the current contract and implementation support them;
 - the API inventory must be refreshed when the official OpenAPI changes materially.
