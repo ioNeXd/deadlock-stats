@@ -2,7 +2,6 @@ import { probeApiStatus } from "./services/api-status.js";
 import { API_BASE_URL } from "./api/client.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
-import { getDashboardSnapshot } from "./services/dashboard.js";
 import { safeExternalUrl } from "./ui/security.js";
 
 const $ = selector => document.querySelector(selector);
@@ -12,6 +11,13 @@ let routeController = null;
 let dataExplorerRuntimePromise = null;
 let assetVersionContextPromise = null;
 let assetsRuntimePromise = null;
+let dashboardRuntimePromise = null;
+
+function loadDashboardRuntime() {
+  if (!dashboardRuntimePromise) dashboardRuntimePromise = import("./services/dashboard.js");
+  return dashboardRuntimePromise;
+}
+
 
 function loadAssetsRuntime() {
   if (!assetsRuntimePromise) assetsRuntimePromise = import("./services/assets.js");
@@ -147,11 +153,11 @@ async function renderDashboard(signal) {
 }
 
 async function loadDashboard(signal) {
-  const assetsRuntime = await loadAssetsRuntime();
+  const [assetsRuntime, dashboardRuntime] = await Promise.all([loadAssetsRuntime(), loadDashboardRuntime()]);
   const options = { ...assetVersion.options(), signal };
   const [heroesResult, snapshotResult] = await Promise.allSettled([
     assetsRuntime.listHeroes(options),
-    getDashboardSnapshot(options),
+    dashboardRuntime.getDashboardSnapshot(options),
   ]);
 
   if (signal.aborted) return;
