@@ -443,6 +443,14 @@ test("buildRequest enforces oneOf, anyOf, and allOf parameter schemas", () => {
   assert.throws(() => buildRequest(allOfOperation, { value: "8" }), /minimum/);
 });
 
+test("buildRequest rejects undeclared request bodies", () => {
+  assert.throws(() => buildRequest({
+    method: "GET",
+    path: "/v1/no-body",
+    parameters: [],
+  }, { __body: { value: true } }), /not declared/);
+});
+
 test("buildRequest coerces additional object properties from their schema", () => {
   const operation = {
     method: "GET",
