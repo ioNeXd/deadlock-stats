@@ -229,12 +229,13 @@ test("hero detail snapshot composes current hero analytics sources", async t => 
     dedupe: false,
   });
 
-  assert.equal(calls.length, 4);
+  assert.equal(calls.length, 5);
   assert.deepEqual(calls.map(url => url.pathname).sort(), [
     "/v1/analytics/ability-order-stats",
     "/v1/analytics/hero-build-stats/7",
     "/v1/analytics/hero-counter-stats",
     "/v1/analytics/hero-stats",
+    "/v1/analytics/hero-synergy-stats",
   ]);
   assert.deepEqual(snapshot.stats, [{ heroId: 7, bucket: null, wins: 12, losses: null, matches: 20, matchesPerBucket: null, totalKills: null, totalDeaths: null, totalAssists: null, totalNetWorth: null, totalLastHits: null, totalDenies: null, totalPlayerDamage: null, totalPlayerDamageTaken: null, totalBossDamage: null, totalCreepDamage: null, totalNeutralDamage: null, totalMaxHealth: null, totalShotsHit: null, totalShotsMissed: null, totalPermanentBuffs: null, permanentBuffMatches: null, totalFirstPermanentBuffTimeS: null, permanentBuffTimingMatches: null, raw: { hero_id: 7, matches: 20, wins: 12 } }]);
   assert.equal(snapshot.counters.length, 0);
