@@ -407,6 +407,30 @@ test("buildRequest coerces array items according to their schema", () => {
   assert.equal(request.query.ids, "1,2,3");
 });
 
+test("buildRequest coerces additional object properties from their schema", () => {
+  const operation = {
+    method: "GET",
+    path: "/v1/test",
+    parameters: [{
+      name: "filters",
+      in: "query",
+      style: "deepObject",
+      explode: true,
+      schema: {
+        type: "object",
+        properties: { mode: { type: "string" } },
+        additionalProperties: { type: "integer" },
+      },
+    }],
+    requestBody: null,
+  };
+  const request = buildRequest(operation, { filters: { mode: "ranked", hero: "7" } });
+  assert.deepEqual(request.query, {
+    "filters[mode]": "ranked",
+    "filters[hero]": 7,
+  });
+});
+
 test("buildRequest honors OpenAPI query serialization styles", () => {
   const operation = {
     method: "GET",
