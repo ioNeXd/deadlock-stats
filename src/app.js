@@ -1,14 +1,10 @@
-import { getActiveMatchesSnapshot, getRecentlyFetchedMatchesSnapshot, getBulkMatchMetadataSnapshot } from "./services/matches.js";
 import { listHeroes, listRanks, listItems, listItemsByHeroId, listItemsBySlotType, listItemsByType, fetchItem, listMiscEntities, listBuildTags, buildItemDetailViewModel } from "./services/assets.js";
 import { probeApiStatus } from "./services/api-status.js";
 import { API_BASE_URL } from "./api/client.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
-import { listBuilds, buildBuildDetailViewModel } from "./services/builds.js";
 import { fetchMap } from "./services/assets.js";
-import { loadLeaderboard } from "./services/leaderboard.js";
-import { searchPlayers, loadPlayerRank, loadPlayerHeroStats, loadPlayerMatchHistory, loadSteamProfiles, getPlayerDetailSnapshot, buildPlayerDetailViewModel } from "./services/players.js";
 import { safeExternalUrl } from "./ui/security.js";
 
 const $ = selector => document.querySelector(selector);
@@ -22,6 +18,30 @@ let analyticsRuntimePromise = null;
 function loadAnalyticsRuntime() {
   if (!analyticsRuntimePromise) analyticsRuntimePromise = import("./services/analytics.js");
   return analyticsRuntimePromise;
+}
+
+let matchesRuntimePromise = null;
+function loadMatchesRuntime() {
+  if (!matchesRuntimePromise) matchesRuntimePromise = import("./services/matches.js");
+  return matchesRuntimePromise;
+}
+
+let playersRuntimePromise = null;
+function loadPlayersRuntime() {
+  if (!playersRuntimePromise) playersRuntimePromise = import("./services/players.js");
+  return playersRuntimePromise;
+}
+
+let buildsRuntimePromise = null;
+function loadBuildsRuntime() {
+  if (!buildsRuntimePromise) buildsRuntimePromise = import("./services/builds.js");
+  return buildsRuntimePromise;
+}
+
+let leaderboardRuntimePromise = null;
+function loadLeaderboardRuntime() {
+  if (!leaderboardRuntimePromise) leaderboardRuntimePromise = import("./services/leaderboard.js");
+  return leaderboardRuntimePromise;
 }
 
 function loadDataExplorerRuntime() {
@@ -981,7 +1001,8 @@ async function loadApiStatus(signal) {
   }
 }
 
-function renderLeaderboard(signal) {
+async function renderLeaderboard(signal) {
+  const leaderboard = await loadLeaderboardRuntime();
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">GAME / LEADERBOARD</span><h2>Leaderboard</h2><p>Current regional leaderboard data returned by the Deadlock API. The API refreshes this data hourly.</p></section>' +
     '<section class="panel analytics-filter-panel"><form id="leaderboard-filters" class="analytics-filters">' +
@@ -998,7 +1019,7 @@ function renderLeaderboard(signal) {
     try {
       const options = {};
       if (values.leaderboard_id !== "") options.leaderboard_id = Number(values.leaderboard_id);
-      const result = await loadLeaderboard(values.region, { ...options, signal });
+      const result = await leaderboard.loadLeaderboard(values.region, { ...options, signal });
       if (signal.aborted) return;
       const entries = result.data ?? [];
       $("#leaderboard-status").textContent = entries.length + " PLAYERS";
@@ -1022,7 +1043,8 @@ function renderLeaderboard(signal) {
   load(Object.fromEntries(new FormData(form).entries()));
 }
 
-function renderBuilds(signal) {
+async function renderBuilds(signal) {
+  const buildsRuntime = await loadBuildsRuntime();
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">GAME / BUILDS</span><h2>Builds</h2><p>Search the live build catalog using filters documented by the current Deadlock API.</p></section>' +
     '<section class="panel analytics-filter-panel"><form id="build-filters" class="analytics-filters">' +
@@ -1048,7 +1070,7 @@ function renderBuilds(signal) {
       if (filters.author_id !== undefined) filters.author_id = Number(filters.author_id);
       if (filters.limit !== undefined) filters.limit = Number(filters.limit);
       if (filters.only_latest !== undefined) filters.only_latest = filters.only_latest === "true";
-      const result = await listBuilds({ ...assetVersion.options(), ...filters, signal });
+      const result = await buildsRuntime.listBuilds({ ...assetVersion.options(), ...filters, signal });
       if (signal.aborted) return;
       const builds = result.data ?? [];
       $("#build-status").textContent = builds.length + " FOUND";
@@ -1082,7 +1104,8 @@ function renderBuilds(signal) {
   load(Object.fromEntries(new FormData(form).entries()));
 }
 
-function renderBuildDetail(heroId, buildId, signal) {
+async function renderBuildDetail(heroId, buildId, signal) {
+  const [analytics, buildsRuntime] = await Promise.all([loadAnalyticsRuntime(), loadBuildsRuntime()]);
   const numericHeroId = Number(heroId);
   const numericBuildId = Number(buildId);
   if (!Number.isInteger(numericHeroId) || numericHeroId < 0 || !Number.isInteger(numericBuildId) || numericBuildId < 0) {
@@ -1113,7 +1136,7 @@ function renderBuildDetail(heroId, buildId, signal) {
 
       const hero = (heroCatalog.data ?? []).find(item => Number(item?.id) === numericHeroId);
       const tags = new Map((tagCatalog.data ?? []).map(tag => [Number(tag?.id), tag]));
-      const model = buildBuildDetailViewModel(detail, snapshot.performance);
+      const model = buildsRuntime.buildBuildDetailViewModel(detail, snapshot.performance);
       $("#build-detail-name").textContent = model.name ?? ("Build #" + numericBuildId);
 
       const tagLabels = model.tags.map(id => tags.get(Number(id))?.label ?? ("Tag " + id));
@@ -1159,7 +1182,8 @@ function renderBuildDetail(heroId, buildId, signal) {
   render();
 }
 
-function renderMatches(signal) {
+async function renderMatches(signal) {
+  const matches = await loadMatchesRuntime();
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">MATCH INTELLIGENCE</span><h2>Matches</h2><p>Live and recently fetched match intelligence from the current Deadlock API.</p></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">ACTIVE</span><h2>Live matches</h2></div><b id="active-match-status">LOADING</b></div><div id="active-match-list" class="analytics-table"><p class="muted">Loading active matches.</p></div></article>' +
@@ -1229,7 +1253,7 @@ function renderMatches(signal) {
     $("#match-detail").innerHTML = '<span class="eyebrow">RESPONSE</span><p class="muted">Loading metadata…</p>';
     try {
       const [data, heroCatalog, itemCatalog] = await Promise.all([
-        getBulkMatchMetadataSnapshot({
+        matches.getBulkMatchMetadataSnapshot({
         match_ids: [numericMatchId],
         include_info: true,
         include_more_info: true,
@@ -1263,8 +1287,8 @@ function renderMatches(signal) {
 
   try {
     const [active, recent] = await Promise.all([
-      getActiveMatchesSnapshot({ signal }),
-      getRecentlyFetchedMatchesSnapshot({ signal }),
+      matches.getActiveMatchesSnapshot({ signal }),
+      matches.getRecentlyFetchedMatchesSnapshot({ signal }),
     ]);
     if (signal.aborted) return;
     renderList("#active-match-list", active);
@@ -1283,7 +1307,8 @@ function renderMatches(signal) {
   });
 }
 
-function renderPlayers(signal) {
+async function renderPlayers(signal) {
+  const players = await loadPlayersRuntime();
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">GAME / PLAYERS</span><h2>Players</h2><p>Search Steam profiles and inspect public Deadlock player data from the current API contract.</p></section>' +
     '<section class="panel"><form id="player-search" class="analytics-filters">' +
@@ -1314,7 +1339,7 @@ function renderPlayers(signal) {
     $("#player-search-status").textContent = "LOADING";
     results.innerHTML = '<p class="muted">Searching profiles…</p>';
     try {
-      const response = await searchPlayers(values.query.trim(), { limit: Number(values.limit), signal });
+      const response = await players.searchPlayers(values.query.trim(), { limit: Number(values.limit), signal });
       if (signal.aborted) return;
       renderProfiles(response.data);
       $("#player-search-status").textContent = response.data.length + " FOUND";
@@ -1326,7 +1351,8 @@ function renderPlayers(signal) {
   });
 }
 
-async function renderPlayerDetail(accountId, signal) {
+async async function renderPlayerDetail(accountId, signal) {
+  const players = await loadPlayersRuntime();
   const numericAccountId = Number(accountId);
   if (!Number.isInteger(numericAccountId) || numericAccountId < 0) {
     renderNotFound("players/" + accountId);
@@ -1342,14 +1368,14 @@ async function renderPlayerDetail(accountId, signal) {
 
   try {
     const [snapshot, profiles, heroResult, rankResult] = await Promise.all([
-      getPlayerDetailSnapshot(numericAccountId, { signal }),
-      loadSteamProfiles([numericAccountId], { signal }),
+      players.getPlayerDetailSnapshot(numericAccountId, { signal }),
+      players.loadSteamProfiles([numericAccountId], { signal }),
       listHeroes({ ...assetVersion.options(), signal }),
       listRanks({ ...assetVersion.options(), signal }),
     ]);
     if (signal.aborted) return;
     const profile = profiles.data?.[0] ?? null;
-    const model = buildPlayerDetailViewModel(snapshot, profile);
+    const model = players.buildPlayerDetailViewModel(snapshot, profile);
     const profileName = profile?.personaname ?? profile?.name ?? null;
     const heroMap = new Map((heroResult.data ?? []).map(hero => [String(idOf(hero)), hero]));
     const rankAsset = (rankResult.data ?? []).find(rank => String(rank.id) === String(model.rank?.rank ?? "")) ?? null;
