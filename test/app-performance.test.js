@@ -36,3 +36,9 @@ test("app defers asset service runtime", () => {
   assert.doesNotMatch(appSource, /from ["']\.\/services\/assets\.js["']/);
   assert.match(appSource, /import\(\s*["']\.\/services\/assets\.js["']/);
 });
+
+test("asset version service avoids eager asset service dependency", async () => {
+  const source = await (await import("node:fs/promises")).readFile(new URL("../src/services/asset-version.js", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /from ["']\.\/assets\.js["']/);
+  assert.match(source, /from ["']\.\.\/api\/assets\.js["']/);
+});
