@@ -4,6 +4,7 @@ import { getOpenApiContract } from "./services/versioning.js";
 import { probeApiStatus } from "./services/api-status.js";
 import { describeOperation, executeOperation, listApiOperations } from "./services/data-explorer.js";
 import { API_BASE_URL } from "./api/client.js";
+import { loadGraphqlPlayground } from "./services/graphql.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
@@ -161,6 +162,23 @@ async function loadDashboard(signal) {
       console.error("Deadlock API request failed", result.reason);
     }
   }
+}
+
+function renderGraphql(signal) {
+  const playgroundUrl = API_BASE_URL + "/v1/graphql";
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">TOOLS / GRAPHQL</span><h2>GraphQL Explorer</h2><p>The current API exposes an official GraphiQL playground at <code>/v1/graphql</code>. This view verifies the endpoint and opens the API-hosted playground without embedding or rewriting its content.</p></section>' +
+    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">OFFICIAL ENDPOINT</span><h2>GraphiQL</h2></div><b id="graphql-status">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(playgroundUrl) + '</strong></div><p class="panel-actions"><a class="button" href="' + esc(playgroundUrl) + '" target="_blank" rel="noopener noreferrer">Open official playground ↗</a></p><iframe class="graphql-frame" title="Deadlock API GraphQL Playground" src="' + esc(playgroundUrl) + '"></iframe></article></section>';
+  loadGraphqlPlayground({ signal }).then(() => {
+    if (signal.aborted) return;
+    const status = $("#graphql-status");
+    if (status) { status.textContent = "ONLINE"; status.classList.add("online"); }
+  }).catch(error => {
+    if (isAborted(error)) return;
+    const status = $("#graphql-status");
+    if (status) { status.textContent = "UNAVAILABLE"; status.classList.add("offline"); }
+    console.error("GraphQL playground probe failed", error);
+  });
 }
 
 function renderAssetCatalog(kind, signal) {
@@ -1252,6 +1270,7 @@ function route() {
   else if (routeName === "item-analytics") renderItemAnalytics(signal);
   else if (routeName === "maps") renderMaps(signal);
   else if (routeName === "data") renderDataExplorer(signal);
+  else if (routeName === "graphql") renderGraphql(signal);
   else if (routeName === "heroes" || routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
   else renderNotFound(routeName);
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName)));
