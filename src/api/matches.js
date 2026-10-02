@@ -21,7 +21,9 @@ function bulkMetadataOptions(options = {}) {
       BULK_METADATA_KEYS.includes(key) && value !== undefined && value !== null
     ),
   );
-  if (Array.isArray(filtered.match_ids)) filtered.match_ids = filtered.match_ids.join(",");
+  for (const key of ["match_ids", "hero_ids", "include_item_ids", "exclude_item_ids"]) {
+    if (Array.isArray(filtered[key])) filtered[key] = filtered[key].join(",");
+  }
   return { ...rest, query: filtered };
 }
 
