@@ -133,7 +133,8 @@ function beginRoute() {
   return routeController.signal;
 }
 
-function renderDashboard(signal) {
+async function renderDashboard(signal) {
+  const assetsRuntime = await loadAssetsRuntime();
   el.content.innerHTML = '<section class="hero-banner"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA</span><h2>The city never sleeps.</h2><p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p><div class="pills"><span>API-FIRST</span><span>OPENAPI</span><span>LIVE CONTRACT</span></div></div></section>' +
     '<section class="dashboard-metrics">' +
       '<article class="metric-card"><span>FETCHED MATCHES / 24H</span><strong id="matches-per-day">—</strong><small>API info</small></article>' +
@@ -149,7 +150,7 @@ function renderDashboard(signal) {
 async function loadDashboard(signal) {
   const options = { ...assetVersion.options(), signal };
   const [heroesResult, snapshotResult] = await Promise.allSettled([
-    listHeroes(options),
+    assetsRuntime.listHeroes(options),
     getDashboardSnapshot(options),
   ]);
 
@@ -214,9 +215,7 @@ async function loadDashboard(signal) {
     }
   }
 }
-
-function renderGraphql(signal) {
-  const playgroundUrl = API_BASE_URL + "/v1/graphql";
+ API_BASE_URL + "/v1/graphql";
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">TOOLS / GRAPHQL</span><h2>GraphQL Explorer</h2><p>The current API exposes an official GraphiQL playground at <code>/v1/graphql</code>. This view verifies the endpoint and opens the API-hosted playground without embedding or rewriting its content.</p></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">OFFICIAL ENDPOINT</span><h2>GraphiQL</h2></div><b id="graphql-status">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(playgroundUrl) + '</strong></div><p class="panel-actions"><a class="button" href="' + esc(playgroundUrl) + '" target="_blank" rel="noopener noreferrer">Open official playground ↗</a></p><iframe class="graphql-frame" title="Deadlock API GraphQL Playground" src="' + esc(playgroundUrl) + '"></iframe></article></section>';
@@ -587,8 +586,7 @@ s") {
     setConnection(false, "API unavailable");
   });
 }
-
-function normalizeAnalyticsFilters(filters = {}) {
+alizeAnalyticsFilters(filters = {}) {
   const normalized = { ...filters };
   for (const key of ["min_unix_timestamp", "max_unix_timestamp"]) {
     if (normalized[key]) {
@@ -1970,7 +1968,8 @@ function bindVersionControl() {
 }
 
 
-function renderMaps(signal) {
+async function renderMaps(signal) {
+  const assetsRuntime = await loadAssetsRuntime();
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">GAME / MAP INTELLIGENCE</span><h2>Map Explorer</h2><p>Live map geometry and official map layers from the Deadlock asset contract. Coordinates and markers are rendered directly from the API response.</p></section>' +
     '<section class="map-toolbar panel"><div><span class="eyebrow">MAP DATA</span><strong id="map-build">LATEST BUILD</strong></div><div class="map-toggles" role="group" aria-label="Map layers">' +
@@ -1984,7 +1983,7 @@ function renderMaps(signal) {
 
   const stage = $("#map-stage");
   const options = { ...assetVersion.options(), signal };
-  fetchMap(options).then(result => {
+  assetsRuntime.fetchMap(options).then(result => {
     if (signal.aborted) return;
     const map = result?.data ?? {};
     const images = map.images ?? {};
@@ -2141,14 +2140,11 @@ function renderMaps(signal) {
     setConnection(false, "API unavailable");
   });
 }
-
-function renderNotFound(routeName) {
-  el.content.innerHTML = '<section class="page-head"><span class="eyebrow">NAVIGATION / 404</span><h2>Route not found</h2><p>The route <code>' +
+TML = '<section class="page-head"><span class="eyebrow">NAVIGATION / 404</span><h2>Route not found</h2><p>The route <code>' +
     esc('#/' + routeName) +
     '</code> is not implemented in this build.</p><p><a class="primary-button" href="#/">Return to dashboard</a></p></section>';
 }
-
-function route() {
+e() {
   const signal = beginRoute();
   const routeParts = location.hash.replace(/^#\/?/, "").split("/");
   const routeName = routeParts[0] || "dashboard";
