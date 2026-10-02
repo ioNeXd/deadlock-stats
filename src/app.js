@@ -396,9 +396,9 @@ function renderItemDetail(itemId, signal) {
 
   Promise.all([
     fetchItem(itemId, { ...assetVersion.options(), signal }),
-    getItemStatsSnapshot({ ...assetVersion.options(), signal, min_matches: 20 }),
-    getItemPermutationSnapshot({ ...assetVersion.options(), signal, min_matches: 20, comb_size: 2 }),
-    getItemFlowSnapshot({ ...assetVersion.options(), signal, min_matches: 20 }),
+    getItemStatsSnapshot({ ...assetVersion.options(), signal, include_item_ids: [Number(itemId)], min_matches: 20 }),
+    getItemPermutationSnapshot({ ...assetVersion.options(), signal, item_ids: [Number(itemId)], min_matches: 20, comb_size: 2 }),
+    getItemFlowSnapshot({ ...assetVersion.options(), signal, include_item_ids: [Number(itemId)], min_matches: 20 }),
   ]).then(([itemResult, stats, permutations, flow]) => {
     if (signal.aborted) return;
     const model = buildItemDetailAnalyticsViewModel(itemResult.data, stats, permutations, flow);
@@ -418,9 +418,11 @@ function renderItemDetail(itemId, signal) {
       '<div class="metric"><span>AVG BUY</span><strong>' + esc(formatDuration(performance?.avgBuyTimeS)) + '</strong></div>' +
       '<div class="metric"><span>AVG SELL</span><strong>' + esc(formatDuration(performance?.avgSellTimeS)) + '</strong></div>' +
       '</div>';
-    const images = Object.entries(item.images ?? {}).filter(([, value]) => typeof value === "string" && value);
+    const images = Object.entries(item.images ?? {})
+      .map(([key, value]) => [key, safeExternalUrl(value)])
+      .filter(([, value]) => value);
     $("#item-detail-images").innerHTML = images.map(([key, value]) =>
-      '<div class="analytics-table-row"><span><strong>' + esc(key) + '</strong></span><span><a href="' + esc(safeExternalUrl(value)) + '" target="_blank" rel="noreferrer">Open asset</a></span></div>'
+      '<div class="analytics-table-row"><span><strong>' + esc(key) + '</strong></span><span><a href="' + esc(value) + '" target="_blank" rel="noreferrer">Open asset</a></span></div>'
     ).join("") || '<p class="muted">No image assets returned.</p>';
     $("#item-detail-raw").textContent = JSON.stringify(item.raw ?? item, null, 2);
 
