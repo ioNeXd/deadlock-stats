@@ -1,3 +1,4 @@
+import { getBuildDetail } from "./builds.js";
 import { getGameStats, getHeroBanStats, getHeroStats, getHeroCounterStats, getHeroSynergyStats, getHeroBuildStats, getAbilityOrderStats, getHeroCombStats, getBuildItemStats, getBuffStats, getBadgeDistribution, getItemFlowStats, getItemPermutationStats, getItemStats } from "../api/analytics.js";
 
 export async function getAnalyticsSnapshot(options = {}) {
@@ -211,8 +212,24 @@ export function buildHeroDetailViewModel(snapshot, hero = null) {
     counters,
     synergies,
     builds,
+    buildDetails,
     abilityOrders,
   };
+}
+
+export async function getHeroBuildDetailsSnapshot(heroId, builds, options = {}) {
+  const candidates = (builds ?? [])
+    .filter(item => String(item?.heroId) === String(heroId) && Number.isInteger(Number(item?.heroBuildId)))
+    .slice(0, 5);
+
+  const results = await Promise.allSettled(
+    candidates.map(item => getBuildDetail(heroId, Number(item.heroBuildId), options)),
+  );
+
+  return results
+    .filter(result => result.status === "fulfilled")
+    .map(result => result.value?.data)
+    .filter(Boolean);
 }
 
 export async function getHeroDetailSnapshot(heroId, options = {}) {
@@ -223,6 +240,8 @@ export async function getHeroDetailSnapshot(heroId, options = {}) {
     getHeroBuildStatsSnapshot(heroId, { ...requestOptions, signal }),
     getAbilityOrderStatsSnapshot(heroId, { ...requestOptions, signal }),
   ]);
+
+  const buildDetails = await getHeroBuildDetailsSnapshot(heroId, builds, { ...requestOptions, signal });
 
   return {
     heroId,
