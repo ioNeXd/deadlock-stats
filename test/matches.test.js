@@ -12,8 +12,8 @@ test("match wrappers target documented endpoints", async () => {
   };
   await getActiveMatches({ query: { account_ids: [7, 8] }, cache: false, dedupe: false });
   await getRecentlyFetchedMatches({ cache: false, dedupe: false });
-  await getMatchMetadata(123, { cache: false, dedupe: false });
-  await getMatchSalts(123, { cache: false, dedupe: false });
+  await getMatchMetadata(123, { is_custom: true, disable_steam: true, cache: false, dedupe: false });
+  await getMatchSalts(123, { disable_steam: true, cache: false, dedupe: false });
   await getBulkMatchMetadata({
     match_ids: [123, 456],
     include_player_final_stats: true,
@@ -39,6 +39,9 @@ test("match wrappers target documented endpoints", async () => {
   assert.equal(calls[0].searchParams.get("account_ids"), "7");
   assert.equal(calls[0].searchParams.getAll("account_ids").length, 2);
   assert.deepEqual(calls[4].searchParams.getAll("match_ids"), ["123", "456"]);
+  assert.equal(calls[2].searchParams.get("is_custom"), "true");
+  assert.equal(calls[2].searchParams.get("disable_steam"), "true");
+  assert.equal(calls[3].searchParams.get("disable_steam"), "true");
   assert.equal(calls[4].searchParams.get("include_player_final_stats"), "true");
   assert.equal(calls[4].searchParams.get("include_player_stats"), "false");
   assert.equal(calls[4].searchParams.get("hero_ids"), "1,2");
