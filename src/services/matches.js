@@ -72,7 +72,7 @@ export async function getMatchMetadataSnapshot(matchId, options = {}) {
 }
 
 export async function getRawMatchMetadataSnapshot(matchId, options = {}) {
-  return passthrough(getRawMatchMetadata, { ...options, matchId });
+  return getRawMatchMetadata(matchId, options);
 }
 
 export async function getActiveMatchesRawSnapshot(options = {}) {
