@@ -16,6 +16,12 @@ import {
   resolveSchema,
   buildGeneratedSchemaExample,
 } from "../src/services/data-explorer.js";
+import {
+  listUserRequestPresets,
+  saveUserRequestPreset,
+  deleteUserRequestPreset,
+  clearUserRequestPresets,
+} from "../src/services/data-explorer-presets.js";
 
 const originalFetch = globalThis.fetch;
 
@@ -1169,4 +1175,57 @@ test("buildRequestExamples respects OpenAPI media and schema example precedence"
       { name: "Schema default", summary: "Schema default", value: { hero_id: 8 }, source: "schema.default" },
     ],
   );
+});
+
+
+test("user request presets persist by operation and media type", () => {
+  const store = new Map();
+  globalThis.localStorage = {
+    getItem: key => store.get(key) ?? null,
+    setItem: (key, value) => store.set(key, value),
+    removeItem: key => store.delete(key),
+  };
+
+  const saved = saveUserRequestPreset({
+    operationKey: "POST /v1/example",
+    mediaType: "application/json",
+    name: "Ranked default",
+    value: { hero_id: 7, mode: "ranked" },
+  });
+
+  assert.equal(saved.name, "Ranked default");
+  assert.deepEqual(
+    listUserRequestPresets("POST /v1/example", "application/json").map(item => item.value),
+    [{ hero_id: 7, mode: "ranked" }],
+  );
+  assert.deepEqual(listUserRequestPresets("POST /v1/example", "text/plain"), []);
+
+  const updated = saveUserRequestPreset({
+    operationKey: "POST /v1/example",
+    mediaType: "application/json",
+    name: "ranked DEFAULT",
+    value: { hero_id: 9 },
+  });
+  assert.equal(updated.id, saved.id);
+  assert.deepEqual(
+    listUserRequestPresets("POST /v1/example", "application/json").map(item => item.value),
+    [{ hero_id: 9 }],
+  );
+
+  assert.equal(deleteUserRequestPreset(saved.id), true);
+  assert.deepEqual(listUserRequestPresets("POST /v1/example", "application/json"), []);
+  clearUserRequestPresets();
+  delete globalThis.localStorage;
+});
+
+test("user request presets ignore corrupt storage", () => {
+  globalThis.localStorage = {
+    getItem: () => "{invalid",
+    setItem: () => {},
+    removeItem: () => {},
+  };
+
+  assert.deepEqual(listUserRequestPresets("POST /v1/example", "application/json"), []);
+  clearUserRequestPresets();
+  delete globalThis.localStorage;
 });
