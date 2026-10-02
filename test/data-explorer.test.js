@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import {
   listApiOperations,
   describeOperation,
+  buildSchemaFormModel,
+  parseSchemaFormValue,
   buildRequest,
   executeOperation,
   enumValues,
