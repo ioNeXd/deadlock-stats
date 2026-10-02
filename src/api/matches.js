@@ -56,11 +56,19 @@ export function getRecentlyFetchedMatches(options = {}) {
 }
 
 export function getMatchMetadata(matchId, options = {}) {
-  return apiGet(matchPath(matchId, "/metadata"), options);
+  const query = queryToObject(options.query);
+  for (const key of ["is_custom", "disable_steam"]) {
+    if (options[key] !== undefined) query[key] = options[key];
+  }
+  return apiGet(matchPath(matchId, "/metadata"), { ...options, query });
 }
 
 export function getRawMatchMetadata(matchId, options = {}) {
-  return apiGet(matchPath(matchId, "/metadata/raw"), options);
+  const query = queryToObject(options.query);
+  for (const key of ["is_custom", "disable_steam"]) {
+    if (options[key] !== undefined) query[key] = options[key];
+  }
+  return apiGet(matchPath(matchId, "/metadata/raw"), { ...options, query });
 }
 
 export function getMatchLiveUrl(matchId, options = {}) {
@@ -68,7 +76,9 @@ export function getMatchLiveUrl(matchId, options = {}) {
 }
 
 export function getMatchSalts(matchId, options = {}) {
-  return apiGet(matchPath(matchId, "/salts"), options);
+  const query = queryToObject(options.query);
+  if (options.disable_steam !== undefined) query.disable_steam = options.disable_steam;
+  return apiGet(matchPath(matchId, "/salts"), { ...options, query });
 }
 
 export function getBulkMatchMetadata(options = {}) {
