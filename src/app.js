@@ -17,6 +17,7 @@ const el = { content: $("#page-content"), dot: $("#api-dot"), status: $("#api-st
 const assetVersion = createAssetVersionContext();
 let routeController = null;
 let dataExplorerRuntimePromise = null;
+let assetVersionContextPromise = null;
 
 function loadDataExplorerRuntime() {
   if (!dataExplorerRuntimePromise) {
@@ -78,13 +79,18 @@ async function applyAssetColors() {
   }
 }
 
-async function loadAssetVersionContext() {
-  try {
-    await assetVersion.load({ cacheTtlMs: 10 * 60_000 });
-  } catch (error) {
-    console.warn("Deadlock API client versions unavailable", error);
+function loadAssetVersionContext() {
+  if (!assetVersionContextPromise) {
+    assetVersionContextPromise = (async () => {
+      try {
+        await assetVersion.load({ cacheTtlMs: 10 * 60_000 });
+      } catch (error) {
+        console.warn("Deadlock API client versions unavailable", error);
+      }
+      await applyAssetColors();
+    })();
   }
-  await applyAssetColors();
+  return assetVersionContextPromise;
 }
 
 function isAborted(error) {
@@ -2131,6 +2137,14 @@ function route() {
   else renderNotFound(routeName);
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName)));
   bindVersionControl();
+
+  if (routeName === "dashboard" || routeName === "maps") {
+    const initialSelectedVersion = assetVersion.get();
+    loadAssetVersionContext().then(() => {
+      refreshVersionControlOptions();
+      if (assetVersion.get() !== initialSelectedVersion && !signal.aborted) route();
+    }).catch(() => {});
+  }
 }
 
 function refreshVersionControlOptions() {
@@ -2150,9 +2164,3 @@ function refreshVersionControlOptions() {
 
 window.addEventListener("hashchange", route);
 route();
-
-const initialSelectedVersion = assetVersion.get();
-loadAssetVersionContext().then(() => {
-  refreshVersionControlOptions();
-  if (assetVersion.get() !== initialSelectedVersion) route();
-}).catch(() => {});
