@@ -183,7 +183,9 @@ test("match snapshots normalize active and recently fetched responses and preser
     assert.equal(recent[0].durationS, 1200);
     assert.equal(recent[0].raw.future_metric, "recent");
     assert.equal(calls.length, 2);
-    assert.ok(calls.every(call => call.signal === controller.signal));
+    assert.ok(calls.every(call => call.signal instanceof AbortSignal));
+    controller.abort();
+    assert.ok(calls.every(call => call.signal.aborted));
   } finally {
     globalThis.fetch = originalFetch;
   }
