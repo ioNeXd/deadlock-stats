@@ -14,6 +14,7 @@ import {
   schemaType,
   schemaNullable,
   resolveSchema,
+  buildGeneratedSchemaExample,
 } from "../src/services/data-explorer.js";
 
 const originalFetch = globalThis.fetch;
@@ -1056,7 +1057,68 @@ test("buildSchemaViewModel describes nested schema metadata and composition", ()
   assert.deepEqual(model.properties.find(item => item.name === "mode").enum, ["ranked", "normal"]);
   assert.equal(model.properties.find(item => item.name === "nested").properties[0].nullable, true);
   assert.equal(model.properties.find(item => item.name === "ids").items.type, "integer");
-  assert.equal(model.oneOf.length, 2);
+  assert.equa
+
+test("buildGeneratedSchemaExample creates a validated minimal request example", () => {
+  assert.deepEqual(
+    buildGeneratedSchemaExample({
+      type: "object",
+      required: ["hero_id", "mode"],
+      properties: {
+        hero_id: { type: "integer", minimum: 1 },
+        mode: { type: "string", enum: ["ranked", "normal"] },
+        enabled: { type: "boolean" },
+      },
+    }),
+    { hero_id: 1, mode: "ranked" },
+  );
+
+  assert.equal(
+    buildGeneratedSchemaExample({
+      type: "object",
+      required: ["id"],
+      properties: { id: { type: "integer", minimum: 10, maximum: 20 } },
+    }).id,
+    10,
+  );
+
+  assert.equal(
+    buildGeneratedSchemaExample({
+      type: "object",
+      required: ["items"],
+      properties: { items: { type: "array", minItems: 2, items: { type: "integer" } } },
+    }).items.length,
+    2,
+  );
+
+  assert.equal(
+    buildGeneratedSchemaExample({
+      type: "string",
+      pattern: "^[A-Z]+$",
+      minLength: 2,
+    }),
+    undefined,
+  );
+});
+
+test("buildRequestExamples falls back to a generated example only after documented metadata", () => {
+  assert.deepEqual(
+    buildRequestExamples({
+      schema: {
+        type: "object",
+        required: ["mode"],
+        properties: { mode: { type: "string", enum: ["ranked"] } },
+      },
+    }),
+    [{
+      name: "Generated example",
+      summary: "Generated from schema constraints",
+      value: { mode: "ranked" },
+      source: "generated",
+    }],
+  );
+});
+l(model.oneOf.length, 2);
 });
 
 test("buildRequestExamples respects OpenAPI media and schema example precedence", () => {
