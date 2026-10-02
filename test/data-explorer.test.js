@@ -352,6 +352,53 @@ test("executeOperation preserves explicit authentication for operations without 
 });
 
 
+test("buildRequest serializes header parameters and rejects browser cookie parameters", () => {
+  const operation = {
+    method: "GET", path: "/v1/header",
+    parameters: [
+      { name: "X-Trace-Id", in: "header", schema: { type: "string" } },
+      { name: "X-Ids", in: "header", schema: { type: "array", items: { type: "integer" } } },
+    ], requestBody: null,
+  };
+  const request = buildRequest(operation, { "X-Trace-Id": "trace-1", "X-Ids": [1, 2, 3] });
+  assert.equal(request.headers.get("X-Trace-Id"), "trace-1");
+  assert.equal(request.headers.get("X-Ids"), "1,2,3");
+  assert.throws(() => buildRequest({
+    method: "GET", path: "/v1/cookie",
+    parameters: [{ name: "session", in: "cookie", schema: { type: "string" } }], requestBody: null,
+  }, { session: "secret" }), /Cookie parameters are not supported/);
+});
+
+test("executeOperation redacts security credentials from the returned request", async () => {
+  let captured;
+  globalThis.fetch = async (input, init) => {
+    captured = { input: String(input), init };
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  const contract = {
+    components: { securitySchemes: { key: { type: "apiKey", in: "header", name: "X-API-KEY" } } },
+    paths: { "/v1/secure": { get: { security: [{ key: [] }], responses: { "200": { description: "ok" } } } } },
+  };
+  const result = await executeOperation(listApiOperations(contract)[0], {}, { apiKey: "super-secret" });
+  assert.equal(captured.init.headers.get("X-API-KEY"), "super-secret");
+  assert.equal(result.request.headers["x-api-key"], "[REDACTED]");
+});
+
+test("executeOperation redacts apiKey query credentials from the returned request", async () => {
+  let captured;
+  globalThis.fetch = async input => {
+    captured = String(input);
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  const contract = {
+    components: { securitySchemes: { key: { type: "apiKey", in: "query", name: "api_key" } } },
+    paths: { "/v1/secure": { get: { security: [{ key: [] }], responses: { "200": { description: "ok" } } } } },
+  };
+  const result = await executeOperation(listApiOperations(contract)[0], {}, { apiKey: "super-secret" });
+  assert.equal(new URL(captured).searchParams.get("api_key"), "super-secret");
+  assert.equal(result.request.query.api_key, "[REDACTED]");
+});
+
 test("buildRequest coerces array items according to their schema", () => {
   const operation = listApiOperations(contract, { includeDeprecated: false })[0];
   const request = buildRequest(operation, { hero_id: "7", ids: "1,2,3" });
