@@ -1332,8 +1332,8 @@ function renderOperation(operation, signal, contract = null) {
       '<label class="field"><span>Content type <small>OpenAPI</small></span><select name="__contentType" id="explorer-content-type">' +
       bodyTypes.map(item => '<option value="' + esc(item.mediaType) + '">' + esc(item.mediaType) + '</option>').join("") +
       '</select></label>' +
-      (initialExamples.length ? '<label class="field"><span>Example / preset <small>OpenAPI</small></span><select id="explorer-body-example"><option value="">— choose documented example —</option>' +
-        initialExamples.map((example, index) => '<option value="' + index + '">' + esc(example.name) + '</option>').join("") + '</select></label>' : '') +
+      '<label class="field"><span>Example / preset <small>OpenAPI</small></span><select id="explorer-body-example"' + (initialExamples.length ? "" : " hidden") + '><option value="">— choose documented example —</option>' +
+        initialExamples.map((example, index) => '<option value="' + index + '">' + esc(example.name) + '</option>').join("") + '</select></label>' +
       '<div id="schema-body-editor">' + (bodyModel ? schemaFieldControl(bodyModel) : '<label class="field"><span>Payload</span><textarea name="__body" rows="8" placeholder="Request payload"></textarea></label>') + '</div>' +
       '<p class="muted schema-body-note">Fields, defaults, constraints and examples are derived from the current OpenAPI contract. Arrays and free-form objects accept JSON.</p></section>'
     : "";
