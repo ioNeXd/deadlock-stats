@@ -27,6 +27,14 @@ test("hero detail fetches only the selected hero asset", () => {
   assert.match(routeSource, /const hero = heroResult\?\.data \?\? null/);
 });
 
+test("build detail fetches only the selected hero asset", () => {
+  const detailStart = appSource.indexOf("async function renderBuildDetail");
+  const routeSource = appSource.slice(detailStart);
+  assert.match(routeSource, /assetsRuntime\.fetchHero\(numericHeroId/);
+  assert.doesNotMatch(routeSource, /assetsRuntime\.listHeroes\(\{ \.\.\.assetVersion\.options\(\), signal \}\)/);
+  assert.match(routeSource, /const hero = heroResult\?\.data \?\? null/);
+});
+
 test("app defers analytics runtime until analytics routes", () => {
   assert.doesNotMatch(appSource, /from ["']\.\/services\/analytics\.js["']/);
   assert.match(appSource, /import\(\s*["']\.\/services\/analytics\.js["']/);
