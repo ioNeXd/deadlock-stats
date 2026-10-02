@@ -122,10 +122,10 @@ export function loadPlayerRankPredictBatchImage(accountIds, format, options = {}
 
 export function buildPlayerDetailViewModel(snapshot, profile = null) {
   const rank = snapshot?.rank?.data ?? snapshot?.rank?.raw ?? snapshot?.rank ?? {};
-  const heroes = Array.isArray(snapshot?.heroStats) ? snapshot.heroStats : [];
-  const history = Array.isArray(snapshot?.matchHistory) ? snapshot.matchHistory : [];
-  const enemies = Array.isArray(snapshot?.enemyStats) ? snapshot.enemyStats : [];
-  const mates = Array.isArray(snapshot?.mateStats) ? snapshot.mateStats : [];
+  const heroes = Array.isArray(snapshot?.heroStats) ? snapshot.heroStats : asArray(snapshot?.heroStats?.data);
+  const history = Array.isArray(snapshot?.matchHistory) ? snapshot.matchHistory : asArray(snapshot?.matchHistory?.data);
+  const enemies = Array.isArray(snapshot?.enemyStats) ? snapshot.enemyStats : asArray(snapshot?.enemyStats?.data);
+  const mates = Array.isArray(snapshot?.mateStats) ? snapshot.mateStats : asArray(snapshot?.mateStats?.data);
 
   return {
     accountId: Number.isInteger(Number(snapshot?.accountId)) ? Number(snapshot.accountId) : null,
