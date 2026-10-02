@@ -981,6 +981,140 @@ function schemaPlaceholder(schema) {
   return "value";
 }
 
+function formatExplorerValue(value) {
+  if (value === undefined) return "undefined";
+  if (value === null) return "null";
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
+function explorerResponseSize(data) {
+  if (data == null) return null;
+  if (typeof Blob !== "undefined" && data instanceof Blob) return data.size;
+  if (data instanceof ArrayBuffer) return data.byteLength;
+  if (ArrayBuffer.isView(data)) return data.byteLength;
+  if (typeof data === "string") return new TextEncoder().encode(data).byteLength;
+  return new TextEncoder().encode(formatExplorerValue(data)).byteLength;
+}
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes)) return "—";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+function renderExplorerHeaders(headers, emptyLabel) {
+  const entries = Object.entries(headers ?? {});
+  if (!entries.length) return '<p class="muted">' + esc(emptyLabel) + "</p>";
+  return '<div class="explorer-headers">' + entries.map(([name, value]) =>
+    '<div><code>' + esc(name) + '</code><span>' + esc(value) + "</span></div>"
+  ).join("") + "</div>";
+}
+
+function renderExplorerResponseContent(result, target) {
+  const data = result?.data;
+  const contentType = String(result?.contentType ?? "").toLowerCase();
+
+  if (data == null) {
+    target.innerHTML = '<p class="muted">Empty response body.</p>';
+    return;
+  }
+
+  if (typeof ReadableStream !== "undefined" && data instanceof ReadableStream) {
+    target.innerHTML =
+      '<div class="explorer-response-placeholder"><strong>STREAM</strong><p>The API returned a streaming response. The inspector does not consume the stream, so the live body remains untouched.</p></div>';
+    return;
+  }
+
+  if (typeof Blob !== "undefined" && data instanceof Blob) {
+    if (contentType.startsWith("image/") || data.type.startsWith("image/")) {
+      const url = URL.createObjectURL(data);
+      target.innerHTML =
+        '<div class="explorer-image-preview"><img src="' + esc(url) + '" alt="API response preview"></div>' +
+        '<p class="muted">' + esc(data.type || contentType || "image/*") + " · " + formatBytes(data.size) + "</p>";
+      target.dataset.objectUrl = url;
+      return;
+    }
+    target.innerHTML =
+      '<div class="explorer-response-placeholder"><strong>BINARY</strong><p>' +
+      esc(data.type || contentType || "application/octet-stream") + " · " + formatBytes(data.size) +
+      "</p></div>";
+    return;
+  }
+
+  if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
+    const bytes = data instanceof ArrayBuffer ? new Uint8Array(data) : new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+    const preview = Array.from(bytes.slice(0, 128), byte => byte.toString(16).padStart(2, "0")).join(" ");
+    target.innerHTML =
+      '<div class="explorer-response-placeholder"><strong>BINARY</strong><p>' +
+      esc(contentType || "application/octet-stream") + " · " + formatBytes(bytes.byteLength) +
+      "</p><code class="explorer-hex">' + esc(preview || "empty") + (bytes.length > 128 ? " …" : "") + "</code></div>";
+    return;
+  }
+
+  const text = typeof data === "string"
+    ? data
+    : formatExplorerValue(data);
+  const language = contentType.includes("html") ? "HTML" : contentType.includes("event-stream") ? "SSE" : contentType.includes("json") || typeof data === "object" ? "JSON" : "TEXT";
+  target.innerHTML =
+    '<div class="explorer-response-toolbar"><span class="eyebrow">' + language + '</span><button type="button" class="secondary-button" data-copy-response>Copy response</button></div>' +
+    '<pre class="explorer-response-body">' + esc(text) + "</pre>";
+
+  const copyButton = target.querySelector("[data-copy-response]");
+  copyButton?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      copyButton.textContent = "Copied";
+      setTimeout(() => { copyButton.textContent = "Copy response"; }, 1200);
+    } catch {
+      copyButton.textContent = "Copy unavailable";
+    }
+  });
+}
+
+async function renderExplorerResponse(result, target, signal) {
+  if (!target) return;
+  const previousUrl = target.dataset.objectUrl;
+  if (previousUrl) {
+    URL.revokeObjectURL(previousUrl);
+    delete target.dataset.objectUrl;
+  }
+
+  const request = result?.request ?? {};
+  const requestQuery = request.query && Object.keys(request.query).length ? request.query : {};
+  const requestBody = request.body;
+  const size = explorerResponseSize(result?.data);
+
+  target.innerHTML =
+    '<div class="explorer-response-meta">' +
+      '<div><span>STATUS</span><strong class="' + (Number(result?.status) >= 400 ? "explorer-bad" : "explorer-good") + '">' + esc(result?.status ?? "—") + "</strong></div>" +
+      '<div><span>LATENCY</span><strong>' + esc(result?.latencyMs != null ? result.latencyMs + " ms" : "—") + "</strong></div>" +
+      '<div><span>TYPE</span><strong>' + esc(result?.contentType || "—") + "</strong></div>" +
+      '<div><span>SIZE</span><strong>' + formatBytes(size) + "</strong></div>" +
+    "</div>" +
+    '<details class="explorer-details" open><summary>Request</summary>' +
+      '<div class="explorer-request-grid">' +
+        '<div><span>METHOD</span><code>' + esc(request.method ?? "—") + "</code></div>" +
+        '<div><span>URL</span><code>' + esc(result?.url ?? "—") + "</code></div>" +
+      "</div>" +
+      '<div class="explorer-detail-section"><span class="eyebrow">QUERY</span><pre>' + esc(formatExplorerValue(requestQuery)) + "</pre></div>" +
+      '<div class="explorer-detail-section"><span class="eyebrow">HEADERS</span>' + renderExplorerHeaders(request.headers, "No request headers.") + "</div>" +
+      (requestBody !== undefined ? '<div class="explorer-detail-section"><span class="eyebrow">BODY</span><pre>' + esc(formatExplorerValue(requestBody)) + "</pre></div>" : "") +
+    "</details>" +
+    '<details class="explorer-details"><summary>Response headers</summary>' +
+      renderExplorerHeaders(result?.headers, "No response headers returned.") +
+    "</details>" +
+    '<section class="explorer-response-content"><div class="section-head"><div><span class="eyebrow">RESPONSE BODY</span><h3>Payload</h3></div></div><div data-explorer-response-content><p class="muted">Rendering response…</p></div></section>';
+
+  renderExplorerResponseContent(result, target.querySelector("[data-explorer-response-content]"));
+  if (signal?.aborted) return;
+}
+
 function renderOperation(operation, signal, contract = null) {
   const detail = describeOperation(operation, contract);
   $("#explorer-empty").hidden = true;
@@ -1013,10 +1147,10 @@ function renderOperation(operation, signal, contract = null) {
 
   const bodyTypes = detail.requestBodyInfo ?? [];
   const bodyField = bodyTypes.length
-    ? '<label class="field"><span>Request body <small>' + (bodyTypes[0].required ? "required · " : "") + "JSON/body</small></span>" +
+    ? '<label class="field"><span>Request body <small>' + (bodyTypes[0].required ? "required · " : "") + "body</small></span>" +
       '<select name="__contentType">' +
       bodyTypes.map(item => '<option value="' + esc(item.mediaType) + '">' + esc(item.mediaType) + "</option>").join("") +
-      "</select><textarea name=\"__body\" rows=\"8\" placeholder=\"{ }\"></textarea></label>"
+      "</select><textarea name="__body" rows="8" placeholder="' + (bodyTypes[0].mediaType?.includes("json") ? "{ }" : "Request payload") + '"></textarea></label>'
     : "";
 
   const responseSummary = detail.responseInfo.map(response =>
@@ -1038,32 +1172,28 @@ function renderOperation(operation, signal, contract = null) {
     (securitySummary ? securitySummary : "") +
     '<form id="operation-form">' + parameterFields + bodyField +
     '<button class="primary-button" type="submit">Execute request</button></form>' +
-    '<div id="operation-result" class="result-box"><span class="eyebrow">RESPONSE</span><pre>Waiting for request.</pre></div>' +
+    '<div id="operation-result" class="result-box explorer-result"><span class="eyebrow">RESPONSE INSPECTOR</span><p class="muted">Waiting for request.</p></div>' +
     '<div class="result-box"><span class="eyebrow">DOCUMENTED RESPONSES</span>' + responseSummary + "</div>";
 
   $("#operation-form").addEventListener("submit", async event => {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
     const resultBox = $("#operation-result");
-    resultBox.querySelector("pre").textContent = "Loading…";
+    resultBox.innerHTML = '<span class="eyebrow">RESPONSE INSPECTOR</span><p class="muted">Executing request…</p>';
     try {
       const result = await executeOperation(operation, values, { signal });
-      resultBox.querySelector("pre").textContent = JSON.stringify({
-        status: result.status,
-        latencyMs: result.latencyMs,
-        url: result.url,
-        contentType: result.contentType,
-        request: result.request,
-        data: result.data,
-      }, null, 2);
+      if (signal.aborted) return;
+      await renderExplorerResponse(result, resultBox, signal);
     } catch (error) {
       if (isAborted(error)) return;
-      resultBox.querySelector("pre").textContent = JSON.stringify({
-        error: error.message,
-        status: error.status ?? null,
-        retryAfterMs: error.retryAfterMs ?? null,
-        url: error.url ?? null,
-      }, null, 2);
+      resultBox.innerHTML =
+        '<span class="eyebrow">REQUEST ERROR</span>' +
+        '<div class="explorer-error-grid">' +
+          '<div><span>STATUS</span><strong>' + esc(error.status ?? "—") + "</strong></div>" +
+          '<div><span>CODE</span><strong>' + esc(error.code ?? error.name ?? "ERROR") + "</strong></div>" +
+          '<div><span>RETRY-AFTER</span><strong>' + esc(error.retryAfterMs != null ? error.retryAfterMs + " ms" : "—") + "</strong></div>" +
+        "</div>" +
+        '<pre class="error-text">' + esc(error.message) + "</pre>";
     }
   });
 }
