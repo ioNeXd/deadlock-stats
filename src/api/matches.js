@@ -114,7 +114,7 @@ export function getCustomMatchId(partyId, options = {}) {
 }
 
 export function getLiveQuery(options = {}) {
-  return apiGet("/v1/matches/demo/live/query", options);
+  return apiGet("/v1/matches/demo/live/query", { ...options, responseType: "stream", cache: false, dedupe: false });
 }
 
 export function submitDemoQuery(body, options = {}) {
@@ -132,7 +132,7 @@ export function getDemoQueryStatus(jobId, options = {}) {
 export function getDemoSchema(matchId, options = {}) {
   return apiGet("/v1/matches/demo/schema", {
     ...options,
-    query: { ...(options.query ?? {}), match_id: validateNumericId(matchId, "matchId") },
+    query: { ...queryToObject(options.query), match_id: validateNumericId(matchId, "matchId") },
   });
 }
 
