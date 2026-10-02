@@ -138,6 +138,10 @@ function responseInfo(responses, contract = null) {
       ...resolveLocalRef(header, contract),
       schema: resolveSchema(resolveLocalRef(header, contract)?.schema ?? null, contract),
     })),
+    links: Object.entries(response?.links ?? {}).map(([name, link]) => ({
+      name,
+      ...resolveLocalRef(link, contract),
+    })),
   }));
 }
 
