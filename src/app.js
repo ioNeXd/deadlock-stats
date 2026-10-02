@@ -2140,11 +2140,13 @@ async function renderMaps(signal) {
     setConnection(false, "API unavailable");
   });
 }
-TML = '<section class="page-head"><span class="eyebrow">NAVIGATION / 404</span><h2>Route not found</h2><p>The route <code>' +
+function renderNotFound(routeName) {
+  el.content.innerHTML = '<section class="page-head"><span class="eyebrow">NAVIGATION / 404</span><h2>Route not found</h2><p>The route <code>' +
     esc('#/' + routeName) +
     '</code> is not implemented in this build.</p><p><a class="primary-button" href="#/">Return to dashboard</a></p></section>';
 }
-e() {
+
+function route() {
   const signal = beginRoute();
   const routeParts = location.hash.replace(/^#\/?/, "").split("/");
   const routeName = routeParts[0] || "dashboard";
