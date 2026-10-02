@@ -121,3 +121,13 @@
 .explorer-hex{display:block;margin-top:12px;padding:12px;overflow:auto;border:1px solid var(--line);background:#090807;color:var(--muted);font:8px/1.7 "DM Mono";word-break:break-all}
 .explorer-error-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
 @media(max-width:720px){.explorer-response-meta{grid-template-columns:repeat(2,minmax(0,1fr))}.explorer-request-grid,.explorer-headers>div{grid-template-columns:1fr}.explorer-error-grid{grid-template-columns:1fr}}
+
+
+.schema-body-editor{display:grid;gap:10px;padding:14px;border:1px solid var(--line);background:rgba(13,12,11,.28)}
+.schema-body-head{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.schema-body-head h3{margin:3px 0 0}
+.schema-object{display:grid;gap:10px;margin:0;padding:12px;border:1px solid var(--line);min-width:0}
+.schema-object legend{padding:0 6px;color:var(--gold2);font:10px "DM Mono";letter-spacing:.06em}
+.schema-object legend small{color:var(--muted);font:8px "DM Mono";letter-spacing:0}
+.schema-field{min-width:0}
+.schema-body-note{margin:0;padding-top:4px}
