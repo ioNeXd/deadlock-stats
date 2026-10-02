@@ -169,6 +169,52 @@ export function normalizeHeroCombStats(result) {
 }
 
 
+export function buildHeroDetailViewModel(snapshot, hero = null) {
+  const stat = snapshot?.stats?.[0] ?? null;
+  const matches = Number(stat?.matches);
+  const wins = Number(stat?.wins);
+  const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? (wins / matches) * 100 : null;
+
+  const counters = (snapshot?.counters ?? [])
+    .filter(item => Number(item?.matchesPlayed) > 0)
+    .sort((a, b) => Number(b.matchesPlayed) - Number(a.matchesPlayed));
+
+  const synergies = (snapshot?.synergies ?? [])
+    .filter(item => Number(item?.matchesPlayed) > 0)
+    .sort((a, b) => Number(b.matchesPlayed) - Number(a.matchesPlayed));
+
+  const builds = (snapshot?.builds ?? [])
+    .filter(item => Number(item?.matches) > 0)
+    .sort((a, b) => Number(b.matches) - Number(a.matches));
+
+  const abilityOrders = (snapshot?.abilityOrders ?? [])
+    .filter(item => Number(item?.matches) > 0)
+    .sort((a, b) => Number(b.matches) - Number(a.matches));
+
+  return {
+    hero: hero ?? null,
+    heroId: snapshot?.heroId ?? null,
+    overview: {
+      matches: Number.isFinite(matches) ? matches : null,
+      wins: Number.isFinite(wins) ? wins : null,
+      losses: Number.isFinite(Number(stat?.losses)) ? Number(stat.losses) : null,
+      winRate,
+      kills: stat?.totalKills ?? null,
+      deaths: stat?.totalDeaths ?? null,
+      assists: stat?.totalAssists ?? null,
+      netWorth: stat?.totalNetWorth ?? null,
+      lastHits: stat?.totalLastHits ?? null,
+      denies: stat?.totalDenies ?? null,
+      playerDamage: stat?.totalPlayerDamage ?? null,
+      playerDamageTaken: stat?.totalPlayerDamageTaken ?? null,
+    },
+    counters,
+    synergies,
+    builds,
+    abilityOrders,
+  };
+}
+
 export async function getHeroDetailSnapshot(heroId, options = {}) {
   const { signal, ...requestOptions } = options;
   const [stats, matchup, builds, abilityOrders] = await Promise.all([
