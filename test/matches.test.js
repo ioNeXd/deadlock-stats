@@ -167,7 +167,7 @@ test("match snapshots normalize active and recently fetched responses and preser
     const url = new URL(input);
     calls.push({ path: url.pathname, signal: init.signal });
     const payload = url.pathname.endsWith("/active")
-      ? { data: [{ match_id: 10, duration_s: 900, players: [], future_metric: "active" }] }
+      ? [{ match_id: 10, duration_s: 900, players: [], future_metric: "active" }]
       : [{ match_id: 20, duration_s: 1200, players: [], future_metric: "recent" }];
     return new Response(JSON.stringify(payload), { status: 200, headers: { "content-type": "application/json" } });
   };
