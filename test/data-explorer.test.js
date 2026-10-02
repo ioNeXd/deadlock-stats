@@ -479,6 +479,25 @@ test("buildRequest serializes path arrays and objects", () => {
   assert.equal(request.path, "/v1/test/.1.2/;hero=7,mode=ranked");
 });
 
+test("buildRequest percent-encodes reserved characters inside path parameters", () => {
+  const operation = {
+    method: "GET",
+    path: "/v1/test/{id}/{tags}/{filters}",
+    parameters: [
+      { name: "id", in: "path", required: true, schema: { type: "string" } },
+      { name: "tags", in: "path", style: "label", schema: { type: "array", items: { type: "string" } } },
+      { name: "filters", in: "path", style: "matrix", schema: { type: "object" } },
+    ],
+    requestBody: null,
+  };
+  const request = buildRequest(operation, {
+    id: "hero/alpha?mode=ranked#build",
+    tags: ["a/b", "x y"],
+    filters: { "hero/id": "7", mode: "ranked+street" },
+  });
+  assert.equal(request.path, "/v1/test/hero%2Falpha%3Fmode%3Dranked%23build/.a%2Fb.x%20y/;hero%2Fid=7,mode=ranked%2Bstreet");
+});
+
 test("executeOperation applies the documented request media type", async () => {
   let captured;
   globalThis.fetch = async (input, init) => {
