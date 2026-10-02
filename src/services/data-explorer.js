@@ -75,6 +75,7 @@ function schemaType(schema) {
 }
 
 function schemaNullable(schema) {
+  if (schema?.nullable === true) return true;
   const nullableType = Array.isArray(schema?.type) && schema.type.includes("null");
   const variants = [...(schema?.oneOf ?? []), ...(schema?.anyOf ?? [])];
   return nullableType || variants.some(item => item?.type === "null" || item?.const === null);
@@ -744,6 +745,11 @@ function schemaFormNode(schema, name, required = false, label = name, path = nam
     default: resolved.default,
     description: resolved.description ?? "",
     enum: enumOptions,
+    examples: Array.isArray(resolved.examples)
+      ? resolved.examples
+      : enumOptions.length
+        ? [enumOptions[0]]
+        : [],
     minimum: resolved.minimum,
     maximum: resolved.maximum,
     minLength: resolved.minLength,
