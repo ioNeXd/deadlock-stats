@@ -168,6 +168,45 @@ test("player MMR and rank prediction endpoints use current API paths and constra
 
 import { getPlayerDetailSnapshot, buildPlayerDetailViewModel } from "../src/services/players.js";
 
+
+test("player detail snapshot composes current API requests", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async input => {
+    const url = new URL(input);
+    calls.push(url.pathname);
+    const payloads = {
+      "/v1/players/7/rank": { badge: 10, rank: 2, subrank: 3 },
+      "/v1/players/hero-stats": [{ hero_id: 1, matches_played: 12 }],
+      "/v1/players/7/match-history": [{ match_id: 99 }],
+      "/v1/players/7/enemy-stats": [{ enemy_hero_id: 8, matches_played: 5 }],
+      "/v1/players/7/mate-stats": [{ mate_account_id: 9, matches_played: 6 }],
+    };
+    return new Response(JSON.stringify(payloads[url.pathname] ?? []), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  try {
+    const snapshot = await getPlayerDetailSnapshot(7, { cache: false, dedupe: false });
+    assert.deepEqual(new Set(calls), new Set([
+      "/v1/players/7/rank",
+      "/v1/players/hero-stats",
+      "/v1/players/7/match-history",
+      "/v1/players/7/enemy-stats",
+      "/v1/players/7/mate-stats",
+    ]));
+    assert.equal(snapshot.rank.data.badge, 10);
+    assert.equal(snapshot.heroStats[0].hero_id, 1);
+    assert.equal(snapshot.matchHistory[0].match_id, 99);
+    assert.equal(snapshot.enemyStats[0].enemy_hero_id, 8);
+    assert.equal(snapshot.mateStats[0].mate_account_id, 9);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("player detail snapshot composes rank, heroes, history and relationships", async () => {
   const snapshot = {
     accountId: 7,
