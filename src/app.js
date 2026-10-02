@@ -1,10 +1,8 @@
-import { listHeroes, listRanks, listItems, listItemsByHeroId, listItemsBySlotType, listItemsByType, fetchItem, listMiscEntities, listBuildTags, buildItemDetailViewModel } from "./services/assets.js";
 import { probeApiStatus } from "./services/api-status.js";
 import { API_BASE_URL } from "./api/client.js";
 import { resolveAssetImage } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { getDashboardSnapshot } from "./services/dashboard.js";
-import { fetchMap } from "./services/assets.js";
 import { safeExternalUrl } from "./ui/security.js";
 
 const $ = selector => document.querySelector(selector);
@@ -13,6 +11,13 @@ const assetVersion = createAssetVersionContext();
 let routeController = null;
 let dataExplorerRuntimePromise = null;
 let assetVersionContextPromise = null;
+let assetsRuntimePromise = null;
+
+function loadAssetsRuntime() {
+  if (!assetsRuntimePromise) assetsRuntimePromise = import("./services/assets.js");
+  return assetsRuntimePromise;
+}
+
 let analyticsRuntimePromise = null;
 
 function loadAnalyticsRuntime() {
@@ -228,6 +233,7 @@ function renderGraphql(signal) {
 }
 
 async function renderHeroDetail(heroId, signal) {
+  const assetsRuntime = await loadAssetsRuntime();
   const analytics = await loadAnalyticsRuntime();
   const numericHeroId = Number(heroId);
   if (!Number.isInteger(numericHeroId) || numericHeroId < 0) {
@@ -245,7 +251,7 @@ async function renderHeroDetail(heroId, signal) {
   const options = { ...assetVersion.options(), signal };
   Promise.all([
     analytics.getHeroDetailSnapshot(numericHeroId, options),
-    listHeroes({ ...assetVersion.options(), signal }),
+    assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
   ]).then(([snapshot, heroResult]) => {
     if (signal.aborted) return;
     const hero = (heroResult.data ?? []).find(item => String(idOf(item)) === String(numericHeroId)) ?? null;
@@ -331,10 +337,7 @@ async function renderHeroDetail(heroId, signal) {
   });
 
 }
-
-function renderHeroes(signal) {
-  el.content.innerHTML =
-    '<section class="page-head"><span class="eyebrow">GAME / HERO INTELLIGENCE</span><h2>Heroes</h2><p>Hero roster, performance and combat statistics from the live Deadlock analytics API.</p></section>' +
+ection class="page-head"><span class="eyebrow">GAME / HERO INTELLIGENCE</span><h2>Heroes</h2><p>Hero roster, performance and combat statistics from the live Deadlock analytics API.</p></section>' +
     '<section class="panel analytics-filter-panel"><div class="section-head"><div><span class="eyebrow">SCOPE</span><h2>Hero statistics</h2></div><b id="heroes-status">LOADING</b></div>' +
     '<form id="heroes-filters" class="analytics-filters">' +
       '<label class="field"><span>Search hero</span><input name="search" type="search" placeholder="Abrams, Infernus…"></label>' +
@@ -433,6 +436,7 @@ function renderHeroes(signal) {
 }
 
 async function renderItemDetail(itemId, signal) {
+  const assetsRuntime = await loadAssetsRuntime();
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">GAME / ITEMS / DETAIL</span><h2 id="item-detail-name">Item</h2><p>Item definition and assets returned by the current Deadlock API.</p></section>' +
     '<section class="panel"><div id="item-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching item…</span></div><div id="item-detail-summary"></div></section>' +
@@ -440,7 +444,7 @@ async function renderItemDetail(itemId, signal) {
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">INTELLIGENCE</span><h2>Item performance & progression</h2></div></div><div id="item-detail-intelligence"></div></section>' + '<section class="panel"><div class="section-head"><div><span class="eyebrow">RAW API</span><h2>Definition</h2></div></div><pre id="item-detail-raw" class="code-block"></pre></section>';
 
   Promise.all([
-    fetchItem(itemId, { ...assetVersion.options(), signal }),
+    assetsRuntime.fetchItem(itemId, { ...assetVersion.options(), signal }),
     analytics.getItemStatsSnapshot({ ...assetVersion.options(), signal, include_item_ids: [Number(itemId)], min_matches: 20 }),
     analytics.getItemPermutationSnapshot({ ...assetVersion.options(), signal, item_ids: [Number(itemId)], min_matches: 20, comb_size: 2 }),
     analytics.getItemFlowSnapshot({ ...assetVersion.options(), signal, include_item_ids: [Number(itemId)], min_matches: 20 }),
@@ -492,9 +496,7 @@ async function renderItemDetail(itemId, signal) {
     $("#item-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span>' + esc(error.message) + '</span>';
   });
 }
-
-function renderAssetCatalog(kind, signal) {
-  if (kind === "items") {
+s") {
     el.content.innerHTML =
       '<section class="page-head"><span class="eyebrow">GAME / ITEMS</span><h2>Items</h2><p>Item, ability, weapon and upgrade definitions from the current Deadlock API.</p></section>' +
       '<section class="panel analytics-filter-panel"><form id="item-catalog-filters" class="analytics-filters">' +
@@ -678,7 +680,7 @@ async function renderItemAnalytics(signal) {
     $("#item-analytics-status").textContent = "LOADING";
     try {
       const [items, stats, permutations, flow] = await Promise.all([
-        listItems({ ...assetVersion.options(), signal }),
+        assetsRuntime.listItems({ ...assetVersion.options(), signal }),
         analytics.getItemStatsSnapshot({ ...assetVersion.options(), ...filters, signal }),
         analytics.getItemPermutationSnapshot({ ...assetVersion.options(), ...filters, signal }),
         analytics.getItemFlowSnapshot({ ...assetVersion.options(), ...filters, signal }),
@@ -743,6 +745,7 @@ async function renderItemAnalytics(signal) {
 }
 
 async function renderAnalytics(signal) {
+  const assetsRuntime = await loadAssetsRuntime();
   const analytics = await loadAnalyticsRuntime();
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">ANALYTICS / MATCH INTELLIGENCE</span><h2>Analytics</h2><p>Aggregate match and hero-ban statistics from the documented analytics API.</p></section>' +
@@ -832,9 +835,9 @@ async function loadAnalytics(signal, filters = {}) {
       : '<p class="muted">No hero ban statistics returned.</p>';
 
     const [heroCatalog, itemCatalog, miscCatalog] = await Promise.all([
-      listHeroes({ ...assetVersion.options(), signal }),
-      listItems({ ...assetVersion.options(), signal }),
-      listMiscEntities({ ...assetVersion.options(), signal }),
+      assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
+      assetsRuntime.listItems({ ...assetVersion.options(), signal }),
+      assetsRuntime.listMiscEntities({ ...assetVersion.options(), signal }),
     ]);
     if (signal.aborted) return;
     const heroesById = new Map(heroCatalog.data.map(hero => [String(idOf(hero)), hero]));
@@ -969,9 +972,7 @@ async function loadAnalytics(signal, filters = {}) {
     console.error("Deadlock analytics request failed", error);
   }
 }
-
-function renderApiStatus(signal) {
-  el.content.innerHTML = '<section class="page-head"><span class="eyebrow">SYSTEM / API</span><h2>API Status</h2><p>Live health probe for the documented Deadlock API infrastructure.</p></section>' +
+n class="eyebrow">SYSTEM / API</span><h2>API Status</h2><p>Live health probe for the documented Deadlock API infrastructure.</p></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">HEALTH</span><h2 id="status-title">Checking…</h2></div><b id="status-badge">CHECKING</b></div><div id="status-metrics"></div></article><article class="panel"><span class="eyebrow">SERVICES</span><h2>Infrastructure</h2><div id="service-list"></div></article></section>';
   loadApiStatus(signal);
 }
@@ -1105,6 +1106,7 @@ async function renderBuilds(signal) {
 }
 
 async function renderBuildDetail(heroId, buildId, signal) {
+  const assetsRuntime = await loadAssetsRuntime();
   const [analytics, buildsRuntime] = await Promise.all([loadAnalyticsRuntime(), loadBuildsRuntime()]);
   const numericHeroId = Number(heroId);
   const numericBuildId = Number(buildId);
@@ -1123,8 +1125,8 @@ async function renderBuildDetail(heroId, buildId, signal) {
     try {
       const [snapshot, heroCatalog, tagCatalog] = await Promise.all([
         analytics.getBuildDetailSnapshot(numericHeroId, numericBuildId, { ...assetVersion.options(), signal }),
-        listHeroes({ ...assetVersion.options(), signal }),
-        listBuildTags({ ...assetVersion.options(), signal }),
+        assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
+        assetsRuntime.listBuildTags({ ...assetVersion.options(), signal }),
       ]);
       if (signal.aborted) return;
 
@@ -1267,8 +1269,8 @@ async function renderMatches(signal) {
         limit: 1,
         signal,
       }),
-        listHeroes({ ...assetVersion.options(), signal }),
-        listItems({ ...assetVersion.options(), signal }),
+        assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
+        assetsRuntime.listItems({ ...assetVersion.options(), signal }),
       ]);
       if (signal.aborted) return;
       const detail = Array.isArray(data) ? data[0] : data;
@@ -1370,8 +1372,8 @@ async async function renderPlayerDetail(accountId, signal) {
     const [snapshot, profiles, heroResult, rankResult] = await Promise.all([
       players.getPlayerDetailSnapshot(numericAccountId, { signal }),
       players.loadSteamProfiles([numericAccountId], { signal }),
-      listHeroes({ ...assetVersion.options(), signal }),
-      listRanks({ ...assetVersion.options(), signal }),
+      assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
+      assetsRuntime.listRanks({ ...assetVersion.options(), signal }),
     ]);
     if (signal.aborted) return;
     const profile = profiles.data?.[0] ?? null;
@@ -1419,9 +1421,7 @@ async async function renderPlayerDetail(accountId, signal) {
     $("#player-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span>' + esc(error.message) + '</span>';
   }
 }
-
-function renderDataExplorer(signal) {
-  el.content.innerHTML = '<section class="page-head"><span class="eyebrow">TOOLS / OPENAPI</span><h2>Data Explorer</h2><p>Inspect and execute documented API operations from the live OpenAPI contract.</p></section>' +
+><h2>Data Explorer</h2><p>Inspect and execute documented API operations from the live OpenAPI contract.</p></section>' +
     '<section class="explorer"><aside class="explorer-list"><input id="operation-filter" class="explorer-search" type="search" aria-label="Filter API operations" placeholder="Filter operations…"><div id="operation-list"></div></aside><article class="panel explorer-main"><div id="explorer-empty"><span class="eyebrow">CONTRACT</span><h3>Select an operation</h3><p>The explorer is populated from the live OpenAPI contract.</p></div><div id="operation-detail" hidden></div></article></section>';
   loadExplorer(signal);
 }
@@ -1451,8 +1451,7 @@ async function loadExplorer(signal) {
     setConnection(false, "API unavailable");
   }
 }
-
-function schemaPlaceholder(schema) {
+maPlaceholder(schema) {
   if (!schema) return "value";
   if (Array.isArray(schema.type)) return schema.type.join(" | ");
   if (schema.type) return schema.type;
