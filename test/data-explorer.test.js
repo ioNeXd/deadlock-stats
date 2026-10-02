@@ -371,6 +371,24 @@ test("buildRequest serializes header parameters and rejects browser cookie param
   }, { session: "secret" }), /Cookie parameters are not supported/);
 });
 
+test("executeOperation rejects a Content-Type that conflicts with the selected request media type", async () => {
+  const operation = {
+    method: "POST",
+    path: "/v1/body",
+    parameters: [],
+    requestBody: {
+      content: {
+        "application/json": { schema: { type: "object" } },
+        "text/plain": { schema: { type: "string" } },
+      },
+    },
+  };
+  await assert.rejects(
+    () => executeOperation(operation, { __body: "{\"ok\":true}" }, { headers: { "Content-Type": "text/plain" } }),
+    /conflicts with selected request media type/,
+  );
+});
+
 test("executeOperation redacts security credentials from the returned request", async () => {
   let captured;
   globalThis.fetch = async (input, init) => {
