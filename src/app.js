@@ -1277,8 +1277,10 @@ function renderOperation(operation, signal, contract = null) {
   $("#operation-form").addEventListener("submit", async event => {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
-    if (bodyModel) {
-      const structuredBody = buildStructuredBody(event.currentTarget, bodyModel);
+    const activeBodyType = bodyTypes.find(item => item.mediaType === event.currentTarget.elements.__contentType?.value) ?? initialBody;
+    const activeBodyModel = activeBodyType?.schema ? buildSchemaFormModel(activeBodyType.schema) : null;
+    if (activeBodyModel) {
+      const structuredBody = buildStructuredBody(event.currentTarget, activeBodyModel);
       if (structuredBody !== undefined) values.__body = structuredBody;
     }
     const resultBox = $("#operation-result");
