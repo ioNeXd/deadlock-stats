@@ -1015,7 +1015,8 @@ test("buildSchemaFormModel derives nested request fields from OpenAPI schema", (
 
   assert.equal(model.type, "object");
   assert.equal(model.properties.find(item => item.name === "hero_id").required, true);
-  assert.deepEqual(model.properties.find(item => item.name === "mode").enum, ["ranked", "normal"]);\n  assert.deepEqual(model.properties.find(item => item.name === "mode").examples, ["ranked"]);
+  assert.deepEqual(model.properties.find(item => item.name === "mode").enum, ["ranked", "normal"]);
+  assert.deepEqual(model.properties.find(item => item.name === "mode").examples, ["ranked"]);
   assert.equal(model.properties.find(item => item.name === "enabled").type, "boolean");
   assert.equal(model.properties.find(item => item.name === "ids").type, "array");
   assert.equal(model.properties.find(item => item.name === "nested").properties[0].path, "__body.nested.label");
