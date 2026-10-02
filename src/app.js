@@ -2115,7 +2115,8 @@ function route() {
   if (routeName === "api") renderApiStatus(signal);
   else if (routeName === "analytics") renderAnalytics(signal);
   else if (routeName === "matches") renderMatches(signal);
-  else if (routeName === "players" && routeParts[1]) renderPlayerDetail(routeParts[1], signal);\n  else if (routeName === "players") renderPlayers(signal);
+  else if (routeName === "players" && routeParts[1]) renderPlayerDetail(routeParts[1], signal);
+  else if (routeName === "players") renderPlayers(signal);
   else if (routeName === "builds" && routeParts[1] && routeParts[2]) renderBuildDetail(routeParts[1], routeParts[2], signal);
   else if (routeName === "builds") renderBuilds(signal);
   else if (routeName === "leaderboard") renderLeaderboard(signal);
