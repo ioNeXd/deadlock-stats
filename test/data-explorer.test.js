@@ -233,6 +233,37 @@ test("listApiOperations resolves response header refs and schemas", () => {
   assert.equal(described.responseInfo[0].headers[1].schema.format, "uuid");
 });
 
+test("listApiOperations exposes response link metadata and resolves link refs", () => {
+  const contract = {
+    components: {
+      links: {
+        NextPage: {
+          operationId: "listNext",
+          parameters: { cursor: "$response.header.X-Next-Cursor" },
+        },
+      },
+    },
+    paths: {
+      "/v1/items": {
+        get: {
+          operationId: "list",
+          responses: {
+            "200": {
+              description: "ok",
+              links: { next: { $ref: "#/components/links/NextPage" } },
+            },
+          },
+        },
+      },
+    },
+  };
+  const operation = listApiOperations(contract)[0];
+  const described = describeOperation(operation, contract);
+  assert.equal(described.responseInfo[0].links[0].name, "next");
+  assert.equal(described.responseInfo[0].links[0].operationId, "listNext");
+  assert.equal(described.responseInfo[0].links[0].parameters.cursor, "$response.header.X-Next-Cursor");
+});
+
 test("listApiOperations merges path-level parameters and preserves security metadata", () => {
   const extended = {
     openapi: "3.1.0",
