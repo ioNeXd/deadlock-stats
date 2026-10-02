@@ -29,3 +29,8 @@ test("app defers route-specific service runtimes", () => {
   assert.match(appSource, /import\(\s*["']\.\/services\/builds\.js["']/);
   assert.match(appSource, /import\(\s*["']\.\/services\/leaderboard\.js["']/);
 });
+
+test("app defers asset service runtime", () => {
+  assert.doesNotMatch(appSource, /from ["']\.\/services\/assets\.js["']/);
+  assert.match(appSource, /import\(\s*["']\.\/services\/assets\.js["']/);
+});
