@@ -732,6 +732,80 @@ function deepEqual(left, right) {
   return false;
 }
 
+
+function schemaFormNode(schema, name, required = false, label = name, path = name, depth = 0) {
+  const resolved = schema ?? {};
+  const type = schemaType(resolved);
+  const enumOptions = enumValues(resolved);
+  const node = {
+    name, path, label, depth, type, required,
+    nullable: schemaNullable(resolved),
+    default: resolved.default,
+    description: resolved.description ?? "",
+    enum: enumOptions,
+    minimum: resolved.minimum,
+    maximum: resolved.maximum,
+    minLength: resolved.minLength,
+    maxLength: resolved.maxLength,
+    minItems: resolved.minItems,
+    maxItems: resolved.maxItems,
+    pattern: resolved.pattern,
+  };
+  if (type === "object") {
+    node.properties = Object.entries(resolved.properties ?? {}).map(([propertyName, propertySchema]) =>
+      schemaFormNode(propertySchema, propertyName, (resolved.required ?? []).includes(propertyName), propertySchema.title ?? propertyName, path + "." + propertyName, depth + 1)
+    );
+    node.additionalProperties = resolved.additionalProperties;
+  } else if (type === "array") {
+    node.items = schemaFormNode(resolved.items ?? {}, name + "[]", false, resolved.items?.title ?? "Item", path + "[]", depth + 1);
+  }
+  return node;
+}
+
+export function buildSchemaFormModel(schema) {
+  if (!schema || typeof schema !== "object") return null;
+  return schemaFormNode(schema, "__body", false, schema.title ?? "Request body", "__body", 0);
+}
+
+export function parseSchemaFormValue(rawValue, schema, path = "$") {
+  if (rawValue === "" || rawValue === undefined) return undefined;
+  const type = schemaType(schema);
+  if (type === "object" || type === "array") {
+    if (typeof rawValue === "object") {
+      validateRequestBody(rawValue, schema, path);
+      return rawValue;
+    }
+    let parsed;
+    try { parsed = JSON.parse(rawValue); } catch { throw new TypeError("Invalid JSON at " + path + "."); }
+    validateRequestBody(parsed, schema, path);
+    return parsed;
+  }
+  if (type === "integer" || type === "number") {
+    const number = Number(rawValue);
+    if (!Number.isFinite(number) || (type === "integer" && !Number.isInteger(number))) {
+      throw new TypeError("Invalid " + type + " at " + path + ".");
+    }
+    validateRequestBody(number, schema, path);
+    return number;
+  }
+  if (type === "boolean") {
+    if (rawValue === true || rawValue === "true") {
+      validateRequestBody(true, schema, path);
+      return true;
+    }
+    if (rawValue === false || rawValue === "false") {
+      validateRequestBody(false, schema, path);
+      return false;
+    }
+    throw new TypeError("Invalid boolean at " + path + ".");
+  }
+  if (rawValue === "null" && schemaAllowsNull(schema)) return null;
+  const value = String(rawValue);
+  validateRequestBody(value, schema, path);
+  return value;
+}
+
+
 export function buildRequest(operation, values = {}) {
   let path = operation.path;
   const query = {};
