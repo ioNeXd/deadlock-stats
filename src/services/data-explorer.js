@@ -5,7 +5,10 @@ const HTTP_METHODS = ["get", "post", "put", "patch", "delete", "head", "options"
 function resolveLocalRef(value, contract) {
   if (!value?.$ref || !contract) return value;
   if (!value.$ref.startsWith("#/")) return value;
-  return value.$ref.slice(2).split("/").reduce((current, key) => current?.[key], contract);
+  return value.$ref.slice(2).split("/").reduce((current, key) => {
+    const pointerKey = key.replace(/~1/g, "/").replace(/~0/g, "~");
+    return current?.[pointerKey];
+  }, contract);
 }
 
 function pathParameters(operation) {
