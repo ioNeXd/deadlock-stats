@@ -390,7 +390,47 @@ function coerceParameter(value, schema, parameter = null) {
       ? coerceParameter(value, coercionSchema, parameter)
       : value;
     for (const variant of variants) {
-      validateRequestBody(result, variant);
+      const variantType = schemaType(variant);
+      if (variantType !== "string" && variantType !== "number" && variantType !== "integer" && variantType !== "boolean" && variantType !== "array" && variantType !== "object") {
+        if (variant.const !== undefined && !deepEqual(result, variant.const)) {
+          throw new TypeError("Parameter does not satisfy allOf const constraint.");
+        }
+        if (Array.isArray(variant.enum) && !variant.enum.some(item => deepEqual(item, result))) {
+          throw new TypeError("Parameter does not satisfy allOf enum constraint.");
+        }
+        if (typeof result === "number") validateNumericConstraints(result, variant);
+        if (typeof result === "string" && variant.pattern !== undefined) {
+          let pattern;
+          try { pattern = new RegExp(variant.pattern); } catch { throw new TypeError("Parameter schema contains an invalid pattern."); }
+          if (!pattern.test(result)) throw new TypeError("Parameter does not satisfy allOf pattern constraint.");
+        }
+        continue;
+      }
+      if (variant.type === undefined) continue;
+      if (variantType === "integer" && (!Number.isInteger(result) || typeof result !== "number")) {
+        throw new TypeError("Parameter does not satisfy allOf integer constraint.");
+      }
+      if (variantType === "number" && (typeof result !== "number" || !Number.isFinite(result))) {
+        throw new TypeError("Parameter does not satisfy allOf number constraint.");
+      }
+      if (variantType === "string" && typeof result !== "string") {
+        throw new TypeError("Parameter does not satisfy allOf string constraint.");
+      }
+      if (variantType === "boolean" && typeof result !== "boolean") {
+        throw new TypeError("Parameter does not satisfy allOf boolean constraint.");
+      }
+      if (typeof result === "number") validateNumericConstraints(result, variant);
+      if (typeof result === "string") {
+        if (variant.minLength !== undefined && result.length < variant.minLength) throw new TypeError("Parameter is shorter than minLength.");
+        if (variant.maxLength !== undefined && result.length > variant.maxLength) throw new TypeError("Parameter exceeds maxLength.");
+        if (variant.pattern !== undefined) {
+          let pattern;
+          try { pattern = new RegExp(variant.pattern); } catch { throw new TypeError("Parameter schema contains an invalid pattern."); }
+          if (!pattern.test(result)) throw new TypeError("Parameter does not match the required pattern.");
+        }
+      }
+      if (variant.const !== undefined && !deepEqual(result, variant.const)) throw new TypeError("Parameter does not satisfy allOf const constraint.");
+      if (Array.isArray(variant.enum) && !variant.enum.some(item => deepEqual(item, result))) throw new TypeError("Parameter does not satisfy allOf enum constraint.");
     }
     return result;
   }
