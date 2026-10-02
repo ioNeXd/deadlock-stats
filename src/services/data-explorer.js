@@ -230,6 +230,7 @@ export function listApiOperations(contract, { includeDeprecated = true } = {}) {
       }));
       const result = {
         operationId: operation.operationId ?? method.toUpperCase() + " " + path,
+        operationKey: method.toUpperCase() + " " + path,
         method: method.toUpperCase(), path,
         summary: operation.summary ?? operation.description?.split("\n")[0] ?? "",
         description: operation.description ?? "", deprecated: operation.deprecated === true,
