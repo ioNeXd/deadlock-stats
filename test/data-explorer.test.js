@@ -905,6 +905,27 @@ test("request body validation supports structural enum, exclusive bounds, multip
   }), /pattern/);
 });
 
+test("buildRequest does not select a media type without a request body", () => {
+  const operation = listApiOperations({
+    paths: {
+      "/v1/optional-body": {
+        post: {
+          operationId: "optionalBody",
+          requestBody: {
+            required: false,
+            content: { "application/json": { schema: { type: "object" } } },
+          },
+          responses: { "204": { description: "no content" } },
+        },
+      },
+    },
+  })[0];
+
+  const request = buildRequest(operation, {});
+  assert.equal(request.body, undefined);
+  assert.equal(request.mediaType, null);
+});
+
 test("buildRequest rejects unsupported request content types", () => {
   const operation = {
     method: "POST",
