@@ -358,11 +358,13 @@ test("buildRequest serializes header parameters and rejects browser cookie param
     parameters: [
       { name: "X-Trace-Id", in: "header", schema: { type: "string" } },
       { name: "X-Ids", in: "header", schema: { type: "array", items: { type: "integer" } } },
+      { name: "X-Filters", in: "header", schema: { type: "object", properties: { hero: { type: "integer" }, mode: { type: "string" } } } },
     ], requestBody: null,
   };
-  const request = buildRequest(operation, { "X-Trace-Id": "trace-1", "X-Ids": [1, 2, 3] });
+  const request = buildRequest(operation, { "X-Trace-Id": "trace-1", "X-Ids": [1, 2, 3], "X-Filters": { hero: 7, mode: "ranked" } });
   assert.equal(request.headers.get("X-Trace-Id"), "trace-1");
   assert.equal(request.headers.get("X-Ids"), "1,2,3");
+  assert.equal(request.headers.get("X-Filters"), "hero=7,mode=ranked");
   assert.throws(() => buildRequest({
     method: "GET", path: "/v1/cookie",
     parameters: [{ name: "session", in: "cookie", schema: { type: "string" } }], requestBody: null,
@@ -592,6 +594,18 @@ test("buildRequest matches structured suffix media type wildcards", () => {
   const request = buildRequest(operation, { __contentType: "application/*+json", __body: '{"ok":true}' });
   assert.equal(request.mediaType, "application/vnd.deadlock+json");
   assert.deepEqual(request.body, { ok: true });
+});
+
+test("buildRequest validates OpenAPI numeric exclusive and multipleOf constraints", () => {
+  const operation = {
+    method: "GET", path: "/v1/validate", parameters: [
+      { name: "score", in: "query", schema: { type: "number", exclusiveMinimum: 0, exclusiveMaximum: 10, multipleOf: 0.5 } },
+    ], requestBody: null,
+  };
+  assert.equal(buildRequest(operation, { score: "2.5" }).query.score, 2.5);
+  assert.throws(() => buildRequest(operation, { score: "0" }), /exclusiveMinimum/);
+  assert.throws(() => buildRequest(operation, { score: "10" }), /exclusiveMaximum/);
+  assert.throws(() => buildRequest(operation, { score: "2.3" }), /multipleOf/);
 });
 
 test("buildRequest validates numeric, boolean, enum and array constraints", () => {
