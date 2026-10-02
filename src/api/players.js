@@ -146,7 +146,7 @@ export function getPlayerMmr(accountIds, options = {}) {
   validateAccountIds(accountIds);
   return apiGet("/v1/players/mmr", {
     ...options,
-    query: { account_ids: accountIds.join(","), ...(options.max_match_id == null ? {} : { max_match_id: options.max_match_id }) },
+    query: { ...queryToObject(options.query), account_ids: accountIds.join(","), ...(options.max_match_id == null ? {} : { max_match_id: options.max_match_id }) },
   });
 }
 
