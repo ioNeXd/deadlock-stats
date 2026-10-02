@@ -11,6 +11,15 @@ import {
   getPlayerEnemyStats,
   getPlayerMateStats,
   getPlayerRankImage,
+  getPlayerMmr,
+  getPlayerMmrDistribution,
+  getPlayerHeroMmr,
+  getPlayerHeroMmrDistribution,
+  getPlayerMmrHistory,
+  getPlayerHeroMmrHistory,
+  getPlayerRankPredict,
+  getPlayerRankPredictImage,
+  getPlayerRankPredictBatchImage,
 } from "../api/players.js";
 
 function asArray(value) {
@@ -72,4 +81,41 @@ export async function loadPlayerMateStats(accountId, options = {}) {
 
 export function loadPlayerRankImage(accountIds, format, options = {}) {
   return getPlayerRankImage(accountIds, format, options);
+}
+
+
+export async function loadPlayerMmr(accountIds, options = {}) {
+  return withArray(await getPlayerMmr(accountIds, options));
+}
+
+export async function loadPlayerMmrDistribution(options = {}) {
+  return withArray(await getPlayerMmrDistribution(options));
+}
+
+export async function loadPlayerHeroMmr(heroId, accountIds, options = {}) {
+  return withArray(await getPlayerHeroMmr(heroId, accountIds, options));
+}
+
+export async function loadPlayerHeroMmrDistribution(heroId, options = {}) {
+  return withArray(await getPlayerHeroMmrDistribution(heroId, options));
+}
+
+export async function loadPlayerMmrHistory(accountId, options = {}) {
+  return withArray(await getPlayerMmrHistory(accountId, options));
+}
+
+export async function loadPlayerHeroMmrHistory(accountId, heroId, options = {}) {
+  return withArray(await getPlayerHeroMmrHistory(accountId, heroId, options));
+}
+
+export async function loadPlayerRankPredict(accountId, options = {}) {
+  return withObject(await getPlayerRankPredict(accountId, options));
+}
+
+export function loadPlayerRankPredictImage(accountId, format, options = {}) {
+  return getPlayerRankPredictImage(accountId, format, options);
+}
+
+export function loadPlayerRankPredictBatchImage(accountIds, format, options = {}) {
+  return getPlayerRankPredictBatchImage(accountIds, format, options);
 }
