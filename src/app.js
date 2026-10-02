@@ -12,7 +12,7 @@ import { getDashboardSnapshot } from "./services/dashboard.js";
 import { listBuilds, buildBuildDetailViewModel } from "./services/builds.js";
 import { fetchMap } from "./services/assets.js";
 import { loadLeaderboard } from "./services/leaderboard.js";
-import { searchPlayers, loadPlayerRank, loadPlayerHeroStats, loadPlayerMatchHistory } from "./services/players.js";
+import { searchPlayers, loadPlayerRank, loadPlayerHeroStats, loadPlayerMatchHistory, loadSteamProfiles, getPlayerDetailSnapshot, buildPlayerDetailViewModel } from "./services/players.js";
 import { safeExternalUrl } from "./ui/security.js";
 import { listUserRequestPresets, saveUserRequestPreset, deleteUserRequestPreset } from "./services/data-explorer-presets.js";
 import { getAnalyticsSnapshot, getHeroStatsSnapshot, getHeroMatchupSnapshot, getHeroDetailSnapshot, getBuildDetailSnapshot, getHeroBuildStatsSnapshot, getAbilityOrderStatsSnapshot, getHeroComboSnapshot, getBuildItemSnapshot, getBuffSnapshot, getBadgeDistributionSnapshot, getItemStatsSnapshot, getItemPermutationSnapshot, getItemFlowSnapshot, normalizeGameStats, normalizeHeroBanStats, buildHeroDetailViewModel, buildItemDetailAnalyticsViewModel } from "./services/analytics.js";
@@ -1263,81 +1263,21 @@ function renderPlayers(signal) {
       '<label class="field"><span>Results</span><input name="limit" type="number" min="1" max="1000" value="25"></label>' +
       '<button class="primary-button" type="submit">Search players</button></form></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">PROFILES</span><h2>Steam profiles</h2></div><b id="player-search-status">READY</b></div><div id="player-results"><p class="muted">Search for a player to begin.</p></div></article>' +
-      '<article class="panel"><div class="section-head"><div><span class="eyebrow">PLAYER DETAIL</span><h2 id="player-detail-title">Select a player</h2></div><b id="player-detail-status">IDLE</b></div><div id="player-detail"><p class="muted">Choose a result to load rank, hero stats and match history.</p></div></article></section>';
+      '<article class="panel"><div class="section-head"><div><span class="eyebrow">PLAYER DETAIL</span><h2>Open a profile</h2></div><b>ROUTE</b></div><p class="muted">Select a profile to open its dedicated player page.</p></article></section>';
 
   const form = $("#player-search");
   const results = $("#player-results");
-  const detail = $("#player-detail");
-
-  const scalarEntries = object => Object.entries(object ?? {})
-    .filter(([, value]) => value == null || ["string", "number", "boolean"].includes(typeof value))
-    .slice(0, 12);
 
   const renderProfiles = profiles => {
     results.innerHTML = profiles.map((profile, index) => {
       const accountId = profile?.account_id ?? profile?.accountid ?? profile?.steam_id3;
       const name = profile?.personaname ?? profile?.name ?? profile?.display_name ?? "Unknown profile";
       const avatar = profile?.avatarfull ?? profile?.avatar ?? profile?.avatar_url ?? "";
-      return '<button type="button" class="match-row player-result" data-account-id="' + esc(accountId ?? "") + '">' +
+      return '<a class="match-row player-result" href="#/players/' + esc(accountId ?? "") + '">' +
         (avatar ? '<img class="match-player-hero" src="' + esc(avatar) + '" alt="" loading="lazy" decoding="async">' : "") +
         '<span><strong>' + esc(name) + '</strong><small>Account ' + esc(accountId ?? "—") + '</small></span>' +
-        '<small>#' + (index + 1) + '</small></button>';
+        '<small>#' + (index + 1) + '</small></a>';
     }).join("") || '<p class="muted">No profiles found.</p>';
-
-    results.querySelectorAll("[data-account-id]").forEach(button => {
-      button.addEventListener("click", () => loadPlayer(button.dataset.accountId));
-    });
-  };
-
-  const loadPlayer = async accountId => {
-    if (!/^\d+$/.test(String(accountId ?? ""))) {
-      detail.innerHTML = '<p class="error-text">The selected profile has no valid SteamID3.</p>';
-      return;
-    }
-    $("#player-detail-title").textContent = "Account " + accountId;
-    $("#player-detail-status").textContent = "LOADING";
-    detail.innerHTML = '<p class="muted">Loading player data…</p>';
-
-    try {
-      const [rankResult, heroResult, historyResult] = await Promise.all([
-        loadPlayerRank(accountId, { signal }),
-        loadPlayerHeroStats({ account_ids: [Number(accountId)], signal }),
-        loadPlayerMatchHistory(accountId, { signal }),
-      ]);
-      if (signal.aborted) return;
-
-      const rank = rankResult.data ?? {};
-      const heroStats = heroResult.data ?? [];
-      const history = historyResult.data ?? [];
-      const rankMetrics = scalarEntries(rank).map(([key, value]) =>
-        '<div class="metric"><span>' + esc(key) + '</span><strong>' + esc(value ?? "—") + '</strong></div>'
-      ).join("");
-      const heroRows = heroStats.slice(0, 12).map(stat =>
-        '<div class="metric"><span>Hero ' + esc(stat?.hero_id ?? "—") + '</span><strong>' +
-        esc(stat?.matches_played ?? "—") + ' matches</strong><small>' +
-        esc(stat?.wins ?? "—") + ' wins · ' + esc(stat?.kills ?? "—") + ' kills · ' +
-        esc(stat?.deaths ?? "—") + ' deaths</small></div>'
-      ).join("");
-      const historyRows = history.slice(0, 10).map(match =>
-        '<div class="metric"><span>Match ' + esc(match?.match_id ?? "—") + '</span><strong>' +
-        esc(match?.hero_id ?? "Hero —") + '</strong><small>' +
-        esc(match?.won != null ? (match.won ? "Win" : "Loss") : (match?.winning_team != null ? "Team " + match.winning_team : "Result unavailable")) +
-        (match?.duration_s != null ? ' · ' + esc(formatDuration(match.duration_s)) : '') +
-        '</small></div>'
-      ).join("");
-
-      detail.innerHTML =
-        '<div class="match-detail-summary">' + (rankMetrics || '<p class="muted">No rank fields returned.</p>') + '</div>' +
-        '<div class="section-head"><div><span class="eyebrow">HERO HISTORY</span><h3>Hero stats</h3></div><span class="muted">' + heroStats.length + ' returned</span></div>' +
-        '<div class="analytics-grid">' + (heroRows || '<p class="muted">No hero stats returned.</p>') + '</div>' +
-        '<div class="section-head"><div><span class="eyebrow">MATCH HISTORY</span><h3>Recent matches</h3></div><span class="muted">' + history.length + ' returned</span></div>' +
-        '<div class="analytics-grid">' + (historyRows || '<p class="muted">No match history returned.</p>') + '</div>';
-      $("#player-detail-status").textContent = "LOADED";
-    } catch (error) {
-      if (isAborted(error)) return;
-      $("#player-detail-status").textContent = "ERROR";
-      detail.innerHTML = '<p class="error-text">Player request failed: ' + esc(error.message) + '</p>';
-    }
   };
 
   form.addEventListener("submit", async event => {
@@ -1346,10 +1286,7 @@ function renderPlayers(signal) {
     $("#player-search-status").textContent = "LOADING";
     results.innerHTML = '<p class="muted">Searching profiles…</p>';
     try {
-      const response = await searchPlayers(values.query.trim(), {
-        limit: Number(values.limit),
-        signal,
-      });
+      const response = await searchPlayers(values.query.trim(), { limit: Number(values.limit), signal });
       if (signal.aborted) return;
       renderProfiles(response.data);
       $("#player-search-status").textContent = response.data.length + " FOUND";
@@ -1359,6 +1296,67 @@ function renderPlayers(signal) {
       results.innerHTML = '<p class="error-text">Player search failed: ' + esc(error.message) + '</p>';
     }
   });
+}
+
+async function renderPlayerDetail(accountId, signal) {
+  const numericAccountId = Number(accountId);
+  if (!Number.isInteger(numericAccountId) || numericAccountId < 0) {
+    renderNotFound("players/" + accountId);
+    return;
+  }
+
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">PLAYER / DETAIL</span><h2 id="player-detail-name">Account #' + esc(numericAccountId) + '</h2><p>Rank, hero performance, match history, opponents and teammates from the Deadlock API.</p></section>' +
+    '<section class="panel"><div id="player-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching player intelligence…</span></div><div id="player-detail-summary"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">HEROES</span><h2>Hero performance</h2></div></div><div id="player-detail-heroes"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">MATCH HISTORY</span><h2>Recent matches</h2></div></div><div id="player-detail-history"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">RELATIONSHIPS</span><h2>Enemies & teammates</h2></div></div><div id="player-detail-relations"></div></section>';
+
+  try {
+    const [snapshot, profiles] = await Promise.all([
+      getPlayerDetailSnapshot(numericAccountId, { signal }),
+      loadSteamProfiles([numericAccountId], { signal }),
+    ]);
+    if (signal.aborted) return;
+    const profile = profiles.data?.[0] ?? null;
+    const model = buildPlayerDetailViewModel(snapshot, profile);
+    const profileName = profile?.personaname ?? profile?.name ?? null;
+    if (profileName) $("#player-detail-name").textContent = profileName;
+
+    const rank = model.rank ?? {};
+    const summary = [
+      ["ACCOUNT", model.accountId],
+      ["BADGE", rank.badge ?? "—"],
+      ["RANK", rank.rank ?? "—"],
+      ["SUBRANK", rank.subrank ?? "—"],
+      ["LAST RANKED MATCH", rank.last_match?.match_id ?? "—"],
+      ["PROFILE", profileName ?? "—"],
+    ];
+    $("#player-detail-summary").innerHTML = '<div class="match-detail-summary">' +
+      summary.map(([label,value]) => '<div class="metric"><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>').join("") +
+      '</div>';
+
+    const heroRows = model.heroStats.slice(0, 20).map(row => '<tr><td>' + esc(row.hero_id ?? "—") + '</td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td><td>' + esc(row.kills ?? "—") + '</td><td>' + esc(row.deaths ?? "—") + '</td><td>' + esc(row.assists ?? "—") + '</td></tr>').join("");
+    $("#player-detail-heroes").innerHTML = heroRows
+      ? '<div class="data-table-wrap"><table><thead><tr><th>Hero</th><th>Matches</th><th>Wins</th><th>Kills</th><th>Deaths</th><th>Assists</th></tr></thead><tbody>' + heroRows + '</tbody></table></div>'
+      : '<p class="muted">No hero stats returned.</p>';
+
+    const historyRows = model.matchHistory.slice(0, 20).map(match => '<tr><td>' + esc(match.match_id ?? "—") + '</td><td>' + esc(match.hero_id ?? "—") + '</td><td>' + esc(match.won != null ? (match.won ? "Win" : "Loss") : match.winning_team ?? "—") + '</td><td>' + esc(match.duration_s == null ? "—" : formatDuration(match.duration_s)) + '</td><td>' + esc(match.ranked_display_badge ?? "—") + '</td><td>' + esc(match.ranked_delta ?? "—") + '</td></tr>').join("");
+    $("#player-detail-history").innerHTML = historyRows
+      ? '<div class="data-table-wrap"><table><thead><tr><th>Match</th><th>Hero</th><th>Result</th><th>Duration</th><th>Rank</th><th>Delta</th></tr></thead><tbody>' + historyRows + '</tbody></table></div>'
+      : '<p class="muted">No match history returned.</p>';
+
+    const enemyRows = model.enemyStats.slice(0, 10).map(row => '<tr><td>' + esc(row.enemy_hero_id ?? row.hero_id ?? "—") + '</td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td></tr>').join("");
+    const mateRows = model.mateStats.slice(0, 10).map(row => '<tr><td>' + esc(row.mate_account_id ?? row.account_id ?? "—") + '</td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td></tr>').join("");
+    $("#player-detail-relations").innerHTML =
+      '<div class="dashboard-grid"><div><h3>Enemies</h3>' + (enemyRows ? '<div class="data-table-wrap"><table><thead><tr><th>Hero / Player</th><th>Matches</th><th>Wins</th></tr></thead><tbody>' + enemyRows + '</tbody></table></div>' : '<p class="muted">No enemy stats returned.</p>') + '</div>' +
+      '<div><h3>Teammates</h3>' + (mateRows ? '<div class="data-table-wrap"><table><thead><tr><th>Player</th><th>Matches</th><th>Wins</th></tr></thead><tbody>' + mateRows + '</tbody></table></div>' : '<p class="muted">No mate stats returned.</p>') + '</div></div>';
+
+    $("#player-detail-status").innerHTML = '<span class="eyebrow">LOADED</span><span>Player data received from the API.</span>';
+  } catch (error) {
+    if (isAborted(error)) return;
+    $("#player-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span>' + esc(error.message) + '</span>';
+  }
 }
 
 function renderDataExplorer(signal) {
@@ -2082,7 +2080,7 @@ function route() {
   if (routeName === "api") renderApiStatus(signal);
   else if (routeName === "analytics") renderAnalytics(signal);
   else if (routeName === "matches") renderMatches(signal);
-  else if (routeName === "players") renderPlayers(signal);
+  else if (routeName === "players" && routeParts[1]) renderPlayerDetail(routeParts[1], signal);\n  else if (routeName === "players") renderPlayers(signal);
   else if (routeName === "builds" && routeParts[1] && routeParts[2]) renderBuildDetail(routeParts[1], routeParts[2], signal);
   else if (routeName === "builds") renderBuilds(signal);
   else if (routeName === "leaderboard") renderLeaderboard(signal);
