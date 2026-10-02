@@ -103,6 +103,20 @@ test("schema helpers support OpenAPI 3.1 nullable, composition and const types",
   assert.deepEqual(enumValues({ anyOf: [{ enum: ["normal"] }, { const: "ranked" }] }), ["normal", "ranked"]);
 });
 
+test("listApiOperations keeps duplicate operationIds independently addressable", () => {
+  const duplicateContract = {
+    paths: {
+      "/v1/patches": { get: { operationId: "feed", responses: { "200": { description: "legacy" } } } },
+      "/v2/patches": { get: { operationId: "feed", responses: { "200": { description: "current" } } } },
+    },
+  };
+  const operations = listApiOperations(duplicateContract);
+  assert.equal(operations.length, 2);
+  assert.equal(new Set(operations.map(operation => operation.operationKey)).size, 2);
+  assert.equal(operations[0].operationKey, "GET /v1/patches");
+  assert.equal(operations[1].operationKey, "GET /v2/patches");
+});
+
 test("listApiOperations resolves local parameter refs", () => {
   const contractWithRef = {
     components: {
