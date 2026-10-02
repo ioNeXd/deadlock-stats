@@ -127,6 +127,28 @@ test("429 honors Retry-After before retrying", async () => {
   assert.ok(Date.now() - started >= 5);
 });
 
+test("retryable GET server failures include 408 and 500", async () => {
+  for (const status of [408, 500]) {
+    let calls = 0;
+    mockFetch(async () => {
+      calls += 1;
+      if (calls === 1) return new Response("temporary failure", { status });
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    });
+
+    const result = await apiGet("/v1/retry-status", {
+      retries: 1,
+      cache: false,
+    });
+
+    assert.deepEqual(result.data, { ok: true });
+    assert.equal(calls, 2);
+  }
+});
+
 test("retryable GET timeouts retry before surfacing timeout", async () => {
   let calls = 0;
   mockFetch(async (_url, init) => {
