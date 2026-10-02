@@ -21,3 +21,11 @@ test("app defers analytics runtime until analytics routes", () => {
   assert.doesNotMatch(appSource, /from ["']\.\/services\/analytics\.js["']/);
   assert.match(appSource, /import\(\s*["']\.\/services\/analytics\.js["']/);
 });\n
+
+test("app defers route-specific service runtimes", () => {
+  assert.doesNotMatch(appSource, /from ["']\.\/services\/(matches|players|builds|leaderboard)\.js["']/);
+  assert.match(appSource, /import\(\s*["']\.\/services\/matches\.js["']/);
+  assert.match(appSource, /import\(\s*["']\.\/services\/players\.js["']/);
+  assert.match(appSource, /import\(\s*["']\.\/services\/builds\.js["']/);
+  assert.match(appSource, /import\(\s*["']\.\/services\/leaderboard\.js["']/);
+});
