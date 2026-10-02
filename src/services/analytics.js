@@ -169,6 +169,25 @@ export function normalizeHeroCombStats(result) {
 }
 
 
+export async function getHeroDetailSnapshot(heroId, options = {}) {
+  const { signal, ...requestOptions } = options;
+  const [stats, matchup, builds, abilityOrders] = await Promise.all([
+    getHeroStatsSnapshot({ ...requestOptions, signal }),
+    getHeroMatchupSnapshot({ ...requestOptions, hero_ids: [heroId], signal }),
+    getHeroBuildStatsSnapshot(heroId, { ...requestOptions, signal }),
+    getAbilityOrderStatsSnapshot(heroId, { ...requestOptions, signal }),
+  ]);
+
+  return {
+    heroId,
+    stats: stats.filter(item => String(item.heroId) === String(heroId)),
+    counters: matchup.counters.filter(item => String(item.heroId) === String(heroId)),
+    synergies: matchup.synergies.filter(item => String(item.heroId1) === String(heroId) || String(item.heroId2) === String(heroId)),
+    builds,
+    abilityOrders,
+  };
+}
+
 export async function getHeroMatchupSnapshot(options = {}) {
   const { signal, ...requestOptions } = options;
   const [counterResult, synergyResult] = await Promise.all([
