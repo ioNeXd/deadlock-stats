@@ -20,7 +20,7 @@ const contentTypes = new Map([
 ]);
 
 const securityHeaders = {
-  "Cache-Control": "public, max-age=60",
+  "Cache-Control": "no-store",
   "Content-Security-Policy": [
     "default-src 'self'",
     "base-uri 'self'",
