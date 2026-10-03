@@ -56,6 +56,18 @@ test("match detail uses the single-match metadata endpoint", () => {
 });
 
 
+test("match listing defers hero and item catalogs until metadata lookup", () => {
+  const routeSource = extractTopLevelFunction(appSource, "async function renderMatches");
+  const lookupStart = routeSource.indexOf("const loadDetail = async matchId =>");
+  assert.notEqual(lookupStart, -1);
+  const initialLoad = routeSource.slice(0, lookupStart);
+  const lookupSource = routeSource.slice(lookupStart);
+  assert.doesNotMatch(initialLoad, /assetsRuntime\.listHeroes\(/);
+  assert.doesNotMatch(initialLoad, /assetsRuntime\.listItems\(/);
+  assert.match(lookupSource, /assetsRuntime\.listHeroes\(/);
+  assert.match(lookupSource, /assetsRuntime\.listItems\(/);
+});
+
 test("player detail loads asset runtime and only the selected rank asset", () => {
   const routeSource = extractTopLevelFunction(appSource, "async function renderPlayerDetail");
   assert.match(routeSource, /const \[players, assetsRuntime\] = await Promise\.all\(\[loadPlayersRuntime\(\), loadAssetsRuntime\(\)\]\)/);
