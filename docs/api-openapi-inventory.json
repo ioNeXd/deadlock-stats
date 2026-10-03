@@ -8,7 +8,7 @@
   "counts": {
     "paths": 126,
     "operations": 129,
-    "schemas": 230,
+    "schemas": 232,
     "security_schemes": 2
   },
   "security_schemes": {
@@ -21257,6 +21257,54 @@
         "color",
         "color_parsed",
         "origin"
+      ],
+      "additionalProperties": null
+    },
+    "MapEntities": {
+      "type": "object",
+      "required": [],
+      "deprecated": false,
+      "enum": null,
+      "allOf": 0,
+      "oneOf": 0,
+      "anyOf": 0,
+      "properties": [
+        "base_sentries",
+        "bells",
+        "bounce_pads",
+        "bridge_buffs",
+        "climb_ropes",
+        "cosmic_veils",
+        "crates",
+        "golden_statues",
+        "healing_snacks",
+        "shops",
+        "soul_urn_pads",
+        "soul_urn_spawns",
+        "steam_vents",
+        "teleporters",
+        "tough_crates",
+        "unstable_rifts"
+      ],
+      "additionalProperties": null
+    },
+    "MapEntity": {
+      "type": "object",
+      "required": [
+        "position"
+      ],
+      "deprecated": false,
+      "enum": null,
+      "allOf": 0,
+      "oneOf": 0,
+      "anyOf": 0,
+      "properties": [
+        "kind",
+        "left_relative",
+        "position",
+        "target",
+        "team",
+        "top_relative"
       ],
       "additionalProperties": null
     }
