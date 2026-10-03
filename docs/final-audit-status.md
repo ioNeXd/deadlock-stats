@@ -7,7 +7,7 @@ PR: #1
 ## Evidence
 
 - Current public OpenAPI was consulted at `https://api.deadlock-api.com/openapi.json`.
-- Repository capability inventory currently records 129 operations, 704 parameters and 230 schemas.
+- Repository capability inventory currently records 129 operations, 704 parameters and 232 schemas.
 - Capability and parameter classifications are complete in the generated inventory.
 - GitHub Actions run #123 passed: 213 tests, 213 passed, 0 failed, 0 skipped, 0 todo.
 - The branch under review is `new-site`; `main` was not modified.
@@ -41,4 +41,4 @@ No fictional API capability was added to compensate for those limitations.
 
 ## Current gate
 
-The technical implementation gate is green at the repository test level. The remaining human/release gate is PR review/merge and, if desired, browser-level smoke/performance validation.
+The technical implementation gate is green at the repository test and live public-API smoke level. The remaining human/release gate is PR review/merge and, if desired, browser-level smoke/performance validation.
