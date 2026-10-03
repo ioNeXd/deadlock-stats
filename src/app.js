@@ -1022,13 +1022,33 @@ n class="eyebrow">SYSTEM / API</span><h2>API Status</h2><p>Live health probe for
 async function loadApiStatus(signal) {
   try {
     const { probeApiStatus } = await loadApiStatusRuntime();
-    const result = await probeApiStatus({ signal });
+    const [statusResult, patchResult] = await Promise.allSettled([
+      probeApiStatus({ signal }),
+      import("./services/patches.js").then(({ loadPatchHistory }) => loadPatchHistory({ signal })),
+    ]);
+    if (statusResult.status === "rejected") throw statusResult.reason;
+    const result = statusResult.value;
+    result.latestPatch = patchResult.status === "fulfilled" ? patchResult.value?.latestPatch ?? null : null;
     if (signal.aborted) return;
   const badge = $("#status-badge");
   badge.textContent = result.online ? (result.healthy === false ? "DEGRADED" : "ONLINE") : "OFFLINE";
   badge.classList.toggle("online", result.online && result.healthy !== false);
   $("#status-title").textContent = result.online ? (result.healthy === false ? "API reachable, service degraded" : "All required services healthy") : "API unreachable";
-  $("#status-metrics").innerHTML = [["HTTP status", result.status ?? "—"], ["Latency", result.latencyMs != null ? result.latencyMs + " ms" : "—"], ["Endpoint", result.url ? new URL(result.url).pathname : "/v1/info/health"], ["Retry-After", result.headers?.["retry-after"] ?? "—"]].map(item => '<div class="metric"><span>' + esc(item[0]) + '</span><strong>' + esc(item[1]) + '</strong></div>').join("");
+  const latestPatch = result.latestPatch;
+  const patchUrl = safeExternalUrl(latestPatch?.link);
+  const patchValue = latestPatch
+    ? (patchUrl ? '<a href="' + esc(patchUrl) + '" target="_blank" rel="noopener noreferrer">' + esc(latestPatch.title ?? "Latest patch") + '</a>' : esc(latestPatch.title ?? "Latest patch"))
+    : "—";
+  const statusError = result.error?.message ?? result.infoError?.message ?? "—";
+  $("#status-metrics").innerHTML = [
+    ["HTTP status", result.status ?? "—"],
+    ["Latency", result.latencyMs != null ? result.latencyMs + " ms" : "—"],
+    ["Endpoint", result.url ? new URL(result.url).pathname : "/v1/info/health"],
+    ["Retry-After", result.headers?.["retry-after"] ?? result.error?.headers?.["retry-after"] ?? "—"],
+    ["Client version", assetVersion.get() ?? "LATEST"],
+    ["Latest patch", patchValue],
+    ["Error", result.online ? "—" : statusError],
+  ].map(([label, value]) => '<div class="metric"><span>' + esc(label) + '</span><strong>' + (label === "Latest patch" ? value : esc(value)) + '</strong></div>').join("");
   const services = result.services ?? {};
   $("#service-list").innerHTML = ["clickhouse","postgres","redis"].map(name => {
     const value = services[name];
