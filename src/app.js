@@ -286,6 +286,8 @@ async function renderHeroDetail(heroId, signal) {
     if (hero) $("#hero-detail-name").textContent = nameOf(hero);
 
     const model = analytics.buildHeroDetailViewModel(snapshot, hero);
+    const analyticsAvailable = analyticsResult.status === "fulfilled";
+    const heroAssetAvailable = heroResult.status === "fulfilled";
     const summary = [
       ["MATCHES", model.overview.matches == null ? "—" : model.overview.matches.toLocaleString()],
       ["WIN RATE", model.overview.winRate == null ? "—" : model.overview.winRate.toFixed(1) + "%"],
@@ -355,8 +357,14 @@ async function renderHeroDetail(heroId, signal) {
         '</tbody></table></div>'
       : '<p class="muted">No ability order statistics returned for this filter.</p>';
 
-    $("#hero-detail-status").innerHTML = '<span class="eyebrow">API CONNECTED</span><span>Hero analytics loaded</span>';
-    setConnection(true, "API connected");
+    const statusLabel = analyticsAvailable
+      ? (heroAssetAvailable ? "API CONNECTED" : "PARTIAL DATA")
+      : (heroAssetAvailable ? "ANALYTICS UNAVAILABLE" : "DATA UNAVAILABLE");
+    const statusMessage = analyticsAvailable
+      ? (heroAssetAvailable ? "Hero analytics and assets loaded" : "Hero analytics loaded; hero asset unavailable")
+      : (heroAssetAvailable ? "Hero asset loaded; analytics unavailable" : "Hero analytics and asset requests failed");
+    $("#hero-detail-status").innerHTML = '<span class="eyebrow">' + statusLabel + '</span><span>' + esc(statusMessage) + '</span>';
+    setConnection(analyticsAvailable || heroAssetAvailable, analyticsAvailable || heroAssetAvailable ? "API connected" : "API unavailable");
   }).catch(error => {
     if (isAborted(error)) return;
     $("#hero-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span class="error-text">' + esc(error.message) + '</span>';
