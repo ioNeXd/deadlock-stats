@@ -9,6 +9,7 @@ const BUILD_FILTERS = [
 
 const BUILD_SORTS = new Set(["weekly_favorites","favorites","ignores","reports","updated_at","published_at","version"]);
 const BUILD_DIRECTIONS = new Set(["desc","asc"]);
+const BUILD_LANGUAGES = new Set(["English","German","French","Italian","Korean","SpanishSpain","ChineseSimplified","Russian","Thai","Japanese","PortuguesePortugal","Polish","Czech","Turkish","PortugueseBrazil","Ukrainian","SpanishLatinAmerica","Vietnamese"]);
 
 function validateId(value, name) {
   if (!Number.isInteger(value) || value < 0) throw new RangeError(name + " must be a non-negative integer");
@@ -21,6 +22,7 @@ function buildOptions(options = {}) {
   const filtered = Object.fromEntries(Object.entries(source).filter(([key, value]) => BUILD_FILTERS.includes(key) && value !== undefined && value !== null && value !== ""));
   if (filtered.sort_by != null && !BUILD_SORTS.has(filtered.sort_by)) throw new RangeError("Unsupported build sort_by");
   if (filtered.sort_direction != null && !BUILD_DIRECTIONS.has(filtered.sort_direction)) throw new RangeError("Unsupported build sort_direction");
+  if (filtered.build_language != null && !BUILD_LANGUAGES.has(filtered.build_language)) throw new RangeError("Unsupported build_language");
   for (const key of ["start","limit","build_id","version","hero_id","tag","rollup_category","author_id"]) {
     if (filtered[key] != null) validateId(Number(filtered[key]), key);
   }
@@ -33,7 +35,7 @@ export function searchBuilds(options = {}) {
 
 export function fetchBuildsByAuthor(accountId, options = {}) {
   validateId(accountId, "accountId");
-  return apiGet("/v1/builds/by-author/" + encodeURIComponent(accountId), options);
+  return apiGet("/v1/builds/by-author/" + encodeURIComponent(accountId), { ...options, query: undefined });
 }
 
 export function fetchBuild(heroId, buildId, options = {}) {
