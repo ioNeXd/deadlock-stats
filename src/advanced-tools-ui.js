@@ -26,7 +26,7 @@ const abortPrevious = () => {
   return controller.signal;
 };
 
-function render() {
+export function renderAdvancedTools() {
   if (!location.hash.replace(/^#\/?/, "").startsWith("tools")) return;
   const signal = abortPrevious();
   root.innerHTML = `
@@ -236,5 +236,4 @@ async function pollDemo(jobId, signal) {
   }
 }
 
-window.addEventListener("hashchange", render);
-render();
+
