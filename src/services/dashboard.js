@@ -1,5 +1,6 @@
 import { getApiInfo } from "./api-status.js";
 import { getPatches } from "../api/patches.js";
+import { getGameStats } from "../api/analytics.js";
 
 function asArray(value) {
   return Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : [];
@@ -27,6 +28,19 @@ export async function getDashboardPatchSnapshot(options = {}) {
   return {
     patches,
     latestPatch: normalizeLatestPatch(patches?.data),
+  };
+}
+
+export async function getDashboardActivitySnapshot(options = {}) {
+  const { signal, ...requestOptions } = options;
+  const result = await getGameStats({
+    ...requestOptions,
+    bucket: "start_time_day",
+    signal,
+  });
+  return {
+    activity: Array.isArray(result?.data) ? result.data : [],
+    raw: result,
   };
 }
 
