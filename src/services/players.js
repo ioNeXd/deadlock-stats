@@ -39,7 +39,7 @@ export async function searchPlayers(query, options = {}) {
   const normalizedQuery = String(query ?? "").trim();
   if (!normalizedQuery) throw new TypeError("query is required");
 
-  if (/^\\d+$/.test(normalizedQuery)) {
+  if (/^\d+$/.test(normalizedQuery)) {
     const accountId = Number(normalizedQuery);
     if (Number.isSafeInteger(accountId) && accountId >= 0) {
       return loadSteamProfiles([accountId], options);
