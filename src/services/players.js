@@ -36,7 +36,17 @@ function withObject(result) {
 }
 
 export async function searchPlayers(query, options = {}) {
-  return withArray(await searchSteamProfiles(query, options));
+  const normalizedQuery = String(query ?? "").trim();
+  if (!normalizedQuery) throw new TypeError("query is required");
+
+  if (/^\\d+$/.test(normalizedQuery)) {
+    const accountId = Number(normalizedQuery);
+    if (Number.isSafeInteger(accountId) && accountId >= 0) {
+      return loadSteamProfiles([accountId], options);
+    }
+  }
+
+  return withArray(await searchSteamProfiles(normalizedQuery, options));
 }
 
 export async function loadSteamProfiles(accountIds, options = {}) {
