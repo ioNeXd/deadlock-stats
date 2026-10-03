@@ -2538,6 +2538,13 @@ function renderNotFound(routeName) {
     '</code> is not implemented in this build.</p><p><a class="primary-button" href="#/">Return to dashboard</a></p></section>';
 }
 
+function renderAdvancedTools(signal) {
+  loadAdvancedToolsRuntime().then(runtime => runtime.renderAdvancedTools({ signal })).catch(error => {
+    if (isAborted(error)) return;
+    el.content.innerHTML = '<section class="panel"><p class="error-text">Advanced tools failed to load: ' + esc(error.message) + '</p></section>';
+  });
+}
+
 function route() {
   const signal = beginRoute();
   const routeParts = location.hash.replace(/^#\/?/, "").split("/");
