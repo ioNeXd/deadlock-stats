@@ -83,9 +83,8 @@ if (operations !== 129 || parameters !== 704 || schemas !== 232) {
   throw new Error(`OpenAPI inventory drift: operations=${operations}, parameters=${parameters}, schemas=${schemas}`);
 }
 console.log(`PASS OpenAPI contract: 3.1.0, ${operations} operations, ${parameters} operation/path parameters, ${schemas} schemas`);
-const snapshotResponse = await fetch('https://raw.githubusercontent.com/ioNeXd/deadlock-stats/new-site/docs/api-openapi-inventory.json');
-if (!snapshotResponse.ok) throw new Error(`failed to load repository OpenAPI inventory: HTTP ${snapshotResponse.status}`);
-const snapshot = await snapshotResponse.json();
+import { readFile } from 'node:fs/promises';
+const snapshot = JSON.parse(await readFile(new URL('../docs/api-openapi-inventory.json', import.meta.url), 'utf8'));
 const liveSchemaNames = Object.keys(contract.components?.schemas || {});
 const snapshotSchemaNames = Object.keys(snapshot.schemas || {});
 const snapshotSet = new Set(snapshotSchemaNames);
