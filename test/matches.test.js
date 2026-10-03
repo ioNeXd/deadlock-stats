@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { getActiveMatches, getActiveMatchesRaw, getRecentlyFetchedMatches, getMatchMetadata, getRawMatchMetadata, getMatchLiveUrl, getMatchSalts, getBulkMatchMetadata, createCustomMatch, leaveCustomMatch, readyCustomMatch, startCustomMatch, unreadyCustomMatch, getCustomMatchId, getLiveQuery, submitDemoQuery, getDemoQueryStatus, getDemoSchema, getLiveUrls, ingestLiveUrls, ingestMatchSalts } from "../src/api/matches.js";
 import { normalizeMatchInfo, normalizeMatchMetadata } from "../src/services/matches.js";
+import { readFile } from "node:fs/promises";
 
 test("match wrappers target documented endpoints", async () => {
   const calls = [];
@@ -229,7 +230,7 @@ test("match detail view model extracts scalar fields, players and array metadata
 
 
 test("match UI loaders can expose active and recent failures independently", () => {
-  const source = require("node:fs").readFileSync(new URL("../src/app.js", import.meta.url), "utf8");
+  const source = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert.match(source, /const loadMatchList = async/);
   assert.match(source, /loadMatchList\(matches\.getActiveMatchesSnapshot/);
   assert.match(source, /loadMatchList\(matches\.getRecentlyFetchedMatchesSnapshot/);
