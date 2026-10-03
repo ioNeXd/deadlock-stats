@@ -1489,7 +1489,8 @@ async function renderPlayerDetail(accountId, signal) {
     '<section class="panel"><div id="player-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching player intelligence…</span></div><div id="player-detail-summary"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">HEROES</span><h2>Hero performance</h2></div></div><div id="player-detail-heroes"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">MATCH HISTORY</span><h2>Recent matches</h2></div></div><div id="player-detail-history"></div></section>' +
-    '<section class="panel"><div class="section-head"><div><span class="eyebrow">RANK HISTORY</span><h2>Rank progression</h2></div></div><div id="player-detail-rank-history"></div></section>' +\n    '<section class="panel"><div class="section-head"><div><span class="eyebrow">RANK FORECAST</span><h2>Predicted rank</h2></div></div><div id="player-detail-rank-forecast"><p class="muted">Loading rank forecast…</p></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">RANK HISTORY</span><h2>Rank progression</h2></div></div><div id="player-detail-rank-history"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">RANK FORECAST</span><h2>Predicted rank</h2></div></div><div id="player-detail-rank-forecast"><p class="muted">Loading rank forecast…</p></div></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">PLAYER CARD</span><h2>Account card</h2></div><span>PATREON API</span></div><div id="player-detail-card"><p class="muted">Loading account card…</p></div></article>' +
     '<article class="panel"><div class="section-head"><div><span class="eyebrow">ACCOUNT STATS</span><h2>Account statistics</h2></div><span>PATREON API</span></div><div id="player-detail-account-stats"><p class="muted">Loading account stats…</p></div></article></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">RELATIONSHIPS</span><h2>Enemies & teammates</h2></div></div><div id="player-detail-relations"></div></section>';
@@ -2527,22 +2528,30 @@ function route() {
   const routeName = routeParts[0] || "dashboard";
   if (routeName === "api") renderApiStatus(signal);
   else if (routeName === "analytics") renderAnalytics(signal);
-  else if (routeName === "matches" && routeParts[1]) renderMatchDetail(routeParts[1], signal);\n  else if (routeName === "matches") renderMatches(signal);
+  else if (routeName === "matches" && routeParts[1]) renderMatchDetail(routeParts[1], signal);
+  else if (routeName === "matches") renderMatches(signal);
   else if (routeName === "players" && routeParts[1]) renderPlayerDetail(routeParts[1], signal);
   else if (routeName === "players") renderPlayers(signal);
   else if (routeName === "builds" && routeParts[1] && routeParts[2]) renderBuildDetail(routeParts[1], routeParts[2], signal);
   else if (routeName === "builds") renderBuilds(signal);
   else if (routeName === "leaderboard") renderLeaderboard(signal);
   else if (routeName === "item-analytics") renderItemAnalytics(signal);
-  else if (routeName === "maps") renderMaps(signal);\n  else if (routeName === "patches") renderPatches(signal);
+  else if (routeName === "maps") renderMaps(signal);
+  else if (routeName === "patches") renderPatches(signal);
   else if (routeName === "data") renderDataExplorer(signal);
-  else if (routeName === "graphql") renderGraphql(signal);\n  else if (routeName === "tools") renderAdvancedTools(signal);
+  else if (routeName === "graphql") renderGraphql(signal);
+  else if (routeName === "tools") renderAdvancedTools(signal);
   else if (routeName === "heroes" && routeParts[1]) renderHeroDetail(routeParts[1], signal);
   else if (routeName === "heroes") renderHeroes(signal);
   else if (routeName === "items" && routeParts[1]) renderItemDetail(routeParts[1], signal);
   else if (routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
   else renderNotFound(routeName);
-  document.querySelectorAll(".nav-item").forEach(item => {\n    const active = item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName);\n    item.classList.toggle("active", active);\n    if (active) item.setAttribute("aria-current", "page");\n    else item.removeAttribute("aria-current");\n  });
+  document.querySelectorAll(".nav-item").forEach(item => {
+    const active = item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName);
+    item.classList.toggle("active", active);
+    if (active) item.setAttribute("aria-current", "page");
+    else item.removeAttribute("aria-current");
+  });
   bindVersionControl();
 
   if (routeName === "dashboard" || routeName === "maps") {
