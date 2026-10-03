@@ -161,8 +161,6 @@ async function loadDashboard(signal) {
   const dashboardRuntime = await loadDashboardRuntime();
   const options = { ...assetVersion.options(), signal };
   const coreResult = await dashboardRuntime.getDashboardCoreSnapshot(options);
-  const heroesResult = { status: "pending" };
-
   if (signal.aborted) return;
 
   const loadHeroes = async () => {
@@ -182,8 +180,7 @@ async function loadDashboard(signal) {
     }
   };
 
-  const heroes = heroesResult.status === "fulfilled" ? heroesResult.value : null;
-  const snapshot = coreResult.status === "fulfilled" ? coreResult.value : null;
+  const snapshot = coreResult;
 
   if (snapshot) {
     const info = snapshot.info?.data ?? {};
@@ -240,9 +237,9 @@ async function loadDashboard(signal) {
     }
   });
 
-  if (heroes || snapshot) {
+  if (snapshot) {
     setConnection(true, "API connected");
-    $("#api-badge").textContent = snapshot ? "ONLINE" : "PARTIAL";
+    $("#api-badge").textContent = "ONLINE";
     $("#api-badge").classList.add("online");
   } else {
     setConnection(false, "API unavailable");
