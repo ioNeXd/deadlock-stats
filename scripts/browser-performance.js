@@ -40,10 +40,13 @@ for (const route of routes) {
       lcpMs: largest?.startTime ?? null,
       cls,
       transferBytes: transfer,
+      jsTransferBytes: resources
+        .filter(resource => /\.js(?:$|\?)/.test(resource.name))
+        .reduce((sum, resource) => sum + Number(resource.transferSize || 0), 0),
       resourceCount: resources.length,
       jsResources: resources.filter(resource => /\.js(?:$|\?)/.test(resource.name)).length,
       cssResources: resources.filter(resource => /\.css(?:$|\?)/.test(resource.name)).length,
-      inpMs: performance.getEntriesByType("event")
+      interactionDurationMs: performance.getEntriesByType("event")
         .map(entry => Number(entry.duration))
         .filter(Number.isFinite)
         .reduce((max, duration) => Math.max(max, duration), 0) || null,
@@ -63,8 +66,8 @@ for (const route of routes) {
   if (metrics.cls > budgets.cls) {
     throw new Error(`${route || "dashboard"} CLS budget exceeded: ${metrics.cls}`);
   }
-  if (metrics.inpMs !== null && metrics.inpMs > 500) {
-    throw new Error(`${route || "dashboard"} INP/event duration budget exceeded: ${Math.round(metrics.inpMs)}ms`);
+  if (metrics.interactionDurationMs !== null && metrics.interactionDurationMs > 500) {
+    throw new Error(`${route || "dashboard"} interaction/event duration budget exceeded: ${Math.round(metrics.inpMs)}ms`);
   }
   if (metrics.jsTransferBytes > budgets.jsTransferBytes) {
     throw new Error(`${route || "dashboard"} JavaScript transfer budget exceeded: ${metrics.jsTransferBytes} bytes`);
