@@ -1458,6 +1458,21 @@ async function renderPlayerDetail(accountId, signal) {
         : '<p class="muted">No match history returned.</p>';
     };
     renderHistoryRows();
+    $("#player-detail-history").innerHTML = '<p class="muted">Loading match history…</p>';
+
+    setTimeout(() => {
+      if (signal.aborted) return;
+      players.getPlayerMatchHistorySnapshot(numericAccountId, { signal }).then(result => {
+        if (signal.aborted) return;
+        model.matchHistory = result.matchHistory ?? [];
+        renderHistoryRows();
+      }).catch(error => {
+        if (!isAborted(error)) {
+          $("#player-detail-history").innerHTML = '<p class="muted">Match history unavailable.</p>';
+          console.warn("Deadlock API match history unavailable on player detail", error);
+        }
+      });
+    }, 0);
 
     setTimeout(() => {
       if (signal.aborted) return;
