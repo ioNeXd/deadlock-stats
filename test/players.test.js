@@ -221,3 +221,18 @@ test("player search resolves numeric account IDs through Steam profile lookup", 
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("player rank history derives current ranked fields from match history", async () => {
+  const { buildPlayerRankHistoryViewModel } = await import("../src/services/players.js");
+  const model = buildPlayerRankHistoryViewModel([
+    { match_id: 20, start_time: 200, ranked_display_badge: 23, ranked_delta: -18, hero_id: 2 },
+    { match_id: 10, start_time: 100, ranked_display_badge: null, ranked_delta: null, hero_id: 1 },
+    { match_id: 30, start_time: 300, ranked_display_badge: 24, ranked_delta: 12, ranked_calibration_match: 1, ranked_used_demotion_protection: true, hero_id: 3 },
+  ]);
+  assert.deepEqual(model.map(row => row.matchId), [20, 30]);
+  assert.deepEqual(model.map(row => row.badge), [23, 24]);
+  assert.deepEqual(model.map(row => row.delta), [-18, 12]);
+  assert.equal(model[1].calibrationMatch, 1);
+  assert.equal(model[1].usedDemotionProtection, true);
+});
