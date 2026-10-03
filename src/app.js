@@ -1230,6 +1230,77 @@ async function renderBuildDetail(heroId, buildId, signal) {
   render();
 }
 
+async function renderMatchDetail(matchId, signal) {
+  const matches = await loadMatchesRuntime();
+  const assetsRuntime = await loadAssetsRuntime();
+  const numericMatchId = Number(matchId);
+  if (!Number.isInteger(numericMatchId) || numericMatchId < 0) {
+    renderNotFound("matches/" + matchId);
+    return;
+  }
+
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">MATCH / DETAIL</span><h2>Match #' + esc(numericMatchId) + '</h2><p>Detailed match metadata, player performance and API response for this match.</p></section>' +
+    '<section class="panel"><div id="match-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching match metadata…</span></div><div id="match-detail-summary"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">PLAYERS</span><h2>Match roster</h2></div><span id="match-detail-player-count">—</span></div><div id="match-detail-players" class="match-player-grid"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">API DATA</span><h2>Raw metadata</h2></div></div><details class="match-raw"><summary>Open raw API response</summary><pre id="match-detail-raw"></pre></details></section>';
+
+  try {
+    const [result, heroCatalog, itemCatalog] = await Promise.all([
+      matches.getMatchMetadataSnapshot(numericMatchId, { ...assetVersion.options(), signal }),
+      assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
+      assetsRuntime.listItems({ ...assetVersion.options(), signal }),
+    ]);
+    if (signal.aborted) return;
+
+    const model = matches.buildMatchDetailViewModel(result);
+    if (!model.match) {
+      $("#match-detail-status").innerHTML = '<span class="eyebrow">NOT FOUND</span><span>No metadata returned for this match.</span>';
+      return;
+    }
+
+    const heroes = new Map((heroCatalog.data ?? []).map(hero => [Number(idOf(hero)), hero]));
+    const items = new Map((itemCatalog.data ?? []).map(item => [Number(item.id), item]));
+
+    $("#match-detail-summary").innerHTML =
+      '<div class="match-detail-summary">' +
+      model.scalarFields.slice(0, 24).map(item => '<div class="metric"><span>' + esc(item.key.replaceAll("_", " ")) + '</span><strong>' + esc(item.value ?? "—") + '</strong></div>').join("") +
+      model.arrayFields.map(item => '<div class="metric"><span>' + esc(item.key.replaceAll("_", " ")) + '</span><strong>' + esc(item.count) + ' entries</strong></div>').join("") +
+      '</div>';
+
+    $("#match-detail-player-count").textContent = model.players.length + " PLAYERS";
+    $("#match-detail-players").innerHTML = model.players.map((player, index) => {
+      const heroId = Number(player?.hero_id);
+      const hero = heroes.get(heroId);
+      const playerItems = Array.isArray(player?.items) ? player.items : [];
+      const itemNames = playerItems.slice(0, 10).map(item => {
+        const id = Number(item?.item_id ?? item?.id ?? item);
+        return items.get(id)?.name ?? ("Item " + (Number.isFinite(id) ? id : "—"));
+      });
+      const kda = ["kills", "deaths", "assists"].every(key => player?.[key] != null)
+        ? player.kills + "/" + player.deaths + "/" + player.assists : "—";
+      const image = hero ? resolveAssetImage(hero, ["icon_image_small_webp", "icon_image_small", "hero_card_critical_webp", "hero_card_critical"]) : "";
+      return '<article class="match-player-card">' +
+        (image ? '<img class="match-player-hero" src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '') +
+        '<span class="eyebrow">PLAYER ' + (index + 1) + '</span>' +
+        '<strong>Account ' + esc(player?.account_id ?? "—") + '</strong>' +
+        '<small>' + esc(hero?.name ?? ("Hero " + (player?.hero_id ?? "—"))) + ' · Team ' + esc(player?.team ?? "—") + '</small>' +
+        '<small>K/D/A ' + esc(kda) + ' · ' + playerItems.length + ' items</small>' +
+        (player?.hero_build_id != null ? '<small>Build ' + esc(player.hero_build_id) + '</small>' : '') +
+        (itemNames.length ? '<small>Items: ' + esc(itemNames.join(", ")) + '</small>' : '') +
+        '</article>';
+    }).join("") || '<p class="muted">No player roster was returned.</p>';
+
+    $("#match-detail-raw").textContent = JSON.stringify(model.raw, null, 2);
+    $("#match-detail-status").innerHTML = '<span class="eyebrow">LOADED</span><span>Metadata received from the Deadlock API.</span>';
+    setConnection(true, "API connected");
+  } catch (error) {
+    if (isAborted(error)) return;
+    $("#match-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span>' + esc(error.message) + '</span>';
+    setConnection(false, "API unavailable");
+  }
+}
+
 async function renderMatches(signal) {
   const matches = await loadMatchesRuntime();
   el.content.innerHTML =
@@ -2384,7 +2455,7 @@ function route() {
   const routeName = routeParts[0] || "dashboard";
   if (routeName === "api") renderApiStatus(signal);
   else if (routeName === "analytics") renderAnalytics(signal);
-  else if (routeName === "matches") renderMatches(signal);
+  else if (routeName === "matches" && routeParts[1]) renderMatchDetail(routeParts[1], signal);\n  else if (routeName === "matches") renderMatches(signal);
   else if (routeName === "players" && routeParts[1]) renderPlayerDetail(routeParts[1], signal);
   else if (routeName === "players") renderPlayers(signal);
   else if (routeName === "builds" && routeParts[1] && routeParts[2]) renderBuildDetail(routeParts[1], routeParts[2], signal);
