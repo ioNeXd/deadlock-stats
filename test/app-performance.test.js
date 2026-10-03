@@ -40,6 +40,13 @@ test("build detail fetches only the selected hero asset", () => {
   assert.match(routeSource, /const hero = heroResult\?\.data \?\? null/);
 });
 
+test("item detail isolates definition from analytics failures", () => {
+  const routeSource = extractTopLevelFunction(appSource, "async function renderItemDetail");
+  assert.match(routeSource, /Promise\\.allSettled\\(\\[/);
+  assert.match(routeSource, /itemSettlement\.status !== "fulfilled"/);
+  assert.match(routeSource, /statsSettlement\.status === "fulfilled" \\? statsSettlement\.value : \[\]/);
+});
+
 test("item detail fetches only the selected item and scopes analytics", () => {
   const routeSource = extractTopLevelFunction(appSource, "async function renderItemDetail");
   assert.match(routeSource, /assetsRuntime\.fetchItem\(itemId/);
