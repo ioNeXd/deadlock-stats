@@ -1,0 +1,81 @@
+name: one-shot master compliance patch
+
+on:
+  push:
+    branches:
+      - new-site
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.head_commit.message != 'chore(ci): remove one-shot master compliance patch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: new-site
+          fetch-depth: 0
+
+      - name: Patch API status UI and remove helper workflow
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path("src/app.js")
+          text = path.read_text()
+
+          old = '''  $("#status-title").textContent = result.online ? (result.healthy === false ? "API reachable, service degraded" : "All required services healthy") : "API unreachable";
+  $("#status-metrics").innerHTML = [["HTTP status", result.status ?? "—"], ["Latency", result.latencyMs != null ? result.latencyMs + " ms" : "—"], ["Endpoint", result.url ? new URL(result.url).pathname : "/v1/info/health"], ["Retry-After", result.headers?.["retry-after"] ?? "—"]].map(item => '<div class="metric"><span>' + esc(item[0]) + '</span><strong>' + esc(item[1]) + '</strong></div>').join("");
+'''
+          new = '''  $("#status-title").textContent = result.online ? (result.healthy === false ? "API reachable, service degraded" : "All required services healthy") : "API unreachable";
+  const latestPatch = result.latestPatch;
+  const patchUrl = safeExternalUrl(latestPatch?.link);
+  const patchValue = latestPatch
+    ? (patchUrl ? '<a href="' + esc(patchUrl) + '" target="_blank" rel="noopener noreferrer">' + esc(latestPatch.title ?? "Latest patch") + '</a>' : esc(latestPatch.title ?? "Latest patch"))
+    : "—";
+  const statusError = result.error?.message ?? result.infoError?.message ?? "—";
+  $("#status-metrics").innerHTML = [
+    ["HTTP status", result.status ?? "—"],
+    ["Latency", result.latencyMs != null ? result.latencyMs + " ms" : "—"],
+    ["Endpoint", result.url ? new URL(result.url).pathname : "/v1/info/health"],
+    ["Retry-After", result.headers?.["retry-after"] ?? result.error?.headers?.["retry-after"] ?? "—"],
+    ["Client version", assetVersion.get() ?? "LATEST"],
+    ["Latest patch", patchValue],
+    ["Error", result.online ? "—" : statusError],
+  ].map(([label, value]) => '<div class="metric"><span>' + esc(label) + '</span><strong>' + (label === "Latest patch" ? value : esc(value)) + '</strong></div>').join("");
+'''
+          if old not in text:
+              raise SystemExit("API status UI marker not found")
+          if 'const latestPatch = result.latestPatch;' not in text:
+              path.write_text(text.replace(old, new))
+
+          path = Path("src/app.js")
+          text = path.read_text()
+          old = '''    const { probeApiStatus } = await loadApiStatusRuntime();
+    const result = await probeApiStatus({ signal });
+    if (signal.aborted) return;
+'''
+          new = '''    const { probeApiStatus } = await loadApiStatusRuntime();
+    const [statusResult, patchResult] = await Promise.allSettled([
+      probeApiStatus({ signal }),
+      import("./services/patches.js").then(({ loadPatchHistory }) => loadPatchHistory({ signal })),
+    ]);
+    if (statusResult.status === "rejected") throw statusResult.reason;
+    const result = statusResult.value;
+    result.latestPatch = patchResult.status === "fulfilled" ? patchResult.value?.latestPatch ?? null : null;
+    if (signal.aborted) return;
+'''
+          if old not in text:
+              raise SystemExit("API status loader marker not found")
+          path.write_text(text.replace(old, new))
+
+      - name: Commit and remove helper workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app.js
+          git rm .github/workflows/one-shot-master-compliance-patch.yml
+          git commit -m "chore(ci): remove one-shot master compliance patch"
+          git push origin new-site
