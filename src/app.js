@@ -1451,21 +1451,23 @@ async function renderMatches(signal) {
     }
   };
 
-  try {
-    const [active, recent] = await Promise.all([
-      matches.getActiveMatchesSnapshot({ signal }),
-      matches.getRecentlyFetchedMatchesSnapshot({ signal }),
-    ]);
-    if (signal.aborted) return;
-    renderList("#active-match-list", active);
-    renderList("#recent-match-list", recent);
-    $("#active-match-status").textContent = active.length + " LIVE";
-    $("#recent-match-status").textContent = recent.length + " FOUND";
-  } catch (error) {
-    if (isAborted(error)) return;
-    $("#active-match-status").textContent = "ERROR";
-    $("#recent-match-status").textContent = "ERROR";
-  }
+  const loadMatchList = async (loader, listSelector, statusSelector, label) => {
+    try {
+      const result = await loader({ signal });
+      if (signal.aborted) return;
+      renderList(listSelector, result);
+      $(statusSelector).textContent = result.length + (label === "LIVE" ? " LIVE" : " FOUND");
+    } catch (error) {
+      if (isAborted(error)) return;
+      $(statusSelector).textContent = "ERROR";
+      $(listSelector).innerHTML = '<p class="error-text">' + esc(label + " matches unavailable: " + (error.message ?? "request failed")) + '</p>';
+    }
+  };
+
+  await Promise.all([
+    loadMatchList(matches.getActiveMatchesSnapshot, "#active-match-list", "#active-match-status", "LIVE"),
+    loadMatchList(matches.getRecentlyFetchedMatchesSnapshot, "#recent-match-list", "#recent-match-status", "RECENT"),
+  ]);
 
   $("#match-lookup").addEventListener("submit", event => {
     event.preventDefault();
