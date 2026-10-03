@@ -1398,11 +1398,35 @@ async function renderPlayerDetail(accountId, signal) {
       ["LAST RANKED MATCH", rank.last_match?.match_id ?? "—"],
       ["PROFILE", profileName ?? "—"],
     ];
-    const rankImage = resolveAssetImage(rankAsset, ["image_webp", "image", "icon_webp", "icon"]);
     $("#player-detail-summary").innerHTML = '<div class="match-detail-summary">' +
       '<div class="metric" data-player-rank><span>RANK BADGE</span><strong>Loading…</strong></div>' +
       summary.map(([label,value]) => '<div class="metric"' + (label === "PROFILE" ? ' data-player-profile' : "") + '><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>').join("") +
       '</div>';
+
+    setTimeout(() => {
+      if (signal.aborted) return;
+      if (!Number.isInteger(rankTier) || rankTier < 0) {
+        const rankMetric = $("#player-detail-summary")?.querySelector("[data-player-rank]");
+        if (rankMetric) rankMetric.innerHTML = '<span>RANK BADGE</span><strong>—</strong>';
+        return;
+      }
+      assetsRuntime.fetchRank(rankTier, { ...assetVersion.options(), signal }).then(result => {
+        if (signal.aborted) return;
+        rankAsset = result?.data ?? null;
+        const rankImage = resolveAssetImage(rankAsset, ["image_webp", "image", "icon_webp", "icon"]);
+        const rankMetric = $("#player-detail-summary")?.querySelector("[data-player-rank]");
+        if (rankMetric) {
+          rankMetric.innerHTML = rankImage
+            ? '<span>RANK BADGE</span><img src="' + esc(rankImage) + '" alt="" loading="lazy" decoding="async">'
+            : '<span>RANK BADGE</span><strong>—</strong>';
+        }
+      }).catch(error => {
+        if (isAborted(error)) return;
+        const rankMetric = $("#player-detail-summary")?.querySelector("[data-player-rank]");
+        if (rankMetric) rankMetric.innerHTML = '<span>RANK BADGE</span><strong>—</strong>';
+        console.warn("Deadlock API rank asset unavailable on player detail", error);
+      });
+    }, 0);
 
     const renderHeroRows = () => {
       const heroRows = model.heroStats.slice(0, 20).map(row => '<tr><td><a href="#/heroes/' + esc(row.hero_id ?? "") + '">' + esc(heroName(row.hero_id ?? "—")) + '</a></td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td><td>' + esc(row.kills ?? "—") + '</td><td>' + esc(row.deaths ?? "—") + '</td><td>' + esc(row.assists ?? "—") + '</td></tr>').join("");
