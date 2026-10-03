@@ -140,12 +140,16 @@ export function buildPlayerDetailViewModel(snapshot, profile = null) {
 }
 
 export async function getPlayerDetailCoreSnapshot(accountId, options = {}) {
-  const [rank, heroStats, matchHistory] = await Promise.all([
+  const [rank, matchHistory] = await Promise.all([
     loadPlayerRank(accountId, options),
-    loadPlayerHeroStats({ ...options, account_ids: [Number(accountId)] }),
     loadPlayerMatchHistory(accountId, options),
   ]);
-  return { accountId, rank, heroStats: heroStats.data, matchHistory: matchHistory.data };
+  return { accountId, rank, heroStats: [], matchHistory: matchHistory.data };
+}
+
+export async function getPlayerHeroStatsSnapshot(accountId, options = {}) {
+  const heroStats = await loadPlayerHeroStats({ ...options, account_ids: [Number(accountId)] });
+  return { accountId, heroStats: heroStats.data };
 }
 
 export async function getPlayerRelationsSnapshot(accountId, options = {}) {
