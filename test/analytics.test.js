@@ -727,3 +727,27 @@ test("lane analytics wrappers reject filters that belong to the other lane endpo
   assert.equal(calls[1].searchParams.get("min_time_s"), "180");
   assert.equal(calls[1].searchParams.get("sample_time_s"), null);
 });
+
+
+test("analytics filters stay aligned with current item and scoreboard contracts", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async url => {
+    calls.push(new URL(url));
+    return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const { getHeroScoreboard, getItemPermutationStats, getItemStats } = await import("../src/api/analytics.js");
+    await getHeroScoreboard({ sort_by: "matches", hero_id: 7, max_matches: 999, min_matches: 10 });
+    await getItemPermutationStats({ sort_by: "matches", hero_id: 7, item_ids: [1, 2], include_corrupted_items: true });
+    await getItemStats({ hero_id: 7, include_corrupted_items: true });
+    assert.equal(calls[0].searchParams.get("min_matches"), "10");
+    assert.equal(calls[0].searchParams.has("hero_id"), false);
+    assert.equal(calls[0].searchParams.has("max_matches"), false);
+    assert.equal(calls[1].searchParams.get("hero_id"), "7");
+    assert.equal(calls[1].searchParams.get("include_corrupted_items"), "true");
+    assert.equal(calls[2].searchParams.get("include_corrupted_items"), "true");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
