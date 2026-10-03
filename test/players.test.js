@@ -267,7 +267,7 @@ test("player rank history loader derives ranked rows from current match history 
 });
 
 
-test("player rank forecast loader uses the current rank-predict endpoint", async () => {
+test("player rank forecast loader uses the current rank endpoint", async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
   globalThis.fetch = async input => {
