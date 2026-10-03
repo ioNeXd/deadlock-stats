@@ -118,19 +118,35 @@ test("player detail keeps the initial critical path free of the full hero catalo
   assert.match(routeSource, /model\.mateStats = Array\.isArray\(relations\?\.mateStats\)/);
 });
 
-test("player detail splits relation stats from the core snapshot service", async () => {
+test("player detail splits non-critical history and relation stats from the core snapshot service", async () => {
   const source = await readFile(new URL("../src/services/players.js", import.meta.url), "utf8");
   assert.match(source, /export async function getPlayerDetailCoreSnapshot\(accountId, options = \{\}\)/);
+  assert.match(source, /export async function getPlayerMatchHistorySnapshot\(accountId, options = \{\}\)/);
   assert.match(source, /export async function getPlayerRelationsSnapshot\(accountId, options = \{\}\)/);
   const coreStart = source.indexOf("export async function getPlayerDetailCoreSnapshot");
+  const historyStart = source.indexOf("export async function getPlayerMatchHistorySnapshot");
   const relationsStart = source.indexOf("export async function getPlayerRelationsSnapshot");
   assert.notEqual(coreStart, -1);
+  assert.notEqual(historyStart, -1);
   assert.notEqual(relationsStart, -1);
-  const coreSource = source.slice(coreStart, relationsStart);
+  const coreSource = source.slice(coreStart, historyStart);
+  assert.doesNotMatch(coreSource, /loadPlayerMatchHistory\(/);
   assert.doesNotMatch(coreSource, /loadPlayerEnemyStats\(/);
   assert.doesNotMatch(coreSource, /loadPlayerMateStats\(/);
+  assert.match(source.slice(historyStart, relationsStart), /loadPlayerMatchHistory\(accountId, options\)/);
   assert.match(source.slice(relationsStart), /loadPlayerEnemyStats\(accountId, options\)/);
   assert.match(source.slice(relationsStart), /loadPlayerMateStats\(accountId, options\)/);
+});
+
+test("player detail defers match history request", () => {
+  const routeSource = extractTopLevelFunction(appSource, "async function renderPlayerDetail");
+  const criticalEnd = routeSource.indexOf("const snapshot = await players.getPlayerDetailCoreSnapshot(numericAccountId, { signal });");
+  assert.notEqual(criticalEnd, -1);
+  const criticalLoad = routeSource.slice(0, criticalEnd);
+  assert.doesNotMatch(criticalLoad, /getPlayerMatchHistorySnapshot/);
+  assert.match(routeSource, /getPlayerMatchHistorySnapshot\(numericAccountId, \{ signal \}\)/);
+  assert.match(routeSource, /model\.matchHistory = result\.matchHistory/);
+  assert.match(routeSource, /Loading match history…/);
 });
 
 test("app defers analytics runtime until analytics routes", () => {
