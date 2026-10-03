@@ -11,7 +11,7 @@ Mirror used for machine parsing: https://github.com/deadlock-api/openapi-clients
 - API version: 0.1.0
 - Paths: 126
 - Operations: 129
-- Schemas: 230
+- Schemas: 232
 - Security schemes: 2
 - Deprecated operations: 14
 - Distinct content types: 7
