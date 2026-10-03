@@ -32,7 +32,7 @@ The current Deadlock API OpenAPI specification is the contract source. The appli
 | Build Detail | PASS | build detail remains available when optional performance analytics fail |
 | Advanced tools | PASS | Demo, Live Query/SSE, Custom Match, Live URLs, async job polling |
 | Accessibility | PASS | skip link, labelled navigation, aria-current, visible focus |
-| Performance | PASS | route-level/deferred loading, dashboard/player/detail request isolation |
+| Performance | PASS WITH BROWSER SMOKEng, dashboard/player/detail request isolation |
 | Security | PASS | URL validation, sanitization, no credentials/secrets in source |
 | Capability matrix | PASS | 129/129 operations and 704/704 parameters classified |
 | OpenAPI inventory | PASS | current timestamp defaults synchronized |
