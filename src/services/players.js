@@ -100,6 +100,26 @@ export function loadPlayerRankPredictBatchImage(accountIds, format, options = {}
   return getPlayerRankPredictBatchImage(accountIds, format, options);
 }
 
+export function buildPlayerRankHistoryViewModel(matchHistory) {
+  const rows = Array.isArray(matchHistory)
+    ? matchHistory
+    : asArray(matchHistory?.data);
+
+  return rows
+    .filter(match => match?.ranked_display_badge != null)
+    .map(match => ({
+      matchId: match.match_id ?? null,
+      startTime: match.start_time ?? null,
+      heroId: match.hero_id ?? null,
+      badge: match.ranked_display_badge,
+      delta: match.ranked_delta ?? null,
+      calibrationMatch: match.ranked_calibration_match ?? null,
+      usedDemotionProtection: match.ranked_used_demotion_protection ?? null,
+      raw: match,
+    }))
+    .sort((a, b) => Number(a.startTime ?? 0) - Number(b.startTime ?? 0));
+}
+
 export function buildPlayerDetailViewModel(snapshot, profile = null) {
   const rank = snapshot?.rank?.data ?? snapshot?.rank?.raw ?? snapshot?.rank ?? {};
   const heroes = Array.isArray(snapshot?.heroStats) ? snapshot.heroStats : asArray(snapshot?.heroStats?.data);
