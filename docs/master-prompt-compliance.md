@@ -10,7 +10,7 @@ The current Deadlock API OpenAPI specification is the contract source. The appli
 
 - 129 operations
 - 704 parameters
-- 230 schemas
+- 232 schemas
 - 2 security schemes
 - 7 documented content types
 - 14 deprecated operations
