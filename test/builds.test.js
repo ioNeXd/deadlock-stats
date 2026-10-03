@@ -101,3 +101,25 @@ test("buildBuildDetailViewModel combines build metadata with performance", () =>
   assert.equal(result.performance.winRate, 60);
   assert.deepEqual(result.tags, [10]);
 });
+
+
+test("build search validates current language enum", async () => {
+  await assert.rejects(() => searchBuilds({ build_language: "Portuguese" }), /Unsupported build_language/);
+});
+
+test("author build endpoint does not forward unsupported query parameters", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async url => {
+    calls.push(new URL(url));
+    return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const { fetchBuildsByAuthor } = await import("../src/api/builds.js");
+    await fetchBuildsByAuthor(123, { query: { limit: 20 } });
+    assert.equal(calls[0].pathname, "/v1/builds/by-author/123");
+    assert.equal(calls[0].search, "");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
