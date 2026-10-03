@@ -29,8 +29,16 @@ for (const route of routes) {
   const url = route ? `${baseUrl}/#/${route}` : `${baseUrl}/#/`;
   const started = Date.now();
   const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20_000 });
-  await page.locator("#page-content").waitFor({ state: "visible", timeout: 10_000 });
-  await page.waitForTimeout(150);
+  await page.waitForTimeout(1000);
+  if (await page.locator("#page-content").innerText().then(text => text.trim().length) < 20) {
+    const diagnostics = await page.evaluate(() => ({
+      title: document.title,
+      scripts: [...document.scripts].map(script => script.src),
+      readyState: document.readyState,
+      bodyText: document.body.innerText.slice(0, 500),
+    }));
+    throw new Error("browser route rendered no content: " + (route || "dashboard") + "\n" + JSON.stringify({ failures, diagnostics }));
+  }
   const contentLength = await page.locator("#page-content").innerText().then(text => text.trim().length);
   const activeHref = await page.locator(".nav-item.active").getAttribute("href");
   const expectedHref = route ? `#/${route}` : "#/";
