@@ -27,6 +27,8 @@ jobs:
         run: node --check src/app.js
       - name: Smoke test public Deadlock API
         run: node scripts/api-smoke.js
+      - name: Audit live API operation coverage
+        run: node scripts/api-coverage-audit.js
       - name: Install browser test runtime
         run: npm install --no-save playwright@1.63.0
       - name: Install Chromium
@@ -42,3 +44,13 @@ jobs:
           exit 1
       - name: Run browser smoke tests
         run: node scripts/browser-smoke.js
+      - name: Run browser E2E tests
+        run: node scripts/browser-e2e.js
+      - name: Run browser performance budgets
+        run: node scripts/browser-performance.js
+      - name: Run authenticated API smoke when credential is configured
+        env:
+          DEADLOCK_API_KEY: ${{ secrets.DEADLOCK_API_KEY }}
+        run: node scripts/protected-api-smoke.js
+      - name: Check dependency vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
