@@ -1366,7 +1366,7 @@ async function renderPlayerDetail(accountId, signal) {
 
   try {
     const [snapshot, profiles] = await Promise.all([
-      players.getPlayerDetailSnapshot(numericAccountId, { signal }),
+      players.getPlayerDetailCoreSnapshot(numericAccountId, { signal }),
       players.loadSteamProfiles([numericAccountId], { signal }),
     ]);
     if (signal.aborted) return;
@@ -1426,13 +1426,29 @@ async function renderPlayerDetail(accountId, signal) {
       });
     }, 0);
 
-    const enemyRows = model.enemyStats.slice(0, 10).map(row => '<tr><td>' + esc(row.enemy_hero_id ?? row.hero_id ?? "—") + '</td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td></tr>').join("");
-    const mateRows = model.mateStats.slice(0, 10).map(row => '<tr><td>' + esc(row.mate_account_id ?? row.account_id ?? "—") + '</td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td></tr>').join("");
-    $("#player-detail-relations").innerHTML =
-      '<div class="dashboard-grid"><div><h3>Enemies</h3>' + (enemyRows ? '<div class="data-table-wrap"><table><thead><tr><th>Hero / Player</th><th>Matches</th><th>Wins</th></tr></thead><tbody>' + enemyRows + '</tbody></table></div>' : '<p class="muted">No enemy stats returned.</p>') + '</div>' +
-      '<div><h3>Teammates</h3>' + (mateRows ? '<div class="data-table-wrap"><table><thead><tr><th>Player</th><th>Matches</th><th>Wins</th></tr></thead><tbody>' + mateRows + '</tbody></table></div>' : '<p class="muted">No mate stats returned.</p>') + '</div></div>';
+    const renderRelationRows = () => {
+      const enemyRows = model.enemyStats.slice(0, 10).map(row => '<tr><td>' + esc(row.enemy_hero_id ?? row.hero_id ?? "—") + '</td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td></tr>').join("");
+      const mateRows = model.mateStats.slice(0, 10).map(row => '<tr><td>' + esc(row.mate_account_id ?? row.account_id ?? "—") + '</td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td></tr>').join("");
+      $("#player-detail-relations").innerHTML =
+        '<div class="dashboard-grid"><div><h3>Enemies</h3>' + (enemyRows ? '<div class="data-table-wrap"><table><thead><tr><th>Hero / Player</th><th>Matches</th><th>Wins</th></tr></thead><tbody>' + enemyRows + '</tbody></table></div>' : '<p class="muted">No enemy stats returned.</p>') + '</div>' +
+        '<div><h3>Teammates</h3>' + (mateRows ? '<div class="data-table-wrap"><table><thead><tr><th>Player</th><th>Matches</th><th>Wins</th></tr></thead><tbody>' + mateRows + '</tbody></table></div>' : '<p class="muted">No mate stats returned.</p>') + '</div></div>';
+    };
+    $("#player-detail-relations").innerHTML = '<p class="muted">Loading enemy and teammate stats…</p>';
 
-    $("#player-detail-status").innerHTML = '<span class="eyebrow">LOADED</span><span>Player data received from the API.</span>';
+    setTimeout(() => {
+      if (signal.aborted) return;
+      players.getPlayerRelationsSnapshot(numericAccountId, { signal }).then(relations => {
+        if (signal.aborted) return;
+        model.enemyStats = Array.isArray(relations?.enemyStats) ? relations.enemyStats.slice().sort((a, b) => Number(b?.matches_played ?? 0) - Number(a?.matches_played ?? 0)) : [];
+        model.mateStats = Array.isArray(relations?.mateStats) ? relations.mateStats.slice().sort((a, b) => Number(b?.matches_played ?? 0) - Number(a?.matches_played ?? 0)) : [];
+        renderRelationRows();
+      }).catch(error => {
+        if (isAborted(error)) return;
+        $("#player-detail-relations").innerHTML = '<p class="muted">Enemy and teammate stats are unavailable.</p>';
+      });
+    }, 0);
+
+    $("#player-detail-status").innerHTML = '<span class="eyebrow">LOADED</span><span>Player data received from the API. Relationship stats are loading separately.</span>';
   } catch (error) {
     if (isAborted(error)) return;
     $("#player-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span>' + esc(error.message) + '</span>';
