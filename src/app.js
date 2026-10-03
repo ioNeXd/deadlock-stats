@@ -250,7 +250,9 @@ async function loadDashboard(signal) {
 
 
 }
- API_BASE_URL + "/v1/graphql";
+
+function renderGraphql(signal) {
+  const playgroundUrl = API_BASE_URL + "/v1/graphql";
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">TOOLS / GRAPHQL</span><h2>GraphQL Explorer</h2><p>The current API exposes an official GraphiQL playground at <code>/v1/graphql</code>. This view verifies the endpoint and opens the API-hosted playground without embedding or rewriting its content.</p></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">OFFICIAL ENDPOINT</span><h2>GraphiQL</h2></div><b id="graphql-status">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(playgroundUrl) + '</strong></div><p class="panel-actions"><a class="button" href="' + esc(playgroundUrl) + '" target="_blank" rel="noopener noreferrer">Open official playground ↗</a></p><iframe class="graphql-frame" title="Deadlock API GraphQL Playground" src="' + esc(playgroundUrl) + '"></iframe></article></section>';
