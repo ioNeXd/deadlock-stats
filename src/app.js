@@ -2328,7 +2328,7 @@ function route() {
   else if (routeName === "items" && routeParts[1]) renderItemDetail(routeParts[1], signal);
   else if (routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
   else renderNotFound(routeName);
-  document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName)));
+  document.querySelectorAll(".nav-item").forEach(item => {\n    const active = item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName);\n    item.classList.toggle("active", active);\n    if (active) item.setAttribute("aria-current", "page");\n    else item.removeAttribute("aria-current");\n  });
   bindVersionControl();
 
   if (routeName === "dashboard" || routeName === "maps") {
