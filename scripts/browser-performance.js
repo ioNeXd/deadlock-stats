@@ -33,7 +33,9 @@ for (const route of routes) {
     const transfer = resources.reduce((sum, resource) => sum + Number(resource.transferSize || 0), 0);
     return {
       domContentLoadedMs: navigation?.domContentLoadedEventEnd ?? null,
-      responseEndMs: navigation?.responseEnd ?? null,
+      ttfbMs: navigation?.responseStart != null && navigation?.startTime != null
+        ? navigation.responseStart - navigation.startTime
+        : null,
       fcpMs: paint?.startTime ?? null,
       lcpMs: largest?.startTime ?? null,
       cls,
@@ -41,6 +43,10 @@ for (const route of routes) {
       resourceCount: resources.length,
       jsResources: resources.filter(resource => /\.js(?:$|\?)/.test(resource.name)).length,
       cssResources: resources.filter(resource => /\.css(?:$|\?)/.test(resource.name)).length,
+      inpMs: performance.getEntriesByType("event")
+        .map(entry => Number(entry.duration))
+        .filter(Number.isFinite)
+        .reduce((max, duration) => Math.max(max, duration), 0) || null,
     };
   });
 
