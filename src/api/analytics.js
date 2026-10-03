@@ -30,7 +30,7 @@ const SCOREBOARD_FILTERS = [
   "max_average_badge","min_match_id","max_match_id","account_ids",
 ];
 
-const HERO_SCOREBOARD_FILTERS = SCOREBOARD_FILTERS.filter(key => key !== "max_matches");
+const HERO_SCOREBOARD_FILTERS = SCOREBOARD_FILTERS.filter(key => key !== "max_matches" && key !== "hero_id");
 const PLAYER_SCOREBOARD_FILTERS = [...SCOREBOARD_FILTERS, "start", "limit"];
 
 const KILL_DEATH_FILTERS = [
@@ -51,8 +51,8 @@ const ANALYTICS_FILTER_KEYS = {
   badge: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","is_high_skill_range_parties","is_low_pri_pool","is_new_player_pool","min_match_id","max_match_id"],
   buff: ["game_mode","match_mode","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_average_badge","max_average_badge","min_match_id","max_match_id","min_networth","max_networth","hero_ids","account_ids"],
   itemFlow: ["phase_interval_s","phase_count","game_mode","match_mode","hero_ids","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","min_matches","account_ids","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","locked_item_ids","locked_columns"],
-  itemPermutation: ["item_ids","comb_size","min_matches","max_matches","game_mode","match_mode","hero_ids","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","account_ids","ability_order_prefix","ability_unlock_order_prefix","include_corrupted_items"],
-  itemStats: ["bucket","game_mode","match_mode","hero_ids","enemy_hero_ids","enemy_hero_ids_all_match","min_enemy_networth","max_enemy_networth","same_lane_filter","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","min_matches","max_matches","account_ids","min_bought_at_s","max_bought_at_s","item_order","corrupted_items"],
+  itemPermutation: ["item_ids","comb_size","min_matches","max_matches","game_mode","match_mode","hero_ids","hero_id","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","account_ids","ability_order_prefix","ability_unlock_order_prefix","include_corrupted_items"],
+  itemStats: ["bucket","game_mode","match_mode","hero_ids","enemy_hero_ids","enemy_hero_ids_all_match","min_enemy_networth","max_enemy_networth","same_lane_filter","min_unix_timestamp","max_unix_timestamp","min_duration_s","max_duration_s","min_networth","max_networth","min_average_badge","max_average_badge","min_match_id","max_match_id","include_item_ids","exclude_item_ids","ability_order_prefix","ability_unlock_order_prefix","min_matches","max_matches","account_ids","min_bought_at_s","max_bought_at_s","item_order","corrupted_items","include_corrupted_items"],
 };
 
 function analyticsOptions(options = {}, allowedKeys = []) {
