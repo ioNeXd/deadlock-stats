@@ -158,27 +158,32 @@ async function renderDashboard(signal) {
 }
 
 async function loadDashboard(signal) {
-  const [assetsRuntime, dashboardRuntime] = await Promise.all([loadAssetsRuntime(), loadDashboardRuntime()]);
+  const dashboardRuntime = await loadDashboardRuntime();
   const options = { ...assetVersion.options(), signal };
-  const [heroesResult, coreResult] = await Promise.allSettled([
-    assetsRuntime.listHeroes(options),
-    dashboardRuntime.getDashboardCoreSnapshot(options),
-  ]);
+  const coreResult = await dashboardRuntime.getDashboardCoreSnapshot(options);
+  const heroesResult = { status: "pending" };
 
   if (signal.aborted) return;
 
+  const loadHeroes = async () => {
+    try {
+      const assetsRuntime = await loadAssetsRuntime();
+      const result = await assetsRuntime.listHeroes(options);
+      if (signal.aborted) return;
+      $("#asset-count").textContent = result.data.length;
+      $("#api-latency").textContent = result.latencyMs + " ms";
+      renderHeroGrid(result.data);
+    } catch (error) {
+      if (isAborted(error)) return;
+      $("#asset-count").textContent = "—";
+      $("#api-latency").textContent = "—";
+      renderHeroGrid([]);
+      console.error("Deadlock API hero catalog request failed", error);
+    }
+  };
+
   const heroes = heroesResult.status === "fulfilled" ? heroesResult.value : null;
   const snapshot = coreResult.status === "fulfilled" ? coreResult.value : null;
-
-  if (heroes) {
-    $("#asset-count").textContent = heroes.data.length;
-    $("#api-latency").textContent = heroes.latencyMs + " ms";
-    renderHeroGrid(heroes.data);
-  } else {
-    $("#asset-count").textContent = "—";
-    $("#api-latency").textContent = "—";
-    renderHeroGrid([]);
-  }
 
   if (snapshot) {
     const info = snapshot.info?.data ?? {};
@@ -209,6 +214,8 @@ async function loadDashboard(signal) {
     $("#known-rows").textContent = "—";
     $("#latest-patch").textContent = "Patch feed unavailable.";
   }
+
+  loadHeroes();
 
   dashboardRuntime.getDashboardPatchSnapshot(options).then(patchResult => {
     if (signal.aborted) return;
@@ -243,11 +250,7 @@ async function loadDashboard(signal) {
     renderHeroGrid([]);
   }
 
-  for (const result of [heroesResult, snapshotResult]) {
-    if (result.status === "rejected" && !isAborted(result.reason)) {
-      console.error("Deadlock API request failed", result.reason);
-    }
-  }
+
 }
  API_BASE_URL + "/v1/graphql";
   el.content.innerHTML =
