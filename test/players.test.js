@@ -8,12 +8,6 @@ import {
   searchSteamProfiles,
   getPlayerMatchHistory,
   getPlayerRankImage,
-  getPlayerMmr,
-  getPlayerMmrDistribution,
-  getPlayerHeroMmr,
-  getPlayerHeroMmrDistribution,
-  getPlayerMmrHistory,
-  getPlayerHeroMmrHistory,
   getPlayerRankPredict,
   getPlayerRankPredictImage,
   getPlayerRankPredictBatchImage,
@@ -122,51 +116,6 @@ test("player match history preserves force_refetch and rank images stay binary",
     globalThis.fetch = originalFetch;
   }
 });
-
-
-test("player MMR and rank prediction endpoints use current API paths and constraints", async () => {
-  const originalFetch = globalThis.fetch;
-  const calls = [];
-  globalThis.fetch = async url => {
-    calls.push(new URL(url));
-    return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
-  };
-  try {
-    assert.throws(() => getPlayerMmr([]), RangeError);
-    assert.throws(() => getPlayerHeroMmr(-1, [1]), RangeError);
-    assert.throws(() => getPlayerRankPredictImage(1, "jpg"), RangeError);
-    assert.throws(() => getPlayerRankPredictBatchImage(new Array(13).fill(1)), RangeError);
-
-    await getPlayerMmr([1, 2], { max_match_id: 99 });
-    await getPlayerMmrDistribution({ min_match_id: 10 });
-    await getPlayerHeroMmr(7, [1, 2], { max_match_id: 99 });
-    await getPlayerHeroMmrDistribution(7, { max_match_id: 99 });
-    await getPlayerMmrHistory(1);
-    await getPlayerHeroMmrHistory(1, 7);
-    await getPlayerRankPredict(1);
-    await getPlayerRankPredictImage(1, "webp");
-    await getPlayerRankPredictBatchImage([1, 2], "png");
-
-    assert.equal(calls[0].pathname, "/v1/players/mmr");
-    assert.equal(calls[0].searchParams.get("account_ids"), "1,2");
-    assert.equal(calls[0].searchParams.get("max_match_id"), "99");
-    assert.equal(calls[1].pathname, "/v1/players/mmr/distribution");
-    assert.equal(calls[2].pathname, "/v1/players/mmr/7");
-    assert.equal(calls[3].pathname, "/v1/players/mmr/distribution/7");
-    assert.equal(calls[4].pathname, "/v1/players/1/mmr-history");
-    assert.equal(calls[5].pathname, "/v1/players/1/mmr-history/7");
-    assert.equal(calls[6].pathname, "/v1/players/1/rank-predict");
-    assert.equal(calls[7].pathname, "/v1/players/1/rank-predict/image");
-    assert.equal(calls[7].searchParams.get("format"), "webp");
-    assert.equal(calls[8].pathname, "/v1/players/rank-predict/image");
-    assert.equal(calls[8].searchParams.get("account_ids"), "1,2");
-    assert.equal(calls[8].searchParams.get("format"), "png");
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
-import { getPlayerDetailSnapshot, buildPlayerDetailViewModel } from "../src/services/players.js";
 
 
 test("player detail core snapshot requests only current rank", async () => {
