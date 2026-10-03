@@ -170,7 +170,7 @@ export function getPlayerRankPredictImage(accountId, format = "png", options = {
 export function getPlayerRankPredictBatchImage(accountIds, format = "png", options = {}) {
   validateAccountIds(accountIds, 12);
   if (format !== "png" && format !== "webp") throw new RangeError("format must be png or webp");
-  return apiGet("/v1/players/rank-predict/image", {
+  return apiGet("/v1/players/rank/image", {
     ...options,
     query: { ...(options.query ?? {}), account_ids: accountIds.join(","), format },
     responseType: "arrayBuffer",
