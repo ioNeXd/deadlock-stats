@@ -75,3 +75,24 @@ test("dashboard full snapshot still composes info and unified v2 patch feed", as
   assert.equal(result.latestPatch.title, "Latest");
   assert.equal(result.latestPatch.source, "forum");
 });
+
+
+test("dashboard activity snapshot uses daily game statistics", async () => {
+  let requestedUrl;
+  globalThis.fetch = async input => {
+    requestedUrl = String(input);
+    return new Response(JSON.stringify([
+      { bucket: "2026-10-02", total_matches: 1200, total_players: 14400 },
+    ]), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  const { getDashboardActivitySnapshot } = await import("../src/services/dashboard.js");
+  const result = await getDashboardActivitySnapshot({ cache: false, dedupe: false });
+  const url = new URL(requestedUrl);
+  assert.equal(url.pathname, "/v1/analytics/game-stats");
+  assert.equal(url.searchParams.get("bucket"), "start_time_day");
+  assert.equal(result.activity[0].total_matches, 1200);
+});
