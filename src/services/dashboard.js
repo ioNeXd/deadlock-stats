@@ -14,16 +14,26 @@ function normalizeLatestPatch(payload) {
     .sort((a, b) => Date.parse(b.pub_date ?? 0) - Date.parse(a.pub_date ?? 0))[0] ?? null;
 }
 
-export async function getDashboardSnapshot(options = {}) {
+export async function getDashboardCoreSnapshot(options = {}) {
   const { signal, ...requestOptions } = options;
-  const [infoResult, patchesResult] = await Promise.all([
-    getApiInfo({ ...requestOptions, signal }),
-    getPatches({ ...requestOptions, signal }),
-  ]);
-
   return {
-    info: infoResult,
-    patches: patchesResult,
-    latestPatch: normalizeLatestPatch(patchesResult?.data),
+    info: await getApiInfo({ ...requestOptions, signal }),
   };
+}
+
+export async function getDashboardPatchSnapshot(options = {}) {
+  const { signal, ...requestOptions } = options;
+  const patches = await getPatches({ ...requestOptions, signal });
+  return {
+    patches,
+    latestPatch: normalizeLatestPatch(patches?.data),
+  };
+}
+
+export async function getDashboardSnapshot(options = {}) {
+  const [core, patch] = await Promise.all([
+    getDashboardCoreSnapshot(options),
+    getDashboardPatchSnapshot(options),
+  ]);
+  return { ...core, ...patch };
 }
