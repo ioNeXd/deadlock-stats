@@ -94,7 +94,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -472,7 +472,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). Values below the start of the\nfirst ranked season (1785430800) are clamped to it. **Default:** 30 days ago."
         },
@@ -672,7 +672,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -911,7 +911,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter builds based on their last updated time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -1028,7 +1028,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -1355,7 +1355,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago. **Minimum:** March 1, 2026."
         },
@@ -1536,7 +1536,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago. **Minimum:** March 1, 2026."
         },
@@ -1831,7 +1831,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -2209,7 +2209,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -2560,7 +2560,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -2950,7 +2950,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -3299,7 +3299,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -3760,7 +3760,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -4191,7 +4191,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -4651,7 +4651,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -5036,7 +5036,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -5371,7 +5371,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -5738,7 +5738,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -6079,7 +6079,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -6527,7 +6527,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -13818,7 +13818,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -13981,7 +13981,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
@@ -14356,7 +14356,7 @@
               "null"
             ],
             "format": "int64",
-            "default": 1788220800
+            "default": 1788307200
           },
           "description": "Filter matches based on their start time (Unix timestamp). **Default:** 30 days ago."
         },
