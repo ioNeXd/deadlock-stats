@@ -208,3 +208,21 @@ test("match snapshots normalize active and recently fetched responses and preser
     globalThis.fetch = originalFetch;
   }
 });
+
+test("match detail view model extracts scalar fields, players and array metadata", async () => {
+  const { buildMatchDetailViewModel } = await import("../src/services/matches.js");
+  const raw = {
+    match_id: 123,
+    duration_s: 1800,
+    winning_team: 1,
+    future_metric: "preserved",
+    players: [{ account_id: 7, hero_id: 1 }, { account_id: 8, hero_id: 2 }],
+    objectives: [{ id: 1 }],
+  };
+  const model = buildMatchDetailViewModel(raw);
+  assert.equal(model.match.match_id, 123);
+  assert.equal(model.players.length, 2);
+  assert.equal(model.scalarFields.find(item => item.key === "duration_s").value, 1800);
+  assert.equal(model.scalarFields.find(item => item.key === "future_metric").value, "preserved");
+  assert.deepEqual(model.arrayFields.find(item => item.key === "objectives"), { key: "objectives", count: 1 });
+});
