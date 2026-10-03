@@ -1349,7 +1349,7 @@ async function renderPlayers(signal) {
   });
 }
 
-async async function renderPlayerDetail(accountId, signal) {
+async function renderPlayerDetail(accountId, signal) {
   const players = await loadPlayersRuntime();
   const numericAccountId = Number(accountId);
   if (!Number.isInteger(numericAccountId) || numericAccountId < 0) {
