@@ -68,13 +68,20 @@ test("match listing defers hero and item catalogs until metadata lookup", () => 
   assert.match(lookupSource, /assetsRuntime\.listItems\(/);
 });
 
-test("player detail loads asset runtime and only the selected rank asset", () => {
+test("player detail keeps the initial critical path free of the full hero catalog", () => {
   const routeSource = extractTopLevelFunction(appSource, "async function renderPlayerDetail");
-  assert.match(routeSource, /const \[players, assetsRuntime\] = await Promise\.all\(\[loadPlayersRuntime\(\), loadAssetsRuntime\(\)\]\)/);
+  const profileStart = routeSource.indexOf("const profile = profiles.data?.[0] ?? null;");
+  assert.notEqual(profileStart, -1);
+  const criticalLoad = routeSource.slice(0, profileStart);
+  assert.match(criticalLoad, /const \[snapshot, profiles\] = await Promise\.all\(/);
+  assert.doesNotMatch(criticalLoad, /assetsRuntime\.listHeroes\(/);
+  assert.match(routeSource, /setTimeout\(\(\) => \{/);
+  assert.match(routeSource, /assetsRuntime\.listHeroes\(\{ \.\.\.assetVersion\.options\(\), signal \}\)/);
+  assert.match(routeSource, /heroMap = new Map/);
+  assert.match(routeSource, /renderHeroRows\(\);/);
+  assert.match(routeSource, /renderHistoryRows\(\);/);
   assert.match(routeSource, /assetsRuntime\.fetchRank\(rankTier/);
   assert.doesNotMatch(routeSource, /assetsRuntime\.listRanks\(\{ \.\.\.assetVersion\.options\(\), signal \}\)/);
-  assert.doesNotMatch(routeSource, /const \[snapshot, profiles, heroResult, rankResult\]/);
-  assert.match(routeSource, /const rankAsset = rankResult\?\.data \?\? null/);
 });
 
 test("app defers analytics runtime until analytics routes", () => {
