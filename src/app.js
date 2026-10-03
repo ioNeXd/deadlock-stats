@@ -1744,7 +1744,8 @@ async function loadExplorer(signal) {
     setConnection(false, "API unavailable");
   }
 }
-maPlaceholder(schema) {
+
+function schemaPlaceholder(schema) {
   if (!schema) return "value";
   if (Array.isArray(schema.type)) return schema.type.join(" | ");
   if (schema.type) return schema.type;
