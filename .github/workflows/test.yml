@@ -1,0 +1,44 @@
+name: test
+
+on:
+  push:
+    branches:
+      - new-site
+  pull_request:
+    branches:
+      - new-site
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run tests
+        run: npm test
+      - name: Check browser entrypoint syntax
+        run: node --check src/app.js
+      - name: Smoke test public Deadlock API
+        run: node scripts/api-smoke.js
+      - name: Install browser test runtime
+        run: npm install --no-save playwright@1.63.0
+      - name: Install Chromium
+        run: npx playwright@1.63.0 install --with-deps chromium
+      - name: Start local web server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/deadlock-stats-server.log 2>&1 &
+          for i in {1..20}; do
+            curl --fail --silent --show-error http://127.0.0.1:4173/ > /dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/deadlock-stats-server.log
+          exit 1
+      - name: Run browser smoke tests
+        run: node scripts/browser-smoke.js

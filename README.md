@@ -1,116 +1,446 @@
 # Deadlock Stats
 
-A lightweight, static website that displays live statistics for [Deadlock](https://store.steampowered.com/app/1422450/Deadlock/) by Valve — hero and item win rates, pick rates, and more — powered by the community-run [Deadlock API](https://api.deadlock-api.com).
+Deadlock Stats is an API-first web application for exploring, analyzing, and visualizing data from the Deadlock API.
 
-Built with plain **HTML, CSS, and JavaScript** — no frameworks, no build step. Just clone and serve.
+The current development branch is **`new-site`**. The project is being rebuilt incrementally around the current API contract rather than around a fixed set of hardcoded endpoints.
 
-🔗 **Live data source:** [api.deadlock-api.com](https://api.deadlock-api.com/docs)
+> **Deadlock in appearance. Modern product UI in experience.**
 
----
+The visual direction combines Deadlock-inspired Art Deco, noir, occult, industrial, old New York, and “Cursed Apple” elements with a modern, responsive and accessible product interface.
 
-## Features
+## Current status
 
-- **Hero stats table** — win rate and pick rate for every hero, with icons, pulled live from the API.
-- **Item stats table** — the same stats for in-game items, with pick rate correctly normalized for the fact that up to 12 items are bought per match.
-- **Search, sorting & pagination** — filter by name, sort by win rate / pick rate / alphabetically, and page through the results without reloading.
-- **Tab navigation** — switch between Heroes and Items without reloading the page.
-- **Hero detail page** — opens at `#hero=<id>` and shows:
-  - **Most popular and highest win rate builds**, falling back to all-time favorite builds (clearly badged) when analytics are unavailable;
-  - **Build cards** — author name, build ID (with a one-click copy button and toast feedback), win rate, and total matches, with a tooltip when the name is truncated;
-  - **Build breakdown** — items grouped by category (weapon / vitality / spirit / utility) with tier-colored cards and optional/active badges;
-  - **Skill path** — a 16-column timeline showing when each ability was unlocked (1–4) and leveled up, with per-level markers;
-  - **Ability tooltips** — hover any skill to see its icon, name, key cooldowns, description, and stats organized into property sections (range, casting, damage, duration, weapon, movement, health & healing, resistances).
-- **"Last updated" indicator** — shows the timestamp of the most recently processed match, so you know how fresh the data is.
-- **Built-in translation system (i18n)** — all interface text is decoupled from the HTML via `data-i18n` attributes and JSON translation files. Adding a language means creating a single file, no HTML/JS changes required.
-- **No backend required** — 100% static, deployable for free on GitHub Pages.
+The project is in active incremental development.
 
-## Getting started
+The current branch already contains:
 
-1. Clone this repository.
-2. Open the project folder in a code editor (e.g. VS Code).
-3. Serve it locally with any static server — e.g. the VS Code **Live Server** extension.
+- a contract-driven API client;
+- domain API modules for assets, analytics, builds, GraphQL, leaderboard, matches, patches, players, and versioning;
+- service layers for dashboard, analytics, API status, assets, builds, matches, players, versioning, and Data Explorer;
+- defensive asset adapters and raw-payload preservation;
+- API version/deprecation tracking derived from OpenAPI snapshots;
+- a Data Explorer with OpenAPI operation discovery;
+- schema inspection and a reusable schema viewer;
+- schema-driven request body editing;
+- request/response inspection;
+- request validation against documented schemas and constraints;
+- request-body media type handling;
+- documented request examples/defaults with OpenAPI-aware precedence;
+- validated best-effort generated request examples when documented examples are unavailable;
+- API status and transport diagnostics;
+- deterministic unit tests for the client, services, adapters, versioning, analytics, and Data Explorer.
 
-> Opening `index.html` directly via `file://` will **not** work: browsers block local `fetch` requests in that mode.
+The application shell currently exposes these routes:
 
-## Setting up the development environment
+| Area | Route | Current role |
+| --- | --- | --- |
+| Dashboard | `#/` | Command center |
+| Matches | `#/matches` | Match exploration |
+| Players | `#/players` | Player exploration |
+| Heroes | `#/heroes` | Hero data and assets |
+| Maps | `#/maps` | Map exploration |
+| Items | `#/items` | Item catalog |
+| Builds | `#/builds` | Build exploration |
+| Leaderboard | `#/leaderboard` | Leaderboard data |
+| Analytics | `#/analytics` | Analytics views |
+| Item Intelligence | `#/item-analytics` | Item analytics |
+| Data Explorer | `#/data` | Direct API/OpenAPI exploration |
+| GraphQL | `#/graphql` | GraphQL endpoint playground |
+| API Status | `#/api` | API health and transport status |
 
-The website itself is plain static HTML/CSS/JS — it only needs a static server and **does not require Node.js**. The Node toolchain is an optional safety net that powers the automated checks (syntax, translations, lint, formatting, unit tests).
+These routes should be understood as the **current application surface**, not a promise that every planned feature is complete or that every API capability has a dedicated UI.
 
-1. **Install Node.js** (v20 or newer — LTS recommended) from [nodejs.org](https://nodejs.org). `npm` is bundled with it.
-2. **Verify the install**:
-   ```bash
-   node --version
-   npm --version
-   ```
-3. **Clone the repository**:
-   ```bash
-   git clone https://github.com/ionexd/deadlock-stats.git
-   cd deadlock-stats
-   ```
-4. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-   This pulls in the dev-only tooling (ESLint, Prettier, Husky) that powers linting, formatting, and the pre-commit hook — the site itself still ships with zero runtime dependencies.
-5. **Run the full check suite** to confirm the codebase is healthy:
-   ```bash
-   npm run check
-   ```
-   This validates the syntax of every JS module, keeps translation files in sync with `en.json`, lints and checks formatting, and runs the unit tests. Use `npm test` to run only the tests.
-6. **Serve the site** with any static server (e.g. the VS Code Live Server extension) and open it in your browser.
+## API source of truth
 
-## Development & checks
+The official Deadlock API is the source of truth for endpoints, parameters, schemas, content types, examples, assets, and supported capabilities.
 
-The project ships a small Node-based toolchain (`node:test` for tests, plus ESLint/Prettier for lint and formatting) to keep the codebase healthy:
+- API: https://api.deadlock-api.com
+- Documentation: https://api.deadlock-api.com/docs
+- OpenAPI: https://api.deadlock-api.com/openapi.json
 
-- `npm run check` — runs everything below in one pass.
-- `npm run check:syntax` — `node --check` on every module in `js/`.
-- `npm run validate:translations` — ensures all translation files stay in sync with `en.json`.
-- `npm run lint` — ESLint over `js/`, `scripts/`, and `tests/`.
-- `npm run format:check` — Prettier formatting check over the whole repo.
-- `npm test` — unit tests for the pure logic (utils, API normalization, i18n, skill-section data).
+The current audited contract is OpenAPI 3.1.0 with API version 0.1.0.
 
-A GitHub Actions workflow (`.github/workflows/ci.yml`) runs the full check suite (syntax, translations, lint, format, tests) on Node 20 and 22 automatically on every push and pull request, so translation drift, style drift, or a broken test never reaches `main` unnoticed.
+The API uses a mixed version lifecycle. Versioning is evaluated **per resource**, not globally. A `/v1` path is not automatically deprecated merely because another resource has a `/v2` path.
 
-## Project structure
+For example, the current contract contains both:
 
-| Path                               | Purpose                                                           |
-| ---------------------------------- | ----------------------------------------------------------------- |
-| `index.html`                       | Single-page shell (hash routing)                                  |
-| `js/api.js`                        | API client — caching, retries, normalization, asset URL mapping   |
-| `js/table.js`                      | Main table: heroes/items, search, sort, pagination, tabs          |
-| `js/hero-detail.js`                | Hero detail page orchestrator (header + build list sections)      |
-| `js/build-cards.js`                | Build cards: summaries, copy button, item categories, build cache |
-| `js/skill-tooltip.js`              | Skill path timeline and per-ability hover tooltips                |
-| `js/router.js`                     | Hash routing (`#hero=<id>` / `#table`)                            |
-| `js/i18n.js`                       | Translation loader and `data-i18n` binding                        |
-| `js/utils.js`                      | Shared helpers (formatting, safe access, caching)                 |
-| `js/constants.js`                  | Shared constants                                                  |
-| `js/skill-sections-data.js`        | Skill tooltip data: property sections and manual key overrides    |
-| `translations/`                    | JSON translation files (`en.json`, `pt-br.json`)                  |
-| `scripts/validate-translations.js` | Checks translation keys stay in sync                              |
-| `scripts/check-syntax.js`          | Runs `node --check` on every module in `js/`                      |
-| `tests/`                           | Unit tests (`node:test`, no dependencies)                         |
-| `package.json`                     | npm scripts for checks and tests (`npm run check`)                |
-| `.github/workflows/ci.yml`         | CI: syntax + translations + tests on every push/PR                |
-| `assets/`                          | Local SVGs and fonts (rest is served by the API CDN)              |
-| `css/style.css`                    | Dark theme, responsive layout, shop/build styling                 |
+```text
+/v1/assets/heroes
+/v2/patches
+```
 
-## Contributing a translation
+while older resources may explicitly be deprecated. The application derives this state from the contract instead of hardcoding a global “v1 is deprecated” rule.
 
-1. Copy `translations/en.json`.
-2. Rename it to your language code (e.g. `es.json`, `fr.json`).
-3. Translate the values — keep the keys exactly as they are.
-4. Run `node scripts/validate-translations.js` to confirm the new file is in sync.
-5. Open a pull request.
+## API-first architecture
 
-## Tech stack
+The project follows this dependency direction:
 
-- Vanilla HTML / CSS / JavaScript (no frameworks, no build tools)
-- [Deadlock API](https://api.deadlock-api.com) (community-run, open source) — see its [docs](https://api.deadlock-api.com/docs)
-- Hosted on GitHub Pages
-- Zero-dependency Node toolchain (`node:test`) for syntax checks, translation validation, and unit tests — CI runs it automatically
+```text
+Official OpenAPI
+      ↓
+API Contract / Inventory
+      ↓
+API Client
+      ↓
+Services
+      ↓
+Adapters / Normalizers
+      ↓
+View Models
+      ↓
+UI
+```
 
-## License
+### API client
 
-Open source — feel free to fork, use, and contribute.
+`src/api/client.js` is the transport boundary.
+
+It currently handles:
+
+- URL and query normalization;
+- stable cache keys;
+- GET caching;
+- request deduplication;
+- AbortController integration;
+- timeouts;
+- HTTP errors;
+- retries and backoff;
+- `429` and `Retry-After`;
+- conservative retry rules for idempotent methods;
+- optional retries for non-idempotent methods;
+- authentication headers;
+- content negotiation;
+- JSON, text, binary, image, response, and stream handling.
+
+Cache identity includes the HTTP method, normalized path/query, request body, response type, and relevant headers.
+
+### Services
+
+Services expose semantic operations to the application without making UI components responsible for transport details.
+
+Current service modules include:
+
+```text
+src/services/
+├── analytics.js
+├── api-status.js
+├── asset-version.js
+├── assets.js
+├── builds.js
+├── dashboard.js
+├── data-explorer.js
+├── graphql.js
+├── leaderboard.js
+├── matches.js
+├── players.js
+└── versioning.js
+```
+
+### Adapters and raw data
+
+Adapters normalize API-specific structures for the UI while remaining tolerant of:
+
+- missing optional fields;
+- unknown fields;
+- new enum values;
+- API shape changes.
+
+Where normalization is used, the original API payload is preserved when useful for debugging, Data Explorer, and future compatibility.
+
+## Data Explorer
+
+The Data Explorer is the project's API escape hatch. It exists so an API capability does not need to be discarded merely because it does not have a dedicated product page.
+
+The current implementation is contract-driven and includes:
+
+- OpenAPI operation discovery;
+- operation and parameter inspection;
+- request path/query/path-parameter handling;
+- request body content types;
+- schema-driven request forms;
+- nested object and array fields;
+- enum and constraint metadata;
+- nullable/default/example metadata;
+- schema composition such as `oneOf`, `anyOf`, and `allOf`;
+- reusable Schema Viewer rendering;
+- request previews;
+- request validation;
+- response inspection;
+- response examples;
+- HTTP status and latency information;
+- response headers/content type;
+- raw response/data inspection.
+
+### Request examples
+
+Request examples start with documented OpenAPI metadata and may fall back to a validated generated example when no documented value is available.
+
+The documented-value precedence is:
+
+1. Media Type `example`;
+2. Media Type `examples`;
+3. Schema `example`;
+4. Schema `examples`;
+5. Schema `default`;
+6. generated schema example, only when the generator can build a payload that passes the existing request-body validator.
+
+Generated values are intentionally conservative. The generator currently uses supported schema constraints such as required properties, defaults, enums, consts, primitive formats, array minimums, and simple compositions. If it cannot produce a validated value, no generated preset is exposed.
+
+User-created request presets are persisted locally in the browser, scoped by HTTP operation and request media type. Generated values, user presets, and values explicitly documented by the API remain distinguishable.
+
+## Schema support
+
+The Data Explorer preserves schema metadata needed by both inspection and request editing, including:
+
+- type;
+- format;
+- title;
+- description;
+- required;
+- nullable;
+- `$ref`;
+- `const`;
+- `default`;
+- `example`;
+- `examples`;
+- `enum`;
+- object properties;
+- additional properties;
+- array items;
+- `oneOf`;
+- `anyOf`;
+- `allOf`;
+- numeric, string, array, and object constraints.
+
+Schema rendering is isolated in:
+
+```text
+src/ui/schema-viewer.js
+```
+
+This keeps presentation concerns out of the Data Explorer service.
+
+## API status and versioning
+
+API status uses documented health resources and preserves transport diagnostics such as:
+
+- HTTP status;
+- latency;
+- URL;
+- response headers;
+- content type;
+- API errors.
+
+Version/deprecation behavior is derived from OpenAPI snapshots. The versioning layer can identify newer versions of the same resource, legacy versions, explicit OpenAPI deprecation, and removed resources.
+
+Relevant modules:
+
+```text
+src/api/versioning.js
+src/services/versioning.js
+src/services/api-status.js
+```
+
+## Assets
+
+Real assets from the official API are preferred whenever available.
+
+The asset layer supports documented hero and other game assets rather than creating replacement artwork when the API already provides the corresponding resource.
+
+Relevant modules:
+
+```text
+src/api/assets.js
+src/services/assets.js
+src/adapters/assets.js
+src/services/asset-version.js
+```
+
+## API capability inventory
+
+The API audit is maintained under `docs/`:
+
+```text
+docs/
+├── api-capability-matrix.md
+├── api-capability-matrix.json
+├── api-classification-audit.md
+├── api-openapi-inventory.md
+└── api-openapi-inventory.json
+```
+
+The capability matrix uses:
+
+- `UI`
+- `API-ONLY`
+- `ADVANCED`
+- `DEPRECATED`
+- `INTERNAL`
+- `UNAVAILABLE`
+
+Parameter classifications use:
+
+- `SUPPORTED_UI`
+- `SUPPORTED_API_ONLY`
+- `DEPRECATED`
+- `INTERNAL`
+- `NOT_APPLICABLE`
+
+The inventory is intended to make unclassified operations, parameters, schemas, content types, and other contract changes visible instead of silently ignoring them.
+
+## Repository layout
+
+The current source tree is intentionally small and modular:
+
+```text
+.
+├── index.html
+├── src/
+│   ├── app.js
+│   ├── styles.css
+│   ├── adapters/
+│   │   └── assets.js
+│   ├── api/
+│   │   ├── analytics.js
+│   │   ├── assets.js
+│   │   ├── builds.js
+│   │   ├── client.js
+│   │   ├── graphql.js
+│   │   ├── leaderboard.js
+│   │   ├── matches.js
+│   │   ├── patches.js
+│   │   ├── players.js
+│   │   ├── query.js
+│   │   └── versioning.js
+│   ├── services/
+│   │   ├── analytics.js
+│   │   ├── api-status.js
+│   │   ├── asset-version.js
+│   │   ├── assets.js
+│   │   ├── builds.js
+│   │   ├── dashboard.js
+│   │   ├── data-explorer.js
+│   │   ├── graphql.js
+│   │   ├── leaderboard.js
+│   │   ├── matches.js
+│   │   ├── players.js
+│   │   └── versioning.js
+│   └── ui/
+│       ├── schema-viewer.js
+│       └── security.js
+├── test/
+├── docs/
+├── AGENTS.md
+├── ARCHITECTURE.md
+├── package.json
+└── sw.js
+```
+
+The exact implementation surface is expected to evolve as the API and product mature. Documentation should describe committed behavior rather than future architecture.
+
+## Testing
+
+The project uses Node's built-in test runner.
+
+```bash
+npm test
+```
+
+Requirements:
+
+- Node.js 20 or newer;
+- no live API access is required for the deterministic unit suite.
+
+The test suite currently covers API client behavior, API status, versioning, assets, analytics, builds, dashboard behavior, matches, players, GraphQL, query handling, security, and Data Explorer behavior.
+
+For Data Explorer specifically, tests cover schema/form models, request construction, media types, validation, examples, constraints, composition, and response metadata.
+
+When adding behavior, tests should include normal responses as well as incomplete, unexpected, invalid, or error cases relevant to the feature.
+
+## Development workflow
+
+All development must happen on `new-site`.
+
+Never modify `main`.
+
+For meaningful API or product changes:
+
+```text
+Verify branch
+    ↓
+Read affected files
+    ↓
+Consult current OpenAPI
+    ↓
+Map the contract
+    ↓
+Plan the smallest coherent change
+    ↓
+Implement
+    ↓
+Test
+    ↓
+Review regressions
+    ↓
+Commit
+```
+
+Small, focused commits are preferred.
+
+If the official API does not provide a requested capability, document the limitation rather than inventing data or endpoints.
+
+## Engineering rules
+
+1. The official OpenAPI is the API source of truth.
+2. Never invent endpoints, fields, assets, metrics, or capabilities.
+3. Do not treat all `/v1` resources as deprecated by default.
+4. Keep HTTP and transport logic inside the API client.
+5. Keep semantic API behavior inside services.
+6. Keep normalization out of UI components.
+7. Preserve raw API data when useful.
+8. Make adapters tolerant of API evolution.
+9. Keep API-only capabilities accessible through Data Explorer.
+10. Prefer real API assets over fabricated replacements.
+11. Add deterministic tests for meaningful behavior and failure modes.
+12. Review the final diff before committing.
+13. Keep changes focused and avoid unnecessary dependencies.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) and [AGENTS.md](AGENTS.md) for the detailed engineering contract.
+
+## Known scope boundaries
+
+The project intentionally does not claim that every planned capability is finished.
+
+In particular:
+
+- the Data Explorer is the primary generic surface for API capabilities that do not yet have dedicated product UI;
+- generated request examples are best-effort and intentionally conservative rather than a complete JSON Schema example generator;
+- persistent user-created request presets are not yet implemented;
+- advanced API capabilities are exposed only where the current contract and implementation support them;
+- the API inventory must be refreshed when the official OpenAPI changes materially.
+
+These boundaries prevent the README from presenting planned behavior as completed behavior.
+
+## Contributing
+
+Changes should target `new-site` and preserve the API-first architecture.
+
+For API-related work:
+
+1. verify the current OpenAPI contract;
+2. identify the exact operation, parameters, schemas, content types, and response behavior;
+3. update the appropriate client/service/adapter layer;
+4. add or update tests;
+5. update API inventory documentation when the contract changes;
+6. review UI behavior and regressions;
+7. make a small, descriptive commit.
+
+## Disclaimer
+
+Deadlock Stats is an independent project. The Deadlock API states that `deadlock-api.com` is not endorsed by Valve and does not reflect the views or opinions of Valve or anyone officially involved in producing or managing Valve properties.
+
+Deadlock and associated properties are trademarks or registered trademarks of Valve Corporation.
+
+### User request presets
+
+The Data Explorer also supports local user-created request presets. Presets are stored in the browser using `localStorage`, scoped by HTTP operation key and request media type, and kept separate from OpenAPI-derived documented/generated examples. Users can save the current structured payload, reuse it later, overwrite a preset by name, and delete a selected saved preset. Corrupt or unavailable browser storage is treated as empty rather than breaking the explorer.

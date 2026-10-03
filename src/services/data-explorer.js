@@ -1,0 +1,1219 @@
+import { apiRequest } from "../api/client.js";
+
+const HTTP_METHODS = ["get", "post", "put", "patch", "delete", "head", "options", "trace"];
+
+function resolveLocalRef(value, contract) {
+  if (!value?.$ref || !contract) return value;
+  if (!value.$ref.startsWith("#/")) return value;
+  return value.$ref.slice(2).split("/").reduce((current, key) => {
+    const pointerKey = key.replace(/~1/g, "/").replace(/~0/g, "~");
+    return current?.[pointerKey];
+  }, contract);
+}
+
+function pathParameters(operation) {
+  return (operation?.parameters ?? []).filter(parameter => parameter?.in === "path");
+}
+
+function queryParameters(operation) {
+  return (operation?.parameters ?? []).filter(parameter => parameter?.in === "query");
+}
+
+
+function resolveSchema(value, contract, seen = new Set()) {
+  if (!value || typeof value !== "object" || !contract) return value;
+  if (Array.isArray(value)) return value.map(item => resolveSchema(item, contract, seen));
+
+  if (value.$ref && value.$ref.startsWith("#/")) {
+    if (seen.has(value.$ref)) return { ...value };
+    const resolved = resolveLocalRef(value, contract);
+    if (!resolved || resolved === value) return value;
+    const nextSeen = new Set(seen);
+    nextSeen.add(value.$ref);
+    const siblings = { ...value };
+    delete siblings.$ref;
+    return resolveSchema({ ...resolved, ...siblings }, contract, nextSeen);
+  }
+
+  const result = {};
+  for (const [key, child] of Object.entries(value)) result[key] = resolveSchema(child, contract, seen);
+  return result;
+}
+
+function parameterSchema(parameter, contract = null) {
+  return resolveSchema(parameter?.schema ?? {}, contract);
+}
+
+function enumValues(schema) {
+  if (Array.isArray(schema?.enum)) return [...schema.enum];
+  const variants = [...(schema?.oneOf ?? []), ...(schema?.anyOf ?? [])];
+  const values = variants.flatMap(item => Array.isArray(item?.enum) ? item.enum : item?.const !== undefined ? [item.const] : []);
+  if (schema?.const !== undefined) values.push(schema.const);
+  return values.filter((value, index) => values.findIndex(candidate => deepEqual(candidate, value)) === index);
+}
+
+function schemaType(schema) {
+  if (typeof schema?.type === "string") return schema.type;
+  if (Array.isArray(schema?.type)) return schema.type.find(type => type !== "null") ?? "string";
+  const variants = [...(schema?.oneOf ?? []), ...(schema?.anyOf ?? []), ...(schema?.allOf ?? [])];
+  if (variants.length) return variants.map(item => schemaType(item)).find(type => type !== "null") ?? "string";
+  if (schema?.const !== undefined) {
+    if (schema.const === null) return "null";
+    if (Array.isArray(schema.const)) return "array";
+    if (typeof schema.const === "object") return "object";
+    return typeof schema.const === "boolean" ? "boolean" : typeof schema.const === "number" ? "number" : "string";
+  }
+  if (Array.isArray(schema?.enum) && schema.enum.length) {
+    const first = schema.enum[0];
+    if (first === null) return "null";
+    if (Array.isArray(first)) return "array";
+    if (typeof first === "object") return "object";
+    return typeof first === "boolean" ? "boolean" : typeof first === "number" ? "number" : "string";
+  }
+  if (schema?.$ref) return "object";
+  return "string";
+}
+
+function schemaNullable(schema) {
+  if (schema?.nullable === true) return true;
+  const nullableType = Array.isArray(schema?.type) && schema.type.includes("null");
+  const variants = [...(schema?.oneOf ?? []), ...(schema?.anyOf ?? [])];
+  return nullableType || variants.some(item => item?.type === "null" || item?.const === null);
+}
+
+function parameterDefaults(parameter, contract = null) {
+  const schema = parameterSchema(parameter, contract);
+  return {
+    default: schema?.default ?? null,
+    minimum: schema?.minimum ?? null,
+    maximum: schema?.maximum ?? null,
+    minItems: schema?.minItems ?? null,
+    maxItems: schema?.maxItems ?? null,
+  };
+}
+
+function mergeParameters(pathItem, operation, contract) {
+  const merged = new Map();
+
+  for (const parameter of Array.isArray(pathItem?.parameters) ? pathItem.parameters : []) {
+    const resolved = resolveLocalRef(parameter, contract);
+    if (resolved?.name && resolved?.in) merged.set(`${resolved.in}:${resolved.name}`, resolved);
+  }
+
+  for (const parameter of Array.isArray(operation?.parameters) ? operation.parameters : []) {
+    const resolved = resolveLocalRef(parameter, contract);
+    if (resolved?.name && resolved?.in) merged.set(`${resolved.in}:${resolved.name}`, resolved);
+  }
+
+  return [...merged.values()];
+}
+
+function resolveExamples(examples, contract) {
+  return Object.fromEntries(Object.entries(examples ?? {}).map(([name, example]) => {
+    const resolved = resolveLocalRef(example, contract) ?? example;
+    return [name, resolved];
+  }));
+}
+
+function requestBodyInfo(requestBody, contract = null) {
+  const content = requestBody?.content ?? {};
+  return Object.entries(content).map(([mediaType, media]) => ({
+    mediaType,
+    required: requestBody?.required === true,
+    schema: resolveSchema(media?.schema ?? null, contract),
+    example: media?.example,
+    examples: resolveExamples(media?.examples, contract),
+    encoding: media?.encoding ?? {},
+  }));
+}
+
+function responseInfo(responses, contract = null) {
+  return Object.entries(responses ?? {}).map(([status, response]) => ({
+    status,
+    description: response?.description ?? "",
+    content: Object.entries(response?.content ?? {}).map(([mediaType, media]) => ({
+      mediaType,
+      schema: resolveSchema(media?.schema ?? null, contract),
+      example: media?.example,
+      examples: resolveExamples(media?.examples, contract),
+    })),
+    headers: Object.entries(response?.headers ?? {}).map(([name, header]) => ({
+      name,
+      ...resolveLocalRef(header, contract),
+      schema: resolveSchema(resolveLocalRef(header, contract)?.schema ?? null, contract),
+    })),
+    links: Object.entries(response?.links ?? {}).map(([name, link]) => ({
+      name,
+      ...resolveLocalRef(link, contract),
+    })),
+  }));
+}
+
+function securityInfo(operation, contract) {
+  const security = operation?.security ?? contract?.security ?? [];
+  return Array.isArray(security) ? security : [];
+}
+
+function securitySchemes(contract) {
+  return contract?.components?.securitySchemes ?? {};
+}
+
+function applySecurity(operation, request, options = {}) {
+  const security = securityInfo(operation, operation?._contract);
+  if (!security.length) return { headers: new Headers(options.headers), query: { ...request.query } };
+
+  const schemes = securitySchemes(operation?._contract);
+  const credentials = { apiKey: options.apiKey, authorization: options.authorization };
+
+  for (const requirement of security) {
+    if (!requirement || typeof requirement !== "object") continue;
+    if (Object.keys(requirement).length === 0) {
+      return { headers: new Headers(options.headers), query: { ...request.query } };
+    }
+
+    const headers = new Headers(options.headers);
+    const query = { ...request.query };
+    let satisfied = true;
+
+    for (const schemeName of Object.keys(requirement)) {
+      const scheme = resolveLocalRef(schemes[schemeName], operation?._contract);
+      if (!scheme) { satisfied = false; break; }
+      if (scheme.type === "apiKey") {
+        if (!credentials.apiKey) { satisfied = false; break; }
+        if (scheme.in === "header") headers.set(scheme.name, credentials.apiKey);
+        else if (scheme.in === "query") query[scheme.name] = credentials.apiKey;
+        else { satisfied = false; break; }
+        continue;
+      }
+      if (scheme.type === "http") {
+        if (!credentials.authorization) { satisfied = false; break; }
+        headers.set("Authorization", credentials.authorization);
+        continue;
+      }
+      satisfied = false;
+      break;
+    }
+    if (satisfied) return { headers, query };
+  }
+
+  throw new TypeError("Missing or unsupported authentication credentials for this operation.");
+}
+
+export function listApiOperations(contract, { includeDeprecated = true } = {}) {
+  const paths = contract?.paths ?? {};
+  const operations = [];
+
+  for (const [path, rawPathItem] of Object.entries(paths)) {
+    const pathItem = resolveLocalRef(rawPathItem, contract);
+    if (!pathItem) continue;
+    for (const method of HTTP_METHODS) {
+      const operation = pathItem?.[method];
+      if (!operation) continue;
+      if (!includeDeprecated && operation.deprecated) continue;
+
+      const parameters = mergeParameters(pathItem, operation, contract).map(parameter => ({
+        ...parameter,
+        schema: resolveSchema(parameter.schema ?? {}, contract),
+      }));
+      const requestBody = resolveLocalRef(operation.requestBody, contract) ?? null;
+      const responses = Object.fromEntries(Object.entries(operation.responses ?? {}).map(([status, response]) => {
+        const resolvedResponse = resolveLocalRef(response, contract) ?? response;
+        return [status, resolvedResponse ? {
+          ...resolvedResponse,
+          headers: Object.fromEntries(Object.entries(resolvedResponse.headers ?? {}).map(([name, header]) => {
+            const resolved = resolveLocalRef(header, contract) ?? header;
+            return [name, { ...resolved, schema: resolveSchema(resolved.schema ?? null, contract) }];
+          })),
+          content: Object.fromEntries(Object.entries(resolvedResponse.content ?? {}).map(([mediaType, media]) => [
+            mediaType, media ? { ...media, schema: resolveSchema(media.schema ?? null, contract) } : media,
+          ])),
+        } : resolvedResponse];
+      }));
+      const result = {
+        operationId: operation.operationId ?? method.toUpperCase() + " " + path,
+        operationKey: method.toUpperCase() + " " + path,
+        method: method.toUpperCase(), path,
+        summary: operation.summary ?? operation.description?.split("\n")[0] ?? "",
+        description: operation.description ?? "", deprecated: operation.deprecated === true,
+        tags: Array.isArray(operation.tags) ? operation.tags : [], parameters,
+        requestBody: requestBody ? {
+          ...requestBody,
+          content: Object.fromEntries(Object.entries(requestBody.content ?? {}).map(([mediaType, media]) => [
+            mediaType, media ? { ...media, schema: resolveSchema(media.schema ?? null, contract) } : media,
+          ])),
+        } : null,
+        responses, security: securityInfo(operation, contract),
+        servers: operation.servers ?? contract.servers ?? [],
+      };
+      Object.defineProperty(result, "_contract", { value: contract, enumerable: false });
+      operations.push(result);
+    }
+  }
+
+  return operations.sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method));
+}
+
+export function describeOperation(operation, contract = null) {
+  contract = contract ?? operation?._contract ?? null;
+  const parameters = (operation?.parameters ?? []).map(parameter => resolveLocalRef(parameter, contract)).filter(Boolean);
+  const resolvedOperation = {
+    ...operation,
+    parameters,
+    requestBody: resolveLocalRef(operation?.requestBody, contract) ?? null,
+    responses: Object.fromEntries(Object.entries(operation?.responses ?? {}).map(([status, response]) => [status, resolveLocalRef(response, contract)])),
+  };
+  return {
+    ...resolvedOperation,
+    pathParameters: pathParameters(resolvedOperation),
+    queryParameters: queryParameters(resolvedOperation),
+    parameterSummary: resolvedOperation.parameters.map(parameter => ({
+      name: parameter.name,
+      in: parameter.in,
+      required: parameter.required === true,
+      deprecated: parameter.deprecated === true,
+      description: parameter.description ?? "",
+      schema: parameterSchema(parameter, contract),
+      type: schemaType(parameterSchema(parameter, contract)),
+      nullable: schemaNullable(parameterSchema(parameter, contract)),
+      enum: enumValues(parameterSchema(parameter, contract)),
+      constraints: parameterDefaults(parameter, contract),
+    })),
+    requestBodyInfo: requestBodyInfo(resolvedOperation.requestBody, contract),
+    responseInfo: responseInfo(resolvedOperation.responses, contract),
+    security: securityInfo(operation, contract),
+  };
+}
+
+function schemaAllowsNull(schema) {
+  return schemaNullable(schema) || schema?.type === "null" || schema?.const === null;
+}
+
+function validateEnum(value, schema) {
+  const values = enumValues(schema);
+  if (!values.length) return;
+  const valid = values.some(item => Object.is(item, value) || (typeof item === "number" && Number(item) === value));
+  if (!valid) throw new TypeError("Value is not allowed by the parameter enum.");
+}
+
+function validateNumericConstraints(number, schema) {
+  if (schema.minimum !== undefined && number < schema.minimum) throw new TypeError("Parameter is below the minimum.");
+  if (schema.maximum !== undefined && number > schema.maximum) throw new TypeError("Parameter exceeds the maximum.");
+  if (schema.exclusiveMinimum !== undefined) {
+    const minimum = typeof schema.exclusiveMinimum === "number" ? schema.exclusiveMinimum : schema.minimum;
+    if (minimum !== undefined && number <= minimum) throw new TypeError("Parameter is below exclusiveMinimum.");
+  }
+  if (schema.exclusiveMaximum !== undefined) {
+    const maximum = typeof schema.exclusiveMaximum === "number" ? schema.exclusiveMaximum : schema.maximum;
+    if (maximum !== undefined && number >= maximum) throw new TypeError("Parameter exceeds exclusiveMaximum.");
+  }
+  if (schema.multipleOf !== undefined) {
+    const quotient = number / schema.multipleOf;
+    if (!Number.isFinite(quotient) || Math.abs(quotient - Math.round(quotient)) > 1e-10) {
+      throw new TypeError("Parameter is not a multipleOf value.");
+    }
+  }
+}
+
+function coerceScalar(value, schema) {
+  if (value === null) {
+    if (schemaAllowsNull(schema)) return null;
+    throw new TypeError("Null is not allowed by the parameter schema.");
+  }
+
+  const type = schemaType(schema);
+  if (type === "null") throw new TypeError("Value must be null.");
+  if (type === "integer" || type === "number") {
+    const number = Number(value);
+    if (!Number.isFinite(number)) throw new TypeError("Parameter must be a finite number.");
+    if (type === "integer" && !Number.isInteger(number)) throw new TypeError("Parameter must be an integer.");
+    validateEnum(number, schema);
+    validateNumericConstraints(number, schema);
+    return number;
+  }
+
+  if (type === "boolean") {
+    if (value === true || value === "true") {
+      validateEnum(true, schema);
+      return true;
+    }
+    if (value === false || value === "false") {
+      validateEnum(false, schema);
+      return false;
+    }
+    throw new TypeError("Parameter must be a boolean.");
+  }
+
+  const result = String(value);
+  validateEnum(result, schema);
+  if (schema.minLength !== undefined && result.length < schema.minLength) throw new TypeError("Parameter is shorter than minLength.");
+  if (schema.maxLength !== undefined && result.length > schema.maxLength) throw new TypeError("Parameter exceeds maxLength.");
+  if (schema.pattern !== undefined) {
+    let pattern;
+    try {
+      pattern = new RegExp(schema.pattern);
+    } catch {
+      throw new TypeError("Parameter schema contains an invalid pattern.");
+    }
+    if (!pattern.test(result)) throw new TypeError("Parameter does not match the required pattern.");
+  }
+  return result;
+}
+
+function coerceParameter(value, schema, parameter = null) {
+  if (value === "" || value === undefined) return undefined;
+  if (schema?.oneOf?.length) {
+    const matches = [];
+    for (const variant of schema.oneOf) {
+      try {
+        matches.push(coerceParameter(value, resolveSchema(variant, parameter?._contract), parameter));
+      } catch {}
+    }
+    if (matches.length !== 1) {
+      throw new TypeError(matches.length === 0
+        ? "Parameter does not match any oneOf schema."
+        : "Parameter matches multiple oneOf schemas.");
+    }
+    return matches[0];
+  }
+  if (schema?.anyOf?.length) {
+    const matches = [];
+    for (const variant of schema.anyOf) {
+      try {
+        matches.push(coerceParameter(value, resolveSchema(variant, parameter?._contract), parameter));
+      } catch {}
+    }
+    if (!matches.length) throw new TypeError("Parameter does not match any anyOf schema.");
+    return matches[0];
+  }
+  if (schema?.allOf?.length) {
+    const variants = schema.allOf.map((variant) => resolveSchema(variant, parameter?._contract));
+    const coercionSchema = variants.find((variant) => (
+      typeof variant?.type === "string"
+      || Array.isArray(variant?.type)
+      || variant?.oneOf?.length
+      || variant?.anyOf?.length
+      || variant?.const !== undefined
+      || variant?.enum !== undefined
+    ));
+    let result = coercionSchema
+      ? coerceParameter(value, coercionSchema, parameter)
+      : value;
+    for (const variant of variants) {
+      const variantType = schemaType(variant);
+      if (variantType !== "string" && variantType !== "number" && variantType !== "integer" && variantType !== "boolean" && variantType !== "array" && variantType !== "object") {
+        if (variant.const !== undefined && !deepEqual(result, variant.const)) {
+          throw new TypeError("Parameter does not satisfy allOf const constraint.");
+        }
+        if (Array.isArray(variant.enum) && !variant.enum.some(item => deepEqual(item, result))) {
+          throw new TypeError("Parameter does not satisfy allOf enum constraint.");
+        }
+        if (typeof result === "number") validateNumericConstraints(result, variant);
+        if (typeof result === "string" && variant.pattern !== undefined) {
+          let pattern;
+          try { pattern = new RegExp(variant.pattern); } catch { throw new TypeError("Parameter schema contains an invalid pattern."); }
+          if (!pattern.test(result)) throw new TypeError("Parameter does not satisfy allOf pattern constraint.");
+        }
+        continue;
+      }
+      if (variant.type === undefined) {
+        if (typeof result === "number") validateNumericConstraints(result, variant);
+        if (typeof result === "string") {
+          if (variant.minLength !== undefined && result.length < variant.minLength) throw new TypeError("Parameter is shorter than minLength.");
+          if (variant.maxLength !== undefined && result.length > variant.maxLength) throw new TypeError("Parameter exceeds maxLength.");
+          if (variant.pattern !== undefined) {
+            let pattern;
+            try { pattern = new RegExp(variant.pattern); } catch { throw new TypeError("Parameter schema contains an invalid pattern."); }
+            if (!pattern.test(result)) throw new TypeError("Parameter does not match the required pattern.");
+          }
+        }
+        continue;
+      }
+      if (variantType === "integer" && (!Number.isInteger(result) || typeof result !== "number")) {
+        throw new TypeError("Parameter does not satisfy allOf integer constraint.");
+      }
+      if (variantType === "number" && (typeof result !== "number" || !Number.isFinite(result))) {
+        throw new TypeError("Parameter does not satisfy allOf number constraint.");
+      }
+      if (variantType === "string" && typeof result !== "string") {
+        throw new TypeError("Parameter does not satisfy allOf string constraint.");
+      }
+      if (variantType === "boolean" && typeof result !== "boolean") {
+        throw new TypeError("Parameter does not satisfy allOf boolean constraint.");
+      }
+      if (typeof result === "number") validateNumericConstraints(result, variant);
+      if (typeof result === "string") {
+        if (variant.minLength !== undefined && result.length < variant.minLength) throw new TypeError("Parameter is shorter than minLength.");
+        if (variant.maxLength !== undefined && result.length > variant.maxLength) throw new TypeError("Parameter exceeds maxLength.");
+        if (variant.pattern !== undefined) {
+          let pattern;
+          try { pattern = new RegExp(variant.pattern); } catch { throw new TypeError("Parameter schema contains an invalid pattern."); }
+          if (!pattern.test(result)) throw new TypeError("Parameter does not match the required pattern.");
+        }
+      }
+      if (variant.const !== undefined && !deepEqual(result, variant.const)) throw new TypeError("Parameter does not satisfy allOf const constraint.");
+      if (Array.isArray(variant.enum) && !variant.enum.some(item => deepEqual(item, result))) throw new TypeError("Parameter does not satisfy allOf enum constraint.");
+    }
+    return result;
+  }
+  if (value === null) return schemaAllowsNull(schema) ? null : undefined;
+
+  if (schemaType(schema) === "array") {
+    const style = parameter?.style ?? (parameter?.in === "query" ? "form" : "simple");
+    const explode = parameter?.explode ?? (style === "form");
+    let values;
+
+    if (Array.isArray(value)) {
+      values = value;
+    } else {
+      const text = String(value).trim();
+      if (style === "spaceDelimited") values = text.split(/\s+/).filter(Boolean);
+      else if (style === "pipeDelimited") values = text.split("|").map(item => item.trim()).filter(Boolean);
+      else if (style === "form" && explode && parameter?.in === "query" && !/comma separated/i.test(parameter?.description ?? "")) values = [text];
+      else values = text.split(",").map(item => item.trim()).filter(Boolean);
+    }
+    if (schema.minItems !== undefined && values.length < schema.minItems) throw new TypeError("Parameter has fewer items than minItems.");
+    if (schema.maxItems !== undefined && values.length > schema.maxItems) throw new TypeError("Parameter has more items than maxItems.");
+    return values.map(item => coerceScalar(item, schema?.items ?? {}));
+  }
+
+  if (schemaType(schema) === "object") {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new TypeError("Parameter must be an object.");
+    }
+    const properties = schema.properties ?? {};
+    const result = { ...value };
+    for (const [name, propertySchema] of Object.entries(properties)) {
+      if (result[name] !== undefined) result[name] = coerceParameter(result[name], propertySchema);
+    }
+    if (schema.additionalProperties && typeof schema.additionalProperties === "object") {
+      for (const name of Object.keys(result)) {
+        if (!(name in properties)) result[name] = coerceParameter(result[name], schema.additionalProperties);
+      }
+    }
+    for (const name of schema.required ?? []) {
+      if (result[name] === undefined) throw new TypeError("Missing required object property: " + name);
+    }
+    if (schema.additionalProperties === false) {
+      for (const name of Object.keys(result)) {
+        if (!(name in properties)) throw new TypeError("Unexpected object property: " + name);
+      }
+    }
+    return result;
+  }
+
+  return coerceScalar(value, schema);
+}
+
+function serializeQueryParameter(parameter, value) {
+  const style = parameter?.style ?? "form";
+  const explode = parameter?.explode ?? (style === "form");
+
+  if (Array.isArray(value)) {
+    if (style === "spaceDelimited") return value.join(" ");
+    if (style === "pipeDelimited") return value.join("|");
+    if (style === "form" && (explode === false || /comma separated/i.test(parameter?.description ?? ""))) {
+      return value.join(",");
+    }
+    return value;
+  }
+
+  if (value && typeof value === "object") {
+    if (style === "deepObject") {
+      return Object.fromEntries(Object.entries(value).map(([key, item]) => [
+        parameter.name + "[" + key + "]",
+        Array.isArray(item) ? item.join(",") : item,
+      ]));
+    }
+    if (style === "form" && explode) return value;
+    return Object.entries(value).flat().join(",");
+  }
+
+  return value;
+}
+
+function encodePathComponent(value) {
+  return encodeURIComponent(String(value));
+}
+
+function serializePathParameter(parameter, value) {
+  const style = parameter?.style ?? "simple";
+  if (Array.isArray(value)) {
+    const items = value.map(encodePathComponent);
+    if (style === "label") return "." + items.join(".");
+    if (style === "matrix") return ";" + parameter.name + "=" + items.join(",");
+    return items.join(",");
+  }
+  if (value && typeof value === "object") {
+    const pairs = Object.entries(value).map(([key, item]) => [encodePathComponent(key), encodePathComponent(item)]);
+    if (style === "label") return "." + pairs.map(([key, item]) => key + "=" + item).join(",");
+    if (style === "matrix") return ";" + pairs.map(([key, item]) => key + "=" + item).join(",");
+    return pairs.map(([key, item]) => key + "," + item).join(",");
+  }
+  return encodePathComponent(value);
+}
+
+function mediaTypeMatches(available, requested) {
+  if (!available || !requested) return false;
+  const normalize = value => String(value).split(";", 1)[0].trim().toLowerCase();
+  const [availableType, availableSubtype = "*"] = normalize(available).split("/", 2);
+  const [requestedType, requestedSubtype = "*"] = normalize(requested).split("/", 2);
+
+  const subtypeMatches = (left, right) => {
+    if (left === "*" || right === "*" || left === right) return true;
+    if (left.startsWith("*+") && right.endsWith(left.slice(1))) return true;
+    if (right.startsWith("*+") && left.endsWith(right.slice(1))) return true;
+    return false;
+  };
+
+  return (availableType === "*" || requestedType === "*" || availableType === requestedType)
+    && subtypeMatches(availableSubtype, requestedSubtype);
+}
+
+function selectRequestMediaType(operation, values) {
+  const available = requestBodyInfo(operation.requestBody, operation?._contract);
+  if (!available.length) return null;
+  const requested = values.__contentType;
+  if (!requested) return available[0].mediaType;
+  const selected = available.find(item => mediaTypeMatches(item.mediaType, requested));
+  if (!selected) throw new TypeError(`Unsupported request content type: ${requested}`);
+  return selected.mediaType;
+}
+
+function isJsonMediaType(mediaType) {
+  return /(^|[/+])json($|[;+])|\+json$/i.test(String(mediaType ?? ""));
+}
+
+function validateRequestBody(value, schema, path = "$") {
+  if (!schema || value === undefined) return;
+  if (value === null) {
+    if (schemaAllowsNull(schema)) return;
+    throw new TypeError(`Invalid request body at ${path}: null is not allowed.`);
+  }
+
+  if (schema.oneOf?.length) {
+    const matches = schema.oneOf.filter(variant => {
+      try {
+        validateRequestBody(value, variant, path);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    if (matches.length !== 1) {
+      throw new TypeError(`Invalid request body at ${path}: oneOf requires exactly one matching schema.`);
+    }
+  }
+
+  if (schema.anyOf?.length) {
+    const matches = schema.anyOf.filter(variant => {
+      try {
+        validateRequestBody(value, variant, path);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    if (matches.length === 0) {
+      throw new TypeError(`Invalid request body at ${path}: no anyOf schema matched.`);
+    }
+  }
+
+  if (schema.allOf?.length) {
+    for (const variant of schema.allOf) validateRequestBody(value, variant, path);
+  }
+
+  if (schema.const !== undefined && !deepEqual(value, schema.const)) {
+    throw new TypeError(`Invalid request body at ${path}: value does not match const.`);
+  }
+
+  if (Array.isArray(schema.enum) && !schema.enum.some(item => deepEqual(item, value))) {
+    throw new TypeError(`Invalid request body at ${path}: value is not in enum.`);
+  }
+
+  if (typeof value === "number") {
+    validateNumericConstraints(value, schema);
+  }
+  if (typeof value === "string") {
+    if (schema.minLength !== undefined && value.length < schema.minLength) {
+      throw new TypeError(`Invalid request body at ${path}: shorter than minLength.`);
+    }
+    if (schema.maxLength !== undefined && value.length > schema.maxLength) {
+      throw new TypeError(`Invalid request body at ${path}: exceeds maxLength.`);
+    }
+    if (schema.pattern !== undefined) {
+      let pattern;
+      try {
+        pattern = new RegExp(schema.pattern);
+      } catch {
+        throw new TypeError(`Invalid request body at ${path}: schema contains an invalid pattern.`);
+      }
+      if (!pattern.test(value)) {
+        throw new TypeError(`Invalid request body at ${path}: pattern mismatch.`);
+      }
+    }
+  }
+
+  const type = schemaType(schema);
+  if (type === "object") {
+    if (typeof value !== "object" || Array.isArray(value)) {
+      throw new TypeError(`Invalid request body at ${path}: expected an object.`);
+    }
+    const properties = schema.properties ?? {};
+    if (schema.minProperties !== undefined && Object.keys(value).length < schema.minProperties) {
+      throw new TypeError(`Invalid request body at ${path}: fewer than minProperties.`);
+    }
+    if (schema.maxProperties !== undefined && Object.keys(value).length > schema.maxProperties) {
+      throw new TypeError(`Invalid request body at ${path}: more than maxProperties.`);
+    }
+    for (const name of schema.required ?? []) {
+      if (value[name] === undefined) {
+        throw new TypeError(`Invalid request body at ${path}: missing required property ${name}.`);
+      }
+    }
+    for (const [name, propertySchema] of Object.entries(properties)) {
+      if (value[name] !== undefined) validateRequestBody(value[name], propertySchema, `${path}.${name}`);
+    }
+    if (schema.additionalProperties === false) {
+      for (const name of Object.keys(value)) {
+        if (!(name in properties)) throw new TypeError(`Invalid request body at ${path}: unexpected property ${name}.`);
+      }
+    } else if (schema.additionalProperties && typeof schema.additionalProperties === "object") {
+      for (const name of Object.keys(value)) {
+        if (!(name in properties)) validateRequestBody(value[name], schema.additionalProperties, `${path}.${name}`);
+      }
+    }
+  } else if (type === "array") {
+    if (!Array.isArray(value)) throw new TypeError(`Invalid request body at ${path}: expected an array.`);
+    if (schema.minItems !== undefined && value.length < schema.minItems) throw new TypeError(`Invalid request body at ${path}: fewer than minItems.`);
+    if (schema.maxItems !== undefined && value.length > schema.maxItems) throw new TypeError(`Invalid request body at ${path}: more than maxItems.`);
+    if (schema.uniqueItems) {
+      for (let i = 0; i < value.length; i += 1) {
+        for (let j = i + 1; j < value.length; j += 1) {
+          if (deepEqual(value[i], value[j])) throw new TypeError(`Invalid request body at ${path}: items must be unique.`);
+        }
+      }
+    }
+    for (let index = 0; index < value.length; index += 1) validateRequestBody(value[index], schema.items, `${path}[${index}]`);
+  } else if (type === "integer" || type === "number") {
+    if (typeof value !== "number" || !Number.isFinite(value) || (type === "integer" && !Number.isInteger(value))) {
+      throw new TypeError(`Invalid request body at ${path}: expected ${type}.`);
+    }
+    if (schema.minimum !== undefined && value < schema.minimum) throw new TypeError(`Invalid request body at ${path}: below minimum.`);
+    if (schema.maximum !== undefined && value > schema.maximum) throw new TypeError(`Invalid request body at ${path}: above maximum.`);
+    if (schema.exclusiveMinimum !== undefined && value <= schema.exclusiveMinimum) throw new TypeError(`Invalid request body at ${path}: at or below exclusiveMinimum.`);
+    if (schema.exclusiveMaximum !== undefined && value >= schema.exclusiveMaximum) throw new TypeError(`Invalid request body at ${path}: at or above exclusiveMaximum.`);
+    if (schema.multipleOf !== undefined && Math.abs(value / schema.multipleOf - Math.round(value / schema.multipleOf)) > Number.EPSILON * Math.max(1, Math.abs(value))) {
+      throw new TypeError(`Invalid request body at ${path}: value is not a multipleOf constraint.`);
+    }
+  } else if (type === "boolean" && typeof value !== "boolean") {
+    throw new TypeError(`Invalid request body at ${path}: expected boolean.`);
+  } else if (type === "string") {
+    if (typeof value !== "string") throw new TypeError(`Invalid request body at ${path}: expected string.`);
+    if (schema.minLength !== undefined && value.length < schema.minLength) throw new TypeError(`Invalid request body at ${path}: shorter than minLength.`);
+    if (schema.maxLength !== undefined && value.length > schema.maxLength) throw new TypeError(`Invalid request body at ${path}: exceeds maxLength.`);
+    if (schema.pattern !== undefined && !(new RegExp(schema.pattern)).test(value)) {
+      throw new TypeError(`Invalid request body at ${path}: does not match pattern.`);
+    }
+  }
+}
+
+function deepEqual(left, right) {
+  if (Object.is(left, right)) return true;
+  if (typeof left !== typeof right || left === null || right === null) return false;
+  if (Array.isArray(left) || Array.isArray(right)) {
+    if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
+    return left.every((item, index) => deepEqual(item, right[index]));
+  }
+  if (typeof left === "object") {
+    const leftKeys = Object.keys(left);
+    const rightKeys = Object.keys(right);
+    if (leftKeys.length !== rightKeys.length) return false;
+    return leftKeys.every(key => Object.prototype.hasOwnProperty.call(right, key) && deepEqual(left[key], right[key]));
+  }
+  return false;
+}
+
+
+function schemaFormNode(schema, name, required = false, label = name, path = name, depth = 0) {
+  const resolved = schema ?? {};
+  const type = schemaType(resolved);
+  const enumOptions = enumValues(resolved);
+  const node = {
+    name, path, label, depth, type, required,
+    schema: resolved,
+    nullable: schemaNullable(resolved),
+    default: resolved.default,
+    description: resolved.description ?? "",
+    enum: enumOptions,
+    examples: Array.isArray(resolved.examples)
+      ? resolved.examples
+      : enumOptions.length
+        ? [enumOptions[0]]
+        : [],
+    minimum: resolved.minimum,
+    maximum: resolved.maximum,
+    minLength: resolved.minLength,
+    maxLength: resolved.maxLength,
+    minItems: resolved.minItems,
+    maxItems: resolved.maxItems,
+    pattern: resolved.pattern,
+  };
+  if (type === "object") {
+    node.properties = Object.entries(resolved.properties ?? {}).map(([propertyName, propertySchema]) =>
+      schemaFormNode(propertySchema, propertyName, (resolved.required ?? []).includes(propertyName), propertySchema.title ?? propertyName, path + "." + propertyName, depth + 1)
+    );
+    node.additionalProperties = resolved.additionalProperties;
+  } else if (type === "array") {
+    node.items = schemaFormNode(resolved.items ?? {}, name + "[]", false, resolved.items?.title ?? "Item", path + "[]", depth + 1);
+  }
+  return node;
+}
+
+function schemaViewNode(schema, name = "root", path = "$", depth = 0, required = false) {
+  const resolved = schema ?? {};
+  const type = schemaType(resolved);
+  const node = {
+    name,
+    path,
+    depth,
+    type,
+    format: resolved.format ?? null,
+    required,
+    nullable: schemaNullable(resolved),
+    description: resolved.description ?? "",
+    title: resolved.title ?? null,
+    ref: resolved.$ref ?? null,
+    default: resolved.default,
+    example: resolved.example,
+    examples: Array.isArray(resolved.examples) ? resolved.examples : [],
+    enum: enumValues(resolved),
+    const: resolved.const,
+    minimum: resolved.minimum,
+    maximum: resolved.maximum,
+    exclusiveMinimum: resolved.exclusiveMinimum,
+    exclusiveMaximum: resolved.exclusiveMaximum,
+    multipleOf: resolved.multipleOf,
+    minLength: resolved.minLength,
+    maxLength: resolved.maxLength,
+    pattern: resolved.pattern,
+    minItems: resolved.minItems,
+    maxItems: resolved.maxItems,
+    uniqueItems: resolved.uniqueItems,
+    constraints: {
+      minimum: resolved.minimum,
+      maximum: resolved.maximum,
+      exclusiveMinimum: resolved.exclusiveMinimum,
+      exclusiveMaximum: resolved.exclusiveMaximum,
+      multipleOf: resolved.multipleOf,
+      minLength: resolved.minLength,
+      maxLength: resolved.maxLength,
+      pattern: resolved.pattern,
+      minItems: resolved.minItems,
+      maxItems: resolved.maxItems,
+      uniqueItems: resolved.uniqueItems,
+      minProperties: resolved.minProperties,
+      maxProperties: resolved.maxProperties,
+    },
+    additionalProperties: resolved.additionalProperties,
+  };
+
+  if (type === "object") {
+    node.properties = Object.entries(resolved.properties ?? {}).map(([propertyName, propertySchema]) =>
+      schemaViewNode(
+        propertySchema,
+        propertyName,
+        path + "." + propertyName,
+        depth + 1,
+        (resolved.required ?? []).includes(propertyName),
+      )
+    );
+  } else if (type === "array") {
+    node.items = schemaViewNode(resolved.items ?? {}, "items", path + "[]", depth + 1);
+  }
+
+  for (const keyword of ["oneOf", "anyOf", "allOf"]) {
+    if (Array.isArray(resolved[keyword]) && resolved[keyword].length) {
+      node[keyword] = resolved[keyword].map((variant, index) =>
+        schemaViewNode(variant, keyword + "[" + index + "]", path + "." + keyword + "[" + index + "]", depth + 1)
+      );
+    }
+  }
+
+  return node;
+}
+
+export function buildSchemaViewModel(schema) {
+  if (!schema || typeof schema !== "object") return null;
+  return schemaViewNode(schema, schema.title ?? "Schema");
+}
+
+export function buildRequestExamples(bodyInfo) {
+  if (!bodyInfo || typeof bodyInfo !== "object") return [];
+
+  const examples = [];
+  const addExample = (example) => {
+    if (!example || example.value === undefined) return;
+    examples.push(example);
+  };
+
+  // OpenAPI Media Type Object examples are mutually exclusive. If either
+  // representation is present, it takes precedence over schema examples.
+  if (bodyInfo.example !== undefined) {
+    addExample({
+      name: "Default example",
+      summary: "Media type example",
+      value: bodyInfo.example,
+      source: "example",
+    });
+    return examples;
+  }
+
+  const mediaExamples = bodyInfo.examples ?? {};
+  if (Object.keys(mediaExamples).length) {
+    for (const [name, example] of Object.entries(mediaExamples)) {
+      addExample({
+        name,
+        summary: example?.summary ?? example?.description ?? name,
+        value: example?.value,
+        source: "examples",
+      });
+    }
+    return examples;
+  }
+
+  const schema = bodyInfo.schema;
+  if (!schema || typeof schema !== "object") return examples;
+
+  // Schema examples are representation-independent; the media type examples
+  // above intentionally override them when supplied.
+  if (schema.example !== undefined) {
+    addExample({
+      name: "Schema example",
+      summary: "Schema example",
+      value: schema.example,
+      source: "schema.example",
+    });
+    return examples;
+  }
+
+  if (Array.isArray(schema.examples) && schema.examples.length) {
+    schema.examples.forEach((value, index) => {
+      addExample({
+        name: "Schema example " + (index + 1),
+        summary: "Schema examples",
+        value,
+        source: "schema.examples",
+      });
+    });
+    return examples;
+  }
+
+  // A default documents receiver behavior rather than an example, but it is
+  // still useful as an explicit fallback preset in a request editor.
+  if (schema.default !== undefined) {
+    addExample({
+      name: "Schema default",
+      summary: "Schema default",
+      value: schema.default,
+      source: "schema.default",
+    });
+    return examples;
+  }
+
+  const generated = buildGeneratedSchemaExample(schema);
+  if (generated !== undefined) {
+    examples.push({
+      name: "Generated example",
+      summary: "Generated from schema constraints",
+      value: generated,
+      source: "generated",
+    });
+  }
+
+  return examples;
+}
+
+function generatedScalar(schema) {
+  const values = enumValues(schema);
+  if (values.length) return values[0];
+  if (schema?.const !== undefined) return schema.const;
+
+  const type = schemaType(schema);
+  if (type === "null") return null;
+  if (type === "boolean") return false;
+  if (type === "integer" || type === "number") {
+    if (typeof schema.minimum === "number") return schema.exclusiveMinimum === true ? schema.minimum + 1 : schema.minimum;
+    if (typeof schema.exclusiveMinimum === "number") return schema.exclusiveMinimum + (type === "integer" ? 1 : Number.EPSILON);
+    if (typeof schema.maximum === "number" && schema.maximum < 0) return schema.maximum;
+    return 0;
+  }
+
+  if (type === "string") {
+    const format = schema.format;
+    if (format === "email") return "example@example.com";
+    if (format === "uuid") return "00000000-0000-4000-8000-000000000000";
+    if (format === "date") return "2026-01-01";
+    if (format === "date-time") return "2026-01-01T00:00:00Z";
+    const length = Math.max(1, schema.minLength ?? 1);
+    return "x".repeat(length);
+  }
+
+  return undefined;
+}
+
+function buildGeneratedSchemaValue(schema, depth = 0) {
+  if (!schema || typeof schema !== "object" || depth > 12) return undefined;
+  if (schema.default !== undefined) return schema.default;
+  if (schema.example !== undefined) return schema.example;
+  if (Array.isArray(schema.examples) && schema.examples.length) return schema.examples[0];
+  if (schema.const !== undefined) return schema.const;
+
+  if (schema.oneOf?.length) {
+    for (const variant of schema.oneOf) {
+      const value = buildGeneratedSchemaValue(variant, depth + 1);
+      if (value !== undefined) return value;
+    }
+    return undefined;
+  }
+
+  if (schema.anyOf?.length) {
+    for (const variant of schema.anyOf) {
+      const value = buildGeneratedSchemaValue(variant, depth + 1);
+      if (value !== undefined) return value;
+    }
+    return undefined;
+  }
+
+  if (schema.allOf?.length) {
+    const merged = { ...schema, oneOf: undefined, anyOf: undefined, allOf: undefined, properties: { ...(schema.properties ?? {}) } };
+    const required = new Set(schema.required ?? []);
+    for (const variant of schema.allOf) {
+      if (variant?.properties) Object.assign(merged.properties, variant.properties);
+      for (const name of variant?.required ?? []) required.add(name);
+    }
+    if (required.size) merged.required = [...required];
+    return buildGeneratedSchemaValue(merged, depth + 1);
+  }
+
+  const type = schemaType(schema);
+  if (type === "object") {
+    const value = {};
+    const properties = schema.properties ?? {};
+    for (const name of schema.required ?? []) {
+      if (!(name in properties)) return undefined;
+      const generated = buildGeneratedSchemaValue(properties[name], depth + 1);
+      if (generated === undefined) return undefined;
+      value[name] = generated;
+    }
+
+    if (schema.minProperties !== undefined && Object.keys(value).length < schema.minProperties) {
+      for (const [name, propertySchema] of Object.entries(properties)) {
+        if (name in value) continue;
+        const generated = buildGeneratedSchemaValue(propertySchema, depth + 1);
+        if (generated === undefined) continue;
+        value[name] = generated;
+        if (Object.keys(value).length >= schema.minProperties) break;
+      }
+    }
+
+    return value;
+  }
+
+  if (type === "array") {
+    if (!schema.items) return schema.minItems ? undefined : [];
+    const count = schema.minItems ?? 0;
+    const values = [];
+    for (let index = 0; index < count; index += 1) {
+      const generated = buildGeneratedSchemaValue(schema.items, depth + 1);
+      if (generated === undefined) return undefined;
+      values.push(generated);
+    }
+    return values;
+  }
+
+  return generatedScalar(schema);
+}
+
+export function buildGeneratedSchemaExample(schema) {
+  const generated = buildGeneratedSchemaValue(schema);
+  if (generated === undefined) return undefined;
+  try {
+    validateRequestBody(generated, schema);
+    return generated;
+  } catch {
+    return undefined;
+  }
+}
+
+export function buildSchemaFormModel(schema) {
+  if (!schema || typeof schema !== "object") return null;
+  return schemaFormNode(schema, "__body", false, schema.title ?? "Request body", "__body", 0);
+}
+
+export function parseSchemaFormValue(rawValue, schema, path = "$") {
+  if (rawValue === "" || rawValue === undefined) return undefined;
+  const type = schemaType(schema);
+  if (type === "object" || type === "array") {
+    if (typeof rawValue === "object") {
+      validateRequestBody(rawValue, schema, path);
+      return rawValue;
+    }
+    let parsed;
+    try { parsed = JSON.parse(rawValue); } catch { throw new TypeError("Invalid JSON at " + path + "."); }
+    validateRequestBody(parsed, schema, path);
+    return parsed;
+  }
+  if (type === "integer" || type === "number") {
+    const number = Number(rawValue);
+    if (!Number.isFinite(number) || (type === "integer" && !Number.isInteger(number))) {
+      throw new TypeError("Invalid " + type + " at " + path + ".");
+    }
+    validateRequestBody(number, schema, path);
+    return number;
+  }
+  if (type === "boolean") {
+    if (rawValue === true || rawValue === "true") {
+      validateRequestBody(true, schema, path);
+      return true;
+    }
+    if (rawValue === false || rawValue === "false") {
+      validateRequestBody(false, schema, path);
+      return false;
+    }
+    throw new TypeError("Invalid boolean at " + path + ".");
+  }
+  if (rawValue === "null" && schemaAllowsNull(schema)) return null;
+  const value = String(rawValue);
+  validateRequestBody(value, schema, path);
+  return value;
+}
+
+
+export function buildRequest(operation, values = {}) {
+  let path = operation.path;
+  const query = {};
+  const headers = new Headers();
+
+  for (const parameter of operation.parameters) {
+    const schema = parameterSchema(parameter, operation?._contract);
+    let value = values[parameter.name];
+    if (value === undefined || value === "") {
+      if (schema?.default !== undefined) value = schema.default;
+      else {
+        if (parameter.required) throw new TypeError(`Missing required parameter: ${parameter.name}`);
+        continue;
+      }
+    }
+
+    const coerced = coerceParameter(value, schema, parameter);
+
+    if (parameter.in === "path") {
+      path = path.replace(`{${parameter.name}}`, serializePathParameter(parameter, coerced));
+    } else if (parameter.in === "query") {
+      const serialized = serializeQueryParameter(parameter, coerced);
+      if (serialized && typeof serialized === "object" && !Array.isArray(serialized)) {
+        Object.assign(query, serialized);
+      } else {
+        query[parameter.name] = serialized;
+      }
+    } else if (parameter.in === "header") {
+      let serialized;
+      if (Array.isArray(coerced)) {
+        serialized = coerced.join(",");
+      } else if (coerced && typeof coerced === "object") {
+        serialized = Object.entries(coerced).map(([name, item]) => `${name}=${item}`).join(",");
+      } else {
+        serialized = coerced;
+      }
+      if (serialized !== undefined && serialized !== null) headers.set(parameter.name, String(serialized));
+    } else if (parameter.in === "cookie") {
+      throw new TypeError("Cookie parameters are not supported in the browser Data Explorer.");
+    }
+  }
+
+  let body;
+  const hasBody = values.__body !== undefined && values.__body !== "";
+  const mediaType = hasBody ? selectRequestMediaType(operation, values) : null;
+  if (hasBody && !operation.requestBody) {
+    throw new TypeError("Request body is not declared for this operation.");
+  }
+  if (operation.requestBody?.required && !hasBody) {
+    throw new TypeError("Missing required request body");
+  }
+  if (hasBody) {
+    if (typeof values.__body !== "string") {
+      body = values.__body;
+    } else if (isJsonMediaType(mediaType)) {
+      try {
+        body = JSON.parse(values.__body);
+      } catch {
+        throw new TypeError("Request body must contain valid JSON for the selected content type.");
+      }
+    } else {
+      body = values.__body;
+    }
+
+    const content = operation.requestBody?.content?.[mediaType];
+    if (content?.schema && (isJsonMediaType(mediaType) || typeof body !== "string")) {
+      validateRequestBody(body, content.schema);
+    }
+  }
+
+  return {
+    path,
+    method: operation.method,
+    query,
+    headers,
+    body,
+    mediaType,
+  };
+}
+
+export async function executeOperation(operation, values = {}, options = {}) {
+  const request = buildRequest(operation, values);
+  const secured = applySecurity(operation, request, options);
+  const headers = secured.headers;
+  for (const [name, value] of request.headers.entries()) {
+    if (!headers.has(name)) headers.set(name, value);
+  }
+
+  if (request.mediaType) {
+    const contentType = headers.get("Content-Type");
+    if (contentType && !mediaTypeMatches(request.mediaType, contentType)) {
+      throw new TypeError(`Content-Type ${contentType} conflicts with selected request media type ${request.mediaType}.`);
+    }
+    if (!contentType) headers.set("Content-Type", request.mediaType);
+  }
+
+  const result = await apiRequest(request.path, {
+    ...options,
+    method: request.method,
+    query: secured.query,
+    body: request.body,
+    headers,
+    cache: options.cache ?? false,
+    dedupe: options.dedupe ?? false,
+    apiKey: securityInfo(operation, operation?._contract).length ? undefined : options.apiKey,
+    authorization: securityInfo(operation, operation?._contract).length ? undefined : options.authorization,
+  });
+
+  return {
+    ...result,
+    request: {
+      ...request,
+      headers: Object.fromEntries([...headers.entries()].map(([name, value]) => [name, /authorization|api[-_]?key|cookie/i.test(name) ? "[REDACTED]" : value])),
+      query: Object.fromEntries(Object.entries(secured.query).map(([name, value]) => [name, /api[-_]?key|authorization|token/i.test(name) ? "[REDACTED]" : value])),
+    },
+  };
+}
+
+export {
+  coerceParameter,
+  enumValues,
+  parameterSchema,
+  requestBodyInfo,
+  resolveSchema,
+  responseInfo,
+  schemaNullable,
+  schemaType,
+};

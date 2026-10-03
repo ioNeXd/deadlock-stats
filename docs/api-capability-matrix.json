@@ -1,0 +1,6387 @@
+{
+  "source": "https://api.deadlock-api.com/openapi.json",
+  "audited_at": "2026-10-03",
+  "openapi_version": "3.1.0",
+  "api_version": "0.1.0",
+  "server": "https://api.deadlock-api.com",
+  "classifications": [
+    "UI",
+    "API-ONLY",
+    "ADVANCED",
+    "DEPRECATED",
+    "INTERNAL",
+    "UNAVAILABLE"
+  ],
+  "parameter_classifications": [
+    "SUPPORTED_UI",
+    "SUPPORTED_API_ONLY",
+    "DEPRECATED",
+    "INTERNAL",
+    "NOT_APPLICABLE"
+  ],
+  "audit_status": {
+    "endpoint_inventory": "COMPLETE",
+    "parameter_inventory": "COMPLETE",
+    "schema_inventory": "COMPLETE",
+    "content_type_inventory": "COMPLETE",
+    "authentication_inventory": "COMPLETE",
+    "rate_limit_inventory": "CONFIRMED_IN_DESCRIPTIONS",
+    "capability_classification": "COMPLETE",
+    "parameter_classification": "COMPLETE",
+    "classification_method": "tag/operation contract mapping; deprecated/internal overrides"
+  },
+  "inventory": {
+    "path_count": 126,
+    "operation_count": 129,
+    "schema_count": 230,
+    "security_scheme_count": 2,
+    "deprecated_operation_count": 14,
+    "content_types": [
+      "application/json",
+      "application/octet-stream",
+      "image/png",
+      "image/webp",
+      "text/event-stream",
+      "text/html",
+      "text/plain"
+    ],
+    "generated_file": "docs/api-openapi-inventory.json"
+  },
+  "operation_classifications": [
+    {
+      "operationId": "ability_order_stats",
+      "method": "GET",
+      "path": "/v1/analytics/ability-order-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "hero_id",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_ability_upgrades",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_ability_upgrades",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "exclude_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_unlock_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "badge_distribution",
+      "method": "GET",
+      "path": "/v1/analytics/badge-distribution",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_high_skill_range_parties",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_low_pri_pool",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_new_player_pool",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "buff_stats",
+      "method": "GET",
+      "path": "/v1/analytics/buff-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "build_item_stats",
+      "method": "GET",
+      "path": "/v1/analytics/build-item-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "hero_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_last_updated_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_last_updated_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "game_stats",
+      "method": "GET",
+      "path": "/v1/analytics/game-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "bucket",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "exclude_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_unlock_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "hero_ban_stats",
+      "method": "GET",
+      "path": "/v1/analytics/hero-ban-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "bucket",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "hero_build_stats",
+      "method": "GET",
+      "path": "/v1/analytics/hero-build-stats/{hero_id}",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "hero_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_build_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_unlock_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "hero_comb_stats",
+      "method": "GET",
+      "path": "/v1/analytics/hero-comb-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "exclude_hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_enemy_hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "exclude_enemy_hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "comb_size",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "hero_counters_stats",
+      "method": "GET",
+      "path": "/v1/analytics/hero-counter-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_enemy_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_enemy_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "same_lane_filter",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "hero_stats",
+      "method": "GET",
+      "path": "/v1/analytics/hero-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "bucket",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_hero_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_hero_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_hero_matches_total",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_hero_matches_total",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "exclude_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_unlock_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "hero_synergies_stats",
+      "method": "GET",
+      "path": "/v1/analytics/hero-synergy-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "same_lane_filter",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "item_flow_stats",
+      "method": "GET",
+      "path": "/v1/analytics/item-flow-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "phase_interval_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "phase_count",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "exclude_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_unlock_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "locked_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "locked_columns",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "item_permutation_stats",
+      "method": "GET",
+      "path": "/v1/analytics/item-permutation-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "comb_size",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_unlock_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_corrupted_items",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "item_stats",
+      "method": "GET",
+      "path": "/v1/analytics/item-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "bucket",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "enemy_hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "enemy_hero_ids_all_match",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_enemy_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_enemy_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "same_lane_filter",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "exclude_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_unlock_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_bought_at_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_bought_at_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "item_order",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "corrupted_items",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_corrupted_items",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        }
+      ]
+    },
+    {
+      "operationId": "kill_death_stats",
+      "method": "GET",
+      "path": "/v1/analytics/kill-death-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "team",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_high_skill_range_parties",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_low_pri_pool",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_new_player_pool",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_kills_per_raster",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_kills_per_raster",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_deaths_per_raster",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_deaths_per_raster",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_game_time_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_game_time_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "lane_matchup_stats",
+      "method": "GET",
+      "path": "/v1/analytics/lane-matchup-stats",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "sample_time_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "assigned_lanes",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "enemy_hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "stats",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "group_by",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "lane_soul_curve",
+      "method": "GET",
+      "path": "/v1/analytics/lane-soul-curve",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_time_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_time_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "assigned_lanes",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "enemy_hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "stats",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "group_by",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "player_performance_curve",
+      "method": "GET",
+      "path": "/v1/analytics/player-performance-curve",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "resolution",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "exclude_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_unlock_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "player_stats_metrics",
+      "method": "GET",
+      "path": "/v1/analytics/player-stats/metrics",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "exclude_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "ability_unlock_order_prefix",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_buff_metrics",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "hero_scoreboard",
+      "method": "GET",
+      "path": "/v1/analytics/scoreboards/heroes",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "sort_by",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "sort_direction",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "player_scoreboard",
+      "method": "GET",
+      "path": "/v1/analytics/scoreboards/players",
+      "tags": [
+        "Analytics"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "sort_by",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "sort_direction",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_matches",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "start",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "list_accolades",
+      "method": "GET",
+      "path": "/v1/assets/accolades",
+      "tags": [
+        "Accolades"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_accolade_by_name",
+      "method": "GET",
+      "path": "/v1/assets/accolades/by-name/{name}",
+      "tags": [
+        "Accolades"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_accolade",
+      "method": "GET",
+      "path": "/v1/assets/accolades/{accolade_id}",
+      "tags": [
+        "Accolades"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "accolade_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "list_build_tags",
+      "method": "GET",
+      "path": "/v1/assets/build-tags",
+      "tags": [
+        "Build Tags"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_build_tag_by_name",
+      "method": "GET",
+      "path": "/v1/assets/build-tags/by-name/{name}",
+      "tags": [
+        "Build Tags"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_build_tag",
+      "method": "GET",
+      "path": "/v1/assets/build-tags/{build_tag_id}",
+      "tags": [
+        "Build Tags"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "build_tag_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "list_client_versions",
+      "method": "GET",
+      "path": "/v1/assets/client-versions",
+      "tags": [
+        "Client Versions"
+      ],
+      "classification": "UI",
+      "parameters": []
+    },
+    {
+      "operationId": "list_colors",
+      "method": "GET",
+      "path": "/v1/assets/colors",
+      "tags": [
+        "Colors"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "fonts",
+      "method": "GET",
+      "path": "/v1/assets/fonts",
+      "tags": [
+        "Assets Bucket"
+      ],
+      "classification": "API-ONLY",
+      "parameters": []
+    },
+    {
+      "operationId": "get_generic_data",
+      "method": "GET",
+      "path": "/v1/assets/generic-data",
+      "tags": [
+        "Generic Data"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "list_heroes",
+      "method": "GET",
+      "path": "/v1/assets/heroes",
+      "tags": [
+        "Heroes"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "only_active",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_hero_by_name",
+      "method": "GET",
+      "path": "/v1/assets/heroes/by-name/{name}",
+      "tags": [
+        "Heroes"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_hero",
+      "method": "GET",
+      "path": "/v1/assets/heroes/{hero_id}",
+      "tags": [
+        "Heroes"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "hero_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "icons",
+      "method": "GET",
+      "path": "/v1/assets/icons",
+      "tags": [
+        "Assets Bucket"
+      ],
+      "classification": "API-ONLY",
+      "parameters": []
+    },
+    {
+      "operationId": "images",
+      "method": "GET",
+      "path": "/v1/assets/images",
+      "tags": [
+        "Assets Bucket"
+      ],
+      "classification": "API-ONLY",
+      "parameters": []
+    },
+    {
+      "operationId": "list_items",
+      "method": "GET",
+      "path": "/v1/assets/items",
+      "tags": [
+        "Items"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_items_by_hero_id",
+      "method": "GET",
+      "path": "/v1/assets/items/by-hero-id/{id}",
+      "tags": [
+        "Items"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_items_by_slot_type",
+      "method": "GET",
+      "path": "/v1/assets/items/by-slot-type/{slot_type}",
+      "tags": [
+        "Items"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "slot_type",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_items_by_type",
+      "method": "GET",
+      "path": "/v1/assets/items/by-type/{type}",
+      "tags": [
+        "Items"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "type",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_item",
+      "method": "GET",
+      "path": "/v1/assets/items/{id_or_class_name}",
+      "tags": [
+        "Items"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "id_or_class_name",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "list_loot_tables",
+      "method": "GET",
+      "path": "/v1/assets/loot-tables",
+      "tags": [
+        "Loot Tables"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": [
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_map",
+      "method": "GET",
+      "path": "/v1/assets/map",
+      "tags": [
+        "Map"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "list_misc_entities",
+      "method": "GET",
+      "path": "/v1/assets/misc-entities",
+      "tags": [
+        "Misc Entities"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_misc_entity",
+      "method": "GET",
+      "path": "/v1/assets/misc-entities/{id_or_classname}",
+      "tags": [
+        "Misc Entities"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "id_or_classname",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "list_modifiers",
+      "method": "GET",
+      "path": "/v1/assets/modifiers",
+      "tags": [
+        "Modifiers"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_modifier",
+      "method": "GET",
+      "path": "/v1/assets/modifiers/{id_or_classname}",
+      "tags": [
+        "Modifiers"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "id_or_classname",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "list_npc_units",
+      "method": "GET",
+      "path": "/v1/assets/npc-units",
+      "tags": [
+        "NPC Units"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_npc_unit",
+      "method": "GET",
+      "path": "/v1/assets/npc-units/{id_or_classname}",
+      "tags": [
+        "NPC Units"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "id_or_classname",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "list_ranked_seasons",
+      "method": "GET",
+      "path": "/v1/assets/ranked-seasons",
+      "tags": [
+        "Ranked Seasons"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "list_ranks",
+      "method": "GET",
+      "path": "/v1/assets/ranks",
+      "tags": [
+        "Ranks"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_rank",
+      "method": "GET",
+      "path": "/v1/assets/ranks/{tier}",
+      "tags": [
+        "Ranks"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "tier",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "subrank_image",
+      "method": "GET",
+      "path": "/v1/assets/ranks/{tier}/{subrank}/image",
+      "tags": [
+        "Ranks"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "tier",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "subrank",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "sounds",
+      "method": "GET",
+      "path": "/v1/assets/sounds",
+      "tags": [
+        "Assets Bucket"
+      ],
+      "classification": "API-ONLY",
+      "parameters": []
+    },
+    {
+      "operationId": "get_steam_info",
+      "method": "GET",
+      "path": "/v1/assets/steam-info",
+      "tags": [
+        "Steam Info"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "client_version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_all_steam_info",
+      "method": "GET",
+      "path": "/v1/assets/steam-info/all",
+      "tags": [
+        "Steam Info"
+      ],
+      "classification": "UI",
+      "parameters": []
+    },
+    {
+      "operationId": "search_builds",
+      "method": "GET",
+      "path": "/v1/builds",
+      "tags": [
+        "Builds"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_published_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_published_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "sort_by",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "start",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "sort_direction",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "search_name",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "search_description",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "only_latest",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "language",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "build_language",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "build_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "version",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "tag",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "rollup_category",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "author_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "fetch_builds_by_author_live",
+      "method": "GET",
+      "path": "/v1/builds/by-author/{account_id}",
+      "tags": [
+        "Builds"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "fetch_build_live",
+      "method": "GET",
+      "path": "/v1/builds/{hero_id}/{build_id}",
+      "tags": [
+        "Builds"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "hero_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "build_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "force_refetch",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "command_resolve",
+      "method": "GET",
+      "path": "/v1/commands/resolve",
+      "tags": [
+        "Commands"
+      ],
+      "classification": "API-ONLY",
+      "parameters": [
+        {
+          "name": "region",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "account_id",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "template",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "hero_name",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "available_variables",
+      "method": "GET",
+      "path": "/v1/commands/variables/available",
+      "tags": [
+        "Commands"
+      ],
+      "classification": "API-ONLY",
+      "parameters": []
+    },
+    {
+      "operationId": "variables_resolve",
+      "method": "GET",
+      "path": "/v1/commands/variables/resolve",
+      "tags": [
+        "Commands"
+      ],
+      "classification": "API-ONLY",
+      "parameters": [
+        {
+          "name": "region",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "account_id",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "variables",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "hero_name",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "widget_versions",
+      "method": "GET",
+      "path": "/v1/commands/widgets/versions",
+      "tags": [
+        "Commands"
+      ],
+      "classification": "API-ONLY",
+      "parameters": []
+    },
+    {
+      "operationId": "code_image",
+      "method": "GET",
+      "path": "/v1/crosshair/code/image",
+      "tags": [
+        "Crosshair"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "code",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "screen_height",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "scale",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "code_settings",
+      "method": "GET",
+      "path": "/v1/crosshair/code/settings",
+      "tags": [
+        "Crosshair"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "code",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "settings_code",
+      "method": "GET",
+      "path": "/v1/crosshair/settings/code",
+      "tags": [
+        "Crosshair"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "themed",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_gap_static",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_width",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_height",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_gap",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_opacity",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_outline_border",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_outline_gap",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_outline_opacity",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "dot_size",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "dot_opacity",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "dot_outline_border",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "dot_outline_gap",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "dot_outline_opacity",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "color_r",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "color_g",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "color_b",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "outline_color_r",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "outline_color_g",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "outline_color_b",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "settings_image",
+      "method": "GET",
+      "path": "/v1/crosshair/settings/image",
+      "tags": [
+        "Crosshair"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "themed",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_gap_static",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_width",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_height",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_gap",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_opacity",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_outline_border",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_outline_gap",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "pip_outline_opacity",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "dot_size",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "dot_opacity",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "dot_outline_border",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "dot_outline_gap",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "dot_outline_opacity",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "color_r",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "color_g",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "color_b",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "outline_color_r",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "outline_color_g",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "outline_color_b",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "screen_height",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "scale",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "submit_feedback",
+      "method": "POST",
+      "path": "/v1/feedback",
+      "tags": [
+        "Internal"
+      ],
+      "classification": "INTERNAL",
+      "parameters": []
+    },
+    {
+      "operationId": "playground",
+      "method": "GET",
+      "path": "/v1/graphql",
+      "tags": [
+        "GraphQL"
+      ],
+      "classification": "ADVANCED",
+      "parameters": []
+    },
+    {
+      "operationId": "info",
+      "method": "GET",
+      "path": "/v1/info",
+      "tags": [
+        "Info"
+      ],
+      "classification": "API-ONLY",
+      "parameters": []
+    },
+    {
+      "operationId": "health_check",
+      "method": "GET",
+      "path": "/v1/info/health",
+      "tags": [
+        "Info"
+      ],
+      "classification": "API-ONLY",
+      "parameters": []
+    },
+    {
+      "operationId": "leaderboard",
+      "method": "GET",
+      "path": "/v1/leaderboard/{region}",
+      "tags": [
+        "Leaderboard"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "region",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "leaderboard_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "leaderboard_raw",
+      "method": "GET",
+      "path": "/v1/leaderboard/{region}/raw",
+      "tags": [
+        "Leaderboard"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "region",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "leaderboard_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "leaderboard_hero",
+      "method": "GET",
+      "path": "/v1/leaderboard/{region}/{hero_id}",
+      "tags": [
+        "Leaderboard"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "region",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "leaderboard_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "leaderboard_hero_raw",
+      "method": "GET",
+      "path": "/v1/leaderboard/{region}/{hero_id}/raw",
+      "tags": [
+        "Leaderboard"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "region",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "leaderboard_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "active_matches",
+      "method": "GET",
+      "path": "/v1/matches/active",
+      "tags": [
+        "Matches"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": true
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "active_matches_raw",
+      "method": "GET",
+      "path": "/v1/matches/active/raw",
+      "tags": [
+        "Matches"
+      ],
+      "classification": "UI",
+      "parameters": []
+    },
+    {
+      "operationId": "create_custom",
+      "method": "POST",
+      "path": "/v1/matches/custom/create",
+      "tags": [
+        "Custom Matches"
+      ],
+      "classification": "API-ONLY",
+      "parameters": []
+    },
+    {
+      "operationId": "leave",
+      "method": "POST",
+      "path": "/v1/matches/custom/{lobby_id}/leave",
+      "tags": [
+        "Custom Matches"
+      ],
+      "classification": "API-ONLY",
+      "parameters": [
+        {
+          "name": "lobby_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "ready_up",
+      "method": "POST",
+      "path": "/v1/matches/custom/{lobby_id}/ready",
+      "tags": [
+        "Custom Matches"
+      ],
+      "classification": "API-ONLY",
+      "parameters": [
+        {
+          "name": "lobby_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "start",
+      "method": "POST",
+      "path": "/v1/matches/custom/{lobby_id}/start",
+      "tags": [
+        "Custom Matches"
+      ],
+      "classification": "API-ONLY",
+      "parameters": [
+        {
+          "name": "lobby_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "unready",
+      "method": "POST",
+      "path": "/v1/matches/custom/{lobby_id}/unready",
+      "tags": [
+        "Custom Matches"
+      ],
+      "classification": "API-ONLY",
+      "parameters": [
+        {
+          "name": "lobby_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "get_custom",
+      "method": "GET",
+      "path": "/v1/matches/custom/{party_id}/match-id",
+      "tags": [
+        "Custom Matches"
+      ],
+      "classification": "API-ONLY",
+      "parameters": [
+        {
+          "name": "party_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "live_query",
+      "method": "GET",
+      "path": "/v1/matches/demo/live/query",
+      "tags": [
+        "Demo"
+      ],
+      "classification": "ADVANCED",
+      "parameters": [
+        {
+          "name": "query",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "broadcast_url",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "submit",
+      "method": "POST",
+      "path": "/v1/matches/demo/query",
+      "tags": [
+        "Demo"
+      ],
+      "classification": "ADVANCED",
+      "parameters": []
+    },
+    {
+      "operationId": "status",
+      "method": "GET",
+      "path": "/v1/matches/demo/query/{job_id}",
+      "tags": [
+        "Demo"
+      ],
+      "classification": "ADVANCED",
+      "parameters": [
+        {
+          "name": "job_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "schema",
+      "method": "GET",
+      "path": "/v1/matches/demo/schema",
+      "tags": [
+        "Demo"
+      ],
+      "classification": "ADVANCED",
+      "parameters": [
+        {
+          "name": "match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "urls",
+      "method": "GET",
+      "path": "/v1/matches/live/urls",
+      "tags": [
+        "Matches"
+      ],
+      "classification": "UI",
+      "parameters": []
+    },
+    {
+      "operationId": "ingest_urls",
+      "method": "POST",
+      "path": "/v1/matches/live/urls",
+      "tags": [
+        "Matches"
+      ],
+      "classification": "UI",
+      "parameters": []
+    },
+    {
+      "operationId": "bulk_metadata",
+      "method": "GET",
+      "path": "/v1/matches/metadata",
+      "tags": [
+        "Matches"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "include_info",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_more_info",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_objectives",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_mid_boss",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_player_info",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_player_kda",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_player_items",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_player_stats",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_player_final_stats",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_player_death_details",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_high_skill_range_parties",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_low_pri_pool",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_new_player_pool",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "only_filtered_players",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "item_filter_hero_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "include_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "exclude_item_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "extra_match_columns",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "extra_player_columns",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "order_by",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "order_direction",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "recently_fetched",
+      "method": "GET",
+      "path": "/v1/matches/recently-fetched",
+      "tags": [
+        "Matches"
+      ],
+      "classification": "UI",
+      "parameters": []
+    },
+    {
+      "operationId": "ingest_salts",
+      "method": "POST",
+      "path": "/v1/matches/salts",
+      "tags": [
+        "Internal"
+      ],
+      "classification": "INTERNAL",
+      "parameters": []
+    },
+    {
+      "operationId": "url",
+      "method": "GET",
+      "path": "/v1/matches/{match_id}/live/url",
+      "tags": [
+        "Matches"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "match_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "metadata",
+      "method": "GET",
+      "path": "/v1/matches/{match_id}/metadata",
+      "tags": [
+        "Matches"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "match_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_custom",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "disable_steam",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "metadata_raw",
+      "method": "GET",
+      "path": "/v1/matches/{match_id}/metadata/raw",
+      "tags": [
+        "Matches"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "match_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_custom",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "disable_steam",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "salts",
+      "method": "GET",
+      "path": "/v1/matches/{match_id}/salts",
+      "tags": [
+        "Matches"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "match_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "disable_steam",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "feed",
+      "method": "GET",
+      "path": "/v1/patches",
+      "tags": [
+        "Patches"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": []
+    },
+    {
+      "operationId": "big_patch_days",
+      "method": "GET",
+      "path": "/v1/patches/big-days",
+      "tags": [
+        "Patches"
+      ],
+      "classification": "UI",
+      "parameters": []
+    },
+    {
+      "operationId": "list_steam_accounts",
+      "method": "GET",
+      "path": "/v1/patron/steam-accounts",
+      "tags": [
+        "Internal"
+      ],
+      "classification": "INTERNAL",
+      "parameters": []
+    },
+    {
+      "operationId": "add_steam_account",
+      "method": "POST",
+      "path": "/v1/patron/steam-accounts",
+      "tags": [
+        "Internal"
+      ],
+      "classification": "INTERNAL",
+      "parameters": []
+    },
+    {
+      "operationId": "replace_steam_account",
+      "method": "PUT",
+      "path": "/v1/patron/steam-accounts/{account_id}",
+      "tags": [
+        "Internal"
+      ],
+      "classification": "INTERNAL",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "INTERNAL",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "delete_steam_account",
+      "method": "DELETE",
+      "path": "/v1/patron/steam-accounts/{account_id}",
+      "tags": [
+        "Internal"
+      ],
+      "classification": "INTERNAL",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "INTERNAL",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "reactivate_steam_account",
+      "method": "POST",
+      "path": "/v1/patron/steam-accounts/{account_id}/reactivate",
+      "tags": [
+        "Internal"
+      ],
+      "classification": "INTERNAL",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "INTERNAL",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "player_hero_stats",
+      "method": "GET",
+      "path": "/v1/players/hero-stats",
+      "tags": [
+        "Players"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "match_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "hero_ids",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_networth",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_average_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "mmr",
+      "method": "GET",
+      "path": "/v1/players/mmr",
+      "tags": [
+        "MMR"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": [
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": true,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "mmr_distribution",
+      "method": "GET",
+      "path": "/v1/players/mmr/distribution",
+      "tags": [
+        "MMR"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": [
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "is_high_skill_range_parties",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "is_low_pri_pool",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "is_new_player_pool",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "hero_mmr_distribution",
+      "method": "GET",
+      "path": "/v1/players/mmr/distribution/{hero_id}",
+      "tags": [
+        "MMR"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": [
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "is_high_skill_range_parties",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "is_low_pri_pool",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "is_new_player_pool",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "hero_id",
+          "in": "path",
+          "required": true,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "hero_mmr",
+      "method": "GET",
+      "path": "/v1/players/mmr/{hero_id}",
+      "tags": [
+        "MMR"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": [
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": true,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "hero_id",
+          "in": "path",
+          "required": true,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "rank_batch",
+      "method": "GET",
+      "path": "/v1/players/rank",
+      "tags": [
+        "Players"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "rank_predict_avg_image",
+      "method": "GET",
+      "path": "/v1/players/rank-predict/image",
+      "tags": [
+        "Players"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": [
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": true,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "rank_distribution",
+      "method": "GET",
+      "path": "/v1/players/rank/distribution",
+      "tags": [
+        "Players"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_high_skill_range_parties",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_low_pri_pool",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "is_new_player_pool",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "rank_avg_image",
+      "method": "GET",
+      "path": "/v1/players/rank/image",
+      "tags": [
+        "Players"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "steam",
+      "method": "GET",
+      "path": "/v1/players/steam",
+      "tags": [
+        "Steam"
+      ],
+      "classification": "API-ONLY",
+      "parameters": [
+        {
+          "name": "account_ids",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "refresh",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "steam_search",
+      "method": "GET",
+      "path": "/v1/players/steam-search",
+      "tags": [
+        "Steam"
+      ],
+      "classification": "API-ONLY",
+      "parameters": [
+        {
+          "name": "search_query",
+          "in": "query",
+          "required": true,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches_played_last_30d",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "min_last_team_avg_badge",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        },
+        {
+          "name": "matches_played_weight",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_API_ONLY",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "account_stats",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/account-stats",
+      "tags": [
+        "Players"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "card",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/card",
+      "tags": [
+        "Players"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "enemy_stats",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/enemy-stats",
+      "tags": [
+        "Players"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches_played",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_matches_played",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "match_history",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/match-history",
+      "tags": [
+        "Players"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "force_refetch",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "mate_stats",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/mate-stats",
+      "tags": [
+        "Players"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "game_mode",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_unix_timestamp",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_duration_s",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_match_id",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "min_matches_played",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "max_matches_played",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "same_party",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "mmr_history",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/mmr-history",
+      "tags": [
+        "MMR"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "hero_mmr_history",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/mmr-history/{hero_id}",
+      "tags": [
+        "MMR"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "hero_id",
+          "in": "path",
+          "required": true,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "rank",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/rank",
+      "tags": [
+        "Players"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "rank_predict",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/rank-predict",
+      "tags": [
+        "Players"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "rank_predict_image",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/rank-predict/image",
+      "tags": [
+        "Players"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "rank_image",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/rank/image",
+      "tags": [
+        "Players"
+      ],
+      "classification": "UI",
+      "parameters": [
+        {
+          "name": "account_id",
+          "in": "path",
+          "required": true,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "classification": "SUPPORTED_UI",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "sql",
+      "method": "GET",
+      "path": "/v1/sql",
+      "tags": [
+        "SQL"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": [
+        {
+          "name": "query",
+          "in": "query",
+          "required": true,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "list_tables",
+      "method": "GET",
+      "path": "/v1/sql/tables",
+      "tags": [
+        "SQL"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": []
+    },
+    {
+      "operationId": "table_schema",
+      "method": "GET",
+      "path": "/v1/sql/tables/{table}/schema",
+      "tags": [
+        "SQL"
+      ],
+      "classification": "DEPRECATED",
+      "parameters": [
+        {
+          "name": "table",
+          "in": "path",
+          "required": true,
+          "classification": "DEPRECATED",
+          "deprecated": false
+        }
+      ]
+    },
+    {
+      "operationId": "feed",
+      "method": "GET",
+      "path": "/v2/patches",
+      "tags": [
+        "Patches"
+      ],
+      "classification": "UI",
+      "parameters": []
+    }
+  ],
+  "classification_counts": {
+    "UI": 85,
+    "API-ONLY": 18,
+    "DEPRECATED": 14,
+    "INTERNAL": 7,
+    "ADVANCED": 5
+  },
+  "parameter_classification_counts": {
+    "SUPPORTED_UI": 640,
+    "DEPRECATED": 36,
+    "SUPPORTED_API_ONLY": 25,
+    "INTERNAL": 3
+  }
+}
