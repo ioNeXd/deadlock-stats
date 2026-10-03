@@ -79,7 +79,7 @@ const parameters = Object.values(contract.paths || {}).reduce(
   0,
 );
 const schemas = Object.keys(contract.components?.schemas || {}).length;
-if (operations !== 129 || parameters !== 704) {
+if (operations !== 129 || parameters !== 704 || schemas !== 232) {
   throw new Error(`OpenAPI inventory drift: operations=${operations}, parameters=${parameters}, schemas=${schemas}`);
 }
 console.log(`PASS OpenAPI contract: 3.1.0, ${operations} operations, ${parameters} operation/path parameters, ${schemas} schemas`);
