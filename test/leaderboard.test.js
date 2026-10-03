@@ -32,3 +32,31 @@ test("getLeaderboard validates regions and forwards leaderboard id", async () =>
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("leaderboard service preserves normalized entries and raw payload", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ entries: [{ account_name: "Test", rank: 3 }], marker: "raw" }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+  try {
+    const { loadLeaderboard } = await import("../src/services/leaderboard.js");
+    const result = await loadLeaderboard("Europe");
+    assert.equal(result.data[0].account_name, "Test");
+    assert.equal(result.raw.marker, "raw");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("leaderboard UI exposes raw download action", async () => {
+  const source = await (await import("node:fs/promises")).readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  const start = source.indexOf("async function renderLeaderboard(signal");
+  const end = source.indexOf("\nasync function renderBuilds", start);
+  const route = source.slice(start, end);
+  assert.match(route, /Download raw/);
+  assert.match(route, /downloadHeroLeaderboardRaw/);
+  assert.match(route, /downloadLeaderboardRaw/);
+  assert.match(route, /application\\/octet-stream/);
+});
