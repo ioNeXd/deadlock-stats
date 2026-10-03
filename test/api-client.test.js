@@ -254,6 +254,25 @@ test("binary response requests do not force JSON Accept", async () => {
   assert.equal(accept, "*/*");
 });
 
+test("auto response parsing preserves protobuf and other binary media types", async () => {
+  mockFetch(async () => new Response(new Uint8Array([1, 2, 3]), {
+    status: 200,
+    headers: { "content-type": "application/x-protobuf" },
+  }));
+  const protobuf = await apiGet("/v1/raw-protobuf", { cache: false });
+  assert.ok(protobuf.data instanceof ArrayBuffer);
+  assert.deepEqual([...new Uint8Array(protobuf.data)], [1, 2, 3]);
+
+  mockFetch(async () => new Response(new Uint8Array([4, 5]), {
+    status: 200,
+    headers: { "content-type": "application/pdf" },
+  }));
+  const pdf = await apiGet("/v1/raw-pdf", { cache: false });
+  assert.ok(pdf.data instanceof ArrayBuffer);
+  assert.deepEqual([...new Uint8Array(pdf.data)], [4, 5]);
+});
+
+
 test("invalidateApiCache can invalidate every query variant for a path", async () => {
   let calls = 0;
   mockFetch(async () => {
