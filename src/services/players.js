@@ -11,9 +11,6 @@ import {
   getPlayerEnemyStats,
   getPlayerMateStats,
   getPlayerRankImage,
-  getPlayerRankPredict,
-  getPlayerRankPredictImage,
-  getPlayerRankPredictBatchImage,
 } from "../api/players.js";
 
 function asArray(value) {
@@ -101,7 +98,7 @@ export async function loadPlayerRankForecast(accountId, options = {}) {
 }
 
 export async function loadPlayerRankPredict(accountId, options = {}) {
-  return withObject(await getPlayerRankPredict(accountId, options));
+  return loadPlayerRank(accountId, options);
 }
 
 export function loadPlayerRankPredictImage(accountId, format, options = {}) {
