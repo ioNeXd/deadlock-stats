@@ -56,6 +56,14 @@ for (const [path, label] of checks) {
   console.log(`PASS ${label}: HTTP 200, JSON array, ${result.parsed.length} records, ${result.elapsedMs}ms`);
 }
 
+for (const [path, label] of [['/v1/info/health', 'health'], ['/v1/info', 'info']]) {
+  const result = await fetchWithRetry(path);
+  if (!result.parsed || typeof result.parsed !== 'object' || Array.isArray(result.parsed)) {
+    throw new Error(`${label}: expected a JSON object response`);
+  }
+  console.log(`PASS ${label}: HTTP 200, JSON object, ${result.elapsedMs}ms`);
+}
+
 const openApiResponse = await fetchWithRetry('/openapi.json');
 const contract = openApiResponse.parsed;
 if (contract.openapi !== '3.1.0') {
