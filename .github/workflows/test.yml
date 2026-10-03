@@ -23,6 +23,8 @@ jobs:
           node-version: 22
       - name: Run tests
         run: npm test
+      - name: Check browser entrypoint syntax
+        run: node --check src/app.js
       - name: Smoke test public Deadlock API
         run: node scripts/api-smoke.js
       - name: Install browser test runtime
