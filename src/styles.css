@@ -330,3 +330,13 @@
 .command-palette-empty{padding:1rem;color:var(--muted-text,#aaa)}
 @media(max-width:700px){.command-palette{padding-top:4rem}.command-palette-meta{display:none}}
 @media(prefers-reduced-motion:reduce){.command-palette-backdrop{backdrop-filter:none}}
+
+.patch-history{display:grid;gap:1rem}
+.patch-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;padding:1rem;border:1px solid var(--line,rgba(255,255,255,.08));background:rgba(255,255,255,.02)}
+.patch-card h3{margin:.2rem 0 .45rem}
+.patch-card p{margin:.35rem 0;color:var(--muted-text,#aaa)}
+.patch-meta{display:flex;flex-wrap:wrap;gap:.5rem;color:var(--muted-text,#aaa);font:10px "DM Mono",monospace;text-transform:uppercase}
+.patch-content{max-height:0;overflow:hidden;transition:max-height .2s ease}
+.patch-card.expanded .patch-content{max-height:420px;overflow:auto;margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--line,rgba(255,255,255,.08))}
+.patch-content :where(p,ul,ol){color:var(--muted-text,#c0bbb2);line-height:1.6}
+@media(max-width:700px){.patch-card{grid-template-columns:1fr}}
