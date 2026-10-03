@@ -520,7 +520,7 @@ test("analytics wrappers forward current combo and permutation filters", async (
   assert.equal(calls[0].searchParams.get("exclude_hero_ids"), "9");
   assert.equal(calls[0].searchParams.get("include_enemy_hero_ids"), "10");
   assert.equal(calls[0].searchParams.get("exclude_enemy_hero_ids"), "11,12");
-  assert.equal(calls[1].searchParams.get("hero_id"), null);
+  assert.equal(calls[1].searchParams.get("hero_id"), "7");
   assert.equal(calls[1].searchParams.get("hero_ids"), "8,9");
 });
 
