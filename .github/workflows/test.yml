@@ -23,3 +23,5 @@ jobs:
           node-version: 22
       - name: Run tests
         run: npm test
+      - name: Smoke test public Deadlock API
+        run: node scripts/api-smoke.js
