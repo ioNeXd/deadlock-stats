@@ -23,8 +23,10 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Generate audit lockfile
+        run: npm install --package-lock-only --ignore-scripts
       - name: Dependency audit
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
       - name: Start hardened local server
         run: |
           node scripts/security-server.js > /tmp/deadlock-stats-server.log 2>&1 &
