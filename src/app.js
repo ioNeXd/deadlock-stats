@@ -1314,8 +1314,7 @@ async function renderMatches(signal) {
       '<button class="analytics-table-row match-row" data-match-id="' + esc(match.matchId) + '"><span><strong>#' + esc(match.matchId) + '</strong><small class="matchup-meta">' + esc(match.startTime ? new Date(Number(match.startTime) * 1000).toLocaleString() : "Unknown start") + ' · ' + esc(match.durationS ?? "—") + 's</small></span><strong>' + esc(match.players.length) + ' players</strong></button>'
     ).join("") || '<p class="muted">No matches returned.</p>';
     document.querySelectorAll(target + " .match-row").forEach(button => button.addEventListener("click", () => {
-      $("#match-lookup [name=match_id]").value = button.dataset.matchId;
-      loadDetail(button.dataset.matchId);
+      location.hash = "#/matches/" + encodeURIComponent(button.dataset.matchId);
     }));
   };
 
