@@ -7,7 +7,7 @@ const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf
 function extractTopLevelFunction(source, marker) {
   const start = source.indexOf(marker);
   assert.notEqual(start, -1);
-  const next = source.slice(start + marker.length).search(/\\r?\\n(?:async )?function /);
+  const next = source.slice(start + marker.length).search(/\r?\n(?:async )?function /);
   return next === -1 ? source.slice(start) : source.slice(start, start + marker.length + next);
 }
 
