@@ -561,3 +561,49 @@ test("cache keys include Headers instances", async () => {
   assert.equal(first.data.authorization, "Bearer first");
   assert.equal(second.data.authorization, "Bearer second");
 });
+
+
+test("URLSearchParams queries are canonicalized by key order", async () => {
+  let requestedUrl;
+  mockFetch(async url => {
+    requestedUrl = String(url);
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  await apiGet("/v1/query-order", {
+    query: new URLSearchParams([
+      ["z", "last"],
+      ["a", "first"],
+      ["m", "middle"],
+    ]),
+    cache: false,
+  });
+
+  assert.equal(
+    requestedUrl,
+    "https://api.deadlock-api.com/v1/query-order?a=first&m=middle&z=last",
+  );
+});
+
+test("transient network failures retry idempotent requests", async () => {
+  let calls = 0;
+  mockFetch(async () => {
+    calls += 1;
+    if (calls === 1) throw new TypeError("network unavailable");
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  const result = await apiGet("/v1/network-retry", {
+    retries: 1,
+    cache: false,
+  });
+
+  assert.equal(calls, 2);
+  assert.deepEqual(result.data, { ok: true });
+});
