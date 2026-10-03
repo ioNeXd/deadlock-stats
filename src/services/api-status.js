@@ -16,6 +16,17 @@ function normalizeServices(data) {
   return { ...services };
 }
 
+function rateLimitHeaders(headers = {}) {
+  const entries = Object.entries(headers).reduce((result, [name, value]) => {
+    const key = String(name).toLowerCase();
+    if (/^(x-)?ratelimit-(limit|remaining|reset)$/.test(key) || key === "ratelimit-limit" || key === "ratelimit-remaining" || key === "ratelimit-reset") {
+      result[key] = value;
+    }
+    return result;
+  }, {});
+  return entries;
+}
+
 export async function probeApiStatus(options = {}) {
   const started = performance.now();
   const requestOptions = {
@@ -48,6 +59,7 @@ export async function probeApiStatus(options = {}) {
       status: healthError?.status ?? null,
       url: healthError?.url ?? null,
       headers: healthError?.headers ?? {},
+      rateLimit: rateLimitHeaders(healthError?.headers ?? {}),
       contentType: null,
       data: null,
       info: info?.data ?? null,
@@ -75,6 +87,7 @@ export async function probeApiStatus(options = {}) {
     status: health.status,
     url: health.url,
     headers: health.headers,
+    rateLimit: rateLimitHeaders(health.headers),
     contentType: health.contentType,
     data: health.data,
     info: info?.data ?? null,
