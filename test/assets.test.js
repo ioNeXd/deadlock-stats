@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { clearApiCache } from "../src/api/client.js";
-import { getHeroes, getRankSubrankImage, getMap, getColors } from "../src/api/assets.js";
+import { getHeroes, getItems, getItemsByHeroId, getItemsBySlotType, getItemsByType, getItem, getRankSubrankImage, getMap, getColors } from "../src/api/assets.js";
 import { normalizeCollection, normalizeMap, resolveAssetImage } from "../src/adapters/assets.js";
 
 function mockJsonResponse(value, contentType = "application/json") {
@@ -40,6 +40,30 @@ test("asset list helpers forward language, client version and endpoint-specific 
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("item asset helpers use the current documented item endpoints", async t => {
+  const calls = [];
+  t.mock.method(globalThis, "fetch", async input => {
+    calls.push(new URL(input));
+    return mockJsonResponse([]);
+  });
+
+  await getItems({ language: "english", clientVersion: 6712, cache: false, dedupe: false });
+  await getItemsByHeroId(7, { cache: false, dedupe: false });
+  await getItemsBySlotType("weapon", { cache: false, dedupe: false });
+  await getItemsByType("ability", { cache: false, dedupe: false });
+  await getItem("item_test", { cache: false, dedupe: false });
+
+  assert.deepEqual(calls.map(url => url.pathname), [
+    "/v1/assets/items",
+    "/v1/assets/items/by-hero-id/7",
+    "/v1/assets/items/by-slot-type/weapon",
+    "/v1/assets/items/by-type/ability",
+    "/v1/assets/items/item_test",
+  ]);
+  assert.equal(calls[0].searchParams.get("language"), "english");
+  assert.equal(calls[0].searchParams.get("client_version"), "6712");
 });
 
 test("versioned asset endpoints preserve explicit query options", async () => {
