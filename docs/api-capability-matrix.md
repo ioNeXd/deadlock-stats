@@ -134,7 +134,7 @@ No parameter should be manually assumed to be supported. The Data Explorer shoul
 ## Audit status
 The endpoint, parameter, schema, content-type and authentication inventories are now generated from the official OpenAPI contract and checked into the repository:
 
-- `docs/api-openapi-inventory.json` contains 126 paths, 129 operations and 230 schemas.
+- `docs/api-openapi-inventory.json` contains 126 paths, 129 operations and 232 schemas.
 - `docs/api-capability-matrix.json` contains classifications for all 129 operations and their 704 parameters.
 - Deprecated parameters are classified as `DEPRECATED` rather than being exposed as supported UI inputs.
 - The current contract contains one duplicate `operationId`: `feed` is used by both `GET /v1/patches` and `GET /v2/patches`. Operation identity in the Data Explorer therefore uses `METHOD + PATH` via `operationKey`; `operationId` remains display/search metadata.
@@ -142,4 +142,4 @@ The endpoint, parameter, schema, content-type and authentication inventories are
 - A targeted audit found no current request-body usage of `patternProperties`, `prefixItems`, `contains`, `dependentRequired` or `not`. These are therefore not being implemented speculatively in the Data Explorer validator.
 - Current request bodies are JSON in the public contract, including feedback, custom matches, demo queries, live URL ingestion, match-salt ingestion and patron Steam-account operations. No current `multipart/form-data` or `application/x-www-form-urlencoded` request body is documented.
 
-The remaining work in this layer is regression testing and coverage of any newly introduced API schema constructs, not rebuilding the inventory manually.
+The inventory is additionally checked against the live OpenAPI contract in CI; schema drift fails the smoke audit rather than being silently accepted.
