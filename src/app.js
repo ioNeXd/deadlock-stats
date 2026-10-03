@@ -1350,7 +1350,7 @@ async function renderPlayers(signal) {
 }
 
 async function renderPlayerDetail(accountId, signal) {
-  const players = await loadPlayersRuntime();
+  const [players, assetsRuntime] = await Promise.all([loadPlayersRuntime(), loadAssetsRuntime()]);
   const numericAccountId = Number(accountId);
   if (!Number.isInteger(numericAccountId) || numericAccountId < 0) {
     renderNotFound("players/" + accountId);
@@ -1365,7 +1365,7 @@ async function renderPlayerDetail(accountId, signal) {
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">RELATIONSHIPS</span><h2>Enemies & teammates</h2></div></div><div id="player-detail-relations"></div></section>';
 
   try {
-    const [snapshot, profiles, heroResult, rankResult] = await Promise.all([
+    const [snapshot, profiles, heroResult] = await Promise.all([
       players.getPlayerDetailSnapshot(numericAccountId, { signal }),
       players.loadSteamProfiles([numericAccountId], { signal }),
       assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
