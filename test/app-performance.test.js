@@ -33,6 +33,13 @@ test("hero detail fetches only the selected hero asset", () => {
   assert.match(routeSource, /const hero = heroResult\?\.data \?\? null/);
 });
 
+test("build detail isolates optional hero and tag catalog failures", () => {
+  const routeSource = extractTopLevelFunction(appSource, "async function renderBuildDetail");
+  assert.match(routeSource, /Promise\.allSettled\(\[/);
+  assert.match(routeSource, /heroSettlement\.status === "fulfilled" \? heroSettlement\.value : null/);
+  assert.match(routeSource, /tagSettlement\.status === "fulfilled" \? tagSettlement\.value : \{ data: \[\] \}/);
+});
+
 test("build detail fetches only the selected hero asset", () => {
   const routeSource = extractTopLevelFunction(appSource, "async function renderBuildDetail");
   assert.match(routeSource, /assetsRuntime\.fetchHero\(numericHeroId/);
