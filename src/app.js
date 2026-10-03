@@ -1365,10 +1365,9 @@ async function renderPlayerDetail(accountId, signal) {
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">RELATIONSHIPS</span><h2>Enemies & teammates</h2></div></div><div id="player-detail-relations"></div></section>';
 
   try {
-    const [snapshot, profiles, heroResult] = await Promise.all([
+    const [snapshot, profiles] = await Promise.all([
       players.getPlayerDetailSnapshot(numericAccountId, { signal }),
       players.loadSteamProfiles([numericAccountId], { signal }),
-      assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
     ]);
     if (signal.aborted) return;
     const profile = profiles.data?.[0] ?? null;
@@ -1379,7 +1378,7 @@ async function renderPlayerDetail(accountId, signal) {
       : null;
     if (signal.aborted) return;
     const profileName = profile?.personaname ?? profile?.name ?? null;
-    const heroMap = new Map((heroResult.data ?? []).map(hero => [String(idOf(hero)), hero]));
+    let heroMap = new Map();
     const rankAsset = rankResult?.data ?? null;
     const heroName = heroId => heroMap.get(String(heroId))?.name ?? ("Hero #" + heroId);
     if (profileName) $("#player-detail-name").textContent = profileName;
@@ -1399,15 +1398,33 @@ async function renderPlayerDetail(accountId, signal) {
       summary.map(([label,value]) => '<div class="metric"><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>').join("") +
       '</div>';
 
-    const heroRows = model.heroStats.slice(0, 20).map(row => '<tr><td><a href="#/heroes/' + esc(row.hero_id ?? "") + '">' + esc(heroName(row.hero_id ?? "—")) + '</a></td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td><td>' + esc(row.kills ?? "—") + '</td><td>' + esc(row.deaths ?? "—") + '</td><td>' + esc(row.assists ?? "—") + '</td></tr>').join("");
-    $("#player-detail-heroes").innerHTML = heroRows
-      ? '<div class="data-table-wrap"><table><thead><tr><th>Hero</th><th>Matches</th><th>Wins</th><th>Kills</th><th>Deaths</th><th>Assists</th></tr></thead><tbody>' + heroRows + '</tbody></table></div>'
-      : '<p class="muted">No hero stats returned.</p>';
+    const renderHeroRows = () => {
+      const heroRows = model.heroStats.slice(0, 20).map(row => '<tr><td><a href="#/heroes/' + esc(row.hero_id ?? "") + '">' + esc(heroName(row.hero_id ?? "—")) + '</a></td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td><td>' + esc(row.kills ?? "—") + '</td><td>' + esc(row.deaths ?? "—") + '</td><td>' + esc(row.assists ?? "—") + '</td></tr>').join("");
+      $("#player-detail-heroes").innerHTML = heroRows
+        ? '<div class="data-table-wrap"><table><thead><tr><th>Hero</th><th>Matches</th><th>Wins</th><th>Kills</th><th>Deaths</th><th>Assists</th></tr></thead><tbody>' + heroRows + '</tbody></table></div>'
+        : '<p class="muted">No hero stats returned.</p>';
+    };
+    renderHeroRows();
 
-    const historyRows = model.matchHistory.slice(0, 20).map(match => '<tr><td>' + esc(match.match_id ?? "—") + '</td><td><a href="#/heroes/' + esc(match.hero_id ?? "") + '">' + esc(heroName(match.hero_id ?? "—")) + '</a></td><td>' + esc(match.won != null ? (match.won ? "Win" : "Loss") : match.winning_team ?? "—") + '</td><td>' + esc(match.duration_s == null ? "—" : formatDuration(match.duration_s)) + '</td><td>' + esc(match.ranked_display_badge ?? "—") + '</td><td>' + esc(match.ranked_delta ?? "—") + '</td></tr>').join("");
-    $("#player-detail-history").innerHTML = historyRows
-      ? '<div class="data-table-wrap"><table><thead><tr><th>Match</th><th>Hero</th><th>Result</th><th>Duration</th><th>Rank</th><th>Delta</th></tr></thead><tbody>' + historyRows + '</tbody></table></div>'
-      : '<p class="muted">No match history returned.</p>';
+    const renderHistoryRows = () => {
+      const historyRows = model.matchHistory.slice(0, 20).map(match => '<tr><td>' + esc(match.match_id ?? "—") + '</td><td><a href="#/heroes/' + esc(match.hero_id ?? "") + '">' + esc(heroName(match.hero_id ?? "—")) + '</a></td><td>' + esc(match.won != null ? (match.won ? "Win" : "Loss") : match.winning_team ?? "—") + '</td><td>' + esc(match.duration_s == null ? "—" : formatDuration(match.duration_s)) + '</td><td>' + esc(match.ranked_display_badge ?? "—") + '</td><td>' + esc(match.ranked_delta ?? "—") + '</td></tr>').join("");
+      $("#player-detail-history").innerHTML = historyRows
+        ? '<div class="data-table-wrap"><table><thead><tr><th>Match</th><th>Hero</th><th>Result</th><th>Duration</th><th>Rank</th><th>Delta</th></tr></thead><tbody>' + historyRows + '</tbody></table></div>'
+        : '<p class="muted">No match history returned.</p>';
+    };
+    renderHistoryRows();
+
+    setTimeout(() => {
+      if (signal.aborted) return;
+      assetsRuntime.listHeroes({ ...assetVersion.options(), signal }).then(result => {
+        if (signal.aborted) return;
+        heroMap = new Map((result.data ?? []).map(hero => [String(idOf(hero)), hero]));
+        renderHeroRows();
+        renderHistoryRows();
+      }).catch(error => {
+        if (!isAborted(error)) console.warn("Deadlock API hero catalog unavailable on player detail", error);
+      });
+    }, 0);
 
     const enemyRows = model.enemyStats.slice(0, 10).map(row => '<tr><td>' + esc(row.enemy_hero_id ?? row.hero_id ?? "—") + '</td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td></tr>').join("");
     const mateRows = model.mateStats.slice(0, 10).map(row => '<tr><td>' + esc(row.mate_account_id ?? row.account_id ?? "—") + '</td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td></tr>').join("");
