@@ -56,4 +56,32 @@ for (const [path, label] of checks) {
   console.log(`PASS ${label}: HTTP 200, JSON array, ${result.parsed.length} records, ${result.elapsedMs}ms`);
 }
 
+const openApiResponse = await fetchWithRetry('/openapi.json');
+const contract = openApiResponse.parsed;
+if (contract.openapi !== '3.1.0') {
+  throw new Error(`unexpected OpenAPI version: ${contract.openapi}`);
+}
+const operations = Object.values(contract.paths || {}).reduce(
+  (total, pathItem) => total + Object.keys(pathItem || {}).filter((method) =>
+    ['get', 'post', 'put', 'patch', 'delete', 'options', 'head', 'trace'].includes(method),
+  ).length,
+  0,
+);
+const parameters = Object.values(contract.paths || {}).reduce(
+  (total, pathItem) =>
+    total +
+    Object.values(pathItem || {}).reduce(
+      (pathTotal, operation) =>
+        pathTotal + (Array.isArray(operation?.parameters) ? operation.parameters.length : 0),
+      0,
+    ) +
+    (Array.isArray(pathItem?.parameters) ? pathItem.parameters.length : 0),
+  0,
+);
+const schemas = Object.keys(contract.components?.schemas || {}).length;
+if (operations !== 129 || parameters !== 704 || schemas !== 230) {
+  throw new Error(`OpenAPI inventory drift: operations=${operations}, parameters=${parameters}, schemas=${schemas}`);
+}
+console.log(`PASS OpenAPI contract: 3.1.0, ${operations} operations, ${parameters} operation/path parameters, ${schemas} schemas`);
+
 console.log('Deadlock API smoke checks passed.');
