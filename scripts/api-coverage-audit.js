@@ -23,10 +23,18 @@ const known = new Map(
   ]),
 );
 
-const missing = operations.filter(operation => !known.has(`${operation.method} ${operation.path}`));
-const stale = [...known.keys()].filter(key => !operations.some(operation => `${operation.method} ${operation.path}` === key));
+const liveKeys = new Set(operations.map(operation => `${operation.method} ${operation.path}`));
+const missing = operations
+  .filter(operation => !known.has(`${operation.method} ${operation.path}`))
+  .map(operation => `${operation.method} ${operation.path}`);
+const stale = [...known.keys()].filter(key => !liveKeys.has(key));
 if (missing.length || stale.length) {
-  throw new Error(`coverage classification drift: missing=${missing.length} stale=${stale.length}`);
+  const details = [
+    `coverage classification drift: missing=${missing.length} stale=${stale.length}`,
+    missing.length ? `missing: ${missing.join(" | ")}` : "",
+    stale.length ? `stale: ${stale.join(" | ")}` : "",
+  ].filter(Boolean).join("\n");
+  throw new Error(details);
 }
 
 const counts = {};
