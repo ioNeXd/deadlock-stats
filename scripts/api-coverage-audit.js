@@ -16,8 +16,9 @@ const classifications = JSON.parse(await (await import("node:fs/promises")).read
   new URL("../docs/api-capability-matrix.json", import.meta.url),
   "utf8",
 ));
+const inventory = classifications.operation_classifications || classifications.operations || [];
 const known = new Map(
-  (classifications.operations || []).map(operation => [
+  inventory.map(operation => [
     `${operation.method} ${operation.path}`,
     operation,
   ]),
