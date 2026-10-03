@@ -171,3 +171,29 @@ test("probeApiStatus preserves health status when optional API info fails", asyn
   assert.equal(result.info, null);
   assert.equal(result.infoError.status, 503);
 });
+
+
+test("probeApiStatus exposes standard rate limit headers", async () => {
+  globalThis.fetch = async input => {
+    const pathname = new URL(String(input)).pathname;
+    if (pathname === "/v1/info/health") {
+      return new Response(JSON.stringify({ services: { clickhouse: true, postgres: true, redis: true } }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+          "x-ratelimit-limit": "120",
+          "x-ratelimit-remaining": "117",
+          "x-ratelimit-reset": "60",
+        },
+      });
+    }
+    return new Response(JSON.stringify({}), { status: 200, headers: { "content-type": "application/json" } });
+  };
+
+  const result = await probeApiStatus({ retries: 0 });
+  assert.deepEqual(result.rateLimit, {
+    "x-ratelimit-limit": "120",
+    "x-ratelimit-remaining": "117",
+    "x-ratelimit-reset": "60",
+  });
+});
