@@ -160,7 +160,8 @@ async function renderDashboard(signal) {
       '<article class="metric-card"><span>HERO ASSETS</span><strong id="asset-count">—</strong><small>current catalog response</small></article>' +
     '</section>' +
     '<section class="section"><div class="section-head"><div><span class="eyebrow">ROSTER</span><h2>Heroes in the city</h2></div><a href="#/heroes">View all →</a></div><div id="hero-grid" class="hero-grid" aria-live="polite"></div></section>' +
-    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(API_BASE_URL.replace("https://", "")) + '</strong></div><div class="metric"><span>Hero response</span><strong id="api-latency">—</strong></div><div class="metric"><span>Latest patch</span><strong id="latest-patch" class="patch-link">Loading…</strong></div></article><article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article></section>';
+    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(API_BASE_URL.replace("https://", "")) + '</strong></div><div class="metric"><span>Hero response</span><strong id="api-latency">—</strong></div><div class="metric"><span>Latest patch</span><strong id="latest-patch" class="patch-link">Loading…</strong></div></article><article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article></section>'' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">ACTIVITY</span><h2>Recent game activity</h2></div><b id="dashboard-activity-status">LOADING</b></div><div id="dashboard-activity" class="dashboard-activity"><p class="muted">Loading daily game statistics…</p></div></section>';
   loadDashboard(signal);
 }
 
@@ -214,6 +215,33 @@ async function loadDashboard(signal) {
   }
 
   loadHeroes();
+
+  dashboardRuntime.getDashboardActivitySnapshot(options).then(activityResult => {
+    if (signal.aborted) return;
+    const rows = Array.isArray(activityResult?.activity) ? activityResult.activity.slice(-7).reverse() : [];
+    const status = $("#dashboard-activity-status");
+    const panel = $("#dashboard-activity");
+    if (status) status.textContent = rows.length ? "LIVE" : "NO DATA";
+    if (panel) {
+      panel.innerHTML = rows.length
+        ? rows.map(row => {
+            const matches = Number(row?.total_matches);
+            const players = Number(row?.total_players);
+            const bucket = row?.bucket ? new Date(row.bucket).toLocaleDateString() : "Unknown date";
+            return '<div class="metric"><span>' + esc(bucket) + '</span><strong>' +
+              (Number.isFinite(matches) ? matches.toLocaleString() + " matches" : "—") +
+              '</strong><small>' + (Number.isFinite(players) ? players.toLocaleString() + " players" : "Player count unavailable") + '</small></div>';
+          }).join("")
+        : '<p class="muted">No daily game statistics returned.</p>';
+    }
+  }).catch(error => {
+    if (isAborted(error)) return;
+    const status = $("#dashboard-activity-status");
+    const panel = $("#dashboard-activity");
+    if (status) status.textContent = "UNAVAILABLE";
+    if (panel) panel.innerHTML = '<p class="muted">Game activity unavailable.</p>';
+    console.error("Deadlock API dashboard activity request failed", error);
+  });
 
   dashboardRuntime.getDashboardPatchSnapshot(options).then(patchResult => {
     if (signal.aborted) return;
