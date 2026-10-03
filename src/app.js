@@ -2302,6 +2302,23 @@ async function renderMaps(signal) {
   });
 }
 
+function sanitizePatchHtml(value) {
+  const template = document.createElement("template");
+  template.innerHTML = value;
+  template.content.querySelectorAll("script,style,iframe,object,embed,form").forEach(node => node.remove());
+  template.content.querySelectorAll("*").forEach(node => {
+    [...node.attributes].forEach(attribute => {
+      if (/^on/i.test(attribute.name)) node.removeAttribute(attribute.name);
+      if (["href", "src", "xlink:href"].includes(attribute.name)) {
+        const safe = safeExternalUrl(attribute.value);
+        if (safe) node.setAttribute(attribute.name, safe);
+        else node.removeAttribute(attribute.name);
+      }
+    });
+  });
+  return template.innerHTML;
+}
+
 async function renderPatches(signal) {
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">HISTORY / PATCH NOTES</span><h2>Patch History</h2><p>Official patch-note feed returned by the Deadlock API. The page preserves the feed content and exposes the source link when provided.</p></section>' +
@@ -2325,7 +2342,7 @@ async function renderPatches(signal) {
       const date = patch.pubDate ? new Date(patch.pubDate).toLocaleDateString() : "Unknown date";
       const source = patch.author || patch.creator || patch.category || "PATCH FEED";
       const safeLink = safeExternalUrl(patch.link);
-      const content = patch.content ? String(patch.content) : "";
+      const content = patch.content ? sanitizePatchHtml(String(patch.content)) : "";
       return '<article class="patch-card' + (index === 0 ? ' expanded' : '') + '">' +
         '<div><div class="patch-meta"><span>' + esc(date) + '</span><span>' + esc(source) + '</span></div>' +
         '<h3>' + esc(patch.title ?? "Untitled patch") + '</h3>' +
