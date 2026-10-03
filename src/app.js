@@ -160,15 +160,15 @@ async function renderDashboard(signal) {
 async function loadDashboard(signal) {
   const [assetsRuntime, dashboardRuntime] = await Promise.all([loadAssetsRuntime(), loadDashboardRuntime()]);
   const options = { ...assetVersion.options(), signal };
-  const [heroesResult, snapshotResult] = await Promise.allSettled([
+  const [heroesResult, coreResult] = await Promise.allSettled([
     assetsRuntime.listHeroes(options),
-    dashboardRuntime.getDashboardSnapshot(options),
+    dashboardRuntime.getDashboardCoreSnapshot(options),
   ]);
 
   if (signal.aborted) return;
 
   const heroes = heroesResult.status === "fulfilled" ? heroesResult.value : null;
-  const snapshot = snapshotResult.status === "fulfilled" ? snapshotResult.value : null;
+  const snapshot = coreResult.status === "fulfilled" ? coreResult.value : null;
 
   if (heroes) {
     $("#asset-count").textContent = heroes.data.length;
@@ -209,6 +209,29 @@ async function loadDashboard(signal) {
     $("#known-rows").textContent = "—";
     $("#latest-patch").textContent = "Patch feed unavailable.";
   }
+
+  dashboardRuntime.getDashboardPatchSnapshot(options).then(patchResult => {
+    if (signal.aborted) return;
+    const patch = patchResult?.latestPatch;
+    const patchUrl = safeExternalUrl(patch?.link);
+    const patchTitle = esc(patch?.title ?? "Latest patch");
+    const patchDate = patch?.pub_date ? new Date(patch.pub_date).toLocaleDateString() : "Unknown date";
+    const patchMeta = esc(patch?.source?.toUpperCase() ?? "FEED") + " · " + esc(patchDate);
+    const patchElement = $("#latest-patch");
+    if (patchElement) {
+      patchElement.innerHTML = patch
+        ? (patchUrl
+          ? '<a href="' + esc(patchUrl) + '" target="_blank" rel="noopener noreferrer">' + patchTitle + '</a><small>' + patchMeta + '</small>'
+          : '<span>' + patchTitle + '</span><small>' + patchMeta + '</small>')
+        : "No patch feed entries returned.";
+    }
+  }).catch(error => {
+    if (!isAborted(error)) {
+      const patchElement = $("#latest-patch");
+      if (patchElement) patchElement.textContent = "Patch feed unavailable.";
+      console.error("Deadlock API patch feed request failed", error);
+    }
+  });
 
   if (heroes || snapshot) {
     setConnection(true, "API connected");
