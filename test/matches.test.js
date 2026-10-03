@@ -158,14 +158,13 @@ test("match API exposes current advanced endpoints and JSON request bodies", asy
     assert.equal(calls[11].url.searchParams.get("match_id"), "123");
     assert.equal(calls[12].url.pathname, "/v1/matches/demo/schema");
     assert.equal(calls[12].url.searchParams.has("match_id"), false);
-    assert.equal(calls[11].url.searchParams.get("match_id"), "123");
     assert.equal(calls[11].url.searchParams.get("format"), "json");
-    assert.equal(calls[12].url.pathname, "/v1/matches/demo/live/query");
-    assert.equal(calls[12].method, "GET");
-    assert.equal(calls[13].url.pathname, "/v1/matches/live/urls");
+    assert.equal(calls[13].url.pathname, "/v1/matches/demo/live/query");
+    assert.equal(calls[13].method, "GET");
     assert.equal(calls[14].url.pathname, "/v1/matches/live/urls");
-    assert.equal(calls[14].method, "POST");
-    assert.equal(calls[15].url.pathname, "/v1/matches/salts");
+    assert.equal(calls[15].url.pathname, "/v1/matches/live/urls");
+    assert.equal(calls[15].method, "POST");
+    assert.equal(calls[16].url.pathname, "/v1/matches/salts");
     assert.equal(calls[15].method, "POST");
   } finally {
     globalThis.fetch = originalFetch;
