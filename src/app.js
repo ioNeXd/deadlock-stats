@@ -1369,14 +1369,18 @@ async async function renderPlayerDetail(accountId, signal) {
       players.getPlayerDetailSnapshot(numericAccountId, { signal }),
       players.loadSteamProfiles([numericAccountId], { signal }),
       assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
-      assetsRuntime.listRanks({ ...assetVersion.options(), signal }),
     ]);
     if (signal.aborted) return;
     const profile = profiles.data?.[0] ?? null;
     const model = players.buildPlayerDetailViewModel(snapshot, profile);
+    const rankTier = Number(model.rank?.rank);
+    const rankResult = Number.isInteger(rankTier) && rankTier >= 0
+      ? await assetsRuntime.fetchRank(rankTier, { ...assetVersion.options(), signal })
+      : null;
+    if (signal.aborted) return;
     const profileName = profile?.personaname ?? profile?.name ?? null;
     const heroMap = new Map((heroResult.data ?? []).map(hero => [String(idOf(hero)), hero]));
-    const rankAsset = (rankResult.data ?? []).find(rank => String(rank.id) === String(model.rank?.rank ?? "")) ?? null;
+    const rankAsset = rankResult?.data ?? null;
     const heroName = heroId => heroMap.get(String(heroId))?.name ?? ("Hero #" + heroId);
     if (profileName) $("#player-detail-name").textContent = profileName;
 
