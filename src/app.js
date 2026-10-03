@@ -546,7 +546,11 @@ async function renderItemDetail(itemId, signal) {
     $("#item-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span>' + esc(error.message) + '</span>';
   });
 }
-s") {
+
+async function renderAssetCatalog(kind, signal) {
+  const assetsRuntime = await loadAssetsRuntime();
+  const { listHeroes, listRanks, listItems, listItemsByHeroId, listItemsBySlotType, listItemsByType } = assetsRuntime;
+  if (kind === "items") {
     el.content.innerHTML =
       '<section class="page-head"><span class="eyebrow">GAME / ITEMS</span><h2>Items</h2><p>Item, ability, weapon and upgrade definitions from the current Deadlock API.</p></section>' +
       '<section class="panel analytics-filter-panel"><form id="item-catalog-filters" class="analytics-filters">' +
@@ -637,7 +641,7 @@ s") {
     setConnection(false, "API unavailable");
   });
 }
-alizeAnalyticsFilters(filters = {}) {
+function normalizeAnalyticsFilters(filters = {}) {
   const normalized = { ...filters };
   for (const key of ["min_unix_timestamp", "max_unix_timestamp"]) {
     if (normalized[key]) {
