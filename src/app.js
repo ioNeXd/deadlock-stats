@@ -873,7 +873,7 @@ async function renderAnalytics(signal) {
 async function loadAnalytics(signal, filters = {}) {
   const analytics = await loadAnalyticsRuntime();
   try {
-    const [snapshotResult, heroStats, matchup, comboStats, buffStats, badgeDistribution] = await Promise.all([
+    const settled = await Promise.allSettled([
       analytics.getAnalyticsSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), bucket: "start_time_day", signal }),
       analytics.getHeroStatsSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
       analytics.getHeroMatchupSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), min_matches: 20, signal }),
@@ -881,8 +881,15 @@ async function loadAnalytics(signal, filters = {}) {
       analytics.getBuffSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
       analytics.getBadgeDistributionSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), signal }),
     ]);
-    const result = snapshotResult;
     if (signal.aborted) return;
+    const valueOr = (index, fallback) => settled[index]?.status === "fulfilled" ? settled[index].value : fallback;
+    const snapshotResult = valueOr(0, { gameStats: null, heroBanStats: null });
+    const heroStats = valueOr(1, []);
+    const matchup = valueOr(2, { counters: [], synergies: [] });
+    const comboStats = valueOr(3, []);
+    const buffStats = valueOr(4, []);
+    const badgeDistribution = valueOr(5, []);
+    const result = snapshotResult;
 
     const game = analytics.normalizeGameStats(result.gameStats);
     const bans = analytics.normalizeHeroBanStats(result.heroBanStats);
@@ -924,16 +931,19 @@ async function loadAnalytics(signal, filters = {}) {
         sortedBans.map(item => '<div class="analytics-table-row"><span>Hero ' + esc(item.heroId) + '</span><strong>' + esc(Number(item.bans ?? 0).toLocaleString()) + '</strong></div>').join("")
       : '<p class="muted">No hero ban statistics returned.</p>';
 
-    const [heroCatalog, itemCatalog, miscCatalog] = await Promise.all([
+    const catalogSettled = await Promise.allSettled([
       assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
       assetsRuntime.listItems({ ...assetVersion.options(), signal }),
       assetsRuntime.listMiscEntities({ ...assetVersion.options(), signal }),
     ]);
     if (signal.aborted) return;
-    const heroesById = new Map(heroCatalog.data.map(hero => [String(idOf(hero)), hero]));
-    const itemsById = new Map(itemCatalog.data.map(item => [String(item.id), item]));
+    const heroCatalog = catalogSettled[0]?.status === "fulfilled" ? catalogSettled[0].value : { data: [] };
+    const itemCatalog = catalogSettled[1]?.status === "fulfilled" ? catalogSettled[1].value : { data: [] };
+    const miscCatalog = catalogSettled[2]?.status === "fulfilled" ? catalogSettled[2].value : { data: [] };
+    const heroesById = new Map((heroCatalog.data ?? []).map(hero => [String(idOf(hero)), hero]));
+    const itemsById = new Map((itemCatalog.data ?? []).map(item => [String(item.id), item]));
     const buffsByType = new Map(
-      miscCatalog.data
+      (miscCatalog.data ?? [])
         .filter(entity => entity?.raw?.buff_type_name || entity?.raw?.buff_type_loc_string)
         .map(entity => [String(entity.raw.buff_type_loc_string ?? entity.raw.class_name), entity])
     );
