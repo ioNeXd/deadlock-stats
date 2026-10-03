@@ -48,10 +48,12 @@ test("match detail uses the single-match metadata endpoint", () => {
 });
 
 
-test("player detail fetches only the selected rank asset", () => {
+test("player detail loads asset runtime and only the selected rank asset", () => {
   const routeSource = extractTopLevelFunction(appSource, "async function renderPlayerDetail");
+  assert.match(routeSource, /const \[players, assetsRuntime\] = await Promise\.all\(\[loadPlayersRuntime\(\), loadAssetsRuntime\(\)\]\)/);
   assert.match(routeSource, /assetsRuntime\.fetchRank\(rankTier/);
   assert.doesNotMatch(routeSource, /assetsRuntime\.listRanks\(\{ \.\.\.assetVersion\.options\(\), signal \}\)/);
+  assert.doesNotMatch(routeSource, /const \[snapshot, profiles, heroResult, rankResult\]/);
   assert.match(routeSource, /const rankAsset = rankResult\?\.data \?\? null/);
 });
 
