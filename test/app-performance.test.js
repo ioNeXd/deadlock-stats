@@ -219,3 +219,13 @@ test("dashboard keeps deferred work alive when the core request fails", () => {
   assert.match(afterCore, /loadHeroes\(\)/);
   assert.match(afterCore, /getDashboardPatchSnapshot\(options\)\.then\(/);
 });
+
+
+test("dashboard defers game activity from the critical info request", () => {
+  const routeSource = extractTopLevelFunction(appSource, "async function loadDashboard");
+  const coreIndex = routeSource.indexOf("await dashboardRuntime.getDashboardCoreSnapshot(options)");
+  const activityIndex = routeSource.indexOf("getDashboardActivitySnapshot(options).then(");
+  assert.notEqual(coreIndex, -1);
+  assert.notEqual(activityIndex, -1);
+  assert.ok(coreIndex < activityIndex);
+});
