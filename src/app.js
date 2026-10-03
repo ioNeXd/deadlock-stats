@@ -521,13 +521,22 @@ async function renderItemDetail(itemId, signal) {
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">ASSET DATA</span><h2>Images</h2></div></div><div id="item-detail-images"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">INTELLIGENCE</span><h2>Item performance & progression</h2></div></div><div id="item-detail-intelligence"></div></section>' + '<section class="panel"><div class="section-head"><div><span class="eyebrow">RAW API</span><h2>Definition</h2></div></div><pre id="item-detail-raw" class="code-block"></pre></section>';
 
-  Promise.all([
+  Promise.allSettled([
     assetsRuntime.fetchItem(itemId, { ...assetVersion.options(), signal }),
     analytics.getItemStatsSnapshot({ ...assetVersion.options(), signal, include_item_ids: [Number(itemId)], min_matches: 20 }),
     analytics.getItemPermutationSnapshot({ ...assetVersion.options(), signal, item_ids: [Number(itemId)], min_matches: 20, comb_size: 2 }),
     analytics.getItemFlowSnapshot({ ...assetVersion.options(), signal, include_item_ids: [Number(itemId)], min_matches: 20 }),
-  ]).then(([itemResult, stats, permutations, flow]) => {
+  ]).then(([itemSettlement, statsSettlement, permutationSettlement, flowSettlement]) => {
     if (signal.aborted) return;
+    if (itemSettlement.status !== "fulfilled") {
+      const error = itemSettlement.reason;
+      $("#item-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span>' + esc(error?.message ?? "Item definition unavailable.") + '</span>';
+      return;
+    }
+    const itemResult = itemSettlement.value;
+    const stats = statsSettlement.status === "fulfilled" ? statsSettlement.value : [];
+    const permutations = permutationSettlement.status === "fulfilled" ? permutationSettlement.value : [];
+    const flow = flowSettlement.status === "fulfilled" ? flowSettlement.value : null;
     const model = analytics.buildItemDetailAnalyticsViewModel(itemResult.data, stats, permutations, flow);
     const item = model.item;
     if (!item?.id && !item?.name) {
