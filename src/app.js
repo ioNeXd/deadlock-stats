@@ -732,7 +732,7 @@ async function renderItemAnalytics(signal) {
   const load = async filters => {
     $("#item-analytics-status").textContent = "LOADING";
     try {
-      const [items, stats, permutations, flow] = await Promise.all([
+      const [items, stats, permutations, flowData] = await Promise.all([
         assetsRuntime.listItems({ ...assetVersion.options(), signal }),
         analytics.getItemStatsSnapshot({ ...assetVersion.options(), ...filters, signal }),
         analytics.getItemPermutationSnapshot({ ...assetVersion.options(), ...filters, signal }),
@@ -764,7 +764,7 @@ async function renderItemAnalytics(signal) {
 
       const flow = $("#item-flow-list");
       const nodes = flowData => flowData.nodes.slice().sort((a,b) => Number(a.column ?? 0) - Number(b.column ?? 0) || Number(b.matches ?? 0) - Number(a.matches ?? 0)).slice(0, 48);
-      const flowNodes = nodes(flow);
+      const flowNodes = nodes(flowData);
       const columns = [...new Set(flowNodes.map(node => Number(node.column ?? 0)))];
       flow.innerHTML = columns.map(column => {
         const entries = flowNodes.filter(node => Number(node.column ?? 0) === column).slice(0, 8);
@@ -774,13 +774,13 @@ async function renderItemAnalytics(signal) {
         }).join("") + '</section>';
       }).join("") || '<p class="muted">No flow nodes returned.</p>';
 
-      $("#item-flow-edges").innerHTML = (flow.edges ?? []).slice().sort((a,b) => Number(b.matches ?? 0) - Number(a.matches ?? 0)).slice(0, 40).map(edge => {
+      $("#item-flow-edges").innerHTML = (flowData.edges ?? []).slice().sort((a,b) => Number(b.matches ?? 0) - Number(a.matches ?? 0)).slice(0, 40).map(edge => {
         const from = itemName.get(Number(edge.fromItemId)) ?? "Item " + edge.fromItemId;
         const to = itemName.get(Number(edge.toItemId)) ?? "Item " + edge.toItemId;
         return '<div class="analytics-table-row"><span>' + esc(from) + ' → ' + esc(to) + '<small class="matchup-meta">PHASE ' + esc(Number(edge.fromColumn ?? 0) + 1) + ' → NEXT</small></span><strong>' + esc(edge.matches ?? 0) + ' matches</strong></div>';
       }).join("") || '<p class="muted">No item transitions returned.</p>';
 
-      const summary = flow.summary ?? {};
+      const summary = flowData.summary ?? {};
       $("#item-flow-summary").innerHTML = [
         ["BASELINE MATCHES", summary.matches], ["BASELINE PLAYERS", summary.players],
         ["REACHED COLUMNS", flow.reachedPerColumn?.length ?? 0], ["EDGES", flow.edges?.length ?? 0],
