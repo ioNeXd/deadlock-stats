@@ -96,6 +96,10 @@ export function loadPlayerRankImage(accountIds, format, options = {}) {
 }
 
 
+export async function loadPlayerRankForecast(accountId, options = {}) {
+  return loadPlayerRankPredict(accountId, options);
+}
+
 export async function loadPlayerRankPredict(accountId, options = {}) {
   return withObject(await getPlayerRankPredict(accountId, options));
 }
