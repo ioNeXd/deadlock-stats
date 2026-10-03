@@ -58,7 +58,7 @@ test("master compliance: capability inventory remains complete", () => {
   const audit = read("docs/api-classification-audit.md");
 
   assert.equal(matrix.inventory.operation_count, 129);
-  assert.equal(matrix.capabilities.length, 129);
+  assert.equal(matrix.operation_classifications.length, 129);
   assert.equal(inventory.operation_count, 129);
   has(audit, "129/129");
   has(audit, "704/704");
