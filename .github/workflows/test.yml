@@ -56,6 +56,16 @@ jobs:
         run: |
           npx lighthouse http://127.0.0.1:4173/#/ --quiet --chrome-flags="--headless --no-sandbox" --only-categories=performance,accessibility,best-practices --output=json --output-path=/tmp/lighthouse.json
           node --input-type=module -e "import fs from 'node:fs'; const r=JSON.parse(fs.readFileSync('/tmp/lighthouse.json','utf8')); const c=r.categories; for (const k of ['performance','accessibility','best-practices']) console.log(k, c[k].score); if (c.performance.score < 0.85 || c.accessibility.score < 0.90 || c['best-practices'].score < 0.90) process.exit(1)"
+      - name: Upload browser validation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-validation
+          path: |
+            /tmp/lighthouse.json
+            /tmp/deadlock-stats-server.log
+          if-no-files-found: ignore
+
       - name: Run authenticated API smoke when credential is configured
         env:
           DEADLOCK_API_KEY: ${{ secrets.DEADLOCK_API_KEY }}
