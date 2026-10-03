@@ -2093,7 +2093,7 @@ async function renderOperation(operation, signal, contract = null) {
   const securitySummary = detail.security.length
     ? '<div class="result-box"><span class="eyebrow">SECURITY</span><p class="muted">' +
       esc(detail.security.map(requirement => Object.keys(requirement).join(", ") || "optional").join(" · ")) +
-      "</p><label class="field"><span>API key <small>sent only for this request</small></span><input name="__apiKey" type="password" autocomplete="off" placeholder="X-API-KEY / api_key"></label>" +
+      '</p><label class="field"><span>API key <small>sent only for this request</small></span><input name="__apiKey" type="password" autocomplete="off" placeholder="X-API-KEY / api_key"></label>' +
       '<label class="field"><span>Authorization <small>optional HTTP auth</small></span><input name="__authorization" type="password" autocomplete="off" placeholder="Bearer …"></label></div>'
     : "";
 
