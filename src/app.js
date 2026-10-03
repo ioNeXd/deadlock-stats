@@ -382,7 +382,12 @@ async function renderHeroDetail(heroId, signal) {
   });
 
 }
-ection class="page-head"><span class="eyebrow">GAME / HERO INTELLIGENCE</span><h2>Heroes</h2><p>Hero roster, performance and combat statistics from the live Deadlock analytics API.</p></section>' +
+
+async function renderHeroes(signal) {
+  const analytics = await loadAnalyticsRuntime();
+  const assetsRuntime = await loadAssetsRuntime();
+  const { listHeroes } = assetsRuntime;
+  el.content.innerHTML = '<section class="page-head"><span class="eyebrow">GAME / HERO INTELLIGENCE</span><h2>Heroes</h2><p>Hero roster, performance and combat statistics from the live Deadlock analytics API.</p></section>' +
     '<section class="panel analytics-filter-panel"><div class="section-head"><div><span class="eyebrow">SCOPE</span><h2>Hero statistics</h2></div><b id="heroes-status">LOADING</b></div>' +
     '<form id="heroes-filters" class="analytics-filters">' +
       '<label class="field"><span>Search hero</span><input name="search" type="search" placeholder="Abrams, Infernus…"></label>' +
