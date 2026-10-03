@@ -751,3 +751,25 @@ test("analytics filters stay aligned with current item and scoreboard contracts"
     globalThis.fetch = originalFetch;
   }
 });
+
+test("build detail snapshot keeps build detail available when performance analytics fail", async () => {
+  globalThis.fetch = async input => {
+    const url = new URL(input);
+    if (url.pathname === "/v1/builds/7/42") {
+      return new Response(JSON.stringify({ hero_build: { hero_build_id: 42, hero_id: 7, name: "Core build" } }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({ detail: "analytics unavailable" }), {
+      status: 503,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  const snapshot = await getBuildDetailSnapshot(7, 42, { cache: false, dedupe: false });
+  assert.equal(snapshot.detail.heroBuildId, 42);
+  assert.equal(snapshot.performance, null);
+  assert.equal(snapshot.performanceAvailable, false);
+  assert.equal(snapshot.performanceError?.status, 503);
+});
