@@ -1470,6 +1470,8 @@ async function renderPlayerDetail(accountId, signal) {
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">HEROES</span><h2>Hero performance</h2></div></div><div id="player-detail-heroes"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">MATCH HISTORY</span><h2>Recent matches</h2></div></div><div id="player-detail-history"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">RANK HISTORY</span><h2>Rank progression</h2></div></div><div id="player-detail-rank-history"></div></section>' +\n    '<section class="panel"><div class="section-head"><div><span class="eyebrow">RANK FORECAST</span><h2>Predicted rank</h2></div></div><div id="player-detail-rank-forecast"><p class="muted">Loading rank forecast…</p></div></section>' +
+    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">PLAYER CARD</span><h2>Account card</h2></div><span>PATREON API</span></div><div id="player-detail-card"><p class="muted">Loading account card…</p></div></article>' +
+    '<article class="panel"><div class="section-head"><div><span class="eyebrow">ACCOUNT STATS</span><h2>Account statistics</h2></div><span>PATREON API</span></div><div id="player-detail-account-stats"><p class="muted">Loading account stats…</p></div></article></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">RELATIONSHIPS</span><h2>Enemies & teammates</h2></div></div><div id="player-detail-relations"></div></section>';
 
   try {
@@ -1511,6 +1513,32 @@ async function renderPlayerDetail(accountId, signal) {
       });
     }, 0);
 
+    const renderOptionalObject = (target, data, emptyLabel) => {
+      const object = data && typeof data === "object" ? data : {};
+      const entries = Object.entries(object)
+        .filter(([, value]) => value == null || ["string", "number", "boolean"].includes(typeof value))
+        .slice(0, 16);
+      $(target).innerHTML = entries.length
+        ? '<div class="match-detail-summary">' + entries.map(([key, value]) => '<div class="metric"><span>' + esc(key.replaceAll("_", " ")) + '</span><strong>' + esc(value ?? "—") + '</strong></div>').join("") + '</div>'
+        : '<p class="muted">' + esc(emptyLabel) + '</p>';
+    };
+
+    Promise.allSettled([
+      players.loadPlayerCard(numericAccountId, { signal }),
+      players.loadPlayerAccountStats(numericAccountId, { signal }),
+    ]).then(([cardResult, statsResult]) => {
+      if (signal.aborted) return;
+      if (cardResult.status === "fulfilled") {
+        renderOptionalObject("#player-detail-card", cardResult.value?.data, "No player card data returned.");
+      } else {
+        $("#player-detail-card").innerHTML = '<p class="muted">Player card unavailable. This endpoint requires API access.</p>';
+      }
+      if (statsResult.status === "fulfilled") {
+        renderOptionalObject("#player-detail-account-stats", statsResult.value?.data, "No account statistics returned.");
+      } else {
+        $("#player-detail-account-stats").innerHTML = '<p class="muted">Account stats unavailable. This endpoint requires API access.</p>';
+      }
+    });
     const rank = model.rank ?? {};
     const summary = [
       ["ACCOUNT", model.accountId],
