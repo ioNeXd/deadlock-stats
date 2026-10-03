@@ -59,7 +59,8 @@ test("master compliance: capability inventory remains complete", () => {
 
   assert.equal(matrix.inventory.operation_count, 129);
   assert.equal(matrix.operation_classifications.length, 129);
-  assert.equal(inventory.inventory.operation_count, 129);
+  assert.equal(inventory.counts.operations, 129);
+  assert.equal(inventory.operations.length, 129);
   has(audit, "129/129");
   has(audit, "704/704");
   has(audit, "SUPPORTED_UI");
