@@ -2085,10 +2085,35 @@ async function renderOperation(operation, signal, contract = null) {
     : "";
 
 
-  const responseSummary = detail.responseInfo.map(response =>
-    '<div class="metric"><span>' + esc(response.status) + "</span><strong>" +
-    esc(response.description || "Response") + "</strong></div>"
-  ).join("");
+  const responseSummary = detail.responseInfo.map(response => {
+    const contentSummary = response.content.map(content => {
+      const schema = content.schema ? buildSchemaViewModel(content.schema) : null;
+      const schemaHtml = schema ? renderSchemaViewer(schema, content.mediaType + " response schema") : "";
+      const examples = [
+        ...(content.example !== undefined ? [{ name: "Example", value: content.example }] : []),
+        ...Object.entries(content.examples ?? {}).map(([name, example]) => ({ name, value: example?.value })),
+      ].filter(example => example.value !== undefined);
+      const examplesHtml = examples.length
+        ? '<div class="explorer-detail-section"><span class="eyebrow">EXAMPLES</span>' +
+          examples.map(example => '<div class="explorer-example"><strong>' + esc(example.name) + '</strong><pre>' + esc(formatExplorerValue(example.value)) + '</pre></div>').join("") +
+          '</div>'
+        : "";
+      return '<div class="explorer-response-contract"><div class="metric"><span>CONTENT TYPE</span><strong>' +
+        esc(content.mediaType) + '</strong></div>' + schemaHtml + examplesHtml + '</div>';
+    }).join("");
+    const headersHtml = response.headers.length
+      ? '<div class="explorer-detail-section"><span class="eyebrow">HEADERS</span>' +
+        renderExplorerHeaders(Object.fromEntries(response.headers.map(header => [header.name, header.description ?? header.schema?.description ?? "documented header"])), "No documented headers.") +
+        '</div>'
+      : "";
+    const linksHtml = response.links.length
+      ? '<div class="explorer-detail-section"><span class="eyebrow">LINKS</span><div class="explorer-headers">' +
+        response.links.map(link => '<div><code>' + esc(link.name) + '</code><span>' + esc(link.operationId ?? "linked operation") + '</span></div>').join("") +
+        '</div></div>'
+      : "";
+    return '<details class="explorer-details"><summary><strong>' + esc(response.status) + '</strong> ' +
+      esc(response.description || "Response") + '</summary>' + contentSummary + headersHtml + linksHtml + '</details>';
+  }).join("");
 
   const securitySummary = detail.security.length
     ? '<div class="result-box"><span class="eyebrow">SECURITY</span><p class="muted">' +
