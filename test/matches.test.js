@@ -226,3 +226,12 @@ test("match detail view model extracts scalar fields, players and array metadata
   assert.equal(model.scalarFields.find(item => item.key === "future_metric").value, "preserved");
   assert.deepEqual(model.arrayFields.find(item => item.key === "objectives"), { key: "objectives", count: 1 });
 });
+
+
+test("match UI loaders can expose active and recent failures independently", () => {
+  const source = require("node:fs").readFileSync(new URL("../src/app.js", import.meta.url), "utf8");
+  assert.match(source, /const loadMatchList = async/);
+  assert.match(source, /loadMatchList\(matches\.getActiveMatchesSnapshot/);
+  assert.match(source, /loadMatchList\(matches\.getRecentlyFetchedMatchesSnapshot/);
+  assert.doesNotMatch(source, /Promise\.all\(\[\s*matches\.getActiveMatchesSnapshot\(\{ signal \}\),\s*matches\.getRecentlyFetchedMatchesSnapshot/);
+});
