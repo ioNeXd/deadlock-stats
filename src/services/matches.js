@@ -142,3 +142,22 @@ export function ingestLiveUrlsSnapshot(body, options = {}) {
 export function ingestMatchSaltsSnapshot(body, options = {}) {
   return ingestMatchSalts(body, options);
 }
+
+export function buildMatchDetailViewModel(result) {
+  const data = normalizeMatchMetadata(result);
+  const object = Array.isArray(data) ? (data[0] ?? null) : data;
+  if (!object || typeof object !== "object") {
+    return { match: null, players: [], scalarFields: [], arrayFields: [], raw: data ?? null };
+  }
+
+  const scalarFields = Object.entries(object)
+    .filter(([, value]) => value == null || ["string", "number", "boolean"].includes(typeof value))
+    .map(([key, value]) => ({ key, value }));
+
+  const players = Array.isArray(object.players) ? object.players : [];
+  const arrayFields = Object.entries(object)
+    .filter(([, value]) => Array.isArray(value))
+    .map(([key, value]) => ({ key, count: value.length }));
+
+  return { match: object, players, scalarFields, arrayFields, raw: data };
+}
