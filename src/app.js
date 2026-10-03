@@ -1860,11 +1860,29 @@ async function renderExplorerResponse(result, target, signal) {
       '<div class="explorer-detail-section"><span class="eyebrow">QUERY</span><pre>' + esc(formatExplorerValue(requestQuery)) + "</pre></div>" +
       '<div class="explorer-detail-section"><span class="eyebrow">HEADERS</span>' + renderExplorerHeaders(request.headers, "No request headers.") + "</div>" +
       (requestBody !== undefined ? '<div class="explorer-detail-section"><span class="eyebrow">BODY</span><pre>' + esc(formatExplorerValue(requestBody)) + "</pre></div>" : "") +
+      '<div class="panel-actions"><button type="button" class="secondary-button" data-copy-request>Copy request</button></div>' +
     "</details>" +
     '<details class="explorer-details"><summary>Response headers</summary>' +
       renderExplorerHeaders(result?.headers, "No response headers returned.") +
     "</details>" +
     '<section class="explorer-response-content"><div class="section-head"><div><span class="eyebrow">RESPONSE BODY</span><h3>Payload</h3></div></div><div data-explorer-response-content><p class="muted">Rendering response…</p></div></section>';
+
+  const copyRequestButton = target.querySelector("[data-copy-request]");
+  copyRequestButton?.addEventListener("click", async () => {
+    const requestText = [
+      request.method ?? "GET",
+      result?.url ?? "—",
+      Object.entries(request.headers ?? {}).map(([name, value]) => name + ": " + value).join("\n"),
+      requestBody === undefined ? "" : formatExplorerValue(requestBody),
+    ].filter(Boolean).join("\n");
+    try {
+      await navigator.clipboard.writeText(requestText);
+      copyRequestButton.textContent = "Copied";
+      setTimeout(() => { copyRequestButton.textContent = "Copy request"; }, 1200);
+    } catch {
+      copyRequestButton.textContent = "Copy unavailable";
+    }
+  });
 
   renderExplorerResponseContent(result, target.querySelector("[data-explorer-response-content]"));
   if (signal?.aborted) return;
@@ -2058,7 +2076,8 @@ async function renderOperation(operation, signal, contract = null) {
   const securitySummary = detail.security.length
     ? '<div class="result-box"><span class="eyebrow">SECURITY</span><p class="muted">' +
       esc(detail.security.map(requirement => Object.keys(requirement).join(", ") || "optional").join(" · ")) +
-      "</p></div>"
+      "</p><label class="field"><span>API key <small>sent only for this request</small></span><input name="__apiKey" type="password" autocomplete="off" placeholder="X-API-KEY / api_key"></label>" +
+      '<label class="field"><span>Authorization <small>optional HTTP auth</small></span><input name="__authorization" type="password" autocomplete="off" placeholder="Bearer …"></label></div>'
     : "";
 
   target.innerHTML =
@@ -2075,6 +2094,10 @@ async function renderOperation(operation, signal, contract = null) {
   $("#operation-form").addEventListener("submit", async event => {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
+    const apiKey = values.__apiKey || undefined;
+    const authorization = values.__authorization || undefined;
+    delete values.__apiKey;
+    delete values.__authorization;
     const activeBodyType = bodyTypes.find(item => item.mediaType === event.currentTarget.elements.__contentType?.value) ?? initialBody;
     const activeBodyModel = activeBodyType?.schema ? buildSchemaFormModel(activeBodyType.schema) : null;
     if (activeBodyModel) {
@@ -2084,7 +2107,7 @@ async function renderOperation(operation, signal, contract = null) {
     const resultBox = $("#operation-result");
     resultBox.innerHTML = '<span class="eyebrow">RESPONSE INSPECTOR</span><p class="muted">Executing request…</p>';
     try {
-      const result = await executeOperation(operation, values, { signal });
+      const result = await executeOperation(operation, values, { signal, apiKey, authorization });
       if (signal.aborted) return;
       await renderExplorerResponse(result, resultBox, signal);
     } catch (error) {
@@ -2096,7 +2119,9 @@ async function renderOperation(operation, signal, contract = null) {
           '<div><span>CODE</span><strong>' + esc(error.code ?? error.name ?? "ERROR") + "</strong></div>" +
           '<div><span>RETRY-AFTER</span><strong>' + esc(error.retryAfterMs != null ? error.retryAfterMs + " ms" : "—") + "</strong></div>" +
         "</div>" +
-        '<pre class="error-text">' + esc(error.message) + "</pre>";
+        '<pre class="error-text">' + esc(error.message) + "</pre>" +
+        (error.responseText ? '<details class="explorer-details"><summary>Error response body</summary><pre class="error-text">' + esc(error.responseText) + "</pre></details>" : "") +
+        (error.headers ? '<details class="explorer-details"><summary>Error response headers</summary>' + renderExplorerHeaders(error.headers, "No error headers returned.") + "</details>" : "");
     }
   });
   const contentTypeSelect = $("#explorer-content-type");
