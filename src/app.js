@@ -1350,7 +1350,7 @@ async function renderPlayers(signal) {
 }
 
 async function renderPlayerDetail(accountId, signal) {
-  const [players, assetsRuntime] = await Promise.all([loadPlayersRuntime(), loadAssetsRuntime()]);
+  const players = await loadPlayersRuntime();
   const numericAccountId = Number(accountId);
   if (!Number.isInteger(numericAccountId) || numericAccountId < 0) {
     renderNotFound("players/" + accountId);
@@ -1410,7 +1410,7 @@ async function renderPlayerDetail(accountId, signal) {
         if (rankMetric) rankMetric.innerHTML = '<span>RANK BADGE</span><strong>—</strong>';
         return;
       }
-      assetsRuntime.fetchRank(rankTier, { ...assetVersion.options(), signal }).then(result => {
+      loadAssetsRuntime().then(assetsRuntime => assetsRuntime.fetchRank(rankTier, { ...assetVersion.options(), signal })).then(result => {
         if (signal.aborted) return;
         rankAsset = result?.data ?? null;
         const rankImage = resolveAssetImage(rankAsset, ["image_webp", "image", "icon_webp", "icon"]);
@@ -1446,7 +1446,7 @@ async function renderPlayerDetail(accountId, signal) {
 
     setTimeout(() => {
       if (signal.aborted) return;
-      assetsRuntime.listHeroes({ ...assetVersion.options(), signal }).then(result => {
+      loadAssetsRuntime().then(assetsRuntime => assetsRuntime.listHeroes({ ...assetVersion.options(), signal })).then(result => {
         if (signal.aborted) return;
         heroMap = new Map((result.data ?? []).map(hero => [String(idOf(hero)), hero]));
         renderHeroRows();
