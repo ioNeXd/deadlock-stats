@@ -1,6 +1,6 @@
 # Deadlock API — OpenAPI Inventory
 
-Generated from the current official OpenAPI contract on 2026-10-01.
+Generated from the current official OpenAPI contract on 2026-10-03.
 
 Source: https://api.deadlock-api.com/openapi.json
 Mirror used for machine parsing: https://github.com/deadlock-api/openapi-clients/blob/master/openapi.json
