@@ -33,7 +33,7 @@
   "inventory": {
     "path_count": 126,
     "operation_count": 129,
-    "schema_count": 230,
+    "schema_count": 232,
     "security_scheme_count": 2,
     "deprecated_operation_count": 14,
     "content_types": [
