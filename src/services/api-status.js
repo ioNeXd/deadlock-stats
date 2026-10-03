@@ -12,57 +12,76 @@ const REQUIRED_SERVICES = ["clickhouse", "postgres", "redis"];
 
 function normalizeServices(data) {
   const services = data?.services;
-
   if (!services || typeof services !== "object") return null;
-
   return { ...services };
 }
 
 export async function probeApiStatus(options = {}) {
   const started = performance.now();
+  const requestOptions = {
+    ...options,
+    cache: false,
+    dedupe: false,
+    retries: options.retries ?? 0,
+  };
 
-  try {
-    const result = await getApiHealth({
-      ...options,
-      cache: false,
-      dedupe: false,
-      retries: options.retries ?? 0,
-    });
+  const [healthResult, infoResult] = await Promise.allSettled([
+    getApiHealth(requestOptions),
+    getApiInfo(requestOptions),
+  ]);
 
-    const services = normalizeServices(result.data);
-    const hasCompleteHealth = services
-      ? REQUIRED_SERVICES.every(name => typeof services[name] === "boolean")
-      : false;
-    const healthy = hasCompleteHealth
-      ? REQUIRED_SERVICES.every(name => services[name] === true)
-      : null;
+  const health = healthResult.status === "fulfilled" ? healthResult.value : null;
+  const healthError = healthResult.status === "rejected" ? healthResult.reason : null;
+  const info = infoResult.status === "fulfilled" ? infoResult.value : null;
+  const infoError = infoResult.status === "rejected" ? infoResult.reason : null;
 
-    return {
-      online: true,
-      healthy,
-      services,
-      latencyMs: result.latencyMs ?? Math.round(performance.now() - started),
-      status: result.status,
-      url: result.url,
-      headers: result.headers,
-      contentType: result.contentType,
-      data: result.data,
-      error: null,
-    };
-  } catch (error) {
-    if (error?.code === "ABORTED" || error?.name === "AbortError") throw error;
+  if (healthError && (healthError?.code === "ABORTED" || healthError?.name === "AbortError")) {
+    throw healthError;
+  }
 
+  if (!health) {
     return {
       online: false,
       healthy: false,
       services: null,
-      latencyMs: error.latencyMs ?? Math.round(performance.now() - started),
-      status: error.status ?? null,
-      url: error.url ?? null,
-      headers: error.headers ?? {},
+      latencyMs: healthError?.latencyMs ?? Math.round(performance.now() - started),
+      status: healthError?.status ?? null,
+      url: healthError?.url ?? null,
+      headers: healthError?.headers ?? {},
       contentType: null,
       data: null,
-      error,
+      info: info?.data ?? null,
+      infoLatencyMs: info?.latencyMs ?? null,
+      infoStatus: info?.status ?? null,
+      infoUrl: info?.url ?? null,
+      error: healthError ?? infoError,
+      infoError,
     };
   }
+
+  const services = normalizeServices(health.data);
+  const hasCompleteHealth = services
+    ? REQUIRED_SERVICES.every(name => typeof services[name] === "boolean")
+    : false;
+  const healthy = hasCompleteHealth
+    ? REQUIRED_SERVICES.every(name => services[name] === true)
+    : null;
+
+  return {
+    online: true,
+    healthy,
+    services,
+    latencyMs: health.latencyMs ?? Math.round(performance.now() - started),
+    status: health.status,
+    url: health.url,
+    headers: health.headers,
+    contentType: health.contentType,
+    data: health.data,
+    info: info?.data ?? null,
+    infoLatencyMs: info?.latencyMs ?? null,
+    infoStatus: info?.status ?? null,
+    infoUrl: info?.url ?? null,
+    error: null,
+    infoError,
+  };
 }
