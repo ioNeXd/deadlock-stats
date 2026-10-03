@@ -8,9 +8,11 @@ const page = await context.newPage();
 const routes = ["", "heroes", "matches", "data"];
 const budgets = {
   domContentLoadedMs: 5000,
+  ttfbMs: 1500,
   lcpMs: 4000,
   cls: 0.15,
   initialTransferBytes: 1_500_000,
+  jsTransferBytes: 900_000,
 };
 
 for (const route of routes) {
@@ -43,6 +45,9 @@ for (const route of routes) {
   });
 
   console.log(`PERF ${route || "dashboard"} ${JSON.stringify(metrics)}`);
+  if (metrics.ttfbMs > budgets.ttfbMs) {
+    throw new Error(`${route || "dashboard"} TTFB budget exceeded: ${Math.round(metrics.ttfbMs)}ms`);
+  }
   if (metrics.domContentLoadedMs > budgets.domContentLoadedMs) {
     throw new Error(`${route || "dashboard"} DOMContentLoaded budget exceeded: ${Math.round(metrics.domContentLoadedMs)}ms`);
   }
@@ -51,6 +56,12 @@ for (const route of routes) {
   }
   if (metrics.cls > budgets.cls) {
     throw new Error(`${route || "dashboard"} CLS budget exceeded: ${metrics.cls}`);
+  }
+  if (metrics.inpMs !== null && metrics.inpMs > 500) {
+    throw new Error(`${route || "dashboard"} INP/event duration budget exceeded: ${Math.round(metrics.inpMs)}ms`);
+  }
+  if (metrics.jsTransferBytes > budgets.jsTransferBytes) {
+    throw new Error(`${route || "dashboard"} JavaScript transfer budget exceeded: ${metrics.jsTransferBytes} bytes`);
   }
   if (route === "" && metrics.transferBytes > budgets.initialTransferBytes) {
     throw new Error(`dashboard initial transfer budget exceeded: ${metrics.transferBytes} bytes`);
