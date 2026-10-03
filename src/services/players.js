@@ -161,9 +161,10 @@ export async function getPlayerRelationsSnapshot(accountId, options = {}) {
 }
 
 export async function getPlayerDetailSnapshot(accountId, options = {}) {
-  const [core, relations] = await Promise.all([
+  const [core, heroStats, relations] = await Promise.all([
     getPlayerDetailCoreSnapshot(accountId, options),
+    getPlayerHeroStatsSnapshot(accountId, options),
     getPlayerRelationsSnapshot(accountId, options),
   ]);
-  return { ...core, ...relations };
+  return { ...core, ...heroStats, ...relations };
 }
