@@ -160,7 +160,13 @@ async function renderDashboard(signal) {
 async function loadDashboard(signal) {
   const dashboardRuntime = await loadDashboardRuntime();
   const options = { ...assetVersion.options(), signal };
-  const coreResult = await dashboardRuntime.getDashboardCoreSnapshot(options);
+  let snapshot = null;
+  try {
+    snapshot = await dashboardRuntime.getDashboardCoreSnapshot(options);
+  } catch (error) {
+    if (isAborted(error)) return;
+    console.error("Deadlock API dashboard core request failed", error);
+  }
   if (signal.aborted) return;
 
   const loadHeroes = async () => {
@@ -180,8 +186,6 @@ async function loadDashboard(signal) {
     }
   };
 
-  const snapshot = coreResult;
-
   if (snapshot) {
     const info = snapshot.info?.data ?? {};
     const tableSizes = info.table_sizes && typeof info.table_sizes === "object" ? info.table_sizes : {};
@@ -195,16 +199,6 @@ async function loadDashboard(signal) {
     $("#table-count").textContent = Object.keys(tableSizes).length || "—";
     $("#known-rows").textContent = knownRows ? knownRows.toLocaleString() : "—";
 
-    const patch = snapshot.latestPatch;
-    const patchUrl = safeExternalUrl(patch?.link);
-    const patchTitle = esc(patch?.title ?? "Latest patch");
-    const patchDate = patch?.pub_date ? new Date(patch.pub_date).toLocaleDateString() : "Unknown date";
-    const patchMeta = esc(patch?.source?.toUpperCase() ?? "FEED") + " · " + esc(patchDate);
-    $("#latest-patch").innerHTML = patch
-      ? (patchUrl
-        ? '<a href="' + esc(patchUrl) + '" target="_blank" rel="noopener noreferrer">' + patchTitle + '</a><small>' + patchMeta + '</small>'
-        : '<span>' + patchTitle + '</span><small>' + patchMeta + '</small>')
-      : "No patch feed entries returned.";
   } else {
     $("#matches-per-day").textContent = "—";
     $("#table-count").textContent = "—";
