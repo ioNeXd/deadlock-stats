@@ -265,3 +265,24 @@ test("player rank history loader derives ranked rows from current match history 
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("player rank forecast loader uses the current rank-predict endpoint", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async input => {
+    calls.push(new URL(input).pathname);
+    return new Response(JSON.stringify({ account_id: 7, predicted_badge: 12 }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  try {
+    const { loadPlayerRankForecast } = await import("../src/services/players.js");
+    const result = await loadPlayerRankForecast(7, { cache: false, dedupe: false });
+    assert.deepEqual(calls, ["/v1/players/7/rank-predict"]);
+    assert.equal(result.data.predicted_badge, 12);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
