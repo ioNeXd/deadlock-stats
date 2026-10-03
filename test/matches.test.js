@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getActiveMatches, getActiveMatchesRaw, getRecentlyFetchedMatches, getMatchMetadata, getRawMatchMetadata, getMatchLiveUrl, getMatchSalts, getBulkMatchMetadata, createCustomMatch, readyCustomMatch, getCustomMatchId, getLiveQuery, submitDemoQuery, getDemoQueryStatus, getDemoSchema, getLiveUrls, ingestLiveUrls, ingestMatchSalts } from "../src/api/matches.js";
+import { getActiveMatches, getActiveMatchesRaw, getRecentlyFetchedMatches, getMatchMetadata, getRawMatchMetadata, getMatchLiveUrl, getMatchSalts, getBulkMatchMetadata, createCustomMatch, leaveCustomMatch, readyCustomMatch, startCustomMatch, unreadyCustomMatch, getCustomMatchId, getLiveQuery, submitDemoQuery, getDemoQueryStatus, getDemoSchema, getLiveUrls, ingestLiveUrls, ingestMatchSalts } from "../src/api/matches.js";
 import { normalizeMatchInfo, normalizeMatchMetadata } from "../src/services/matches.js";
 
 test("match wrappers target documented endpoints", async () => {
@@ -121,7 +121,10 @@ test("match API exposes current advanced endpoints and JSON request bodies", asy
     await getRawMatchMetadata(123, { cache: false, dedupe: false });
     await getMatchLiveUrl(123, { cache: false, dedupe: false });
     await createCustomMatch({ game_mode: "normal" }, { cache: false, dedupe: false });
+    await leaveCustomMatch(76, { cache: false, dedupe: false });
     await readyCustomMatch(77, { cache: false, dedupe: false });
+    await startCustomMatch(78, { cache: false, dedupe: false });
+    await unreadyCustomMatch(79, { cache: false, dedupe: false });
     await getCustomMatchId(88, { cache: false, dedupe: false });
     await submitDemoQuery({ query: "select 1", match_id: 123 }, { cache: false, dedupe: false });
     await getDemoQueryStatus("job-1", { cache: false, dedupe: false });
@@ -139,20 +142,27 @@ test("match API exposes current advanced endpoints and JSON request bodies", asy
     assert.equal(calls[3].method, "POST");
     assert.equal(calls[3].contentType, "application/json");
     assert.deepEqual(JSON.parse(calls[3].body), { game_mode: "normal" });
-    assert.equal(calls[4].url.pathname, "/v1/matches/custom/77/ready");
-    assert.equal(calls[5].url.pathname, "/v1/matches/custom/88/match-id");
-    assert.equal(calls[6].url.pathname, "/v1/matches/demo/query");
-    assert.equal(calls[7].url.pathname, "/v1/matches/demo/query/job-1");
-    assert.equal(calls[8].url.pathname, "/v1/matches/demo/schema");
-    assert.equal(calls[8].url.searchParams.get("match_id"), "123");
-    assert.equal(calls[8].url.searchParams.get("format"), "json");
-    assert.equal(calls[9].url.pathname, "/v1/matches/demo/live/query");
-    assert.equal(calls[9].method, "GET");
-    assert.equal(calls[10].url.pathname, "/v1/matches/live/urls");
-    assert.equal(calls[11].url.pathname, "/v1/matches/live/urls");
-    assert.equal(calls[11].method, "POST");
-    assert.equal(calls[12].url.pathname, "/v1/matches/salts");
-    assert.equal(calls[12].method, "POST");
+    assert.equal(calls[4].url.pathname, "/v1/matches/custom/76/leave");
+    assert.equal(calls[4].method, "POST");
+    assert.equal(calls[5].url.pathname, "/v1/matches/custom/77/ready");
+    assert.equal(calls[5].method, "POST");
+    assert.equal(calls[6].url.pathname, "/v1/matches/custom/78/start");
+    assert.equal(calls[6].method, "POST");
+    assert.equal(calls[7].url.pathname, "/v1/matches/custom/79/unready");
+    assert.equal(calls[7].method, "POST");
+    assert.equal(calls[8].url.pathname, "/v1/matches/custom/88/match-id");
+    assert.equal(calls[9].url.pathname, "/v1/matches/demo/query");
+    assert.equal(calls[10].url.pathname, "/v1/matches/demo/query/job-1");
+    assert.equal(calls[11].url.pathname, "/v1/matches/demo/schema");
+    assert.equal(calls[11].url.searchParams.get("match_id"), "123");
+    assert.equal(calls[11].url.searchParams.get("format"), "json");
+    assert.equal(calls[12].url.pathname, "/v1/matches/demo/live/query");
+    assert.equal(calls[12].method, "GET");
+    assert.equal(calls[13].url.pathname, "/v1/matches/live/urls");
+    assert.equal(calls[14].url.pathname, "/v1/matches/live/urls");
+    assert.equal(calls[14].method, "POST");
+    assert.equal(calls[15].url.pathname, "/v1/matches/salts");
+    assert.equal(calls[15].method, "POST");
   } finally {
     globalThis.fetch = originalFetch;
   }
