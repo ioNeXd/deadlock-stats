@@ -169,6 +169,30 @@ test("player MMR and rank prediction endpoints use current API paths and constra
 import { getPlayerDetailSnapshot, buildPlayerDetailViewModel } from "../src/services/players.js";
 
 
+test("player detail core snapshot requests only current rank", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async input => {
+    const url = new URL(input);
+    calls.push(url.pathname);
+    return new Response(JSON.stringify({ badge: 10, rank: 2, subrank: 3 }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  try {
+    const { getPlayerDetailCoreSnapshot } = await import("../src/services/players.js");
+    const snapshot = await getPlayerDetailCoreSnapshot(7, { cache: false, dedupe: false });
+    assert.deepEqual(calls, ["/v1/players/7/rank"]);
+    assert.equal(snapshot.rank.data.badge, 10);
+    assert.deepEqual(snapshot.heroStats, []);
+    assert.deepEqual(snapshot.matchHistory, []);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("player detail snapshot composes current API requests", async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
