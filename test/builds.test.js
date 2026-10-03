@@ -104,7 +104,7 @@ test("buildBuildDetailViewModel combines build metadata with performance", () =>
 
 
 test("build search validates current language enum", async () => {
-  await assert.rejects(() => searchBuilds({ build_language: "Portuguese" }), /Unsupported build_language/);
+  assert.throws(() => searchBuilds({ build_language: "Portuguese" }), /Unsupported build_language/);
 });
 
 test("author build endpoint does not forward unsupported query parameters", async () => {
