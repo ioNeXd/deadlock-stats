@@ -1365,23 +1365,33 @@ async function renderPlayerDetail(accountId, signal) {
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">RELATIONSHIPS</span><h2>Enemies & teammates</h2></div></div><div id="player-detail-relations"></div></section>';
 
   try {
-    const [snapshot, profiles] = await Promise.all([
-      players.getPlayerDetailCoreSnapshot(numericAccountId, { signal }),
-      players.loadSteamProfiles([numericAccountId], { signal }),
-    ]);
+    const snapshot = await players.getPlayerDetailCoreSnapshot(numericAccountId, { signal });
     if (signal.aborted) return;
-    const profile = profiles.data?.[0] ?? null;
-    const model = players.buildPlayerDetailViewModel(snapshot, profile);
+    const model = players.buildPlayerDetailViewModel(snapshot, null);
     const rankTier = Number(model.rank?.rank);
     const rankResult = Number.isInteger(rankTier) && rankTier >= 0
       ? await assetsRuntime.fetchRank(rankTier, { ...assetVersion.options(), signal })
       : null;
     if (signal.aborted) return;
-    const profileName = profile?.personaname ?? profile?.name ?? null;
+    let profileName = null;
     let heroMap = new Map();
     const rankAsset = rankResult?.data ?? null;
     const heroName = heroId => heroMap.get(String(heroId))?.name ?? ("Hero #" + heroId);
-    if (profileName) $("#player-detail-name").textContent = profileName;
+    const applyProfile = profile => {
+      profileName = profile?.personaname ?? profile?.name ?? null;
+      if (profileName) $("#player-detail-name").textContent = profileName;
+      const profileMetric = $("#player-detail-summary")?.querySelector("[data-player-profile] strong");
+      if (profileMetric) profileMetric.textContent = profileName ?? "—";
+    };
+    setTimeout(() => {
+      if (signal.aborted) return;
+      players.loadSteamProfiles([numericAccountId], { signal }).then(result => {
+        if (signal.aborted) return;
+        applyProfile(result.data?.[0] ?? null);
+      }).catch(error => {
+        if (!isAborted(error)) console.warn("Deadlock API Steam profile unavailable on player detail", error);
+      });
+    }, 0);
 
     const rank = model.rank ?? {};
     const summary = [
@@ -1395,7 +1405,7 @@ async function renderPlayerDetail(accountId, signal) {
     const rankImage = resolveAssetImage(rankAsset, ["image_webp", "image", "icon_webp", "icon"]);
     $("#player-detail-summary").innerHTML = '<div class="match-detail-summary">' +
       (rankImage ? '<div class="metric"><span>RANK BADGE</span><img src="' + esc(rankImage) + '" alt="" loading="lazy" decoding="async"></div>' : '') +
-      summary.map(([label,value]) => '<div class="metric"><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>').join("") +
+      summary.map(([label,value]) => '<div class="metric"' + (label === "PROFILE" ? ' data-player-profile' : "") + '><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>').join("") +
       '</div>';
 
     const renderHeroRows = () => {

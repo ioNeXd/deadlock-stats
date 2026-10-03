@@ -73,8 +73,8 @@ test("player detail keeps the initial critical path free of the full hero catalo
   const profileStart = routeSource.indexOf("const profile = profiles.data?.[0] ?? null;");
   assert.notEqual(profileStart, -1);
   const criticalLoad = routeSource.slice(0, profileStart);
-  assert.match(criticalLoad, /const \[snapshot, profiles\] = await Promise\.all\(/);
-  assert.match(criticalLoad, /players\.getPlayerDetailCoreSnapshot\(numericAccountId, \{ signal \}\)/);
+  assert.match(criticalLoad, /const snapshot = await players\.getPlayerDetailCoreSnapshot\(numericAccountId, \{ signal \}\)/);
+  assert.doesNotMatch(criticalLoad, /players\.loadSteamProfiles\(\[numericAccountId\], \{ signal \}\)/);
   assert.doesNotMatch(criticalLoad, /players\.getPlayerRelationsSnapshot\(numericAccountId, \{ signal \}\)/);
   assert.doesNotMatch(criticalLoad, /assetsRuntime\.listHeroes\(/);
   assert.match(routeSource, /setTimeout\(\(\) => \{/);
@@ -84,6 +84,8 @@ test("player detail keeps the initial critical path free of the full hero catalo
   assert.match(routeSource, /renderHistoryRows\(\);/);
   assert.match(routeSource, /assetsRuntime\.fetchRank\(rankTier/);
   assert.doesNotMatch(routeSource, /assetsRuntime\.listRanks\(\{ \.\.\.assetVersion\.options\(\), signal \}\)/);
+  assert.match(routeSource, /players\.loadSteamProfiles\(\[numericAccountId\], \{ signal \}\)/);
+  assert.match(routeSource, /data-player-profile/);
   assert.match(routeSource, /players\.getPlayerRelationsSnapshot\(numericAccountId, \{ signal \}\)/);
   assert.match(routeSource, /Loading enemy and teammate stats/);
   assert.match(routeSource, /model\.enemyStats = Array\.isArray\(relations\?\.enemyStats\)/);
