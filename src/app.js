@@ -1712,7 +1712,9 @@ async function renderPlayerDetail(accountId, signal) {
     $("#player-detail-status").innerHTML = '<span class="eyebrow">ERROR</span><span>' + esc(error.message) + '</span>';
   }
 }
-><h2>Data Explorer</h2><p>Inspect and execute documented API operations from the live OpenAPI contract.</p></section>' +
+
+async function renderDataExplorer(signal) {
+  el.content.innerHTML = '<section class="page-head"><span class="eyebrow">TOOLS / DATA</span><h2>Data Explorer</h2><p>Inspect and execute documented API operations from the live OpenAPI contract.</p></section>' +
     '<section class="explorer"><aside class="explorer-list"><input id="operation-filter" class="explorer-search" type="search" aria-label="Filter API operations" placeholder="Filter operations…"><div id="operation-list"></div></aside><article class="panel explorer-main"><div id="explorer-empty"><span class="eyebrow">CONTRACT</span><h3>Select an operation</h3><p>The explorer is populated from the live OpenAPI contract.</p></div><div id="operation-detail" hidden></div></article></section>';
   loadExplorer(signal);
 }
