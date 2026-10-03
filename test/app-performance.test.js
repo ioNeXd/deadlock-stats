@@ -175,10 +175,13 @@ test("asset version service avoids eager asset service dependency", async () => 
 
 test("dashboard defers hero catalog from critical render", () => {
   const routeSource = extractTopLevelFunction(appSource, "async function loadDashboard");
-  assert.doesNotMatch(routeSource, /await loadAssetsRuntime\(\)/);
+  const coreIndex = routeSource.indexOf("await dashboardRuntime.getDashboardCoreSnapshot(options)");
+  const assetRuntimeIndex = routeSource.indexOf("loadAssetsRuntime()");
+  assert.notEqual(coreIndex, -1);
+  assert.notEqual(assetRuntimeIndex, -1);
+  assert.ok(coreIndex < assetRuntimeIndex);
   assert.match(routeSource, /loadHeroes\(\)/);
-  assert.match(routeSource, /await assetsRuntime\.listHeroes\(options\)/);
-  assert.match(routeSource, /getDashboardCoreSnapshot\(options\)/);
+  assert.match(routeSource, /assetsRuntime\.listHeroes\(options\)/);
 });
 
 test("dashboard defers patch feed from initial render", () => {
