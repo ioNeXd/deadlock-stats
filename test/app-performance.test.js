@@ -35,6 +35,13 @@ test("build detail fetches only the selected hero asset", () => {
   assert.match(routeSource, /const hero = heroResult\?\.data \?\? null/);
 });
 
+test("match detail uses the single-match metadata endpoint", () => {
+  const detailStart = appSource.indexOf("async function renderMatches");
+  const routeSource = appSource.slice(detailStart);
+  assert.match(routeSource, /matches\.getMatchMetadataSnapshot\(numericMatchId/);
+  assert.doesNotMatch(routeSource, /matches\.getBulkMatchMetadataSnapshot\(\{/);
+});
+
 test("app defers analytics runtime until analytics routes", () => {
   assert.doesNotMatch(appSource, /from ["']\.\/services\/analytics\.js["']/);
   assert.match(appSource, /import\(\s*["']\.\/services\/analytics\.js["']/);
