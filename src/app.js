@@ -1369,13 +1369,9 @@ async function renderPlayerDetail(accountId, signal) {
     if (signal.aborted) return;
     const model = players.buildPlayerDetailViewModel(snapshot, null);
     const rankTier = Number(model.rank?.rank);
-    const rankResult = Number.isInteger(rankTier) && rankTier >= 0
-      ? await assetsRuntime.fetchRank(rankTier, { ...assetVersion.options(), signal })
-      : null;
-    if (signal.aborted) return;
     let profileName = null;
     let heroMap = new Map();
-    const rankAsset = rankResult?.data ?? null;
+    let rankAsset = null;
     const heroName = heroId => heroMap.get(String(heroId))?.name ?? ("Hero #" + heroId);
     const applyProfile = profile => {
       profileName = profile?.personaname ?? profile?.name ?? null;
@@ -1404,7 +1400,7 @@ async function renderPlayerDetail(accountId, signal) {
     ];
     const rankImage = resolveAssetImage(rankAsset, ["image_webp", "image", "icon_webp", "icon"]);
     $("#player-detail-summary").innerHTML = '<div class="match-detail-summary">' +
-      (rankImage ? '<div class="metric"><span>RANK BADGE</span><img src="' + esc(rankImage) + '" alt="" loading="lazy" decoding="async"></div>' : '') +
+      '<div class="metric" data-player-rank><span>RANK BADGE</span><strong>Loading…</strong></div>' +
       summary.map(([label,value]) => '<div class="metric"' + (label === "PROFILE" ? ' data-player-profile' : "") + '><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>').join("") +
       '</div>';
 

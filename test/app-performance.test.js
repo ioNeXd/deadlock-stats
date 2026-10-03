@@ -82,7 +82,13 @@ test("player detail keeps the initial critical path free of the full hero catalo
   assert.match(routeSource, /heroMap = new Map/);
   assert.match(routeSource, /renderHeroRows\(\);/);
   assert.match(routeSource, /renderHistoryRows\(\);/);
+  const criticalRankEnd = routeSource.indexOf("const rank = model.rank ?? {};");
+  assert.notEqual(criticalRankEnd, -1);
+  const criticalRankPath = routeSource.slice(0, criticalRankEnd);
+  assert.doesNotMatch(criticalRankPath, /assetsRuntime\.fetchRank\(rankTier/);
+  assert.match(routeSource, /setTimeout\(\(\) => \{/);
   assert.match(routeSource, /assetsRuntime\.fetchRank\(rankTier/);
+  assert.match(routeSource, /data-player-rank/);
   assert.doesNotMatch(routeSource, /assetsRuntime\.listRanks\(\{ \.\.\.assetVersion\.options\(\), signal \}\)/);
   assert.match(routeSource, /players\.loadSteamProfiles\(\[numericAccountId\], \{ signal \}\)/);
   assert.match(routeSource, /data-player-profile/);
