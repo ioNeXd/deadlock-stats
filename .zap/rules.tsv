@@ -1,0 +1,3 @@
+# ZAP Baseline rule configuration
+# 10049 is an informational beta cacheability rule. The dedicated security server intentionally uses no-store, so this rule reports expected behavior rather than a vulnerability.
+10049	IGNORE	(Non-Storable Content / Storable and Cacheable Content)
