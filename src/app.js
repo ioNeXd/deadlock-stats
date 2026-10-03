@@ -1379,7 +1379,7 @@ async function renderPlayerDetail(accountId, signal) {
     '<section class="panel"><div id="player-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching player intelligence…</span></div><div id="player-detail-summary"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">HEROES</span><h2>Hero performance</h2></div></div><div id="player-detail-heroes"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">MATCH HISTORY</span><h2>Recent matches</h2></div></div><div id="player-detail-history"></div></section>' +
-    '<section class="panel"><div class="section-head"><div><span class="eyebrow">RANK HISTORY</span><h2>Rank progression</h2></div></div><div id="player-detail-rank-history"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">RANK HISTORY</span><h2>Rank progression</h2></div></div><div id="player-detail-rank-history"></div></section>' +\n    '<section class="panel"><div class="section-head"><div><span class="eyebrow">RANK FORECAST</span><h2>Predicted rank</h2></div></div><div id="player-detail-rank-forecast"><p class="muted">Loading rank forecast…</p></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">RELATIONSHIPS</span><h2>Enemies & teammates</h2></div></div><div id="player-detail-relations"></div></section>';
 
   try {
@@ -1397,6 +1397,20 @@ async function renderPlayerDetail(accountId, signal) {
       const profileMetric = $("#player-detail-summary")?.querySelector("[data-player-profile] strong");
       if (profileMetric) profileMetric.textContent = profileName ?? "—";
     };
+    setTimeout(() => {
+      if (signal.aborted) return;
+      players.loadPlayerRankForecast(numericAccountId, { signal }).then(result => {
+        if (signal.aborted) return;
+        const forecast = result?.data ?? {};
+        const badge = forecast.predicted_badge ?? forecast.badge ?? forecast.rank ?? "—";
+        const delta = forecast.predicted_delta ?? forecast.delta;
+        const detail = delta == null ? "" : " · " + (delta > 0 ? "+" : "") + delta;
+        $("#player-detail-rank-forecast").innerHTML = '<div class="metric"><span>PREDICTED BADGE</span><strong>' + esc(badge) + esc(detail) + '</strong></div>';
+      }).catch(error => {
+        if (!isAborted(error)) $("#player-detail-rank-forecast").innerHTML = '<p class="muted">Rank forecast unavailable.</p>';
+      });
+    }, 0);
+
     setTimeout(() => {
       if (signal.aborted) return;
       players.loadSteamProfiles([numericAccountId], { signal }).then(result => {
