@@ -282,7 +282,8 @@ async function renderHeroDetail(heroId, signal) {
   ]).then(([analyticsResult, heroResult]) => {
     if (signal.aborted) return;
     const snapshot = analyticsResult.status === "fulfilled" ? analyticsResult.value : null;
-    const hero = heroResult.status === "fulfilled" ? (heroResult.value?.data ?? null) : null;
+    const heroResultData = heroResult.status === "fulfilled" ? heroResult.value : null;
+    const hero = heroResultData?.data ?? null;
     if (hero) $("#hero-detail-name").textContent = nameOf(hero);
 
     const model = analytics.buildHeroDetailViewModel(snapshot, hero);
