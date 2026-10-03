@@ -773,3 +773,12 @@ test("build detail snapshot keeps build detail available when performance analyt
   assert.equal(snapshot.performanceAvailable, false);
   assert.equal(snapshot.performanceError?.status, 503);
 });
+
+
+test("analytics source exposes failure-isolated route loading", async () => {
+  const source = await (await import("node:fs/promises")).readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  const start = source.indexOf("async function loadAnalytics(signal");
+  const end = source.indexOf("\nfunction ", start);
+  const route = end === -1 ? source.slice(start) : source.slice(start, end);
+  assert.match(route, /Promise\\.allSettled\\(\[/);
+});
