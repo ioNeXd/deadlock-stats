@@ -1,6 +1,6 @@
 import http from "node:http";
 import { createReadStream, statSync } from "node:fs";
-import { extname, join, normalize, resolve } from "node:path";
+import { extname, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -20,7 +20,7 @@ const contentTypes = new Map([
 ]);
 
 const securityHeaders = {
-  "Cache-Control": "no-store",
+  "Cache-Control": "public, max-age=60",
   "Content-Security-Policy": [
     "default-src 'self'",
     "base-uri 'self'",
@@ -51,17 +51,23 @@ function safePath(requestUrl) {
   return filePath.startsWith(root + "/") || filePath === root ? filePath : null;
 }
 
+function writeError(response, status, message) {
+  response.writeHead(status, {
+    ...securityHeaders,
+    "Content-Type": "text/plain; charset=utf-8",
+  });
+  response.end(message);
+}
+
 const server = http.createServer((request, response) => {
   if (request.method !== "GET" && request.method !== "HEAD") {
-    response.writeHead(405, { Allow: "GET, HEAD", ...securityHeaders });
-    response.end();
+    writeError(response, 405, "Method not allowed");
     return;
   }
 
   const filePath = safePath(request.url);
   if (!filePath) {
-    response.writeHead(403, securityHeaders);
-    response.end("Forbidden");
+    writeError(response, 403, "Forbidden");
     return;
   }
 
@@ -81,8 +87,7 @@ const server = http.createServer((request, response) => {
       createReadStream(filePath).pipe(response);
     }
   } catch {
-    response.writeHead(404, securityHeaders);
-    response.end("Not found");
+    writeError(response, 404, "Not found");
   }
 });
 
