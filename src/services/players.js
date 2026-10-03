@@ -71,6 +71,14 @@ export async function loadPlayerAccountStats(accountId, options = {}) {
   return withObject(await getPlayerAccountStats(accountId, options));
 }
 
+export async function loadPlayerRankHistory(accountId, options = {}) {
+  const matchHistory = await loadPlayerMatchHistory(accountId, options);
+  return {
+    ...matchHistory,
+    data: buildPlayerRankHistoryViewModel(matchHistory),
+  };
+}
+
 export async function loadPlayerMatchHistory(accountId, options = {}) {
   return withArray(await getPlayerMatchHistory(accountId, options));
 }
