@@ -780,5 +780,5 @@ test("analytics source exposes failure-isolated route loading", async () => {
   const start = source.indexOf("async function loadAnalytics(signal");
   const end = source.indexOf("\nfunction ", start);
   const route = end === -1 ? source.slice(start) : source.slice(start, end);
-  assert.match(route, /Promise\\.allSettled\\(\[/);
+  assert.match(route, /Promise\.allSettled\(\[/);
 });
