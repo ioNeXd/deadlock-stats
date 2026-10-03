@@ -4,6 +4,13 @@ import { readFile } from "node:fs/promises";
 
 const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
 
+function extractTopLevelFunction(source, marker) {
+  const start = source.indexOf(marker);
+  assert.notEqual(start, -1);
+  const next = source.slice(start + marker.length).search(/\\r?\\n(?:async )?function /);
+  return next === -1 ? source.slice(start) : source.slice(start, start + marker.length + next);
+}
+
 test("app defers non-critical explorer and GraphQL modules", () => {
   assert.doesNotMatch(appSource, /from ["']\.\/services\/(data-explorer|data-explorer-presets|graphql)\.js["']/);
   assert.match(appSource, /import\(\s*["']\.\/services\/data-explorer\.js["']/);
@@ -20,16 +27,14 @@ test("app defers asset version network context outside dashboard and maps", () =
 });
 
 test("hero detail fetches only the selected hero asset", () => {
-  const detailStart = appSource.indexOf("async function renderHeroDetail");
-  const routeSource = appSource.slice(detailStart);
+  const routeSource = extractTopLevelFunction(appSource, "async function renderHeroDetail");
   assert.match(routeSource, /assetsRuntime\.fetchHero\(numericHeroId/);
   assert.doesNotMatch(routeSource, /assetsRuntime\.listHeroes\(\{ \.\.\.assetVersion\.options\(\), signal \}\)/);
   assert.match(routeSource, /const hero = heroResult\?\.data \?\? null/);
 });
 
 test("build detail fetches only the selected hero asset", () => {
-  const detailStart = appSource.indexOf("async function renderBuildDetail");
-  const routeSource = appSource.slice(detailStart);
+  const routeSource = extractTopLevelFunction(appSource, "async function renderBuildDetail");
   assert.match(routeSource, /assetsRuntime\.fetchHero\(numericHeroId/);
   assert.doesNotMatch(routeSource, /assetsRuntime\.listHeroes\(\{ \.\.\.assetVersion\.options\(\), signal \}\)/);
   assert.match(routeSource, /const hero = heroResult\?\.data \?\? null/);
@@ -44,8 +49,7 @@ test("match detail uses the single-match metadata endpoint", () => {
 
 
 test("player detail fetches only the selected rank asset", () => {
-  const detailStart = appSource.indexOf("async async function renderPlayerDetail");
-  const routeSource = appSource.slice(detailStart);
+  const routeSource = extractTopLevelFunction(appSource, "async function renderPlayerDetail");
   assert.match(routeSource, /assetsRuntime\.fetchRank\(rankTier/);
   assert.doesNotMatch(routeSource, /assetsRuntime\.listRanks\(\{ \.\.\.assetVersion\.options\(\), signal \}\)/);
   assert.match(routeSource, /const rankAsset = rankResult\?\.data \?\? null/);
