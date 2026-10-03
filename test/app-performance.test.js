@@ -68,6 +68,16 @@ test("match listing defers hero and item catalogs until metadata lookup", () => 
   assert.match(lookupSource, /assetsRuntime\.listItems\(/);
 });
 
+test("player detail defers hero stats request", () => {
+  const routeSource = extractTopLevelFunction(appSource, "async function renderPlayerDetail");
+  const criticalEnd = routeSource.indexOf("const snapshot = await players.getPlayerDetailCoreSnapshot(numericAccountId, { signal });");
+  assert.notEqual(criticalEnd, -1);
+  const criticalLoad = routeSource.slice(0, criticalEnd);
+  assert.doesNotMatch(criticalLoad, /getPlayerHeroStatsSnapshot/);
+  assert.match(routeSource, /getPlayerHeroStatsSnapshot\(numericAccountId, \{ signal \}\)/);
+  assert.match(routeSource, /model\.heroStats = result\.heroStats/);
+});
+
 test("player detail defers asset runtime loading", () => {
   const routeSource = extractTopLevelFunction(appSource, "async function renderPlayerDetail");
   const criticalEnd = routeSource.indexOf("const snapshot = await players.getPlayerDetailCoreSnapshot(numericAccountId, { signal });");
