@@ -1264,20 +1264,7 @@ async function renderMatches(signal) {
     $("#match-detail").innerHTML = '<span class="eyebrow">RESPONSE</span><p class="muted">Loading metadata…</p>';
     try {
       const [data, heroCatalog, itemCatalog] = await Promise.all([
-        matches.getBulkMatchMetadataSnapshot({
-        match_ids: [numericMatchId],
-        include_info: true,
-        include_more_info: true,
-        include_objectives: true,
-        include_mid_boss: true,
-        include_player_info: true,
-        include_player_kda: true,
-        include_player_items: true,
-        include_player_final_stats: true,
-        include_player_death_details: true,
-        limit: 1,
-        signal,
-      }),
+        matches.getMatchMetadataSnapshot(numericMatchId, { ...assetVersion.options(), signal }),
         assetsRuntime.listHeroes({ ...assetVersion.options(), signal }),
         assetsRuntime.listItems({ ...assetVersion.options(), signal }),
       ]);
