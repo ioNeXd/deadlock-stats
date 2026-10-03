@@ -200,3 +200,12 @@ test("app defers API status runtime", () => {
   assert.doesNotMatch(appSource, /from ["']\.\/services\/api-status\.js["']/);
   assert.match(appSource, /import\(\s*["']\.\/services\/api-status\.js["']/);
 });
+
+
+test("dashboard consumes the core snapshot directly", () => {
+  const routeSource = extractTopLevelFunction(appSource, "async function loadDashboard");
+  assert.match(routeSource, /const coreResult = await dashboardRuntime\.getDashboardCoreSnapshot\(options\);/);
+  assert.match(routeSource, /const snapshot = coreResult;/);
+  assert.doesNotMatch(routeSource, /coreResult\.status/);
+  assert.doesNotMatch(routeSource, /heroesResult/);
+});
