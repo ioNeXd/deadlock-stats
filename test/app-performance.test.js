@@ -40,6 +40,14 @@ test("build detail fetches only the selected hero asset", () => {
   assert.match(routeSource, /const hero = heroResult\?\.data \?\? null/);
 });
 
+test("item detail fetches only the selected item and scopes analytics", () => {
+  const routeSource = extractTopLevelFunction(appSource, "async function renderItemDetail");
+  assert.match(routeSource, /assetsRuntime\.fetchItem\(itemId/);
+  assert.doesNotMatch(routeSource, /assetsRuntime\.listItems\(/);
+  assert.match(routeSource, /include_item_ids: \[Number\(itemId\)\]/);
+  assert.match(routeSource, /item_ids: \[Number\(itemId\)\]/);
+});
+
 test("match detail uses the single-match metadata endpoint", () => {
   const detailStart = appSource.indexOf("async function renderMatches");
   const routeSource = appSource.slice(detailStart);
