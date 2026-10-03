@@ -17,6 +17,7 @@ const routes = [
   "graphql",
   "tools",
   "api",
+  "ranks",
 ];
 
 const browser = await chromium.launch({ headless: true });
