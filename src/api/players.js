@@ -151,51 +151,6 @@ export function getPlayerRankImage(accountIds, format = "png", options = {}) {
 }
 
 
-export function getPlayerMmr(accountIds, options = {}) {
-  validateAccountIds(accountIds);
-  return apiGet("/v1/players/mmr", {
-    ...options,
-    query: { ...queryToObject(options.query), account_ids: accountIds.join(","), ...(options.max_match_id == null ? {} : { max_match_id: options.max_match_id }) },
-  });
-}
-
-export function getPlayerMmrDistribution(options = {}) {
-  const query = filteredQuery(options, new Set([
-    "min_unix_timestamp", "max_unix_timestamp", "min_duration_s", "max_duration_s",
-    "is_high_skill_range_parties", "is_low_pri_pool", "is_new_player_pool",
-    "min_match_id", "max_match_id",
-  ]));
-  return apiGet("/v1/players/mmr/distribution", { ...options, query });
-}
-
-export function getPlayerHeroMmr(heroId, accountIds, options = {}) {
-  validateAccountId(heroId, "heroId");
-  validateAccountIds(accountIds);
-  return apiGet("/v1/players/mmr/" + encodeURIComponent(heroId), {
-    ...options,
-    query: { account_ids: accountIds.join(","), ...(options.max_match_id == null ? {} : { max_match_id: options.max_match_id }) },
-  });
-}
-
-export function getPlayerHeroMmrDistribution(heroId, options = {}) {
-  validateAccountId(heroId, "heroId");
-  const query = filteredQuery(options, new Set([
-    "min_unix_timestamp", "max_unix_timestamp", "min_duration_s", "max_duration_s",
-    "is_high_skill_range_parties", "is_low_pri_pool", "is_new_player_pool",
-    "min_match_id", "max_match_id",
-  ]));
-  return apiGet("/v1/players/mmr/distribution/" + encodeURIComponent(heroId), { ...options, query });
-}
-
-export function getPlayerMmrHistory(accountId, options = {}) {
-  return apiGet(accountPath(accountId, "/mmr-history"), options);
-}
-
-export function getPlayerHeroMmrHistory(accountId, heroId, options = {}) {
-  validateAccountId(heroId, "heroId");
-  return apiGet(accountPath(accountId, "/mmr-history/" + encodeURIComponent(heroId)), options);
-}
-
 export function getPlayerRankPredict(accountId, options = {}) {
   return apiGet(accountPath(accountId, "/rank-predict"), options);
 }
