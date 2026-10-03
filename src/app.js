@@ -510,6 +510,7 @@ async function renderHeroes(signal) {
     event.preventDefault();
     load(Object.fromEntries(new FormData(form).entries()));
   });
+  rawButton.addEventListener("click", () => loadRaw(Object.fromEntries(new FormData(form).entries())));
   load(Object.fromEntries(new FormData(form).entries()));
 }
 
@@ -1133,11 +1134,40 @@ async function renderLeaderboard(signal) {
     '<label class="field"><span>Region</span><select name="region"><option>Europe</option><option>Asia</option><option>NAmerica</option><option>SAmerica</option><option>Oceania</option></select></label>' +
     '<label class="field"><span>Leaderboard ID</span><input name="leaderboard_id" type="number" min="0" inputmode="numeric" placeholder="Current"></label>' +
     '<label class="field"><span>Hero ID</span><input name="hero_id" type="number" min="0" inputmode="numeric" placeholder="All heroes"></label>' +
-    '<button class="primary-button" type="submit">Load leaderboard</button></form></section>' +
+    '<button class="primary-button" type="submit">Load leaderboard</button><button id="leaderboard-raw" class="secondary-button" type="button">Download raw</button></form></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">REGIONAL DATA</span><h2>Players</h2></div><b id="leaderboard-status">LOADING</b></div><div id="leaderboard-list" class="analytics-table"><p class="muted">Loading leaderboard.</p></div></section>';
 
   const form = $("#leaderboard-filters");
   const list = $("#leaderboard-list");
+  const rawButton = $("#leaderboard-raw");
+  const loadRaw = async values => {
+    rawButton.disabled = true;
+    rawButton.textContent = "Downloading…";
+    try {
+      const options = {};
+      if (values.leaderboard_id !== "") options.leaderboard_id = Number(values.leaderboard_id);
+      const result = values.hero_id !== ""
+        ? await leaderboard.downloadHeroLeaderboardRaw(values.region, Number(values.hero_id), { ...options, signal })
+        : await leaderboard.downloadLeaderboardRaw(values.region, { ...options, signal });
+      if (signal.aborted) return;
+      const bytes = result?.data;
+      const blob = new Blob([bytes], { type: result?.contentType || "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "leaderboard-" + values.region + (values.hero_id !== "" ? "-hero-" + values.hero_id : "") + ".bin";
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      if (!isAborted(error)) {
+        $("#leaderboard-status").textContent = "RAW ERROR";
+        list.innerHTML = '<p class="error-text">' + esc(error.message) + '</p>';
+      }
+    } finally {
+      rawButton.disabled = false;
+      rawButton.textContent = "Download raw";
+    }
+  };
   const load = async values => {
     $("#leaderboard-status").textContent = "LOADING";
     list.innerHTML = '<p class="muted">Loading leaderboard…</p>';
