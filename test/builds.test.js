@@ -33,6 +33,22 @@ test("searchBuilds forwards only documented build filters", async () => {
   }
 });
 
+test("searchBuilds forwards pagination start", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async url => {
+    calls.push(new URL(url));
+    return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    await searchBuilds({ start: 40, limit: 20 });
+    assert.equal(calls[0].searchParams.get("start"), "40");
+    assert.equal(calls[0].searchParams.get("limit"), "20");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("getBuild preserves the documented single-build object response", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(JSON.stringify({ hero_build_id: 1234, hero_id: 7 }), {
