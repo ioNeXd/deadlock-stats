@@ -248,3 +248,27 @@ test("player detail snapshot composes rank, heroes, history and relationships", 
   assert.equal(model.enemyStats[0].enemy_hero_id, 8);
   assert.equal(model.mateStats[0].mate_account_id, 9);
 });
+
+
+test("player search resolves numeric account IDs through Steam profile lookup", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async input => {
+    const url = new URL(input);
+    calls.push(url);
+    return new Response(JSON.stringify([{ account_id: 123, personaname: "Detective" }]), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  try {
+    const { searchPlayers } = await import("../src/services/players.js");
+    const result = await searchPlayers("123", { cache: false, dedupe: false });
+    assert.equal(result.data[0].account_id, 123);
+    assert.equal(calls[0].pathname, "/v1/players/steam");
+    assert.equal(calls[0].searchParams.get("account_ids"), "123");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
