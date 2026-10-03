@@ -1239,12 +1239,19 @@ async function renderBuildDetail(heroId, buildId, signal) {
 
   const render = async () => {
     try {
-      const [snapshot, heroResult, tagCatalog] = await Promise.all([
+      const [snapshotSettlement, heroSettlement, tagSettlement] = await Promise.allSettled([
         analytics.getBuildDetailSnapshot(numericHeroId, numericBuildId, { ...assetVersion.options(), signal }),
         assetsRuntime.fetchHero(numericHeroId, { ...assetVersion.options(), signal }),
         assetsRuntime.listBuildTags({ ...assetVersion.options(), signal }),
       ]);
       if (signal.aborted) return;
+
+      if (snapshotSettlement.status !== "fulfilled") {
+        throw snapshotSettlement.reason;
+      }
+      const snapshot = snapshotSettlement.value;
+      const heroResult = heroSettlement.status === "fulfilled" ? heroSettlement.value : null;
+      const tagCatalog = tagSettlement.status === "fulfilled" ? tagSettlement.value : { data: [] };
 
       const detail = snapshot.detail;
       if (!detail) {
