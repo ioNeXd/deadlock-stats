@@ -32,7 +32,7 @@ The current Deadlock API OpenAPI specification is the contract source. The appli
 | Build Detail | PASS | build detail remains available when optional performance analytics fail |
 | Advanced tools | PASS | Demo, Live Query/SSE, Custom Match, Live URLs, async job polling |
 | Accessibility | PASS | skip link, labelled navigation, aria-current, visible focus |
-| Performance | PASS WITH BROWSER SMOKEng, dashboard/player/detail request isolation |
+| Performance | PASS WITH BROWSER SMOKE | Chromium smoke validates route rendering, mobile overflow, and dashboard DOMContentLoaded; source tests cover request isolation and lazy loading |
 | Security | PASS | URL validation, sanitization, no credentials/secrets in source |
 | Capability matrix | PASS | 129/129 operations and 704/704 parameters classified |
 | OpenAPI inventory | PASS | current timestamp defaults synchronized |
@@ -67,8 +67,8 @@ Non-idempotent methods are not retried unless explicitly authorized.
 
 ## Known limitations
 
-- No browser/e2e runner is configured in the repository.
-- Visual verification is therefore represented by source-level accessibility/performance contracts and GitHub Actions tests.
+- Chromium browser smoke is now configured and runs in GitHub Actions.
+- Visual/performance validation is still not equivalent to Lighthouse/WebPageTest or a human visual review.
 - The API may expose capabilities classified as API-only, advanced, internal or deprecated; these remain documented rather than being invented as dedicated UI.
 
 ## Validation
