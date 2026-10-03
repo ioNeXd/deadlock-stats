@@ -68,6 +68,16 @@ test("match listing defers hero and item catalogs until metadata lookup", () => 
   assert.match(lookupSource, /assetsRuntime\.listItems\(/);
 });
 
+test("player detail defers asset runtime loading", () => {
+  const routeSource = extractTopLevelFunction(appSource, "async function renderPlayerDetail");
+  const criticalEnd = routeSource.indexOf("const snapshot = await players.getPlayerDetailCoreSnapshot(numericAccountId, { signal });");
+  assert.notEqual(criticalEnd, -1);
+  const criticalLoad = routeSource.slice(0, criticalEnd);
+  assert.doesNotMatch(criticalLoad, /loadAssetsRuntime\(\)/);
+  assert.match(routeSource, /loadAssetsRuntime\(\)\.then\(assetsRuntime => assetsRuntime\.fetchRank/);
+  assert.match(routeSource, /loadAssetsRuntime\(\)\.then\(assetsRuntime => assetsRuntime\.listHeroes/);
+});
+
 test("player detail keeps the initial critical path free of the full hero catalog", () => {
   const routeSource = extractTopLevelFunction(appSource, "async function renderPlayerDetail");
   const criticalEnd = routeSource.indexOf("const model = players.buildPlayerDetailViewModel(snapshot, null);");
