@@ -42,6 +42,15 @@ test("match detail uses the single-match metadata endpoint", () => {
   assert.doesNotMatch(routeSource, /matches\.getBulkMatchMetadataSnapshot\(\{/);
 });
 
+
+test("player detail fetches only the selected rank asset", () => {
+  const detailStart = appSource.indexOf("async async function renderPlayerDetail");
+  const routeSource = appSource.slice(detailStart);
+  assert.match(routeSource, /assetsRuntime\.fetchRank\(rankTier/);
+  assert.doesNotMatch(routeSource, /assetsRuntime\.listRanks\(\{ \.\.\.assetVersion\.options\(\), signal \}\)/);
+  assert.match(routeSource, /const rankAsset = rankResult\?\.data \?\? null/);
+});
+
 test("app defers analytics runtime until analytics routes", () => {
   assert.doesNotMatch(appSource, /from ["']\.\/services\/analytics\.js["']/);
   assert.match(appSource, /import\(\s*["']\.\/services\/analytics\.js["']/);
