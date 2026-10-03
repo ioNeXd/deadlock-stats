@@ -276,12 +276,13 @@ async function renderHeroDetail(heroId, signal) {
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">ABILITIES</span><h2>Ability orders</h2></div></div><div id="hero-detail-abilities"></div></section>';
 
   const options = { ...assetVersion.options(), signal };
-  Promise.all([
+  Promise.allSettled([
     analytics.getHeroDetailSnapshot(numericHeroId, options),
     assetsRuntime.fetchHero(numericHeroId, { ...assetVersion.options(), signal }),
-  ]).then(([snapshot, heroResult]) => {
+  ]).then(([analyticsResult, heroResult]) => {
     if (signal.aborted) return;
-    const hero = heroResult?.data ?? null;
+    const snapshot = analyticsResult.status === "fulfilled" ? analyticsResult.value : null;
+    const hero = heroResult.status === "fulfilled" ? (heroResult.value?.data ?? null) : null;
     if (hero) $("#hero-detail-name").textContent = nameOf(hero);
 
     const model = analytics.buildHeroDetailViewModel(snapshot, hero);
