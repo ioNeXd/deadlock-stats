@@ -1435,6 +1435,21 @@ async function renderPlayerDetail(accountId, signal) {
         : '<p class="muted">No hero stats returned.</p>';
     };
     renderHeroRows();
+    $("#player-detail-heroes").innerHTML = '<p class="muted">Loading hero stats…</p>';
+
+    setTimeout(() => {
+      if (signal.aborted) return;
+      players.getPlayerHeroStatsSnapshot(numericAccountId, { signal }).then(result => {
+        if (signal.aborted) return;
+        model.heroStats = result.heroStats ?? [];
+        renderHeroRows();
+      }).catch(error => {
+        if (!isAborted(error)) {
+          $("#player-detail-heroes").innerHTML = '<p class="muted">Hero stats unavailable.</p>';
+          console.warn("Deadlock API hero stats unavailable on player detail", error);
+        }
+      });
+    }, 0);
 
     const renderHistoryRows = () => {
       const historyRows = model.matchHistory.slice(0, 20).map(match => '<tr><td>' + esc(match.match_id ?? "—") + '</td><td><a href="#/heroes/' + esc(match.hero_id ?? "") + '">' + esc(heroName(match.hero_id ?? "—")) + '</a></td><td>' + esc(match.won != null ? (match.won ? "Win" : "Loss") : match.winning_team ?? "—") + '</td><td>' + esc(match.duration_s == null ? "—" : formatDuration(match.duration_s)) + '</td><td>' + esc(match.ranked_display_badge ?? "—") + '</td><td>' + esc(match.ranked_delta ?? "—") + '</td></tr>').join("");
