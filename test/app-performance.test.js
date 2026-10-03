@@ -204,8 +204,18 @@ test("app defers API status runtime", () => {
 
 test("dashboard consumes the core snapshot directly", () => {
   const routeSource = extractTopLevelFunction(appSource, "async function loadDashboard");
-  assert.match(routeSource, /const coreResult = await dashboardRuntime\.getDashboardCoreSnapshot\(options\);/);
-  assert.match(routeSource, /const snapshot = coreResult;/);
+  assert.match(routeSource, /snapshot = await dashboardRuntime\.getDashboardCoreSnapshot\(options\)/);
+  assert.match(routeSource, /catch \(error\)/);
   assert.doesNotMatch(routeSource, /coreResult\.status/);
   assert.doesNotMatch(routeSource, /heroesResult/);
+});
+
+
+test("dashboard keeps deferred work alive when the core request fails", () => {
+  const routeSource = extractTopLevelFunction(appSource, "async function loadDashboard");
+  const coreEnd = routeSource.indexOf("if (signal.aborted) return;", routeSource.indexOf("getDashboardCoreSnapshot"));
+  assert.notEqual(coreEnd, -1);
+  const afterCore = routeSource.slice(coreEnd);
+  assert.match(afterCore, /loadHeroes\(\)/);
+  assert.match(afterCore, /getDashboardPatchSnapshot\(options\)\.then\(/);
 });
