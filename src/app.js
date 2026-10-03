@@ -1045,6 +1045,7 @@ async function renderLeaderboard(signal) {
     '<section class="panel analytics-filter-panel"><form id="leaderboard-filters" class="analytics-filters">' +
     '<label class="field"><span>Region</span><select name="region"><option>Europe</option><option>Asia</option><option>NAmerica</option><option>SAmerica</option><option>Oceania</option></select></label>' +
     '<label class="field"><span>Leaderboard ID</span><input name="leaderboard_id" type="number" min="0" inputmode="numeric" placeholder="Current"></label>' +
+    '<label class="field"><span>Hero ID</span><input name="hero_id" type="number" min="0" inputmode="numeric" placeholder="All heroes"></label>' +
     '<button class="primary-button" type="submit">Load leaderboard</button></form></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">REGIONAL DATA</span><h2>Players</h2></div><b id="leaderboard-status">LOADING</b></div><div id="leaderboard-list" class="analytics-table"><p class="muted">Loading leaderboard.</p></div></section>';
 
@@ -1056,7 +1057,9 @@ async function renderLeaderboard(signal) {
     try {
       const options = {};
       if (values.leaderboard_id !== "") options.leaderboard_id = Number(values.leaderboard_id);
-      const result = await leaderboard.loadLeaderboard(values.region, { ...options, signal });
+      const result = values.hero_id !== ""
+        ? await leaderboard.loadHeroLeaderboard(values.region, Number(values.hero_id), { ...options, signal })
+        : await leaderboard.loadLeaderboard(values.region, { ...options, signal });
       if (signal.aborted) return;
       const entries = result.data ?? [];
       $("#leaderboard-status").textContent = entries.length + " PLAYERS";
