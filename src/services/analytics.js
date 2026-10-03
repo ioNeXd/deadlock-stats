@@ -221,16 +221,17 @@ export function buildHeroDetailViewModel(snapshot, hero = null) {
 
 export async function getBuildDetailSnapshot(heroId, buildId, options = {}) {
   const { signal, ...requestOptions } = options;
-  const [detailResult, performance] = await Promise.all([
+  const [detailResult, performanceResult] = await Promise.all([
     getBuildDetail(heroId, buildId, { ...requestOptions, signal }),
     getHeroBuildStatsSnapshot(heroId, {
       ...requestOptions,
       hero_build_id: buildId,
       signal,
-    }),
+    }).then(data => ({ ok: true, data })).catch(error => ({ ok: false, error })),
   ]);
 
   const detail = detailResult?.data ?? null;
+  const performance = performanceResult.ok ? performanceResult.data : [];
   const matchingPerformance = (performance ?? []).find(
     item => String(item?.heroBuildId) === String(buildId),
   ) ?? null;
@@ -240,6 +241,8 @@ export async function getBuildDetailSnapshot(heroId, buildId, options = {}) {
     buildId,
     detail,
     performance: matchingPerformance,
+    performanceAvailable: performanceResult.ok,
+    performanceError: performanceResult.ok ? null : performanceResult.error,
   };
 }
 
