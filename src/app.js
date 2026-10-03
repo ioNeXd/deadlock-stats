@@ -1825,7 +1825,7 @@ function renderExplorerResponseContent(result, target) {
     target.innerHTML =
       '<div class="explorer-response-placeholder"><strong>BINARY</strong><p>' +
       esc(contentType || "application/octet-stream") + " · " + formatBytes(bytes.byteLength) +
-      "</p><code class="explorer-hex">' + esc(preview || "empty") + (bytes.length > 128 ? " …" : "") + "</code></div>";
+      '</p><code class="explorer-hex">' + esc(preview || "empty") + (bytes.length > 128 ? " …" : "") + "</code></div>";
     return;
   }
 
