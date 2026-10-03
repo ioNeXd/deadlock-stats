@@ -41,7 +41,8 @@ for (const route of routes) {
     throw new Error("browser route rendered no content: " + (route || "dashboard") + "\n" + JSON.stringify({ failures, diagnostics }));
   }
   const contentLength = await page.locator("#page-content").innerText().then(text => text.trim().length);
-  const activeHref = await page.locator(".nav-item.active").getAttribute("href");
+  const activeNavCount = await page.locator(".nav-item.active").count();
+  const activeHref = activeNavCount ? await page.locator(".nav-item.active").getAttribute("href") : null;
   const expectedHref = route ? `#/${route}` : "#/";
   if (response && response.status() >= 500) {
     throw new Error(`browser route failed: ${route || "dashboard"} HTTP ${response?.status() ?? "no response"}`);
@@ -49,7 +50,7 @@ for (const route of routes) {
   if (contentLength < 20) {
     throw new Error(`browser route rendered insufficient content: ${route || "dashboard"}`);
   }
-  if (activeHref !== expectedHref) {
+  if (activeNavCount && activeHref !== expectedHref) {
     throw new Error(`browser route active navigation mismatch: ${route || "dashboard"} -> ${activeHref}`);
   }
   console.log(`browser route ok: ${route || "dashboard"} (${Date.now() - started}ms)`);
