@@ -23,8 +23,10 @@ jobs:
           node-version: 22
       - name: Run tests
         run: npm test
-      - name: Check browser entrypoint syntax
-        run: node --check src/app.js
+      - name: Check browser and validation script syntax
+        run: |
+          node --check src/app.js
+          for file in scripts/*.js; do node --check "$file"; done
       - name: Smoke test public Deadlock API
         run: node scripts/api-smoke.js
       - name: Audit live API operation coverage
