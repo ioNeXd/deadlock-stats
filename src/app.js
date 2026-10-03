@@ -1379,6 +1379,7 @@ async function renderPlayerDetail(accountId, signal) {
     '<section class="panel"><div id="player-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching player intelligence…</span></div><div id="player-detail-summary"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">HEROES</span><h2>Hero performance</h2></div></div><div id="player-detail-heroes"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">MATCH HISTORY</span><h2>Recent matches</h2></div></div><div id="player-detail-history"></div></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">RANK HISTORY</span><h2>Rank progression</h2></div></div><div id="player-detail-rank-history"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">RELATIONSHIPS</span><h2>Enemies & teammates</h2></div></div><div id="player-detail-relations"></div></section>';
 
   try {
@@ -1477,12 +1478,26 @@ async function renderPlayerDetail(accountId, signal) {
     renderHistoryRows();
     $("#player-detail-history").innerHTML = '<p class="muted">Loading match history…</p>';
 
+    const renderRankHistoryRows = () => {
+      const rankHistory = players.buildPlayerRankHistoryViewModel(model.matchHistory);
+      const rows = rankHistory.slice(-20).reverse().map(row =>
+        '<tr><td>' + esc(row.matchId ?? "—") + '</td><td>' + esc(row.badge ?? "—") + '</td><td>' +
+        esc(row.delta == null ? "—" : (row.delta > 0 ? "+" : "") + row.delta) + '</td><td>' +
+        esc(row.calibrationMatch ? "Calibration" : row.usedDemotionProtection ? "Protection" : "Ranked") + '</td></tr>'
+      ).join("");
+      $("#player-detail-rank-history").innerHTML = rows
+        ? '<div class="data-table-wrap"><table><thead><tr><th>Match</th><th>Badge</th><th>Delta</th><th>Context</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+        : '<p class="muted">No ranked history returned.</p>';
+    };
+    renderRankHistoryRows();
+
     setTimeout(() => {
       if (signal.aborted) return;
       players.getPlayerMatchHistorySnapshot(numericAccountId, { signal }).then(result => {
         if (signal.aborted) return;
         model.matchHistory = result.matchHistory ?? [];
         renderHistoryRows();
+        renderRankHistoryRows();
       }).catch(error => {
         if (!isAborted(error)) {
           $("#player-detail-history").innerHTML = '<p class="muted">Match history unavailable.</p>';
