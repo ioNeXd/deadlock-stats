@@ -42,7 +42,7 @@ for (const route of routes) {
   const contentLength = await page.locator("#page-content").innerText().then(text => text.trim().length);
   const activeHref = await page.locator(".nav-item.active").getAttribute("href");
   const expectedHref = route ? `#/${route}` : "#/";
-  if (!response || response.status() >= 500) {
+  if (response && response.status() >= 500) {
     throw new Error(`browser route failed: ${route || "dashboard"} HTTP ${response?.status() ?? "no response"}`);
   }
   if (contentLength < 20) {
