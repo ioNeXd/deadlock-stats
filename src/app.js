@@ -12,6 +12,13 @@ let assetVersionContextPromise = null;
 let assetsRuntimePromise = null;
 let dashboardRuntimePromise = null;
 let apiStatusRuntimePromise = null;
+let advancedToolsRuntimePromise = null;
+
+function loadAdvancedToolsRuntime() {
+  if (!advancedToolsRuntimePromise) advancedToolsRuntimePromise = import("./advanced-tools-ui.js");
+  return advancedToolsRuntimePromise;
+}
+
 
 function loadApiStatusRuntime() {
   if (!apiStatusRuntimePromise) apiStatusRuntimePromise = import("./services/api-status.js");
@@ -2315,7 +2322,7 @@ function route() {
   else if (routeName === "item-analytics") renderItemAnalytics(signal);
   else if (routeName === "maps") renderMaps(signal);
   else if (routeName === "data") renderDataExplorer(signal);
-  else if (routeName === "graphql") renderGraphql(signal);
+  else if (routeName === "graphql") renderGraphql(signal);\n  else if (routeName === "tools") renderAdvancedTools(signal);
   else if (routeName === "heroes" && routeParts[1]) renderHeroDetail(routeParts[1], signal);
   else if (routeName === "heroes") renderHeroes(signal);
   else if (routeName === "items" && routeParts[1]) renderItemDetail(routeParts[1], signal);
