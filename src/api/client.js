@@ -175,7 +175,10 @@ async function parseResponse(response, responseType = "auto") {
   if (contentType === "text/plain" || contentType === "text/html") return response.text();
   if (contentType === "text/event-stream") return response.body;
   if (contentType.startsWith("image/")) return response.blob();
-  const binaryMediaType = /^(application\\/x-protobuf|application\\/vnd\\.[^;]+\\+protobuf|application\\/(pdf|zip|gzip|wasm)|audio\\/|video\\/|font\\/)/i.test(contentType);
+  const binaryMediaType = contentType === "application/x-protobuf" ||
+    contentType.endsWith("+protobuf") ||
+    ["application/pdf", "application/zip", "application/gzip", "application/wasm"].includes(contentType) ||
+    ["audio/", "video/", "font/"].some(prefix => contentType.startsWith(prefix));
   if (binaryMediaType) return response.arrayBuffer();
   if (response.status === 204) return null;
 
