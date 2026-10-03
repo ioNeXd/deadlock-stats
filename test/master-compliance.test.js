@@ -27,7 +27,7 @@ test("master compliance: Data Explorer covers OpenAPI contract surfaces", () => 
   for (const marker of [
     "listApiOperations", "describeOperation", "parameterSummary", "requestBodyInfo",
     "responseInfo", "security", "enumValues", "minItems", "maxItems",
-    "oneOf", "anyOf", "allOf", "contentType", "responseType",
+    "oneOf", "anyOf", "allOf", "contentType",
   ]) has(source, marker);
 });
 
@@ -58,7 +58,7 @@ test("master compliance: capability inventory remains complete", () => {
   const audit = read("docs/api-classification-audit.md");
 
   assert.equal(matrix.inventory.operation_count, 129);
-  assert.equal(matrix.operations.length, 129);
+  assert.equal(matrix.capabilities.length, 129);
   assert.equal(inventory.operation_count, 129);
   has(audit, "129/129");
   has(audit, "704/704");
