@@ -70,9 +70,9 @@ test("match listing defers hero and item catalogs until metadata lookup", () => 
 
 test("player detail keeps the initial critical path free of the full hero catalog", () => {
   const routeSource = extractTopLevelFunction(appSource, "async function renderPlayerDetail");
-  const profileStart = routeSource.indexOf("const profile = profiles.data?.[0] ?? null;");
-  assert.notEqual(profileStart, -1);
-  const criticalLoad = routeSource.slice(0, profileStart);
+  const criticalEnd = routeSource.indexOf("const model = players.buildPlayerDetailViewModel(snapshot, null);");
+  assert.notEqual(criticalEnd, -1);
+  const criticalLoad = routeSource.slice(0, criticalEnd);
   assert.match(criticalLoad, /const snapshot = await players\.getPlayerDetailCoreSnapshot\(numericAccountId, \{ signal \}\)/);
   assert.doesNotMatch(criticalLoad, /players\.loadSteamProfiles\(\[numericAccountId\], \{ signal \}\)/);
   assert.doesNotMatch(criticalLoad, /players\.getPlayerRelationsSnapshot\(numericAccountId, \{ signal \}\)/);
