@@ -286,3 +286,30 @@ test("player rank forecast loader uses the current rank-predict endpoint", async
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("player card and account stats loaders use current player endpoints", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async input => {
+    const url = new URL(input);
+    calls.push(url.pathname);
+    const payload = url.pathname.endsWith("/card")
+      ? { account_id: 7, card: "current" }
+      : { account_id: 7, matches: 42 };
+    return new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  try {
+    const { loadPlayerCard, loadPlayerAccountStats } = await import("../src/services/players.js");
+    const card = await loadPlayerCard(7, { cache: false, dedupe: false });
+    const stats = await loadPlayerAccountStats(7, { cache: false, dedupe: false });
+    assert.deepEqual(calls, ["/v1/players/7/card", "/v1/players/7/account-stats"]);
+    assert.equal(card.data.card, "current");
+    assert.equal(stats.data.matches, 42);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
