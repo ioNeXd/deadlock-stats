@@ -152,13 +152,13 @@ export function getPlayerRankImage(accountIds, format = "png", options = {}) {
 
 
 export function getPlayerRankPredict(accountId, options = {}) {
-  return apiGet(accountPath(accountId, "/rank-predict"), options);
+  return apiGet(accountPath(accountId, "/rank"), options);
 }
 
 export function getPlayerRankPredictImage(accountId, format = "png", options = {}) {
   validateAccountId(accountId);
   if (format !== "png" && format !== "webp") throw new RangeError("format must be png or webp");
-  return apiGet(accountPath(accountId, "/rank-predict/image"), {
+  return apiGet(accountPath(accountId, "/rank/image"), {
     ...options,
     query: { ...(options.query ?? {}), format },
     responseType: "arrayBuffer",
