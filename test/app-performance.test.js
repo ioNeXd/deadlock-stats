@@ -173,6 +173,13 @@ test("asset version service avoids eager asset service dependency", async () => 
   assert.match(source, /from ["']\.\.\/api\/assets\.js["']/);
 });
 
+test("dashboard defers patch feed from initial render", () => {
+  const routeSource = extractTopLevelFunction(appSource, "async function loadDashboard");
+  assert.match(routeSource, /getDashboardCoreSnapshot\(options\)/);
+  assert.doesNotMatch(routeSource, /getDashboardSnapshot\(options\)/);
+  assert.match(routeSource, /getDashboardPatchSnapshot\(options\)\.then\(/);
+});
+
 test("app defers dashboard runtime", () => {
   assert.doesNotMatch(appSource, /from ["']\.\/services\/dashboard\.js["']/);
   assert.match(appSource, /import\(\s*["']\.\/services\/dashboard\.js["']/);
