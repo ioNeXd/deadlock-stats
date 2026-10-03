@@ -2301,6 +2301,60 @@ async function renderMaps(signal) {
     setConnection(false, "API unavailable");
   });
 }
+
+async function renderPatches(signal) {
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">HISTORY / PATCH NOTES</span><h2>Patch History</h2><p>Official patch-note feed returned by the Deadlock API. The page preserves the feed content and exposes the source link when provided.</p></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">PATCH FEED</span><h2 id="patch-history-count">Loading…</h2></div><span id="patch-history-status">LIVE API</span></div><div id="patch-history" class="patch-history" aria-live="polite"><p>Loading patch history…</p></div></section>';
+
+  try {
+    const { loadPatchHistory } = await import("./services/patches.js");
+    const result = await loadPatchHistory({ signal });
+    if (signal.aborted) return;
+    const container = $("#patch-history");
+    const patches = result.patches ?? [];
+    $("#patch-history-count").textContent = patches.length + " patches";
+    $("#patch-history-status").textContent = "ONLINE";
+    $("#patch-history-status").classList.add("online");
+    if (!patches.length) {
+      container.innerHTML = '<p>No patch notes returned by the API.</p>';
+      return;
+    }
+
+    container.innerHTML = patches.map((patch, index) => {
+      const date = patch.pubDate ? new Date(patch.pubDate).toLocaleDateString() : "Unknown date";
+      const source = patch.author || patch.creator || patch.category || "PATCH FEED";
+      const safeLink = safeExternalUrl(patch.link);
+      const content = patch.content ? String(patch.content) : "";
+      return '<article class="patch-card' + (index === 0 ? ' expanded' : '') + '">' +
+        '<div><div class="patch-meta"><span>' + esc(date) + '</span><span>' + esc(source) + '</span></div>' +
+        '<h3>' + esc(patch.title ?? "Untitled patch") + '</h3>' +
+        (content ? '<div class="patch-content">' + content + '</div>' : '<p>Patch content was not included in the feed response.</p>') +
+        '</div><div>' +
+        (safeLink ? '<a class="button" href="' + esc(safeLink) + '" target="_blank" rel="noopener noreferrer">Source ↗</a>' : '') +
+        '<button class="button" type="button" data-patch-toggle="' + index + '" aria-expanded="' + (index === 0 ? "true" : "false") + '">' + (index === 0 ? "Collapse" : "Read") + '</button>' +
+        '</div></article>';
+    }).join("");
+
+    container.querySelectorAll("[data-patch-toggle]").forEach(button => {
+      button.addEventListener("click", () => {
+        const card = button.closest(".patch-card");
+        const expanded = card.classList.toggle("expanded");
+        button.setAttribute("aria-expanded", String(expanded));
+        button.textContent = expanded ? "Collapse" : "Read";
+      });
+    });
+    setConnection(true, "API connected");
+  } catch (error) {
+    if (isAborted(error)) return;
+    $("#patch-history-count").textContent = "Unavailable";
+    $("#patch-history-status").textContent = "OFFLINE";
+    $("#patch-history-status").classList.add("offline");
+    $("#patch-history").innerHTML = '<p class="error-text">Patch feed request failed: ' + esc(error.message) + '</p>';
+    setConnection(false, "API unavailable");
+  }
+}
+
 function renderNotFound(routeName) {
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">NAVIGATION / 404</span><h2>Route not found</h2><p>The route <code>' +
     esc('#/' + routeName) +
@@ -2320,7 +2374,7 @@ function route() {
   else if (routeName === "builds") renderBuilds(signal);
   else if (routeName === "leaderboard") renderLeaderboard(signal);
   else if (routeName === "item-analytics") renderItemAnalytics(signal);
-  else if (routeName === "maps") renderMaps(signal);
+  else if (routeName === "maps") renderMaps(signal);\n  else if (routeName === "patches") renderPatches(signal);
   else if (routeName === "data") renderDataExplorer(signal);
   else if (routeName === "graphql") renderGraphql(signal);\n  else if (routeName === "tools") renderAdvancedTools(signal);
   else if (routeName === "heroes" && routeParts[1]) renderHeroDetail(routeParts[1], signal);
