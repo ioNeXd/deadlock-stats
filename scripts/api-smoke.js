@@ -83,6 +83,20 @@ if (operations !== 129 || parameters !== 704) {
   throw new Error(`OpenAPI inventory drift: operations=${operations}, parameters=${parameters}, schemas=${schemas}`);
 }
 console.log(`PASS OpenAPI contract: 3.1.0, ${operations} operations, ${parameters} operation/path parameters, ${schemas} schemas`);
+const snapshotResponse = await fetch('https://raw.githubusercontent.com/ioNeXd/deadlock-stats/new-site/docs/api-openapi-inventory.json');
+if (!snapshotResponse.ok) throw new Error(`failed to load repository OpenAPI inventory: HTTP ${snapshotResponse.status}`);
+const snapshot = await snapshotResponse.json();
+const liveSchemaNames = Object.keys(contract.components?.schemas || {});
+const snapshotSchemaNames = Object.keys(snapshot.schemas || {});
+const snapshotSet = new Set(snapshotSchemaNames);
+const liveSet = new Set(liveSchemaNames);
+const missingFromSnapshot = liveSchemaNames.filter((name) => !snapshotSet.has(name));
+const removedFromLive = snapshotSchemaNames.filter((name) => !liveSet.has(name));
+console.log(`OpenAPI schema diff: missing_from_snapshot=${JSON.stringify(missingFromSnapshot)}, removed_from_live=${JSON.stringify(removedFromLive)}`);
+if (missingFromSnapshot.length || removedFromLive.length) {
+  throw new Error('repository OpenAPI schema inventory is stale; refresh the generated inventory');
+}
+
 
 
 console.log('Deadlock API smoke checks passed.');
