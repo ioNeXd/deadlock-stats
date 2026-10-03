@@ -241,3 +241,27 @@ test("player rank history derives current ranked fields from match history", asy
   assert.equal(model[1].calibrationMatch, 1);
   assert.equal(model[1].usedDemotionProtection, true);
 });
+
+
+test("player rank history loader derives ranked rows from current match history endpoint", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async input => {
+    const url = new URL(input);
+    calls.push(url.pathname);
+    return new Response(JSON.stringify([
+      { match_id: 1, start_time: 100, ranked_display_badge: 11, ranked_delta: 8 },
+      { match_id: 2, start_time: 200, ranked_display_badge: null, ranked_delta: null },
+    ]), { status: 200, headers: { "content-type": "application/json" } });
+  };
+
+  try {
+    const { loadPlayerRankHistory } = await import("../src/services/players.js");
+    const result = await loadPlayerRankHistory(7, { cache: false, dedupe: false });
+    assert.deepEqual(calls, ["/v1/players/7/match-history"]);
+    assert.deepEqual(result.data.map(row => row.matchId), [1]);
+    assert.equal(result.data[0].delta, 8);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
