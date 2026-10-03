@@ -280,7 +280,7 @@ test("player rank forecast loader uses the current rank-predict endpoint", async
   try {
     const { loadPlayerRankForecast } = await import("../src/services/players.js");
     const result = await loadPlayerRankForecast(7, { cache: false, dedupe: false });
-    assert.deepEqual(calls, ["/v1/players/7/rank-predict"]);
+    assert.deepEqual(calls, ["/v1/players/7/rank"]);
     assert.equal(result.data.predicted_badge, 12);
   } finally {
     globalThis.fetch = originalFetch;
