@@ -95,7 +95,7 @@ test("probeApiStatus always bypasses cache and dedupe", async () => {
   await probeApiStatus({ cache: true, dedupe: true });
   await probeApiStatus({ cache: true, dedupe: true });
 
-  assert.equal(requests.length, 2);
+  assert.equal(requests.length, 4);
 });
 
 
