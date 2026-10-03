@@ -1,0 +1,42 @@
+name: security
+
+on:
+  push:
+    branches:
+      - new-site
+  pull_request:
+    branches:
+      - new-site
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Dependency audit
+        run: npm audit --audit-level=high
+      - name: Start local server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/deadlock-stats-server.log 2>&1 &
+          for i in {1..20}; do
+            curl --fail --silent --show-error http://127.0.0.1:4173/ > /dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/deadlock-stats-server.log
+          exit 1
+      - name: OWASP ZAP baseline
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: http://127.0.0.1:4173/
+          fail_action: true
+          allow_issue_writing: false
