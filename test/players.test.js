@@ -13,6 +13,11 @@ import {
   getPlayerRankPredictBatchImage,
 } from "../src/api/players.js";
 
+import {
+  getPlayerDetailSnapshot,
+  buildPlayerDetailViewModel,
+} from "../src/services/players.js";
+
 test("player hero stats requires account ids and forwards documented filters", async () => {
   assert.throws(() => getPlayerHeroStats(), TypeError);
   assert.throws(() => getPlayerHeroStats({ account_ids: [] }), RangeError);
