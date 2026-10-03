@@ -415,7 +415,7 @@ In particular:
 
 - the Data Explorer is the primary generic surface for API capabilities that do not yet have dedicated product UI;
 - generated request examples are best-effort and intentionally conservative rather than a complete JSON Schema example generator;
-- persistent user-created request presets are not yet implemented;
+- server-side/shared persistence for request presets is not implemented; browser-local request presets are supported via `localStorage`;
 - advanced API capabilities are exposed only where the current contract and implementation support them;
 - the API inventory must be refreshed when the official OpenAPI changes materially.
 
