@@ -45,10 +45,10 @@ export function normalizeItem(entity) { return normalizeEntity(entity); }
 
 function resolveAssetUrl(value) {
   if (typeof value !== "string" || !value) return "";
-  if (/^(?:https?:)?\\/\\//i.test(value)) return value;
+  if (/^(?:https?:)?\/\//i.test(value)) return value;
   if (/^data:/i.test(value)) return value;
   if (value.startsWith("/")) return "https://api.deadlock-api.com" + value;
-  if (/^(?:images|icons|assets)\\//i.test(value)) return "https://api.deadlock-api.com/" + value;
+  if (/^(?:images|icons|assets)\//i.test(value)) return "https://api.deadlock-api.com/" + value;
   return value;
 }
 
