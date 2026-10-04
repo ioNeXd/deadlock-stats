@@ -112,8 +112,13 @@ test("advanced tools validate live query requirements", () => {
 });
 
 test("advanced tools parse SSE event fields and multiline data", () => {
-  const event = parseSseEventBlock("event: message\\nid: 7\\ndata: {\"x\":1}\\ndata: next\\n");
+  const event = parseSseEventBlock("event: message
+id: 7
+data: {\"x\":1}
+data: next
+");
   assert.equal(event.type, "message");
   assert.equal(event.id, "7");
-  assert.equal(event.data, '{\"x\":1}\\nnext');
+  assert.equal(event.data, '{"x":1}
+next');
 });
