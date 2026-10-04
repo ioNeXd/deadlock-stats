@@ -19,10 +19,10 @@ test("heroes route uses live asset and analytics contracts", () => {
   assert.match(source, /min_hero_matches/);
 });
 
-test("heroes route uses API assets instead of fabricated artwork", () => {
+test("heroes route uses normal API portraits instead of fabricated artwork", () => {
   const source = heroRouteSource();
   assert.match(source, /resolveAssetImage\(hero, \[/);
-  assert.match(source, /hero_card_critical_webp/);
+  assert.match(source, /icon_image_small_webp/);
 });
 
 test("hero detail isolates analytics and asset availability", () => {
