@@ -2902,8 +2902,8 @@ function renderAdvancedTools(signal) {
   });
 }
 
-function route() {
-  const signal = beginRoute();
+function route(externalSignal) {
+  const signal = externalSignal || beginRoute();
   const routeParts = location.hash.replace(/^#\/?/, "").split("/");
   const routeName = routeParts[0] || "dashboard";
   if (routeName === "dashboard") renderDashboard(signal);
