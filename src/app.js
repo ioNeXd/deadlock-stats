@@ -1,6 +1,8 @@
 import { API_BASE_URL } from "./api/client.js";
 const content = document.querySelector("#page-content");
 
+const APP_ASSET_VERSION = "20261004-1541";
+
 const navItems = [...document.querySelectorAll(".nav-item")];
 let routeController = null;
 let runtimePromise = null;
@@ -46,7 +48,7 @@ function updateNavigation(name) {
 }
 
 function renderDashboard(signal) {
-  if (!dashboardPromise) dashboardPromise = import("./dashboard-route.js");
+  if (!dashboardPromise) dashboardPromise = import("./dashboard-route.js?v=" + APP_ASSET_VERSION);
   if (!dashboardStylesPromise) dashboardStylesPromise = ensureStylesheet("./src/styles-dashboard.css", "dashboard");
   Promise.all([dashboardPromise, dashboardStylesPromise]).then(([module]) => {
     if (signal.aborted) return;
@@ -60,7 +62,7 @@ function renderDashboard(signal) {
 }
 
 async function renderRuntime(signal) {
-  if (!runtimePromise) runtimePromise = import("./app-runtime.js");
+  if (!runtimePromise) runtimePromise = import("./app-runtime.js?v=" + APP_ASSET_VERSION);
   if (!pageStylesPromise) pageStylesPromise = ensureStylesheet("./src/styles-app-pages.css", "pages");
   const [runtime] = await Promise.all([runtimePromise, pageStylesPromise]);
   if (signal.aborted) return;
@@ -85,10 +87,10 @@ window.addEventListener("hashchange", route);
 window.addEventListener("keydown", event => {
   if (!((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k")) return;
   event.preventDefault();
-  import("./command-palette.js").then(module => module.open()).catch(() => {});
+  import("./command-palette.js?v=" + APP_ASSET_VERSION).then(module => module.open()).catch(() => {});
 }, { passive: false });
 route();
 
 window.addEventListener("load", () => {
-  setTimeout(() => import("./sw-register.js").catch(() => {}), 1500);
+  setTimeout(() => import("./sw-register.js?v=" + APP_ASSET_VERSION).catch(() => {}), 1500);
 }, { once: true });
