@@ -5,6 +5,8 @@ import {
   normalizeLiveUrls,
   buildDemoQueryBody,
   buildCustomMatchBody,
+  buildLiveQueryOptions,
+  parseSseEventBlock,
 } from "../src/services/advanced-tools.js";
 
 test("advanced tools normalize demo job status", () => {
@@ -75,4 +77,18 @@ test("advanced tools UI presents demo schema table summaries", async () => {
   assert.match(source, /normalizeDemoSchema/);
   assert.match(source, /columns\.length/);
   assert.match(source, /arrowType/);
+});
+
+
+test("advanced tools validate live query requirements", () => {
+  assert.deepEqual(buildLiveQueryOptions({ query: " select 1 ", matchId: "42" }), { query: "select 1", match_id: 42, broadcast_url: undefined });
+  assert.throws(() => buildLiveQueryOptions({ query: "" }), TypeError);
+  assert.throws(() => buildLiveQueryOptions({ query: "select 1" }), TypeError);
+});
+
+test("advanced tools parse SSE event fields and multiline data", () => {
+  const event = parseSseEventBlock("event: message\\nid: 7\\ndata: {\"x\":1}\\ndata: next\\n");
+  assert.equal(event.type, "message");
+  assert.equal(event.id, "7");
+  assert.equal(event.data, '{\"x\":1}\\nnext');
 });
