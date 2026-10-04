@@ -2315,3 +2315,113 @@ body{
 .demo-output-panel .tool-output{min-height:420px;max-height:620px}
 @media(max-width:720px){.demo-page-head h2{font-size:clamp(42px,12vw,68px)}.demo-output-panel .tool-output{min-height:280px}}
 \n/* Live Query Desk */\n.live-page-head{position:relative;overflow:hidden;border-bottom:1px solid var(--line);padding:clamp(26px,5vw,58px);background:radial-gradient(circle at 82% 18%,rgba(104,195,138,.13),transparent 20rem),radial-gradient(circle at 18% 100%,rgba(93,169,233,.09),transparent 18rem),linear-gradient(135deg,#111718,#141414)}.live-page-head:before{content:"LIVE";position:absolute;right:-8px;bottom:-48px;color:rgba(255,255,255,.025);font:900 clamp(110px,18vw,220px)/.8 "DM Mono";letter-spacing:-.13em;transform:rotate(-8deg);pointer-events:none}.live-page-head>*{position:relative;z-index:1}.live-page-head h2{font-size:clamp(48px,7vw,84px);letter-spacing:-.09em;margin:.12em 0}.live-page-head p{max-width:820px}.live-lab{border-top:2px solid var(--green);background:radial-gradient(circle at 100% 0,rgba(104,195,138,.07),transparent 20rem),var(--panel)}.live-output-panel{border-top:2px solid var(--blue);background:radial-gradient(circle at 0 100%,rgba(93,169,233,.06),transparent 20rem),var(--panel)}.live-lab .tool-form label{border-left:2px solid var(--blue);padding-left:12px}.live-lab .tool-form label:nth-child(2){border-left-color:var(--green)}.live-lab .tool-form label:nth-child(3){border-left-color:var(--yellow)}.live-output-panel .tool-output{min-height:420px;max-height:620px;white-space:pre-wrap}@media(max-width:720px){.live-page-head h2{font-size:clamp(42px,12vw,68px)}.live-output-panel .tool-output{min-height:280px}}
+
+/* The Matchmaker's Office — custom lobby control room. */
+.custom-match-page-head{
+  position:relative;overflow:hidden;padding:clamp(26px,5vw,58px);
+  border-bottom:1px solid var(--line);
+  background:
+    radial-gradient(circle at 82% 16%,rgba(232,166,76,.14),transparent 20rem),
+    radial-gradient(circle at 18% 92%,rgba(93,169,233,.09),transparent 20rem),
+    radial-gradient(circle at 58% 42%,rgba(104,195,138,.055),transparent 18rem),
+    linear-gradient(135deg,#111718,#141414);
+}
+.custom-match-page-head:before{
+  content:"MATCHMAKER";position:absolute;right:-22px;bottom:-50px;
+  color:rgba(255,255,255,.024);font:900 clamp(76px,13vw,165px)/.8 "DM Mono";
+  letter-spacing:-.13em;transform:rotate(-8deg);pointer-events:none;
+}
+.custom-match-page-head:after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:3px;
+  background:linear-gradient(90deg,var(--orange),var(--yellow),var(--green),var(--blue),var(--purple));
+}
+.custom-match-page-head>*{position:relative;z-index:1}
+.custom-match-page-head h2{font-size:clamp(48px,7.5vw,88px);letter-spacing:-.09em;text-transform:uppercase;margin:.12em 0}
+.custom-match-page-head p{max-width:850px}
+.custom-match-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr);gap:14px;align-items:start}
+.custom-match-grid>.panel{min-width:0}
+.custom-match-brief{
+  border-top:2px solid var(--orange);
+  background:radial-gradient(circle at 100% 0,rgba(232,166,76,.065),transparent 22rem),var(--panel);
+}
+.custom-match-telemetry{
+  position:sticky;top:18px;
+  border-top:2px solid var(--blue);
+  background:radial-gradient(circle at 0 100%,rgba(93,169,233,.065),transparent 22rem),var(--panel);
+}
+.custom-match-status{
+  padding:7px 10px;border:1px solid var(--line);
+  font:9px "DM Mono";letter-spacing:.09em;color:var(--muted)
+}
+.custom-match-fieldset{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+  margin-top:14px;padding:14px;border:1px solid var(--line);
+  background:rgba(255,255,255,.012);
+}
+.custom-match-fieldset:first-child{border-left:2px solid var(--yellow)}
+.custom-match-fieldset:nth-child(2){border-left:2px solid var(--blue)}
+.custom-match-fieldset:nth-child(3){border-left:2px solid var(--purple)}
+.custom-match-fieldset-title{
+  grid-column:1/-1;font:9px "DM Mono";letter-spacing:.11em;color:var(--muted);
+  padding-bottom:8px;border-bottom:1px solid var(--line)
+}
+.custom-match-form label{
+  border-left:2px solid color-mix(in srgb,var(--green) 55%,var(--line));
+  padding-left:11px;
+}
+.custom-match-form label input[type="checkbox"]{accent-color:var(--green)}
+.custom-match-switches{grid-template-columns:repeat(2,minmax(0,1fr))}
+.custom-match-switches label{display:flex;align-items:center;gap:9px;min-height:42px}
+.custom-match-switches label input{width:auto}
+.custom-match-submit{margin-top:14px}
+.custom-match-submit .primary-button{
+  min-height:48px;padding-inline:18px;
+  background:linear-gradient(135deg,var(--orange),var(--yellow));color:#111
+}
+.custom-match-rate{
+  margin:14px 0 0;padding:12px 14px;border:1px solid var(--line);
+  color:var(--muted);font:9px/1.6 "DM Mono"
+}
+.custom-response-grid{display:grid;gap:8px;margin-top:16px}
+.custom-response-grid>div{
+  min-width:0;padding:13px 14px;border:1px solid var(--line);
+  border-left:2px solid var(--blue);background:rgba(255,255,255,.018)
+}
+.custom-response-grid>div:nth-child(2){border-left-color:var(--yellow)}
+.custom-response-grid>div:nth-child(3){border-left-color:var(--purple)}
+.custom-response-grid span{
+  display:block;margin-bottom:7px;font:8px "DM Mono";letter-spacing:.09em;color:var(--muted)
+}
+.custom-response-grid strong{display:block;font:12px/1.4 "DM Mono";word-break:break-all}
+.custom-match-actions{
+  margin-top:14px;padding:14px;border:1px solid color-mix(in srgb,var(--green) 24%,var(--line));
+  background:rgba(104,195,138,.025)
+}
+.custom-match-action-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}
+.custom-match-actions>input{width:100%;margin-bottom:10px}
+.custom-match-actions .button{flex:1}
+.custom-match-id-box{
+  display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:14px;
+  padding:14px;border:1px solid color-mix(in srgb,var(--purple) 22%,var(--line));
+  background:rgba(157,131,230,.025)
+}
+.custom-match-id-box>div{grid-column:1/-1}
+.custom-match-id-box h4{margin:.2rem 0 0}
+.custom-match-id-box label{display:grid;gap:6px}
+.custom-match-id-box .button{align-self:end}
+.custom-match-id-box>strong{
+  grid-column:1/-1;display:block;padding:10px;border-top:1px solid var(--line);
+  color:var(--yellow);font:12px "DM Mono";word-break:break-all
+}
+.custom-match-output{min-height:220px;margin-top:14px;max-height:420px;white-space:pre-wrap}
+@media(max-width:920px){
+  .custom-match-grid{grid-template-columns:1fr}
+  .custom-match-telemetry{position:static}
+}
+@media(max-width:720px){
+  .custom-match-page-head h2{font-size:clamp(42px,12vw,68px)}
+  .custom-match-page-head:before{font-size:92px}
+  .custom-match-fieldset,.custom-match-switches{grid-template-columns:1fr}
+  .custom-match-id-box{grid-template-columns:1fr}
+  .custom-match-id-box .button{width:100%}
+}
