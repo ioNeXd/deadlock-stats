@@ -11,6 +11,8 @@ export interface BandOption {
   min: number
   max: number
   label: string
+  startColor: string | null
+  endColor: string | null
 }
 
 interface Props {
@@ -34,13 +36,18 @@ export function FilterBar({ locale, windows, bands, patchId, bandId, onPatch, on
         <div className="flex flex-wrap gap-1.5">
           {bands.map((band) => {
             const active = band.id === bandId
+            const rankStyle =
+              band.startColor && band.endColor
+                ? ({ '--rank-start': band.startColor, '--rank-end': band.endColor } as React.CSSProperties)
+                : undefined
             return (
               <button
                 key={band.id}
                 type="button"
                 aria-pressed={active}
                 onClick={() => onBand(band.id)}
-                className="chamfer-sm flex h-10 items-center gap-2 bg-secondary px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground"
+                style={rankStyle}
+                className="rank-band-button chamfer-sm flex h-10 items-center gap-2 bg-secondary px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground aria-pressed:text-foreground"
               >
                 <span>{band.label}</span>
               </button>
