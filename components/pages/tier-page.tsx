@@ -19,7 +19,7 @@ export function buildBandOptions(ranks: RankEntity[], allLabel: string): BandOpt
       band.id === 'all'
         ? allLabel
         : `${byTier.get(low)?.name ?? low} – ${byTier.get(high)?.name ?? high}`
-    return { id: band.id, min: band.min, max: band.max, label, icon: byTier.get(high)?.icon ?? null }
+    return { id: band.id, min: band.min, max: band.max, label }
   })
 }
 
