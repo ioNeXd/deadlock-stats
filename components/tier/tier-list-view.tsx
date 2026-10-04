@@ -2,8 +2,7 @@
 
 import { Search } from 'lucide-react'
 import Link from 'next/link'
-import { useMemo } from 'react'
-import useSWR from 'swr'
+import { useEffect, useMemo, useState } from 'react'
 import { RateLimitError } from '@/lib/api/client'
 import { loadTierStats, type StatsResult } from '@/lib/api/snapshots'
 import type { HeroEntity, ItemEntity, ItemSlot, PatchWindow, StatsSnapshot } from '@/lib/api/types'
@@ -48,14 +47,43 @@ export function TierListView(props: Props) {
   const dir: SortDir = params.get('dir') === 'asc' ? 'asc' : params.get('dir') === 'desc' ? 'desc' : sort === 'name' ? 'asc' : 'desc'
 
   const isDefault = patch.id === windows[0]?.id && band.id === DEFAULT_BAND.id
-  const fallback: StatsResult | undefined =
+  const initialData: StatsResult | undefined =
     isDefault && initialSnapshot ? { snapshot: initialSnapshot, source: 'snapshot' } : undefined
+  const [data, setData] = useState<StatsResult | undefined>(initialData)
+  const [error, setError] = useState<unknown>(undefined)
+  const [isLoading, setIsLoading] = useState(!initialData)
 
-  const { data, error, isLoading, mutate } = useSWR(
-    ['stats', patch.id, band.id],
-    () => loadTierStats(patch, band),
-    { fallbackData: fallback, revalidateIfStale: false, revalidateOnFocus: false, keepPreviousData: true },
-  )
+  useEffect(() => {
+    let cancelled = false
+
+    if (isDefault && initialSnapshot) {
+      setData(initialData)
+      setError(undefined)
+      setIsLoading(false)
+      return () => {
+        cancelled = true
+      }
+    }
+
+    setIsLoading(true)
+    setError(undefined)
+
+    void loadTierStats(patch, band)
+      .then((result) => {
+        if (cancelled) return
+        setData(result)
+        setIsLoading(false)
+      })
+      .catch((reason) => {
+        if (cancelled) return
+        setError(reason)
+        setIsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [band, initialData, initialSnapshot, isDefault, patch])
 
   const entityMap = useMemo(
     () => new Map<number, HeroEntity | ItemEntity>(props.entities.map((e) => [e.id, e])),
@@ -186,7 +214,19 @@ export function TierListView(props: Props) {
           <p>{throttled ? t.context.throttled : data ? t.context.errorKeep : t.context.error}</p>
           <button
             type="button"
-            onClick={() => mutate()}
+            onClick={() => {
+              setError(undefined)
+              setIsLoading(true)
+              void loadTierStats(patch, band)
+                .then((result) => {
+                  setData(result)
+                  setIsLoading(false)
+                })
+                .catch((reason) => {
+                  setError(reason)
+                  setIsLoading(false)
+                })
+            }}
             className="chamfer-sm bg-secondary px-3 py-1.5 font-medium hover:bg-accent"
           >
             {t.context.retry}
