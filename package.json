@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "gen:api": "openapi-typescript https://api.deadlock-api.com/openapi.json -o lib/api/schema.d.ts",
-    "gen:inventory": "node scripts/generate-api-inventory.mjs"
+    "gen:inventory": "node scripts/generate-api-inventory.mjs",
+    "lighthouse": "pnpm dlx @lhci/cli@0.15.1 autorun --config=./lighthouserc.cjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
