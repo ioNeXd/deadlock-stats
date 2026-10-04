@@ -195,14 +195,16 @@ test("asset version service avoids eager asset service dependency", async () => 
   assert.match(source, /from ["']\.\.\/api\/assets\.js["']/);
 });
 
-test("dashboard defers hero catalog from critical render", () => {
+test("dashboard starts hero catalog independently from core request", () => {
   const routeSource = extractTopLevelFunction(appSource, "async function loadDashboard");
-  const coreIndex = routeSource.indexOf("await dashboardRuntime.getDashboardCoreSnapshot(options)");
+  const coreIndex = routeSource.indexOf("dashboardRuntime.getDashboardCoreSnapshot(options)");
+  const heroCallIndex = routeSource.indexOf("loadHeroes();");
   const assetRuntimeIndex = routeSource.indexOf("loadAssetsRuntime()");
   assert.notEqual(coreIndex, -1);
+  assert.notEqual(heroCallIndex, -1);
   assert.notEqual(assetRuntimeIndex, -1);
-  assert.ok(coreIndex < assetRuntimeIndex);
-  assert.match(routeSource, /loadHeroes\(\)/);
+  assert.ok(heroCallIndex < routeSource.indexOf("getDashboardActivitySnapshot(options)"));
+  assert.doesNotMatch(routeSource, /await loadHeroes\(\)/);
   assert.match(routeSource, /assetsRuntime\.listHeroes\(options\)/);
 });
 
