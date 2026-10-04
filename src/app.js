@@ -5,6 +5,26 @@ const navItems = [...document.querySelectorAll(".nav-item")];
 let routeController = null;
 let runtimePromise = null;
 let dashboardPromise = null;
+let dashboardStylesPromise = null;
+let pageStylesPromise = null;
+const stylesheetPromises = new Map();
+
+function ensureStylesheet(href, cacheKey) {
+  if (stylesheetPromises.has(cacheKey)) return stylesheetPromises.get(cacheKey);
+  const promise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('link[data-route-styles="' + href + '"]');
+    if (existing) { resolve(); return; }
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    link.dataset.routeStyles = href;
+    link.onload = resolve;
+    link.onerror = () => reject(new Error("Stylesheet failed to load: " + href));
+    document.head.appendChild(link);
+  });
+  stylesheetPromises.set(cacheKey, promise);
+  return promise;
+}
 
 function beginRoute() {
   routeController?.abort();
@@ -27,7 +47,8 @@ function updateNavigation(name) {
 
 function renderDashboard(signal) {
   if (!dashboardPromise) dashboardPromise = import("./dashboard-route.js");
-  dashboardPromise.then(module => {
+  if (!dashboardStylesPromise) dashboardStylesPromise = ensureStylesheet("./styles-dashboard.css", "dashboard");
+  Promise.all([dashboardPromise, dashboardStylesPromise]).then(([module]) => {
     if (signal.aborted) return;
     module.renderDashboard({ content, signal, assetVersion });
     module.bindVersionControl(() => route());
@@ -40,7 +61,8 @@ function renderDashboard(signal) {
 
 async function renderRuntime(signal) {
   if (!runtimePromise) runtimePromise = import("./app-runtime.js");
-  const runtime = await runtimePromise;
+  if (!pageStylesPromise) pageStylesPromise = ensureStylesheet("./styles-app-pages.css", "pages");
+  const [runtime] = await Promise.all([runtimePromise, pageStylesPromise]);
   if (signal.aborted) return;
   runtime.route(signal);
 }
@@ -60,10 +82,13 @@ function route() {
 }
 
 window.addEventListener("hashchange", route);
+window.addEventListener("keydown", event => {
+  if (!((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k")) return;
+  event.preventDefault();
+  import("./command-palette.js").then(module => module.open()).catch(() => {});
+}, { passive: false });
 route();
 
-const idle = window.requestIdleCallback || (callback => setTimeout(callback, 5000));
-idle(() => {
-  import("./command-palette.js").catch(() => {});
-  import("./sw-register.js").catch(() => {});
-});
+window.addEventListener("load", () => {
+  setTimeout(() => import("./sw-register.js").catch(() => {}), 1500);
+}, { once: true });
