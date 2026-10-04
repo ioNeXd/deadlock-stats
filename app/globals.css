@@ -24,6 +24,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-background: var(--background);
+  --color-foreground: var(--foreground);
   --color-tier-s: var(--tier-s);
   --color-tier-a: var(--tier-a);
   --color-tier-b: var(--tier-b);
