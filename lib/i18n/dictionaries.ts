@@ -9,13 +9,13 @@ const en = {
     mainNav: 'Main',
     language: 'Language',
   },
-  nav: { heroes: 'Heroes', items: 'Items', methodology: 'Methodology', status: 'Status' },
+  nav: { tierlist: 'Tier List', heroes: 'Heroes', items: 'Items', methodology: 'Methodology', status: 'Status' },
   footer: {
     disclaimer: 'Fan project, not affiliated with or endorsed by Valve. Deadlock and related assets are property of Valve.',
     data: 'Data from the community Deadlock API.',
     sponsor: 'Support the Deadlock API',
   },
-  heroes: {
+  tierList: {\n    eyebrow: 'Tier list',\n    title: 'Tier list',\n    lede: 'Compare heroes and items in one place, with the same rank and patch context.',\n    heroes: 'Heroes',\n    items: 'Items',\n  },\n  tierList: {\n    eyebrow: 'Tier list',\n    title: 'Tier list',\n    lede: 'Compare heróis e itens em um só lugar, com o mesmo contexto de rank e patch.',\n    heroes: 'Heróis',\n    items: 'Itens',\n  },\n  heroes: {
     eyebrow: 'Tier list',
     title: 'Hero tier list',
     lede: 'Win rate and pick rate by rank band, smoothed so small samples do not mislead.',
@@ -120,7 +120,7 @@ const ptBr: Dictionary = {
     mainNav: 'Principal',
     language: 'Idioma',
   },
-  nav: { heroes: 'Heróis', items: 'Itens', methodology: 'Metodologia', status: 'Status' },
+  nav: { tierlist: 'Tier list', heroes: 'Heróis', items: 'Itens', metodologia: 'Metodologia', methodology: 'Metodologia', status: 'Status' },
   footer: {
     disclaimer: 'Projeto de fã, sem afiliação ou endosso da Valve. Deadlock e os recursos relacionados pertencem à Valve.',
     data: 'Dados da Deadlock API da comunidade.',
