@@ -68,3 +68,11 @@ test("advanced tools build custom match body without empty values", () => {
     min_roster_size: 0,
   });
 });
+
+
+test("advanced tools UI presents demo schema table summaries", async () => {
+  const source = await (await import("node:fs/promises")).readFile(new URL("../src/advanced-tools-ui.js", import.meta.url), "utf8");
+  assert.match(source, /normalizeDemoSchema/);
+  assert.match(source, /columns\.length/);
+  assert.match(source, /arrowType/);
+});
