@@ -436,7 +436,7 @@ async function renderHeroDetail(heroId, signal) {
 }
 
 async function renderHeroes(signal) {
-  const [{ ...analytics }, assetsRuntime] = await Promise.all([
+  const [analytics, assetsRuntime] = await Promise.all([
     loadAnalyticsRuntime(),
     loadAssetsRuntime(),
   ]);
