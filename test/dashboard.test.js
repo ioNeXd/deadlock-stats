@@ -71,10 +71,10 @@ test("dashboard full snapshot still composes info and unified v2 patch feed", as
 
   const result = await getDashboardSnapshot({ cache: false, dedupe: false });
 
-  assert.deepEqual(requests.sort(), ["/v1/info", "/v2/patches"]);
+  assert.deepEqual(requests.sort(), ["/v1/info", "/v1/patches/big-days", "/v2/patches"]);
   assert.equal(result.info.data.fetched_matches_per_day, 12345);
   assert.equal(result.latestPatch.title, "Latest");
-  assert.equal(result.latestPatch.source, "forum");
+  assert.equal(result.latestPatch.source, "forum");\n  assert.equal(result.latestMajorPatch.title, "Latest");
 });
 
 
