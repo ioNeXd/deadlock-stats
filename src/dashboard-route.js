@@ -227,4 +227,4 @@ export function loadDashboardVersionContext(onChanged) {
   }).catch(() => {});
 }
 
-export { assetVersion };
+export { renderDashboard, assetVersion };
