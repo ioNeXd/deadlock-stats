@@ -13,6 +13,9 @@ import {
   ingestLiveUrls,
 } from "../api/matches.js";
 
+const CUSTOM_GAME_MODES = ["normal", "street_brawl", "explore_n_y_c", "internal"];
+const CUSTOM_SERVER_REGIONS = ["europe", "eu_amsterdam", "eu_poland", "eu_stockholm", "eu_helsinki", "eu_falkenstein", "eu_spain", "eu_east", "eu_london", "south_africa", "us_west", "us_east", "us_north_central", "us_south_central", "us_south_east", "us_south_west", "australia", "singapore", "japan", "hong_kong", "mp_hong_kong", "seoul", "chile", "peru", "argentina", "south_america"];
+
 export function normalizeDemoStatus(result) {
   const data = result?.data && typeof result.data === "object" ? result.data : result;
   return {
@@ -49,7 +52,8 @@ export function normalizeDemoSchema(result) {
       name: table?.name ?? table?.table_name ?? null,
       columns: Array.isArray(table?.columns) ? table.columns.map(column => ({
         name: column?.name ?? null,
-        arrowType: column?.arrow_type ?? column?.type ?? null,
+        arrowType: column?.arrow_type ?? column?.data_type ?? column?.type ?? null,
+        nullable: column?.nullable ?? null,
         raw: column,
       })) : [],
       raw: table,
@@ -72,8 +76,45 @@ export function buildDemoQueryBody({ matchId, query, format } = {}) {
 
 export function buildCustomMatchBody(values = {}) {
   const body = {};
-  for (const [key, value] of Object.entries(values)) {
-    if (value !== undefined && value !== null && value !== "") body[key] = value;
+  const allowedKeys = new Set([
+    "callback_url",
+    "cheats_enabled",
+    "corrupted_item_shop_spawn_minutes",
+    "disable_auto_ready",
+    "duplicate_heroes_enabled",
+    "game_mode",
+    "is_publicly_visible",
+    "min_roster_size",
+    "randomize_lanes",
+    "server_region",
+  ]);
+  for (const [key, rawValue] of Object.entries(values)) {
+    if (!allowedKeys.has(key) || rawValue === undefined || rawValue === null || rawValue === "") continue;
+    if (["cheats_enabled", "disable_auto_ready", "duplicate_heroes_enabled", "is_publicly_visible", "randomize_lanes"].includes(key)) {
+      if (typeof rawValue !== "boolean") throw new TypeError(key + " must be a boolean");
+      body[key] = rawValue;
+      continue;
+    }
+    if (key === "game_mode") {
+      if (!CUSTOM_GAME_MODES.includes(rawValue)) throw new RangeError("game_mode must be a supported GameMode");
+      body[key] = rawValue;
+      continue;
+    }
+    if (key === "server_region") {
+      if (!CUSTOM_SERVER_REGIONS.includes(rawValue)) throw new RangeError("server_region must be a supported ServerRegion");
+      body[key] = rawValue;
+      continue;
+    }
+    if (key === "min_roster_size" || key === "corrupted_item_shop_spawn_minutes") {
+      const value = Number(rawValue);
+      if (!Number.isInteger(value) || value < 0) throw new RangeError(key + " must be a non-negative integer");
+      body[key] = value;
+      continue;
+    }
+    if (key === "callback_url") {
+      if (typeof rawValue !== "string") throw new TypeError("callback_url must be a string");
+      body[key] = rawValue.trim();
+    }
   }
   return body;
 }
@@ -124,7 +165,7 @@ export function runLiveQuery(values = {}, options = {}) {
 export function parseSseEventBlock(block = "") {
   const event = { type: "message", data: "", id: null, retry: null };
   const dataLines = [];
-  for (const rawLine of String(block).replace(/\\r/g, "").split("\n")) {
+  for (const rawLine of String(block).replace(/\r/g, "").split("\n")) {
     if (!rawLine || rawLine.startsWith(":")) continue;
     const separator = rawLine.indexOf(":");
     const field = separator === -1 ? rawLine : rawLine.slice(0, separator);
@@ -132,7 +173,7 @@ export function parseSseEventBlock(block = "") {
     if (field === "event") event.type = value || "message";
     else if (field === "data") dataLines.push(value);
     else if (field === "id") event.id = value;
-    else if (field === "retry" && /^\\d+$/.test(value)) event.retry = Number(value);
+    else if (field === "retry" && /^\d+$/.test(value)) event.retry = Number(value);
   }
   event.data = dataLines.join("\n");
   return event;
