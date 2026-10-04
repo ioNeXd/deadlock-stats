@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { HeroEntity, ItemEntity } from '@/lib/api/types'
 import { formatCompact, formatInteger, formatPercent } from '@/lib/format'
+import { getDictionary } from '@/lib/i18n/dictionaries'
 import { interpolate, type Locale } from '@/lib/i18n/config'
 import type { TierStat } from '@/lib/tiers'
 import { cn } from '@/lib/utils'
