@@ -39,12 +39,34 @@ export function normalizeLiveUrls(result) {
   }));
 }
 
+export function normalizeDemoSchema(result) {
+  const data = result?.data && typeof result.data === "object" ? result.data : result;
+  const tables = Array.isArray(data?.tables) ? data.tables : [];
+  return {
+    matchId: data?.match_id ?? null,
+    demoUrl: data?.demo_url ?? null,
+    tables: tables.map(table => ({
+      name: table?.name ?? table?.table_name ?? null,
+      columns: Array.isArray(table?.columns) ? table.columns.map(column => ({
+        name: column?.name ?? null,
+        arrowType: column?.arrow_type ?? column?.type ?? null,
+        raw: column,
+      })) : [],
+      raw: table,
+    })),
+    raw: data,
+  };
+}
+
 export function buildDemoQueryBody({ matchId, query, format } = {}) {
   const id = Number(matchId);
   if (!Number.isInteger(id) || id < 0) throw new RangeError("matchId must be a non-negative integer");
   if (typeof query !== "string" || !query.trim()) throw new TypeError("query must be a non-empty string");
   const body = { match_id: id, query: query.trim() };
-  if (format) body.format = format;
+  if (format) {
+    if (!["parquet", "ndjson"].includes(format)) throw new RangeError("format must be parquet or ndjson");
+    body.format = format;
+  }
   return body;
 }
 
