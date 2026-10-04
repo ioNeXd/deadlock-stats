@@ -1904,6 +1904,7 @@ async function renderDataExplorer(signal) {
 async function loadExplorer(signal) {
   const runtime = await loadDataExplorerRuntime();
   const list = $("#operation-list");
+  const HTTP_METHODS = ["get", "post", "put", "patch", "delete", "head", "options", "trace"];
   const filter = $("#operation-filter");
   let activeContract = null;
   let activeOperations = [];
