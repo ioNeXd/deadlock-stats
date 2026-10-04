@@ -97,7 +97,7 @@ function renderHeroGrid(data) {
   const heroes = Array.isArray(data) ? data : (data?.data ?? []);
   const grid = $("#hero-grid");
   grid.innerHTML = heroes.slice(0, 8).map((hero, index) => {
-    const image = resolveAssetImage(hero, ["icon_hero_card_webp", "icon_hero_card", "background_image_webp", "background_image"]);
+    const image = resolveAssetImage(hero, ["background_image_webp", "background_image", "hero_card_gloat_webp", "hero_card_gloat", "hero_card_critical_webp", "hero_card_critical", "icon_hero_card_webp", "icon_hero_card"]);
     const heroColor = colorToCss(hero?.colors?.ui);
     const accent = heroColor || ["#5da9e9", "#9d83e6", "#68c38a", "#d86b6b"][index % 4];
     const description = hero?.description ?? hero?.role ?? hero?.playstyle ?? "Deadlock hero";
@@ -309,8 +309,9 @@ async function renderHeroDetail(heroId, signal) {
   }
 
   el.content.innerHTML =
-    '<section class="page-head"><span class="eyebrow">HERO / DETAIL</span><h2 id="hero-detail-name">Hero #' + esc(numericHeroId) + '</h2><p>Performance, matchups, builds and ability orders from the Deadlock analytics API.</p></section>' +
-    '<section class="panel"><div id="hero-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching hero intelligence…</span></div><div id="hero-detail-summary"></div></section>' +
+    '<section class="page-head hero-detail-heading"><span class="eyebrow">CITY ARCHIVE / HERO INTELLIGENCE</span><h2 id="hero-detail-name">Hero #' + esc(numericHeroId) + '</h2><p>Performance, matchups, builds and ability orders from the Deadlock analytics API.</p></section>' +
+    '<section class="hero-detail-showcase" id="hero-detail-showcase" aria-live="polite"><div class="hero-detail-showcase-placeholder"><span class="eyebrow">LOADING ASSET</span><strong>Fetching hero portrait…</strong></div></section>' +
+    '<section class="panel hero-detail-data"><div id="hero-detail-status" class="section-head"><span class="eyebrow">LOADING</span><span>Fetching hero intelligence…</span></div><div id="hero-detail-summary"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">MATCHUPS</span><h2>Counters & synergies</h2></div></div><div id="hero-detail-matchups"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">BUILDS</span><h2>Hero builds</h2></div></div><div id="hero-detail-builds"></div></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">ABILITIES</span><h2>Ability orders</h2></div></div><div id="hero-detail-abilities"></div></section>';
@@ -324,7 +325,27 @@ async function renderHeroDetail(heroId, signal) {
     const snapshot = analyticsResult.status === "fulfilled" ? analyticsResult.value : null;
     const heroResult = heroSettlement.status === "fulfilled" ? heroSettlement.value : null;
     const hero = heroResult?.data ?? null;
-    if (hero) $("#hero-detail-name").textContent = nameOf(hero);
+    if (hero) {
+      $("#hero-detail-name").textContent = nameOf(hero);
+      const showcase = $("#hero-detail-showcase");
+      const background = resolveAssetImage(hero, ["background_image_webp", "background_image", "hero_card_gloat_webp", "hero_card_gloat", "hero_card_critical_webp", "hero_card_critical", "top_bar_vertical_image_webp", "top_bar_vertical_image"]);
+      const icon = resolveAssetImage(hero, ["icon_hero_card_webp", "icon_hero_card", "icon_image_small_webp", "icon_image_small"]);
+      const accent = colorToCss(hero?.colors?.ui) || "var(--blue)";
+      const role = hero?.role ?? hero?.playstyle ?? "HERO";
+      showcase.style.setProperty("--hero-accent", accent);
+      showcase.innerHTML =
+        (background ? '<img class="hero-detail-background" src="' + esc(background) + '" alt="" aria-hidden="true">' : '') +
+        '<div class="hero-detail-scrim" aria-hidden="true"></div>' +
+        '<div class="hero-detail-frame">' +
+          '<div class="hero-detail-copy">' +
+            '<span class="hero-detail-kicker">THE CURSED APPLE / ' + esc(role).toUpperCase() + '</span>' +
+            '<h3>' + esc(nameOf(hero)) + '</h3>' +
+            '<p>' + esc(hero?.description ?? hero?.lore ?? "Live hero intelligence from the Deadlock API.") + '</p>' +
+          '</div>' +
+          (icon ? '<img class="hero-detail-icon" src="' + esc(icon) + '" alt="' + esc(nameOf(hero)) + ' icon">' : '') +
+          '<div class="hero-detail-stamp">HERO<br><strong>#' + esc(numericHeroId) + '</strong></div>' +
+        '</div>';
+    }
 
     const model = analytics.buildHeroDetailViewModel(snapshot, hero);
     const analyticsAvailable = analyticsResult.status === "fulfilled";
@@ -460,7 +481,7 @@ async function renderHeroes(signal) {
       const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? (wins / matches) * 100 : null;
       const kda = [item.totalKills, item.totalDeaths, item.totalAssists].map(Number);
       const kdaText = kda.every(Number.isFinite) ? kda.join(" / ") : "—";
-      const image = hero ? resolveAssetImage(hero, ["icon_hero_card_webp", "icon_hero_card", "background_image_webp", "background_image"]) : "";
+      const image = hero ? resolveAssetImage(hero, ["background_image_webp", "background_image", "hero_card_gloat_webp", "hero_card_gloat", "hero_card_critical_webp", "hero_card_critical", "icon_hero_card_webp", "icon_hero_card"]) : "";
       const accent = colorToCss(hero?.colors?.ui);
       return '<a class="hero-performance-card" href="#/heroes/' + encodeURIComponent(item.heroId) + '"' + (accent ? ' style="--hero-accent:' + esc(accent) + '"' : "") + '>' +
         '<div class="hero-performance-art">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') + '</div>' +
