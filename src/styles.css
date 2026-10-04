@@ -2464,3 +2464,11 @@ body{
 .inferno-test-error{color:#d98f8f}
 @media(max-width:700px){.inferno-test-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.inferno-test-card-media{min-height:170px}.inferno-test-card-media img{height:170px}}
 @media(max-width:470px){.inferno-test-grid{grid-template-columns:1fr}}
+
+.inferno-test-form{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) auto;align-items:end;gap:12px;margin:0 0 18px}
+.inferno-test-form .primary-button{min-height:44px}
+.inferno-test-meta{display:flex;gap:18px;flex-wrap:wrap;padding:12px 0 18px;color:var(--dl-muted);font:9px/1.5 var(--dl-mono);letter-spacing:.08em;text-transform:uppercase}
+.inferno-test-meta b{color:var(--dl-brass)}
+.inferno-test-card-meta small{display:block;margin:-1px 0 8px;color:var(--dl-muted);font:8px/1.4 var(--dl-mono);overflow-wrap:anywhere}
+@media(max-width:800px){.inferno-test-form{grid-template-columns:1fr 1fr}.inferno-test-form .primary-button{grid-column:1/-1}}
+@media(max-width:520px){.inferno-test-form{grid-template-columns:1fr}}
