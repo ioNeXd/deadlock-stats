@@ -75,4 +75,3 @@ const SLOT_COLOR: Record<ItemEntity['slot'], string> = {
   spirit: 'text-tier-b',
 }
 
-import { getDictionary } from '@/lib/i18n/dictionaries'
