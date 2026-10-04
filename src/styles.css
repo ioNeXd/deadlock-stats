@@ -1969,3 +1969,98 @@ body{
  .build-art{height:125px;min-height:125px}
  .build-art:after{background:linear-gradient(0deg,rgba(16,19,20,.95),transparent)}
 }
+
+
+/* Statistics Bureau — data desk / noir research room. */
+.analytics-page-head{
+  position:relative;overflow:hidden;padding:clamp(24px,4vw,46px);
+  border:1px solid color-mix(in srgb,var(--blue) 26%,var(--line));
+  background:
+    radial-gradient(circle at 88% 14%,color-mix(in srgb,var(--purple) 15%,transparent),transparent 19rem),
+    radial-gradient(circle at 14% 88%,color-mix(in srgb,var(--green) 11%,transparent),transparent 23rem),
+    radial-gradient(circle at 62% 42%,color-mix(in srgb,var(--yellow) 7%,transparent),transparent 18rem),
+    linear-gradient(135deg,#101719,#121316);
+}
+.analytics-page-head:before{
+  content:"BUREAU";position:absolute;right:-8px;bottom:-34px;
+  color:rgba(255,255,255,.025);font:900 clamp(86px,16vw,190px)/.8 "DM Mono";
+  letter-spacing:-.13em;transform:rotate(-7deg);pointer-events:none;
+}
+.analytics-page-head:after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,var(--blue),var(--green),var(--yellow),var(--orange),var(--purple));
+  opacity:.72;
+}
+.analytics-page-head h2,.analytics-page-head p,.analytics-page-kicker{position:relative;z-index:1}
+.analytics-page-head h2{
+  font-size:clamp(44px,7vw,86px);letter-spacing:-.08em;text-transform:uppercase;
+}
+.analytics-page-head p{max-width:760px}
+.analytics-page-kicker{
+  display:flex;flex-wrap:wrap;gap:7px;margin-top:18px;
+}
+.analytics-page-kicker span{
+  padding:6px 9px;border:1px solid var(--line);
+  font:8px "DM Mono";letter-spacing:.09em;color:var(--muted);
+}
+.analytics-page-head + .analytics-filter-panel{
+  margin-top:14px;
+  border-color:color-mix(in srgb,var(--blue) 22%,var(--line));
+  background:
+    linear-gradient(90deg,rgba(93,169,233,.045),transparent 35%),
+    linear-gradient(90deg,transparent 65%,rgba(157,131,230,.04)),
+    var(--panel);
+}
+.analytics-page-head + .analytics-filter-panel .section-head h2{
+  text-transform:uppercase;letter-spacing:-.03em;
+}
+.analytics-page-head + .analytics-filter-panel .primary-button{
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:#071015;
+}
+.analytics-page-head ~ .analytics-grid{
+  position:relative;
+}
+.analytics-page-head ~ .analytics-grid .metric-card{
+  border-top:2px solid color-mix(in srgb,var(--metric-accent,var(--blue)) 75%,transparent);
+}
+.analytics-page-head ~ .analytics-grid .metric-card:nth-child(1){--metric-accent:var(--blue)}
+.analytics-page-head ~ .analytics-grid .metric-card:nth-child(2){--metric-accent:var(--green)}
+.analytics-page-head ~ .analytics-grid .metric-card:nth-child(3){--metric-accent:var(--yellow)}
+.analytics-page-head ~ .analytics-grid .metric-card:nth-child(4){--metric-accent:var(--orange)}
+.analytics-page-head ~ .panel,
+.analytics-page-head ~ .dashboard-grid>.panel{
+  border-color:color-mix(in srgb,var(--blue) 13%,var(--line));
+}
+.analytics-page-head ~ .analytics-hero-panel{
+  background:
+    radial-gradient(circle at 100% 0,rgba(104,195,138,.045),transparent 20rem),
+    var(--panel);
+}
+.analytics-page-head ~ .analytics-matchup-panel{
+  border-color:color-mix(in srgb,var(--purple) 20%,var(--line));
+  background:
+    radial-gradient(circle at 0 100%,rgba(157,131,230,.055),transparent 22rem),
+    var(--panel);
+}
+.analytics-page-head ~ .dashboard-grid:nth-of-type(5)>.panel:first-child{
+  border-color:color-mix(in srgb,var(--yellow) 18%,var(--line));
+}
+.analytics-page-head ~ .dashboard-grid:nth-of-type(5)>.panel:nth-child(2){
+  border-color:color-mix(in srgb,var(--orange) 18%,var(--line));
+}
+.analytics-page-head ~ .dashboard-grid:last-of-type>.panel:first-child{
+  border-color:color-mix(in srgb,var(--green) 18%,var(--line));
+}
+.analytics-page-head ~ .dashboard-grid:last-of-type>.panel:nth-child(2){
+  border-color:color-mix(in srgb,var(--purple) 18%,var(--line));
+}
+.analytics-page-head ~ .panel .section-head h2,
+.analytics-page-head ~ .dashboard-grid .section-head h2{
+  letter-spacing:-.035em;
+}
+@media(max-width:720px){
+  .analytics-page-head h2{font-size:clamp(40px,12.5vw,64px)}
+  .analytics-page-head:before{font-size:100px}
+  .analytics-page-kicker{gap:5px}
+}
