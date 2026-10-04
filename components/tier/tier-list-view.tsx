@@ -34,7 +34,7 @@ export function TierListView(props: Props) {
   const sample = initialSnapshot?.heroes.rows.reduce((sum, row) => sum + row[3], 0) ?? 0
 
   return (
-    <section aria-labelledby="tier-heading" className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <dl className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm" aria-label={t.filters.label}>
           <div className="flex gap-1.5">
@@ -58,7 +58,6 @@ export function TierListView(props: Props) {
             </div>
           ) : null}
           <div className="flex items-center gap-2 md:ml-auto">
-            <dt className="sr-only">Source</dt>
             <dd className="chamfer-sm bg-secondary px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-primary">
               {t.context.snapshot}
             </dd>
@@ -69,7 +68,7 @@ export function TierListView(props: Props) {
       {kind === 'items' ? <p className="text-sm text-muted-foreground text-pretty">{t.items.caveat}</p> : null}
 
       <div id="tier-static">
-        <h2 id="tier-heading" className="sr-only">{strings.title}</h2>
+        <h2 id="tier-heading-static" className="sr-only">{strings.title}</h2>
         <TierTableStatic
           locale={locale}
           kind={kind}
