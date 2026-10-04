@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "./api/client.js";
-import { resolveAssetImage } from "./adapters/assets.js";
+import { resolveAssetImage, resolveHeroArtImages } from "./adapters/assets.js";
 import { colorToCss, createAssetVersionContext } from "./services/asset-version.js";
 import { safeExternalUrl } from "./ui/security.js";
 
@@ -94,7 +94,9 @@ function setConnection(online, label) {
 }
 
 function renderHeroArt(hero, className = "hero-card", portrait = "") {
-  const background = resolveAssetImage(hero, ["background_image_webp", "background_image"]);
+  const art = resolveHeroArtImages(hero);
+  const background = art.background;
+  portrait = portrait || art.card;
   return '<div class="' + className + '-art" aria-hidden="true">' +
     (background ? '<img class="' + className + '-background" src="' + esc(background) + '" alt="" loading="lazy" decoding="async">' : '') +
     (portrait ? '<img class="' + className + '-portrait" src="' + esc(portrait) + '" alt="" loading="lazy" decoding="async">' : '') +
@@ -105,8 +107,7 @@ function renderHeroGrid(data) {
   const heroes = Array.isArray(data) ? data : (data?.data ?? []);
   const grid = $("#hero-grid");
   grid.innerHTML = heroes.slice(0, 8).map((hero, index) => {
-    const background = resolveAssetImage(hero, ["background_image_webp", "background_image"]);
-    const portrait = resolveAssetImage(hero, ["hero_card_webp", "hero_card", "icon_hero_card_webp", "icon_hero_card"]);
+    const portrait = resolveHeroArtImages(hero).card;
     const heroColor = colorToCss(hero?.colors?.ui);
     const accent = heroColor || ["#5da9e9", "#9d83e6", "#68c38a", "#d86b6b"][index % 4];
     const description = hero?.description ?? hero?.role ?? hero?.playstyle ?? "Deadlock hero";
@@ -478,7 +479,7 @@ async function renderHeroes(signal) {
       const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? (wins / matches) * 100 : null;
       const kda = [item.totalKills, item.totalDeaths, item.totalAssists].map(Number);
       const kdaText = kda.every(Number.isFinite) ? kda.join(" / ") : "—";
-      const portrait = hero ? resolveAssetImage(hero, ["hero_card_webp", "hero_card", "icon_hero_card_webp", "icon_hero_card"]) : "";
+      const portrait = hero ? resolveHeroArtImages(hero).card : "";
       const heroArt = hero ? renderHeroArt(hero, "hero-performance", portrait) : "";
       const accent = colorToCss(hero?.colors?.ui);
       return '<a class="hero-performance-card" href="#/heroes/' + encodeURIComponent(item.heroId) + '"' + (accent ? ' style="--hero-accent:' + esc(accent) + '"' : "") + '>' +
