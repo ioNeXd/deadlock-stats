@@ -134,6 +134,12 @@ test("asset normalization preserves raw data and known image fields while tolera
 });
 
 
+test("hero art resolver reuses the same portrait fallback used by dashboard and hero views", async () => {
+  const { resolveHeroCardImage } = await import("../src/adapters/assets.js");
+  const hero = { images: { icon_hero_card_webp: "https://cdn.example/hero.webp" } };
+  assert.equal(resolveHeroCardImage(hero), "https://cdn.example/hero.webp");
+});
+
 test("asset image resolution prefers explicit fields and falls back across official asset fields", () => {
   const entity = {
     images: {
