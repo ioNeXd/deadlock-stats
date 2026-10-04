@@ -118,7 +118,7 @@ function loadStyles() {
   if (document.querySelector('link[data-command-palette-styles]')) return;
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "./styles-command-palette.css";
+  link.href = "./src/styles-command-palette.css";
   link.dataset.commandPaletteStyles = "true";
   document.head.appendChild(link);
 }
