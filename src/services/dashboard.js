@@ -40,12 +40,7 @@ export function normalizeMajorPatch(patchesPayload, bigPatchDaysPayload, now = D
   const exactMatch = forumPatches.find(patch => calendarDate(patch.pub_date) === latestBigDay);
   if (exactMatch) return exactMatch;
 
-  return forumPatches
-    .filter(patch => {
-      const date = calendarDate(patch.pub_date);
-      return date && date <= latestBigDay;
-    })
-    .sort((a, b) => Date.parse(b.pub_date ?? 0) - Date.parse(a.pub_date ?? 0))[0] ?? null;
+  return null;
 }
 
 export async function getDashboardCoreSnapshot(options = {}) {
