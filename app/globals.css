@@ -18,8 +18,11 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
   --color-background: var(--background);
   --color-tier-s: var(--tier-s);
   --color-tier-a: var(--tier-a);
@@ -33,6 +36,7 @@
   --radius-xl: calc(var(--radius) * 1.4);
 }
 
+/* One theme file: a fork re-themes from here. Ledger dark with brass ink. */
 :root {
   color-scheme: dark;
   --background: oklch(0.165 0.008 60);
@@ -41,6 +45,8 @@
   --card-foreground: oklch(0.92 0.022 85);
   --popover: oklch(0.21 0.01 60);
   --popover-foreground: oklch(0.92 0.022 85);
+  --primary: oklch(0.8 0.125 78);
+  --primary-foreground: oklch(0.18 0.012 60);
   --secondary: oklch(0.245 0.012 60);
   --secondary-foreground: oklch(0.92 0.022 85);
   --muted: oklch(0.235 0.01 60);
