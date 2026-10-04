@@ -1,0 +1,3104 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-04T20:22:29.052Z",
+  "source": "https://api.deadlock-api.com/openapi.json",
+  "endpoint_count": 129,
+  "endpoints": [
+    {
+      "operationId": "ability_order_stats",
+      "method": "GET",
+      "path": "/v1/analytics/ability-order-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "badge_distribution",
+      "method": "GET",
+      "path": "/v1/analytics/badge-distribution",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "buff_stats",
+      "method": "GET",
+      "path": "/v1/analytics/buff-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "6 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "build_item_stats",
+      "method": "GET",
+      "path": "/v1/analytics/build-item-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "1 hour",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "game_stats",
+      "method": "GET",
+      "path": "/v1/analytics/game-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "hero_ban_stats",
+      "method": "GET",
+      "path": "/v1/analytics/hero-ban-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "6 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "hero_build_stats",
+      "method": "GET",
+      "path": "/v1/analytics/hero-build-stats/{hero_id}",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "6 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "hero_comb_stats",
+      "method": "GET",
+      "path": "/v1/analytics/hero-comb-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "6 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "hero_counters_stats",
+      "method": "GET",
+      "path": "/v1/analytics/hero-counter-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "6 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "hero_stats",
+      "method": "GET",
+      "path": "/v1/analytics/hero-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "hero_synergies_stats",
+      "method": "GET",
+      "path": "/v1/analytics/hero-synergy-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "6 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "item_flow_stats",
+      "method": "GET",
+      "path": "/v1/analytics/item-flow-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "6 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "item_permutation_stats",
+      "method": "GET",
+      "path": "/v1/analytics/item-permutation-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "6 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "item_stats",
+      "method": "GET",
+      "path": "/v1/analytics/item-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "6 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "kill_death_stats",
+      "method": "GET",
+      "path": "/v1/analytics/kill-death-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "lane_matchup_stats",
+      "method": "GET",
+      "path": "/v1/analytics/lane-matchup-stats",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": true,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "6 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "lane_soul_curve",
+      "method": "GET",
+      "path": "/v1/analytics/lane-soul-curve",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": true,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "6 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "player_performance_curve",
+      "method": "GET",
+      "path": "/v1/analytics/player-performance-curve",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "12 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "player_stats_metrics",
+      "method": "GET",
+      "path": "/v1/analytics/player-stats/metrics",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": "6 hours",
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "hero_scoreboard",
+      "method": "GET",
+      "path": "/v1/analytics/scoreboards/heroes",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "player_scoreboard",
+      "method": "GET",
+      "path": "/v1/analytics/scoreboards/players",
+      "group": "Analytics",
+      "tags": [
+        "Analytics"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "200req/min",
+        "key": "400req/min",
+        "global": "2000req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_accolades",
+      "method": "GET",
+      "path": "/v1/assets/accolades",
+      "group": "Accolades",
+      "tags": [
+        "Accolades"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_accolade",
+      "method": "GET",
+      "path": "/v1/assets/accolades/{accolade_id}",
+      "group": "Accolades",
+      "tags": [
+        "Accolades"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_accolade_by_name",
+      "method": "GET",
+      "path": "/v1/assets/accolades/by-name/{name}",
+      "group": "Accolades",
+      "tags": [
+        "Accolades"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_build_tags",
+      "method": "GET",
+      "path": "/v1/assets/build-tags",
+      "group": "Build Tags",
+      "tags": [
+        "Build Tags"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_build_tag",
+      "method": "GET",
+      "path": "/v1/assets/build-tags/{build_tag_id}",
+      "group": "Build Tags",
+      "tags": [
+        "Build Tags"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_build_tag_by_name",
+      "method": "GET",
+      "path": "/v1/assets/build-tags/by-name/{name}",
+      "group": "Build Tags",
+      "tags": [
+        "Build Tags"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_client_versions",
+      "method": "GET",
+      "path": "/v1/assets/client-versions",
+      "group": "Client Versions",
+      "tags": [
+        "Client Versions"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_colors",
+      "method": "GET",
+      "path": "/v1/assets/colors",
+      "group": "Colors",
+      "tags": [
+        "Colors"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "fonts",
+      "method": "GET",
+      "path": "/v1/assets/fonts",
+      "group": "Assets Bucket",
+      "tags": [
+        "Assets Bucket"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_generic_data",
+      "method": "GET",
+      "path": "/v1/assets/generic-data",
+      "group": "Generic Data",
+      "tags": [
+        "Generic Data"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_heroes",
+      "method": "GET",
+      "path": "/v1/assets/heroes",
+      "group": "Heroes",
+      "tags": [
+        "Heroes"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_hero",
+      "method": "GET",
+      "path": "/v1/assets/heroes/{hero_id}",
+      "group": "Heroes",
+      "tags": [
+        "Heroes"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_hero_by_name",
+      "method": "GET",
+      "path": "/v1/assets/heroes/by-name/{name}",
+      "group": "Heroes",
+      "tags": [
+        "Heroes"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "icons",
+      "method": "GET",
+      "path": "/v1/assets/icons",
+      "group": "Assets Bucket",
+      "tags": [
+        "Assets Bucket"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "images",
+      "method": "GET",
+      "path": "/v1/assets/images",
+      "group": "Assets Bucket",
+      "tags": [
+        "Assets Bucket"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_items",
+      "method": "GET",
+      "path": "/v1/assets/items",
+      "group": "Items",
+      "tags": [
+        "Items"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_item",
+      "method": "GET",
+      "path": "/v1/assets/items/{id_or_class_name}",
+      "group": "Items",
+      "tags": [
+        "Items"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_items_by_hero_id",
+      "method": "GET",
+      "path": "/v1/assets/items/by-hero-id/{id}",
+      "group": "Items",
+      "tags": [
+        "Items"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_items_by_slot_type",
+      "method": "GET",
+      "path": "/v1/assets/items/by-slot-type/{slot_type}",
+      "group": "Items",
+      "tags": [
+        "Items"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_items_by_type",
+      "method": "GET",
+      "path": "/v1/assets/items/by-type/{type}",
+      "group": "Items",
+      "tags": [
+        "Items"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_loot_tables",
+      "method": "GET",
+      "path": "/v1/assets/loot-tables",
+      "group": "Loot Tables",
+      "tags": [
+        "Loot Tables"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_map",
+      "method": "GET",
+      "path": "/v1/assets/map",
+      "group": "Map",
+      "tags": [
+        "Map"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_misc_entities",
+      "method": "GET",
+      "path": "/v1/assets/misc-entities",
+      "group": "Misc Entities",
+      "tags": [
+        "Misc Entities"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_misc_entity",
+      "method": "GET",
+      "path": "/v1/assets/misc-entities/{id_or_classname}",
+      "group": "Misc Entities",
+      "tags": [
+        "Misc Entities"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_modifiers",
+      "method": "GET",
+      "path": "/v1/assets/modifiers",
+      "group": "Modifiers",
+      "tags": [
+        "Modifiers"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_modifier",
+      "method": "GET",
+      "path": "/v1/assets/modifiers/{id_or_classname}",
+      "group": "Modifiers",
+      "tags": [
+        "Modifiers"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_npc_units",
+      "method": "GET",
+      "path": "/v1/assets/npc-units",
+      "group": "NPC Units",
+      "tags": [
+        "NPC Units"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_npc_unit",
+      "method": "GET",
+      "path": "/v1/assets/npc-units/{id_or_classname}",
+      "group": "NPC Units",
+      "tags": [
+        "NPC Units"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_ranked_seasons",
+      "method": "GET",
+      "path": "/v1/assets/ranked-seasons",
+      "group": "Ranked Seasons",
+      "tags": [
+        "Ranked Seasons"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_ranks",
+      "method": "GET",
+      "path": "/v1/assets/ranks",
+      "group": "Ranks",
+      "tags": [
+        "Ranks"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_rank",
+      "method": "GET",
+      "path": "/v1/assets/ranks/{tier}",
+      "group": "Ranks",
+      "tags": [
+        "Ranks"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "subrank_image",
+      "method": "GET",
+      "path": "/v1/assets/ranks/{tier}/{subrank}/image",
+      "group": "Ranks",
+      "tags": [
+        "Ranks"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "sounds",
+      "method": "GET",
+      "path": "/v1/assets/sounds",
+      "group": "Assets Bucket",
+      "tags": [
+        "Assets Bucket"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_steam_info",
+      "method": "GET",
+      "path": "/v1/assets/steam-info",
+      "group": "Steam Info",
+      "tags": [
+        "Steam Info"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_all_steam_info",
+      "method": "GET",
+      "path": "/v1/assets/steam-info/all",
+      "group": "Steam Info",
+      "tags": [
+        "Steam Info"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "search_builds",
+      "method": "GET",
+      "path": "/v1/builds",
+      "group": "Builds",
+      "tags": [
+        "Builds"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "fetch_build_live",
+      "method": "GET",
+      "path": "/v1/builds/{hero_id}/{build_id}",
+      "group": "Builds",
+      "tags": [
+        "Builds"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "20req/min",
+        "key": "100req/min",
+        "global": "500req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "fetch_builds_by_author_live",
+      "method": "GET",
+      "path": "/v1/builds/by-author/{account_id}",
+      "group": "Builds",
+      "tags": [
+        "Builds"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "20req/min",
+        "key": "100req/min",
+        "global": "500req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "command_resolve",
+      "method": "GET",
+      "path": "/v1/commands/resolve",
+      "group": "Commands",
+      "tags": [
+        "Commands"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "available_variables",
+      "method": "GET",
+      "path": "/v1/commands/variables/available",
+      "group": "Commands",
+      "tags": [
+        "Commands"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "variables_resolve",
+      "method": "GET",
+      "path": "/v1/commands/variables/resolve",
+      "group": "Commands",
+      "tags": [
+        "Commands"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "60req/min",
+        "key": null,
+        "global": "300req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "widget_versions",
+      "method": "GET",
+      "path": "/v1/commands/widgets/versions",
+      "group": "Commands",
+      "tags": [
+        "Commands"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "code_image",
+      "method": "GET",
+      "path": "/v1/crosshair/code/image",
+      "group": "Crosshair",
+      "tags": [
+        "Crosshair"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "code_settings",
+      "method": "GET",
+      "path": "/v1/crosshair/code/settings",
+      "group": "Crosshair",
+      "tags": [
+        "Crosshair"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "settings_code",
+      "method": "GET",
+      "path": "/v1/crosshair/settings/code",
+      "group": "Crosshair",
+      "tags": [
+        "Crosshair"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "settings_image",
+      "method": "GET",
+      "path": "/v1/crosshair/settings/image",
+      "group": "Crosshair",
+      "tags": [
+        "Crosshair"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "submit_feedback",
+      "method": "POST",
+      "path": "/v1/feedback",
+      "group": "Internal",
+      "tags": [
+        "Internal"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "10req/min",
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "playground",
+      "method": "GET",
+      "path": "/v1/graphql",
+      "group": "GraphQL",
+      "tags": [
+        "GraphQL"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "300req/min",
+        "key": null,
+        "global": "5000req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "info",
+      "method": "GET",
+      "path": "/v1/info",
+      "group": "Info",
+      "tags": [
+        "Info"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "health_check",
+      "method": "GET",
+      "path": "/v1/info/health",
+      "group": "Info",
+      "tags": [
+        "Info"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "leaderboard",
+      "method": "GET",
+      "path": "/v1/leaderboard/{region}",
+      "group": "Leaderboard",
+      "tags": [
+        "Leaderboard"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "leaderboard_hero",
+      "method": "GET",
+      "path": "/v1/leaderboard/{region}/{hero_id}",
+      "group": "Leaderboard",
+      "tags": [
+        "Leaderboard"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "leaderboard_hero_raw",
+      "method": "GET",
+      "path": "/v1/leaderboard/{region}/{hero_id}/raw",
+      "group": "Leaderboard",
+      "tags": [
+        "Leaderboard"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "leaderboard_raw",
+      "method": "GET",
+      "path": "/v1/leaderboard/{region}/raw",
+      "group": "Leaderboard",
+      "tags": [
+        "Leaderboard"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "url",
+      "method": "GET",
+      "path": "/v1/matches/{match_id}/live/url",
+      "group": "Matches",
+      "tags": [
+        "Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "metadata",
+      "method": "GET",
+      "path": "/v1/matches/{match_id}/metadata",
+      "group": "Matches",
+      "tags": [
+        "Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "metadata_raw",
+      "method": "GET",
+      "path": "/v1/matches/{match_id}/metadata/raw",
+      "group": "Matches",
+      "tags": [
+        "Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "salts",
+      "method": "GET",
+      "path": "/v1/matches/{match_id}/salts",
+      "group": "Matches",
+      "tags": [
+        "Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "active_matches",
+      "method": "GET",
+      "path": "/v1/matches/active",
+      "group": "Matches",
+      "tags": [
+        "Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "active_matches_raw",
+      "method": "GET",
+      "path": "/v1/matches/active/raw",
+      "group": "Matches",
+      "tags": [
+        "Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "leave",
+      "method": "POST",
+      "path": "/v1/matches/custom/{lobby_id}/leave",
+      "group": "Custom Matches",
+      "tags": [
+        "Custom Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "ready_up",
+      "method": "POST",
+      "path": "/v1/matches/custom/{lobby_id}/ready",
+      "group": "Custom Matches",
+      "tags": [
+        "Custom Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "start",
+      "method": "POST",
+      "path": "/v1/matches/custom/{lobby_id}/start",
+      "group": "Custom Matches",
+      "tags": [
+        "Custom Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "unready",
+      "method": "POST",
+      "path": "/v1/matches/custom/{lobby_id}/unready",
+      "group": "Custom Matches",
+      "tags": [
+        "Custom Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "get_custom",
+      "method": "GET",
+      "path": "/v1/matches/custom/{party_id}/match-id",
+      "group": "Custom Matches",
+      "tags": [
+        "Custom Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "create_custom",
+      "method": "POST",
+      "path": "/v1/matches/custom/create",
+      "group": "Custom Matches",
+      "tags": [
+        "Custom Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "live_query",
+      "method": "GET",
+      "path": "/v1/matches/demo/live/query",
+      "group": "Demo",
+      "tags": [
+        "Demo"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "submit",
+      "method": "POST",
+      "path": "/v1/matches/demo/query",
+      "group": "Demo",
+      "tags": [
+        "Demo"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "status",
+      "method": "GET",
+      "path": "/v1/matches/demo/query/{job_id}",
+      "group": "Demo",
+      "tags": [
+        "Demo"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "schema",
+      "method": "GET",
+      "path": "/v1/matches/demo/schema",
+      "group": "Demo",
+      "tags": [
+        "Demo"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "urls",
+      "method": "GET",
+      "path": "/v1/matches/live/urls",
+      "group": "Matches",
+      "tags": [
+        "Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "ingest_urls",
+      "method": "POST",
+      "path": "/v1/matches/live/urls",
+      "group": "Matches",
+      "tags": [
+        "Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "bulk_metadata",
+      "method": "GET",
+      "path": "/v1/matches/metadata",
+      "group": "Matches",
+      "tags": [
+        "Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "30req/min",
+        "key": null,
+        "global": "600req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "recently_fetched",
+      "method": "GET",
+      "path": "/v1/matches/recently-fetched",
+      "group": "Matches",
+      "tags": [
+        "Matches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "ingest_salts",
+      "method": "POST",
+      "path": "/v1/matches/salts",
+      "group": "Internal",
+      "tags": [
+        "Internal"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "feed",
+      "method": "GET",
+      "path": "/v1/patches",
+      "group": "Patches",
+      "tags": [
+        "Patches"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "big_patch_days",
+      "method": "GET",
+      "path": "/v1/patches/big-days",
+      "group": "Patches",
+      "tags": [
+        "Patches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_steam_accounts",
+      "method": "GET",
+      "path": "/v1/patron/steam-accounts",
+      "group": "Internal",
+      "tags": [
+        "Internal"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": true,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "add_steam_account",
+      "method": "POST",
+      "path": "/v1/patron/steam-accounts",
+      "group": "Internal",
+      "tags": [
+        "Internal"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": true,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "delete_steam_account",
+      "method": "DELETE",
+      "path": "/v1/patron/steam-accounts/{account_id}",
+      "group": "Internal",
+      "tags": [
+        "Internal"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": true,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "replace_steam_account",
+      "method": "PUT",
+      "path": "/v1/patron/steam-accounts/{account_id}",
+      "group": "Internal",
+      "tags": [
+        "Internal"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": true,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "reactivate_steam_account",
+      "method": "POST",
+      "path": "/v1/patron/steam-accounts/{account_id}/reactivate",
+      "group": "Internal",
+      "tags": [
+        "Internal"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": true,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "account_stats",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/account-stats",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": true,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "5req/min",
+        "key": "20req/min",
+        "global": "200req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "card",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/card",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": true,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "5req/min",
+        "key": "20req/min",
+        "global": "200req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "enemy_stats",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/enemy-stats",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "match_history",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/match-history",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "mate_stats",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/mate-stats",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "mmr_history",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/mmr-history",
+      "group": "MMR",
+      "tags": [
+        "MMR"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "hero_mmr_history",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/mmr-history/{hero_id}",
+      "group": "MMR",
+      "tags": [
+        "MMR"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "rank",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/rank",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "rank_predict",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/rank-predict",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "rank_predict_image",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/rank-predict/image",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "rank_image",
+      "method": "GET",
+      "path": "/v1/players/{account_id}/rank/image",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "player_hero_stats",
+      "method": "GET",
+      "path": "/v1/players/hero-stats",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "mmr",
+      "method": "GET",
+      "path": "/v1/players/mmr",
+      "group": "MMR",
+      "tags": [
+        "MMR"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "hero_mmr",
+      "method": "GET",
+      "path": "/v1/players/mmr/{hero_id}",
+      "group": "MMR",
+      "tags": [
+        "MMR"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "mmr_distribution",
+      "method": "GET",
+      "path": "/v1/players/mmr/distribution",
+      "group": "MMR",
+      "tags": [
+        "MMR"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "hero_mmr_distribution",
+      "method": "GET",
+      "path": "/v1/players/mmr/distribution/{hero_id}",
+      "group": "MMR",
+      "tags": [
+        "MMR"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "rank_batch",
+      "method": "GET",
+      "path": "/v1/players/rank",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "20req/min",
+        "key": "100req/min",
+        "global": "200req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "rank_predict_avg_image",
+      "method": "GET",
+      "path": "/v1/players/rank-predict/image",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "rank_distribution",
+      "method": "GET",
+      "path": "/v1/players/rank/distribution",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "5req/min",
+        "key": "25req/min",
+        "global": "50req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "rank_avg_image",
+      "method": "GET",
+      "path": "/v1/players/rank/image",
+      "group": "Players",
+      "tags": [
+        "Players"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "steam",
+      "method": "GET",
+      "path": "/v1/players/steam",
+      "group": "Steam",
+      "tags": [
+        "Steam"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "steam_search",
+      "method": "GET",
+      "path": "/v1/players/steam-search",
+      "group": "Steam",
+      "tags": [
+        "Steam"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "sql",
+      "method": "GET",
+      "path": "/v1/sql",
+      "group": "SQL",
+      "tags": [
+        "SQL"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "2req/min",
+        "key": "10req/min",
+        "global": "30req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "list_tables",
+      "method": "GET",
+      "path": "/v1/sql/tables",
+      "group": "SQL",
+      "tags": [
+        "SQL"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "10req/min",
+        "key": null,
+        "global": "60req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "table_schema",
+      "method": "GET",
+      "path": "/v1/sql/tables/{table}/schema",
+      "group": "SQL",
+      "tags": [
+        "SQL"
+      ],
+      "flags": {
+        "deprecated": true,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": "10req/min",
+        "key": null,
+        "global": "60req/min"
+      },
+      "apiCache": null,
+      "siteStrategy": "ignore",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    },
+    {
+      "operationId": "feed",
+      "method": "GET",
+      "path": "/v2/patches",
+      "group": "Patches",
+      "tags": [
+        "Patches"
+      ],
+      "flags": {
+        "deprecated": false,
+        "unstable": false,
+        "patreon": false,
+        "internal": false
+      },
+      "rateLimit": {
+        "ip": null,
+        "key": null,
+        "global": null
+      },
+      "apiCache": null,
+      "siteStrategy": "runtime",
+      "usedBy": [],
+      "implementationStatus": "planned"
+    }
+  ]
+}
