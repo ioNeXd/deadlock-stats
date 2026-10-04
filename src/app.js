@@ -2741,44 +2741,117 @@ async function renderPatches(signal) {
 
 async function renderInfernoTest(signal) {
   el.content.innerHTML =
-    '<section class="page-head"><span class="eyebrow">TEST / INFERNO ASSET LAB</span><h2>Inferno — All Images</h2><p>Exhaustive visual inspection of Inferno/Infernus image references exposed by the official Deadlock asset API. Every rendered card prints the absolute asset URL below the image.</p></section>' +
-    '<section class="panel"><div class="inferno-test-toolbar"><div><span class="eyebrow">OFFICIAL ASSET REGISTRY</span><strong id="inferno-test-count">SCANNING…</strong></div><div id="inferno-test-status" class="inferno-test-status"><span>API</span><b>LOADING</b></div></div><div id="inferno-test-grid" class="inferno-test-grid" aria-live="polite"><p class="muted">Fetching Inferno hero data and the complete image registry…</p></div></section>';
+    '<section class="page-head"><span class="eyebrow">TEST / HERO ASSET LAB</span><h2>Hero — All Images</h2><p>Select any hero by ID or name and inspect every image reference that the official Deadlock asset API exposes for that hero, including hero-bound abilities and matching entries from the hosted image registry.</p></section>' +
+    '<section class="panel">' +
+      '<div class="inferno-test-toolbar">' +
+        '<div><span class="eyebrow">OFFICIAL ASSET REGISTRY</span><strong id="inferno-test-count">SELECT A HERO</strong></div>' +
+        '<div id="inferno-test-status" class="inferno-test-status"><span>API</span><b>READY</b></div>' +
+      '</div>' +
+      '<form id="hero-image-test-form" class="analytics-filters inferno-test-form">' +
+        '<label class="field inferno-test-hero-select"><span>Hero — ordered by ID</span><select id="hero-image-test-select" name="hero"><option value="">Select a hero…</option></select></label>' +
+        '<label class="field"><span>ID or name</span><input id="hero-image-test-input" name="selector" type="text" inputmode="text" placeholder="e.g. 1 or Infernus" autocomplete="off"></label>' +
+        '<button class="primary-button" type="submit">Scan images</button>' +
+      '</form>' +
+      '<div id="hero-image-test-meta" class="inferno-test-meta" aria-live="polite"></div>' +
+      '<div id="inferno-test-grid" class="inferno-test-grid" aria-live="polite"><p class="muted">Loading the hero registry…</p></div>' +
+    '</section>';
 
   try {
-    const { loadInfernoImageTest } = await import("./services/inferno-test.js");
-    const result = await loadInfernoImageTest({ ...assetVersion.options(), signal });
-    if (signal.aborted) return;
+    const { findHero, loadHeroImageTest } = await import("./services/inferno-test.js");
+    const heroesResult = await import("./api/assets.js').then(api => api.getHeroes({ ...assetVersion.options(), signal }));
+    const heroes = heroesResult?.data?.data ?? heroesResult?.data ?? heroesResult?.raw?.data ?? heroesResult?.raw ?? [];
+    const list = Array.isArray(heroes) ? heroes.slice().sort((a, b) => {
+      const ai = Number(a?.hero_id ?? a?.id ?? a?.raw?.hero_id ?? a?.raw?.id ?? Number.MAX_SAFE_INTEGER);
+      const bi = Number(b?.hero_id ?? b?.id ?? b?.raw?.hero_id ?? b?.raw?.id ?? Number.MAX_SAFE_INTEGER);
+      return ai - bi;
+    }) : [];
 
-    const count = $("#inferno-test-count");
+    const select = $("#hero-image-test-select");
+    const input = $("#hero-image-test-input");
+    const form = $("#hero-image-test-form");
     const status = $("#inferno-test-status");
+    const count = $("#inferno-test-count");
+    const meta = $("#hero-image-test-meta");
     const grid = $("#inferno-test-grid");
-    const images = Array.isArray(result.images) ? result.images : [];
 
-    if (count) count.textContent = images.length + " VERIFIED IMAGE REFERENCES";
-    if (status) {
-      status.innerHTML = '<span>API</span><b class="online">ONLINE</b>';
+    if (select) {
+      select.innerHTML = '<option value="">Select a hero…</option>' + list.map(hero => {
+        const id = hero?.hero_id ?? hero?.id ?? hero?.raw?.hero_id ?? hero?.raw?.id ?? "";
+        const name = hero?.name ?? hero?.raw?.name ?? hero?.class_name ?? hero?.raw?.class_name ?? "Unknown hero";
+        return '<option value="' + esc(String(id)) + '">' + esc(String(id)) + ' — ' + esc(String(name)) + '</option>';
+      }).join("");
     }
 
-    grid.innerHTML = images.length
-      ? images.map((image, index) =>
-          '<article class="inferno-test-card">' +
-            '<figure>' +
-              '<div class="inferno-test-card-media"><img src="' + esc(image.url) + '" alt="Inferno asset ' + (index + 1) + '" loading="lazy" decoding="async"></div>' +
-              '<figcaption class="inferno-test-card-meta">' +
-                '<strong>ASSET ' + String(index + 1).padStart(2, "0") + '</strong>' +
-                '<code>' + esc(image.url) + '</code>' +
-              '</figcaption>' +
-            '</figure>' +
-          '</article>'
-        ).join("")
-      : '<p class="muted">No Inferno-related image references were returned by the current official asset registry.</p>';
+    const scan = async selector => {
+      if (!selector) return;
+      if (signal.aborted) return;
+      count.textContent = "SCANNING…";
+      status.innerHTML = '<span>API</span><b>LOADING</b>';
+      meta.innerHTML = "";
+      grid.innerHTML = '<p class="muted">Fetching hero metadata, hero-bound abilities and the official image registry…</p>';
+
+      try {
+        const result = await loadHeroImageTest(selector, { ...assetVersion.options(), signal });
+        if (signal.aborted) return;
+        const hero = result.hero;
+        const heroId = hero?.hero_id ?? hero?.id ?? hero?.raw?.hero_id ?? hero?.raw?.id ?? selector;
+        const heroName = hero?.name ?? hero?.raw?.name ?? hero?.class_name ?? hero?.raw?.class_name ?? selector;
+        const images = Array.isArray(result.images) ? result.images : [];
+
+        count.textContent = images.length + " VERIFIED IMAGE REFERENCES";
+        status.innerHTML = '<span>API</span><b class="online">ONLINE</b>';
+        meta.innerHTML =
+          '<span><b>HERO</b> ' + esc(String(heroName)) + '</span>' +
+          '<span><b>ID</b> ' + esc(String(heroId)) + '</span>' +
+          '<span><b>REGISTRY</b> ' + esc(String(result.imagesEndpoint || "/v1/assets/images")) + '</span>';
+
+        grid.innerHTML = images.length
+          ? images.map((image, index) =>
+              '<article class="inferno-test-card">' +
+                '<figure>' +
+                  '<div class="inferno-test-card-media"><img src="' + esc(image.url) + '" alt="' + esc(String(heroName)) + ' asset ' + (index + 1) + '" loading="lazy" decoding="async"></div>' +
+                  '<figcaption class="inferno-test-card-meta">' +
+                    '<strong>ASSET ' + String(index + 1).padStart(2, "0") + '</strong>' +
+                    '<small>' + esc(image.context || "asset") + '</small>' +
+                    '<code>' + esc(image.url) + '</code>' +
+                  '</figcaption>' +
+                '</figure>' +
+              '</article>'
+            ).join("")
+          : '<p class="muted">No image references were returned for this hero.</p>';
+      } catch (error) {
+        if (isAborted(error)) return;
+        count.textContent = "UNAVAILABLE";
+        status.innerHTML = '<span>API</span><b class="inferno-test-error">OFFLINE</b>';
+        meta.innerHTML = "";
+        grid.innerHTML = '<p class="error-text">Hero asset scan failed: ' + esc(error.message) + '</p>';
+      }
+    };
+
+    if (form) form.addEventListener("submit", event => {
+      event.preventDefault();
+      const selector = String(input?.value || select?.value || "").trim();
+      if (selector) {
+        if (input) input.value = selector;
+        const hero = findHero(list, selector);
+        if (hero && select) select.value = String(hero?.hero_id ?? hero?.id ?? hero?.raw?.hero_id ?? hero?.raw?.id ?? "");
+        scan(selector);
+      }
+    });
+
+    if (select) select.addEventListener("change", () => {
+      const selector = select.value;
+      if (!selector) return;
+      if (input) input.value = selector;
+      scan(selector);
+    });
 
     setConnection(true, "API connected");
   } catch (error) {
     if (isAborted(error)) return;
     $("#inferno-test-count").textContent = "UNAVAILABLE";
     $("#inferno-test-status").innerHTML = '<span>API</span><b class="inferno-test-error">OFFLINE</b>';
-    $("#inferno-test-grid").innerHTML = '<p class="error-text">Inferno asset scan failed: ' + esc(error.message) + '</p>';
+    $("#inferno-test-grid").innerHTML = '<p class="error-text">Hero registry failed: ' + esc(error.message) + '</p>';
     setConnection(false, "API unavailable");
   }
 }
