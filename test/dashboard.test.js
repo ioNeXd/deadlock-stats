@@ -60,6 +60,13 @@ test("dashboard full snapshot still composes info and unified v2 patch feed", as
       });
     }
 
+    if (url.pathname === "/v1/patches/big-days") {
+      return new Response(JSON.stringify(["2026-10-01T10:00:00Z"]), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify([
       { source: "steam", title: "Older", pub_date: "2026-09-30T10:00:00Z", link: "https://example.test/older" },
       { source: "forum", title: "Latest", pub_date: "2026-10-01T10:00:00Z", link: "https://example.test/latest" },
@@ -74,7 +81,8 @@ test("dashboard full snapshot still composes info and unified v2 patch feed", as
   assert.deepEqual(requests.sort(), ["/v1/info", "/v1/patches/big-days", "/v2/patches"]);
   assert.equal(result.info.data.fetched_matches_per_day, 12345);
   assert.equal(result.latestPatch.title, "Latest");
-  assert.equal(result.latestPatch.source, "forum");\n  assert.equal(result.latestMajorPatch.title, "Latest");
+  assert.equal(result.latestPatch.source, "forum");
+  assert.equal(result.latestMajorPatch.title, "Latest");
 });
 
 
