@@ -11,6 +11,14 @@ function extractTopLevelFunction(source, marker) {
   return next === -1 ? source.slice(start) : source.slice(start, start + marker.length + next);
 }
 
+test("app resolves explicit dashboard hash route", () => {
+  const routeStart = appSource.indexOf("function route()");
+  assert.notEqual(routeStart, -1);
+  const routeSource = appSource.slice(routeStart);
+  assert.match(routeSource, /if \(routeName === "dashboard"\) renderDashboard\(signal\);/);
+  assert.doesNotMatch(routeSource, /else renderNotFound\(routeName\);\s*document\.querySelectorAll/);
+});
+
 test("app defers non-critical explorer and GraphQL modules", () => {
   assert.doesNotMatch(appSource, /from ["']\.\/services\/(data-explorer|data-explorer-presets|graphql)\.js["']/);
   assert.match(appSource, /import\(\s*["']\.\/services\/data-explorer\.js["']/);
