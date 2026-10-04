@@ -2,7 +2,8 @@
 
 import { useQueryState } from '@/lib/use-query-state'
 import type { HeroEntity, ItemEntity, PatchWindow, StatsSnapshot } from '@/lib/api/types'
-import type { Locale } from '@/lib/i18n/config'
+import { type Locale } from '@/lib/i18n/config'
+import { getDictionary } from '@/lib/i18n/dictionaries'
 import type { BandOption } from './filter-bar'
 import type { TierTableRow } from './tier-table'
 import { TierListView } from './tier-list-view'
@@ -21,10 +22,11 @@ interface Props {
 export function TierListSwitcher(props: Props) {
   const [params, setParams] = useQueryState()
   const kind = params.get('view') === 'items' ? 'items' : 'heroes'
+  const t = getDictionary(props.locale)
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-1 border-b border-border pb-2" role="tablist" aria-label="Tier list type">
+      <div className="flex flex-wrap items-center gap-1 border-b border-border pb-2" role="tablist" aria-label={t.tierList.switchLabel}>
         {(['heroes', 'items'] as const).map((value) => {
           const active = value === kind
           const className = active
@@ -39,7 +41,7 @@ export function TierListSwitcher(props: Props) {
               onClick={() => setParams({ view: value === 'heroes' ? null : value })}
               className={className}
             >
-              {props.locale === 'pt-br' ? (value === 'heroes' ? 'Heróis' : 'Itens') : value === 'heroes' ? 'Heroes' : 'Items'}
+              {value === 'heroes' ? t.tierList.heroes : t.tierList.items}
             </button>
           )
         })}
