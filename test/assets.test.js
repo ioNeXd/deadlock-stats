@@ -219,25 +219,48 @@ test("map normalization preserves legacy background and optional modern map laye
   assert.equal(modern.entities.shops.length, 1);
 });
 
-test("map normalization converts zipline node splines from origin-relative world coordinates to minimap coordinates", () => {
+test("map normalization converts origin-relative zipline splines to minimap coordinates", () => {
   const normalized = normalizeMap({
     radius: 100,
     images: {},
     objective_positions: {},
     zipline_paths: [{
-      origin: [100, -100, 50],
+      origin: [0, 0, 0],
       color: "#fff",
       color_parsed: { r: 255, g: 255, b: 255, a: 1 },
-      P0_points: [[0, 0, 0], [100, 100, 0]],
-      P1_points: [[0, 0, 0], [-50, 0, 0]],
-      P2_points: [[50, 0, 0], [0, 0, 0]],
+      P0_points: [[-50, -50, 0], [0, 0, 0]],
+      P1_points: [[-50, -50, 0], [0, 0, 0]],
+      P2_points: [[-25, -25, 0], [0, 0, 0]],
     }],
   });
 
   assert.deepEqual(normalized.ziplinePaths[0].segments, [{
-    start: [1, 1],
-    control1: [1.25, 1],
-    control2: [0.75, 1],
-    end: [1.5, 0.5],
+    start: [0.25, 0.75],
+    control1: [0.375, 0.625],
+    control2: [0.5, 0.5],
+    end: [0.5, 0.5],
+  }]);
+});
+
+test("map normalization accepts already-world-space zipline points without double-applying origin", () => {
+  const normalized = normalizeMap({
+    radius: 100,
+    images: {},
+    objective_positions: {},
+    zipline_paths: [{
+      origin: [500, -500, 0],
+      color: "#fff",
+      color_parsed: { r: 255, g: 255, b: 255, a: 1 },
+      P0_points: [[-50, -50, 0], [0, 0, 0]],
+      P1_points: [[-50, -50, 0], [0, 0, 0]],
+      P2_points: [[-25, -25, 0], [0, 0, 0]],
+    }],
+  });
+
+  assert.deepEqual(normalized.ziplinePaths[0].segments, [{
+    start: [0.25, 0.75],
+    control1: [0.375, 0.625],
+    control2: [0.5, 0.5],
+    end: [0.5, 0.5],
   }]);
 });
