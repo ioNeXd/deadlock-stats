@@ -53,15 +53,26 @@ export function resolveAssetImage(entity, preferred = []) {
   return "";
 }
 
-function mapWorldToRelative(point, radius, origin = [0, 0, 0]) {
+function mapWorldToRelative(point, radius, offset = [0, 0]) {
   if (!Array.isArray(point) || point.length < 2 || !Number.isFinite(radius) || radius <= 0) return null;
-  const x = Number(point[0]) + Number(origin[0] ?? 0);
-  const y = Number(point[1]) + Number(origin[1] ?? 0);
+  const x = Number(point[0]) + Number(offset[0] ?? 0);
+  const y = Number(point[1]) + Number(offset[1] ?? 0);
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
   return [
     (x + radius) / (2 * radius),
     (radius - y) / (2 * radius),
   ];
+}
+
+function chooseZiplineCoordinateMode(points, radius, origin) {
+  const candidates = [null, [Number(origin?.[0] ?? 0), Number(origin?.[1] ?? 0)]];
+  const score = offset => points.reduce((total, point) => {
+    if (!Array.isArray(point) || point.length < 2) return total;
+    const x = Number(point[0]) + Number(offset?.[0] ?? 0);
+    const y = Number(point[1]) + Number(offset?.[1] ?? 0);
+    return total + (Number.isFinite(x) && Number.isFinite(y) && Math.abs(x) <= radius && Math.abs(y) <= radius ? 1 : 0);
+  }, 0);
+  return score(candidates[1]) > score(candidates[0]) ? candidates[1] : candidates[0];
 }
 
 function normalizeZiplinePath(path, radius) {
@@ -71,10 +82,12 @@ function normalizeZiplinePath(path, radius) {
   const p1 = Array.isArray(path.P1_points) ? path.P1_points : [];
   const p2 = Array.isArray(path.P2_points) ? path.P2_points : [];
   const count = Math.min(p0.length, p1.length, p2.length);
+  const allPoints = [...p0, ...p1, ...p2];
+  const offset = chooseZiplineCoordinateMode(allPoints, radius, origin);
   const nodes = Array.from({ length: count }, (_, index) => ({
-    p0: mapWorldToRelative(p0[index], radius, origin),
-    p1: mapWorldToRelative(p1[index], radius, origin),
-    p2: mapWorldToRelative(p2[index], radius, origin),
+    p0: mapWorldToRelative(p0[index], radius, offset),
+    p1: mapWorldToRelative(p1[index], radius, offset),
+    p2: mapWorldToRelative(p2[index], radius, offset),
   }));
   const segments = [];
   for (let index = 0; index < nodes.length - 1; index += 1) {
