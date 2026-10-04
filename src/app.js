@@ -155,13 +155,14 @@ function beginRoute() {
 }
 
 async function renderDashboard(signal) {
-  el.content.innerHTML = '<section class="hero-banner"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA</span><h2>The city never sleeps.</h2><p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p><div class="pills"><span>API-FIRST</span><span>OPENAPI</span><span>LIVE CONTRACT</span></div></div></section>' +
-    '<section class="dashboard-metrics">' +
+  el.content.innerHTML = '<section class="dashboard-mosaic">' +
+      '<div class="hero-banner"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA / CITY NEVER SLEEPS</span><h2>Data from the streets.</h2><p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p><div class="pills"><span>API-FIRST</span><span>OPENAPI</span><span>LIVE CONTRACT</span></div></div></div>' +
       '<article class="metric-card"><span>FETCHED MATCHES / 24H</span><strong id="matches-per-day">—</strong><small>API info</small></article>' +
       '<article class="metric-card"><span>DATABASE TABLES</span><strong id="table-count">—</strong><small>reported by API</small></article>' +
       '<article class="metric-card"><span>KNOWN ROWS</span><strong id="known-rows">—</strong><small>reported table sizes</small></article>' +
       '<article class="metric-card"><span>HERO ASSETS</span><strong id="asset-count">—</strong><small>current catalog response</small></article>' +
     '</section>' +
+    '<section class="section">
     '<section class="section"><div class="section-head"><div><span class="eyebrow">ROSTER</span><h2>Heroes in the city</h2></div><a href="#/heroes">View all →</a></div><div id="hero-grid" class="hero-grid" aria-live="polite"></div></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(API_BASE_URL.replace("https://", "")) + '</strong></div><div class="metric"><span>Hero response</span><strong id="api-latency">—</strong></div><div class="metric"><span>Latest patch</span><strong id="latest-patch" class="patch-link">Loading…</strong></div></article><article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">ACTIVITY</span><h2>Recent game activity</h2></div><b id="dashboard-activity-status">LOADING</b></div><div id="dashboard-activity" class="dashboard-activity"><p class="muted">Loading daily game statistics…</p></div></section>';
