@@ -63,6 +63,11 @@ export function getItems(locale: Locale): Promise<ItemEntity[]> {
   })
 }
 
+function normalizeRankColor(color: string): string | null {
+  const value = color.trim()
+  return /^#[0-9a-f]{6}$/i.test(value) ? value : null
+}
+
 export function getRanks(locale: Locale): Promise<RankEntity[]> {
   return once(`assets:latest:ranks:${locale}`, async () => {
     const ranks = await apiGet<RankAsset[]>('/v1/assets/ranks', { language: API_LANGUAGE[locale] }, ASSET_CACHE)
@@ -72,6 +77,7 @@ export function getRanks(locale: Locale): Promise<RankEntity[]> {
         tier: rank.tier,
         name: rank.name,
         icon: images.small_webp ?? images.small_subrank1_webp ?? images.large_webp ?? null,
+        color: normalizeRankColor(rank.color),
       }
     })
   })
