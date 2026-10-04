@@ -7,9 +7,7 @@ const [bootstrapSource, runtimeSource, dashboardSource] = await Promise.all([
   readFile(new URL("../src/app-runtime.js", import.meta.url), "utf8"),
   readFile(new URL("../src/dashboard-route.js", import.meta.url), "utf8"),
 ]);
-const appSource = bootstrapSource + "
-" + runtimeSource + "
-" + dashboardSource;
+const appSource = bootstrapSource + "\n" + runtimeSource + "\n" + dashboardSource;
 
 function extractTopLevelFunction(source, marker) {
   const start = source.indexOf(marker);
