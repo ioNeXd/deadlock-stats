@@ -9,6 +9,7 @@ import { computeTierRows } from '@/lib/tiers'
 import type { ReactNode } from 'react'
 import type { BandOption } from '@/components/tier/filter-bar'
 import { TierListView } from '@/components/tier/tier-list-view'
+import { RankBandTheme } from '@/components/tier/rank-band-theme'
 import { PageHeader } from './page-header'
 
 export function buildBandOptions(ranks: RankEntity[], allLabel: string): BandOption[] {
@@ -19,7 +20,14 @@ export function buildBandOptions(ranks: RankEntity[], allLabel: string): BandOpt
       band.id === 'all'
         ? allLabel
         : `${byTier.get(low)?.name ?? low} – ${byTier.get(high)?.name ?? high}`
-    return { id: band.id, min: band.min, max: band.max, label }
+    return {
+      id: band.id,
+      min: band.min,
+      max: band.max,
+      label,
+      startColor: byTier.get(low)?.color ?? null,
+      endColor: byTier.get(high)?.color ?? null,
+    }
   })
 }
 
@@ -75,8 +83,10 @@ export async function TierPage({ locale, kind }: { locale: Locale; kind: 'heroes
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
-      <PageHeader eyebrow={strings.eyebrow} title={strings.title} lede={strings.lede} />
-      {tierListView}
+      <RankBandTheme bands={bands}>
+        <PageHeader eyebrow={strings.eyebrow} title={strings.title} lede={strings.lede} />
+        {tierListView}
+      </RankBandTheme>
     </main>
   )
 }
