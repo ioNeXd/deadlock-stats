@@ -2668,7 +2668,8 @@ function route() {
   const signal = beginRoute();
   const routeParts = location.hash.replace(/^#\/?/, "").split("/");
   const routeName = routeParts[0] || "dashboard";
-  if (routeName === "api") renderApiStatus(signal);
+  if (routeName === "dashboard") renderDashboard(signal);
+  else if (routeName === "api") renderApiStatus(signal);
   else if (routeName === "analytics") renderAnalytics(signal);
   else if (routeName === "matches" && routeParts[1]) renderMatchDetail(routeParts[1], signal);
   else if (routeName === "matches") renderMatches(signal);
