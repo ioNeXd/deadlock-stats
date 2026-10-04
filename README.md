@@ -60,11 +60,9 @@ Why this stack and what was rejected: [ARCHITECTURE.md](ARCHITECTURE.md#decision
 ```bash
 pnpm install
 pnpm gen:api        # regenerate API types from the OpenAPI spec
-pnpm dev:mock       # develop against recorded fixtures, no network needed
-pnpm dev            # develop against the live API
-pnpm test           # unit and contract tests
-pnpm build          # static build
-pnpm lighthouse     # performance budget check
+pnpm gen:inventory  # regenerate the API inventory from the spec
+pnpm dev            # local Next.js development server
+pnpm build          # production static export
 ```
 
 ## Repository layout
