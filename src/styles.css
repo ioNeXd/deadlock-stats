@@ -1141,3 +1141,67 @@ body{
   .item-asset-card{grid-template-columns:70px minmax(0,1fr)}
   .item-art-frame{width:70px;height:70px}
 }
+
+
+/* Build catalog — hero-led editorial cards with real API artwork. */
+.build-card{
+  --build-accent:var(--blue);
+  position:relative;
+  display:grid;
+  grid-template-columns:180px minmax(0,1fr);
+  min-height:180px;
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--build-accent) 20%,var(--line));
+  border-radius:20px;
+  background:var(--surface);
+  box-shadow:0 10px 35px rgba(0,0,0,.16);
+  transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;
+}
+.build-card:hover{
+  transform:translateY(-4px);
+  border-color:color-mix(in srgb,var(--build-accent) 44%,var(--line));
+  box-shadow:0 24px 55px rgba(0,0,0,.3),0 0 34px color-mix(in srgb,var(--build-accent) 8%,transparent);
+}
+.build-art{position:relative;min-height:180px;overflow:hidden;background:var(--surface-3)}
+.build-art img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease,filter .35s ease}
+.build-art-shade{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,transparent 50%,rgba(12,15,19,.72)),
+    linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.58));
+}
+.build-card:hover .build-art img{transform:scale(1.06);filter:saturate(1.08)}
+.build-index{
+  position:absolute;
+  left:12px;
+  top:12px;
+  padding:5px 7px;
+  border-radius:8px;
+  background:rgba(7,9,12,.7);
+  color:var(--build-accent);
+  font:700 9px var(--font-mono,ui-monospace);
+  backdrop-filter:blur(8px);
+}
+.build-copy{display:flex;flex-direction:column;justify-content:center;padding:22px}
+.build-copy small{color:var(--build-accent);font:8px var(--font-mono,ui-monospace);letter-spacing:.12em}
+.build-copy h3{margin:.4rem 0 .35rem;font-size:1.35rem;color:var(--text)}
+.build-copy p{margin:0;color:var(--muted);font-size:.78rem}
+.build-stats{
+  display:flex;align-items:center;flex-wrap:wrap;gap:7px;
+  margin-top:16px;
+}
+.build-stats span,.build-stats strong,.build-stats em{
+  padding:6px 8px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:rgba(255,255,255,.035);
+  font:8px var(--font-mono,ui-monospace);
+  color:var(--muted);
+}
+.build-stats strong{color:var(--gold2);border-color:color-mix(in srgb,var(--gold) 24%,var(--line))}
+.build-stats em{color:var(--build-accent);font-style:normal}
+@media(max-width:650px){
+  .build-card{grid-template-columns:1fr}
+  .build-art{min-height:150px;max-height:190px}
+  .build-copy{padding:17px}
+}
