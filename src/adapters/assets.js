@@ -64,7 +64,12 @@ export function resolveAssetImage(entity, preferred = []) {
 }
 
 export function resolveHeroCardImage(hero) {
-  return resolveAssetImage(hero, ["hero_card_webp", "hero_card"]);
+  return resolveAssetImage(hero, [
+    "hero_card_webp",
+    "hero_card",
+    "icon_hero_card_webp",
+    "icon_hero_card",
+  ]);
 }
 
 export function resolveHeroBackgroundImage(hero) {
