@@ -5,16 +5,14 @@ import { usePathname } from 'next/navigation'
 import { type Locale, localePath, type SitePath, stripLocale } from '@/lib/i18n/config'
 import { cn } from '@/lib/utils'
 
-const LINKS: { path: SitePath; key: 'heroes' | 'items' | 'methodology' | 'status' }[] = [
-  { path: '/', key: 'heroes' },
-  { path: '/items', key: 'items' },
+const LINKS: { path: SitePath; key: 'tierlist' | 'methodology' | 'status' }[] = [
+  { path: '/tierlist', key: 'tierlist' },
   { path: '/methodology', key: 'methodology' },
   { path: '/status', key: 'status' },
 ]
 
 interface Labels {
-  heroes: string
-  items: string
+  tierlist: string
   methodology: string
   status: string
   mainNav: string
