@@ -194,11 +194,9 @@ function bind(signal) {
       const result = await createCustomMatchFromForm(body, { signal });
       const data = result.data ?? result;
       const partyId = data.party_id;
-      const partyCode = data.party_code;
       document.querySelector("#custom-lobby-id").value = partyId ?? "";
       document.querySelector("#custom-actions").hidden = !partyId;
       write("#custom-output", data);
-      if (partyCode) write("#custom-lobby-id", partyId ?? "");
       write("#custom-status", "CREATED");
     } catch (error) {
       if (signal.aborted) return;
