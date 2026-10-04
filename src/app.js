@@ -931,7 +931,10 @@ async function renderAnalytics(signal) {
 }
 
 async function loadAnalytics(signal, filters = {}) {
-  const analytics = await loadAnalyticsRuntime();
+  const [analytics, assetsRuntime] = await Promise.all([
+    loadAnalyticsRuntime(),
+    loadAssetsRuntime(),
+  ]);
   try {
     const settled = await Promise.allSettled([
       analytics.getAnalyticsSnapshot({ ...assetVersion.options(), ...normalizeAnalyticsFilters(filters), bucket: "start_time_day", signal }),
