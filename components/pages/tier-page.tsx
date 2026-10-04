@@ -6,6 +6,7 @@ import { DEFAULT_BAND, MIN_MATCHES, RANK_BANDS } from '@/lib/config'
 import type { Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { computeTierRows } from '@/lib/tiers'
+import type { ReactNode } from 'react'
 import type { BandOption } from '@/components/tier/filter-bar'
 import { TierListView } from '@/components/tier/tier-list-view'
 import { PageHeader } from './page-header'
@@ -29,18 +30,19 @@ export async function TierPage({ locale, kind }: { locale: Locale; kind: 'heroes
   const initialSnapshot = windows[0]
     ? await fetchTierStats(windows[0], DEFAULT_BAND, STATS_FETCH).catch(() => null)
     : null
-  const entities = kind === 'heroes' ? await getHeroes(locale) : await getItems(locale)
-  const entityMap = new Map(entities.map((entity) => [entity.id, entity]))
-  const initialRows = initialSnapshot
-    ? computeTierRows(initialSnapshot, kind, entityMap, MIN_MATCHES[kind])
-    : []
-  const strings = kind === 'heroes' ? t.heroes : t.items
 
-  return (
-    <main id="main" className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
-      <PageHeader eyebrow={strings.eyebrow} title={strings.title} lede={strings.lede} />
+  let tierListView: ReactNode
+
+  if (kind === 'heroes') {
+    const entities = await getHeroes(locale)
+    const entityMap = new Map(entities.map((entity) => [entity.id, entity]))
+    const initialRows = initialSnapshot
+      ? computeTierRows(initialSnapshot, 'heroes', entityMap, MIN_MATCHES.heroes)
+      : []
+
+    tierListView = (
       <TierListView
-        kind={kind}
+        kind="heroes"
         entities={entities}
         locale={locale}
         windows={windows}
@@ -48,6 +50,33 @@ export async function TierPage({ locale, kind }: { locale: Locale; kind: 'heroes
         initialSnapshot={initialSnapshot}
         initialRows={initialRows}
       />
+    )
+  } else {
+    const entities = await getItems(locale)
+    const entityMap = new Map(entities.map((entity) => [entity.id, entity]))
+    const initialRows = initialSnapshot
+      ? computeTierRows(initialSnapshot, 'items', entityMap, MIN_MATCHES.items)
+      : []
+
+    tierListView = (
+      <TierListView
+        kind="items"
+        entities={entities}
+        locale={locale}
+        windows={windows}
+        bands={bands}
+        initialSnapshot={initialSnapshot}
+        initialRows={initialRows}
+      />
+    )
+  }
+
+  const strings = kind === 'heroes' ? t.heroes : t.items
+
+  return (
+    <main id="main" className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
+      <PageHeader eyebrow={strings.eyebrow} title={strings.title} lede={strings.lede} />
+      {tierListView}
     </main>
   )
 }
