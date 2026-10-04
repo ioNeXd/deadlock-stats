@@ -229,7 +229,7 @@ test("match detail view model extracts scalar fields, players and array metadata
 });
 
 
-test("match UI loaders can expose active and recent failures independently", () => {
+test("match UI loaders can expose active and recent failures independently", async () => {
   const source = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert.match(source, /const loadMatchList = async/);
   assert.match(source, /loadMatchList\(matches\.getActiveMatchesSnapshot/);
