@@ -30,34 +30,24 @@ export async function TierPage({ locale, kind }: { locale: Locale; kind: 'heroes
     ? await fetchTierStats(windows[0], DEFAULT_BAND, STATS_FETCH).catch(() => null)
     : null
   const entities = kind === 'heroes' ? await getHeroes(locale) : await getItems(locale)
+  const entityMap = new Map(entities.map((entity) => [entity.id, entity]))
   const initialRows = initialSnapshot
-    ? computeTierRows(initialSnapshot, kind, new Map(entities.map((entity) => [entity.id, entity])), MIN_MATCHES[kind])
+    ? computeTierRows(initialSnapshot, kind, entityMap, MIN_MATCHES[kind])
     : []
   const strings = kind === 'heroes' ? t.heroes : t.items
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
       <PageHeader eyebrow={strings.eyebrow} title={strings.title} lede={strings.lede} />
-      {kind === 'heroes' ? (
-        <TierListView
-          kind="heroes"
-          entities={entities}
-          locale={locale}
-          windows={windows}
-          bands={bands}
-          initialSnapshot={initialSnapshot}
-          initialRows={initialRows}
-        />
-      ) : (
-        <TierListView
-          kind="items"
-          entities={entities}
-          locale={locale}
-          windows={windows}
-          bands={bands}
-          initialSnapshot={initialSnapshot}
-        />
-      )}
+      <TierListView
+        kind={kind}
+        entities={entities}
+        locale={locale}
+        windows={windows}
+        bands={bands}
+        initialSnapshot={initialSnapshot}
+        initialRows={initialRows}
+      />
     </main>
   )
 }
