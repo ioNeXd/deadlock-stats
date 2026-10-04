@@ -1335,3 +1335,91 @@ body{
   .player-hero-stat{grid-template-columns:76px minmax(0,1fr)}
   .player-hero-art{height:68px}
 }
+
+
+/* Analytics — living command center surfaces, keeping API values authoritative. */
+.analytics-filter-panel{
+  background:
+    radial-gradient(circle at 100% 0,rgba(157,131,230,.07),transparent 34%),
+    var(--surface);
+}
+.analytics-summary{}
+.analytics-grid .metric-card:nth-child(1){--metric-accent:var(--blue)}
+.analytics-grid .metric-card:nth-child(2){--metric-accent:var(--green)}
+.analytics-grid .metric-card:nth-child(3){--metric-accent:var(--purple)}
+.analytics-grid .metric-card:nth-child(4){--metric-accent:var(--red)}
+.analytics-grid .metric-card{
+  position:relative;
+  overflow:hidden;
+  border-color:color-mix(in srgb,var(--metric-accent) 22%,var(--line));
+  background:linear-gradient(135deg,color-mix(in srgb,var(--metric-accent) 7%,var(--surface-2)),var(--surface-2));
+}
+.analytics-grid .metric-card:before{
+  content:"";
+  position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--metric-accent);
+}
+.analytics-grid .metric-card strong{color:var(--text)}
+.analytics-hero-panel{
+  background:
+    radial-gradient(circle at 0 0,rgba(93,169,233,.045),transparent 30%),
+    var(--surface);
+}
+.hero-stat-row{
+  position:relative;
+  transition:background .18s ease,transform .18s ease;
+}
+.hero-stat-row:hover{
+  background:rgba(255,255,255,.025);
+  transform:translateX(2px);
+}
+.hero-stat-identity img{
+  border-radius:8px;
+  border-color:color-mix(in srgb,var(--blue) 24%,var(--line));
+}
+.hero-stat-row>span:nth-child(3){color:var(--green)}
+.hero-stat-row>span:nth-child(4){color:var(--cyan)}
+.hero-stat-row>span:nth-child(5){color:var(--red)}
+.hero-stat-row>span:nth-child(6){color:var(--amber)}
+.analytics-matchup-panel{
+  background:
+    radial-gradient(circle at 100% 0,rgba(157,131,230,.06),transparent 36%),
+    var(--surface);
+}
+.matchup-columns>div:first-child .analytics-table-head{color:var(--red)}
+.matchup-columns>div:last-child .analytics-table-head{color:var(--green)}
+.matchup-columns .analytics-table-row{
+  border-radius:8px;
+  padding-left:9px;
+  padding-right:9px;
+  transition:background .18s ease,transform .18s ease;
+}
+.matchup-columns>div:first-child .analytics-table-row:hover{
+  background:rgba(216,107,107,.055);
+  transform:translateX(2px);
+}
+.matchup-columns>div:last-child .analytics-table-row:hover{
+  background:rgba(104,195,138,.055);
+  transform:translateX(2px);
+}
+.analytics-bars .analytics-bar-row>div{
+  background:rgba(255,255,255,.045);
+  border-color:var(--line);
+}
+.analytics-bars .analytics-bar-row i{
+  background:linear-gradient(90deg,var(--blue),var(--purple));
+}
+.analytics-builds{
+  background:
+    radial-gradient(circle at 0 100%,rgba(104,195,138,.05),transparent 34%),
+    var(--surface);
+}
+.item-analytics-card{
+  border-radius:12px;
+  background:var(--surface-2);
+  transition:transform .18s ease,border-color .18s ease;
+}
+.item-analytics-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(104,195,138,.28);
+}
