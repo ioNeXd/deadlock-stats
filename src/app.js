@@ -2498,3 +2498,317 @@ async function renderMaps(signal) {
 
     
     const camps = Array.isArray(map.neutralCamps) ? map.neutralCamps : [];
+    const ziplinePaths = Array.isArray(map.ziplinePaths) ? map.ziplinePaths : [];
+    const ziplineSvg = ziplinePaths.map((path, index) => {
+      const segments = Array.isArray(path?.segments) ? path.segments : [];
+      if (!segments.length) return "";
+      const first = segments[0]?.start;
+      if (!Array.isArray(first) || first.length < 2) return "";
+      const commands = ["M " + Number(first[0]) + " " + Number(first[1])];
+      for (const segment of segments) {
+        const c1 = segment?.control1;
+        const c2 = segment?.control2;
+        const end = segment?.end;
+        if (![c1, c2, end].every(point => Array.isArray(point) && point.length >= 2 && point.every(value => Number.isFinite(Number(value))))) continue;
+        commands.push(
+          "C " +
+          Number(c1[0]) + " " + Number(c1[1]) + " " +
+          Number(c2[0]) + " " + Number(c2[1]) + " " +
+          Number(end[0]) + " " + Number(end[1])
+        );
+      }
+      const color = colorToCss(path?.color_parsed ?? path?.color);
+      return '<path class="map-zipline-path" data-zipline="' + index + '" d="' + esc(commands.join(" ")) + '"' +
+        (color ? ' style="--zipline-color:' + esc(color) + '"' : "") +
+        ' vector-effect="non-scaling-stroke"></path>';
+    }).join("");
+    const objectiveHtml = Object.entries(map.objectivePositions ?? {}).map(([name, position]) => {
+      const normalizedName = name.replaceAll("_", " ");
+      const isCore = /core|patron/i.test(name);
+      return marker("objective-marker" + (isCore ? " objective-core" : ""), position?.left_relative, position?.top_relative, normalizedName, null, "◆");
+    }).join("");
+
+    const campsHtml = camps.map(camp =>
+      marker("camp-marker camp-" + esc(camp.kind), camp.left_relative, camp.top_relative, camp.name + " · " + camp.kind, camp.icon)
+    ).join("");
+
+    const entities = map.entities && typeof map.entities === "object" ? map.entities : {};
+    const entityGroups = Object.entries(entities).flatMap(([group, values]) =>
+      Array.isArray(values) ? values.map((entity, index) => ({ group, entity, index })) : []
+    );
+    const entitiesHtml = entityGroups.map(({ group, entity, index }) =>
+      marker("entity-marker", entity.left_relative, entity.top_relative, group.replaceAll("_", " ") + " #" + (index + 1), null, "•")
+    ).join("");
+
+    stage.innerHTML =
+      '<div class="map-canvas">' +
+      (base ? '<img class="map-layer map-base" src="' + esc(base) + '" alt="Deadlock map base layer" draggable="false">' : "") +
+      layers.map(([name, url]) => '<img class="map-layer map-' + esc(name) + '" src="' + esc(url) + '" alt="" aria-hidden="true" draggable="false">').join("") +
+      '<svg class="map-ziplines" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">' + ziplineSvg + '</svg>' +
+      '<div class="map-markers map-objectives">' + objectiveHtml + '</div>' +
+      '<div class="map-markers map-camps">' + campsHtml + '</div>' +
+      '<div class="map-markers map-entities">' + entitiesHtml + '</div>' +
+      '</div>';
+
+    const setMarkerGroup = (name, visible) => {
+      const node = name === "ziplines" ? stage.querySelector(".map-ziplines") : stage.querySelector(".map-markers.map-" + name);
+      if (node) node.hidden = !visible;
+    };
+    document.querySelectorAll("[data-map-layer]").forEach(input => {
+      input.addEventListener("change", event => {
+        const layer = event.currentTarget.dataset.mapLayer;
+        setMarkerGroup(layer, event.currentTarget.checked);
+      });
+      setMarkerGroup(input.dataset.mapLayer, input.checked);
+    });
+
+    const imageToggleContainer = $("#map-image-toggles");
+    if (imageToggleContainer) {
+      const imageLayerEntries = [];
+      if (base) imageLayerEntries.push(["base", "Base map"]);
+      layers.forEach(([name]) => imageLayerEntries.push([name, name.replaceAll("_", " ")]));
+
+      imageToggleContainer.innerHTML = imageLayerEntries.map(([name, label]) =>
+        '<label><input type="checkbox" data-map-image="' + esc(name) + '" checked> ' + esc(label) + '</label>'
+      ).join("");
+
+      imageToggleContainer.querySelectorAll("[data-map-image]").forEach(input => {
+        input.addEventListener("change", event => {
+          const layer = event.currentTarget.dataset.mapImage;
+          const node = stage.querySelector(layer === "base" ? ".map-base" : ".map-" + layer);
+          if (node) node.hidden = !event.currentTarget.checked;
+        });
+      });
+    }
+
+    const selection = $("#map-selection");
+    const showSelection = (type, title, data) => {
+      selection.innerHTML = '<span class="eyebrow">' + esc(type) + '</span><h4>' + esc(title) + '</h4><pre>' + esc(JSON.stringify(data, null, 2)) + '</pre>';
+    };
+    const markerData = [
+      ...Object.entries(map.objectivePositions ?? {}).map(([name, data]) => ({
+        selector: ".objective-marker",
+        type: "OBJECTIVE",
+        title: name.replaceAll("_", " "),
+        data,
+      })),
+      ...camps.map(camp => ({
+        selector: ".camp-marker",
+        type: "NEUTRAL CAMP",
+        title: camp.name + " · " + camp.kind,
+        data: camp,
+      })),
+      ...entityGroups.map(({ group, entity, index }) => ({
+        selector: ".entity-marker",
+        type: "ENTITY",
+        title: group.replaceAll("_", " ") + " #" + (index + 1),
+        data: entity,
+      })),
+    ];
+    const markerButtons = stage.querySelectorAll(".map-marker");
+    markerButtons.forEach((button, index) => {
+      const item = markerData[index];
+      if (item) {
+        button.addEventListener("click", () => showSelection(item.type, item.title, item.data));
+      }
+    });
+    const canvas = stage.querySelector(".map-canvas");
+    let scale = 1, offsetX = 0, offsetY = 0, dragging = false, startX = 0, startY = 0;
+    const applyTransform = () => {
+      if (!canvas) return;
+      canvas.style.transform = "translate(" + offsetX + "px," + offsetY + "px) scale(" + scale + ")";
+      $("#map-zoom-reset").textContent = Math.round(scale * 100) + "%";
+    };
+    const changeZoom = delta => { scale = Math.min(2.5, Math.max(.75, scale + delta)); applyTransform(); };
+    $("#map-zoom-in").addEventListener("click", () => changeZoom(.25));
+    $("#map-zoom-out").addEventListener("click", () => changeZoom(-.25));
+    $("#map-zoom-reset").addEventListener("click", () => { scale = 1; offsetX = offsetY = 0; applyTransform(); });
+    stage.addEventListener("wheel", event => { event.preventDefault(); changeZoom(event.deltaY < 0 ? .1 : -.1); }, { passive: false });
+    stage.addEventListener("pointerdown", event => { if (event.target.closest(".map-marker")) return; dragging = true; startX = event.clientX - offsetX; startY = event.clientY - offsetY; stage.setPointerCapture(event.pointerId); });
+    stage.addEventListener("pointermove", event => { if (!dragging) return; offsetX = event.clientX - startX; offsetY = event.clientY - startY; applyTransform(); });
+    stage.addEventListener("pointerup", event => { dragging = false; stage.releasePointerCapture?.(event.pointerId); });
+    stage.addEventListener("pointercancel", event => { dragging = false; stage.releasePointerCapture?.(event.pointerId); });
+    applyTransform();
+
+    $("#map-build").textContent = options.clientVersion ? "BUILD " + options.clientVersion : "LATEST BUILD";
+    $("#map-summary").innerHTML =
+      '<div><span>RADIUS</span><strong>' + esc(map.radius ?? "—") + '</strong></div>' +
+      '<div><span>OBJECTIVES</span><strong>' + Object.keys(map.objectivePositions ?? {}).length + '</strong></div>' +
+      '<div><span>NEUTRAL CAMPS</span><strong>' + camps.length + '</strong></div>' +
+      '<div><span>ENTITIES</span><strong>' + entityGroups.length + '</strong></div>' +
+      '<div><span>ZIPLINES</span><strong>' + ziplinePaths.length + '</strong></div>';
+
+    const entityNames = entityGroups.reduce((counts, item) => {
+      counts[item.group] = (counts[item.group] ?? 0) + 1;
+      return counts;
+    }, {});
+    $("#map-details").innerHTML =
+      '<div class="map-detail"><span class="eyebrow">IMAGE LAYERS</span><p>' + layers.map(([name]) => esc(name)).join(" · ") + '</p></div>' +
+      '<div class="map-detail"><span class="eyebrow">ENTITY GROUPS</span><p>' +
+      (Object.entries(entityNames).map(([name, count]) => esc(name.replaceAll("_", " ")) + " × " + count).join(" · ") || "No extracted entities for this build.") +
+      '</p></div>' +
+      '<div class="map-detail"><span class="eyebrow">DATA AVAILABILITY</span><p>' +
+      (map.neutralCamps == null ? "Neutral camps are not available for this asset build." : "Neutral camp positions are available.") +
+      " " + (map.entities == null ? "Map entity extraction is not available." : "Map entity extraction is available.") +
+      '</p></div>';
+
+    setConnection(true, "API connected");
+  }).catch(error => {
+    if (isAborted(error)) return;
+    stage.innerHTML = '<div class="map-loading error-text">Map request failed: ' + esc(error.message) + '</div>';
+    setConnection(false, "API unavailable");
+  });
+}
+
+function sanitizePatchHtml(value) {
+  const template = document.createElement("template");
+  template.innerHTML = value;
+  template.content.querySelectorAll("script,style,iframe,object,embed,form").forEach(node => node.remove());
+  template.content.querySelectorAll("*").forEach(node => {
+    [...node.attributes].forEach(attribute => {
+      if (/^on/i.test(attribute.name)) node.removeAttribute(attribute.name);
+      if (["href", "src", "xlink:href"].includes(attribute.name)) {
+        const safe = safeExternalUrl(attribute.value);
+        if (safe) node.setAttribute(attribute.name, safe);
+        else node.removeAttribute(attribute.name);
+      }
+    });
+  });
+  return template.innerHTML;
+}
+
+async function renderPatches(signal) {
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">HISTORY / PATCH NOTES</span><h2>Patch History</h2><p>Official patch-note feed returned by the Deadlock API. The page preserves the feed content and exposes the source link when provided.</p></section>' +
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">PATCH FEED</span><h2 id="patch-history-count">Loading…</h2></div><span id="patch-history-status">LIVE API</span></div><div id="patch-big-days" class="muted">Loading major patch dates…</div><div id="patch-history" class="patch-history" aria-live="polite"><p>Loading patch history…</p></div></section>';
+
+  try {
+    const { loadBigPatchDays, loadPatchHistory } = await import("./services/patches.js");
+    const [historySettlement, bigDaysSettlement] = await Promise.allSettled([
+      loadPatchHistory({ signal }),
+      loadBigPatchDays({ signal }),
+    ]);
+    if (historySettlement.status !== "fulfilled") throw historySettlement.reason;
+    const result = historySettlement.value;
+    const bigDays = bigDaysSettlement.status === "fulfilled" ? bigDaysSettlement.value.data ?? [] : [];
+    const bigDaysElement = $("#patch-big-days");
+    bigDaysElement.textContent = bigDays.length ? "Major patch dates: " + bigDays.slice(0, 6).map(day => new Date(day).toLocaleDateString()).join(" · ") : "Major patch dates unavailable";
+    if (signal.aborted) return;
+    const container = $("#patch-history");
+    const patches = result.patches ?? [];
+    $("#patch-history-count").textContent = patches.length + " patches";
+    $("#patch-history-status").textContent = "ONLINE";
+    $("#patch-history-status").classList.add("online");
+    if (!patches.length) {
+      container.innerHTML = '<p>No patch notes returned by the API.</p>';
+      return;
+    }
+
+    container.innerHTML = patches.map((patch, index) => {
+      const date = patch.pubDate ? new Date(patch.pubDate).toLocaleDateString() : "Unknown date";
+      const source = patch.source || patch.author || patch.creator || patch.category || "PATCH FEED";
+      const safeLink = safeExternalUrl(patch.link);
+      const content = patch.content ? sanitizePatchHtml(String(patch.content)) : "";
+      return '<article class="patch-card' + (index === 0 ? ' expanded' : '') + '">' +
+        '<div><div class="patch-meta"><span>' + esc(date) + '</span><span>' + esc(source) + '</span></div>' +
+        '<h3>' + esc(patch.title ?? "Untitled patch") + '</h3>' +
+        (content ? '<div class="patch-content">' + content + '</div>' : '<p>Patch content was not included in the feed response.</p>') +
+        '</div><div>' +
+        (safeLink ? '<a class="button" href="' + esc(safeLink) + '" target="_blank" rel="noopener noreferrer">Source ↗</a>' : '') +
+        '<button class="button" type="button" data-patch-toggle="' + index + '" aria-expanded="' + (index === 0 ? "true" : "false") + '">' + (index === 0 ? "Collapse" : "Read") + '</button>' +
+        '</div></article>';
+    }).join("");
+
+    container.querySelectorAll("[data-patch-toggle]").forEach(button => {
+      button.addEventListener("click", () => {
+        const card = button.closest(".patch-card");
+        const expanded = card.classList.toggle("expanded");
+        button.setAttribute("aria-expanded", String(expanded));
+        button.textContent = expanded ? "Collapse" : "Read";
+      });
+    });
+    setConnection(true, "API connected");
+  } catch (error) {
+    if (isAborted(error)) return;
+    $("#patch-history-count").textContent = "Unavailable";
+    $("#patch-history-status").textContent = "OFFLINE";
+    $("#patch-history-status").classList.add("offline");
+    $("#patch-history").innerHTML = '<p class="error-text">Patch feed request failed: ' + esc(error.message) + '</p>';
+    setConnection(false, "API unavailable");
+  }
+}
+
+function renderNotFound(routeName) {
+  el.content.innerHTML = '<section class="page-head"><span class="eyebrow">NAVIGATION / 404</span><h2>Route not found</h2><p>The route <code>' +
+    esc('#/' + routeName) +
+    '</code> is not implemented in this build.</p><p><a class="primary-button" href="#/">Return to dashboard</a></p></section>';
+}
+
+function renderAdvancedTools(signal) {
+  loadAdvancedToolsRuntime().then(runtime => runtime.renderAdvancedTools({ signal })).catch(error => {
+    if (isAborted(error)) return;
+    el.content.innerHTML = '<section class="panel"><p class="error-text">Advanced tools failed to load: ' + esc(error.message) + '</p></section>';
+  });
+}
+
+function route() {
+  const signal = beginRoute();
+  const routeParts = location.hash.replace(/^#\/?/, "").split("/");
+  const routeName = routeParts[0] || "dashboard";
+  if (routeName === "dashboard") renderDashboard(signal);
+  else if (routeName === "api") renderApiStatus(signal);
+  else if (routeName === "analytics") renderAnalytics(signal);
+  else if (routeName === "matches" && routeParts[1]) renderMatchDetail(routeParts[1], signal);
+  else if (routeName === "matches") renderMatches(signal);
+  else if (routeName === "players" && routeParts[1]) renderPlayerDetail(routeParts[1], signal);
+  else if (routeName === "players") renderPlayers(signal);
+  else if (routeName === "builds" && routeParts[1] && routeParts[2]) renderBuildDetail(routeParts[1], routeParts[2], signal);
+  else if (routeName === "builds") renderBuilds(signal);
+  else if (routeName === "leaderboard") renderLeaderboard(signal);
+  else if (routeName === "item-analytics") renderItemAnalytics(signal);
+  else if (routeName === "maps") renderMaps(signal);
+  else if (routeName === "patches") renderPatches(signal);
+  else if (routeName === "data") renderDataExplorer(signal);
+  else if (routeName === "graphql") renderGraphql(signal);
+  else if (routeName === "demos") loadAdvancedToolsRuntime().then(runtime => runtime.renderDemoExplorer({ signal }));
+  else if (routeName === "live") loadAdvancedToolsRuntime().then(runtime => runtime.renderLiveQuery({ signal }));
+  else if (routeName === "tools") renderAdvancedTools(signal);
+  else if (routeName === "heroes" && routeParts[1]) renderHeroDetail(routeParts[1], signal);
+  else if (routeName === "heroes") renderHeroes(signal);
+  else if (routeName === "items" && routeParts[1]) renderItemDetail(routeParts[1], signal);
+  else if (routeName === "items" || routeName === "ranks") renderAssetCatalog(routeName, signal);
+  else renderNotFound(routeName);
+  document.querySelectorAll(".nav-item").forEach(item => {
+    const active = item.getAttribute("href") === "#/" + (routeName === "dashboard" ? "" : routeName);
+    item.classList.toggle("active", active);
+    if (active) item.setAttribute("aria-current", "page");
+    else item.removeAttribute("aria-current");
+  });
+  bindVersionControl();
+
+  if (routeName === "dashboard" || routeName === "maps") {
+    const initialSelectedVersion = assetVersion.get();
+    loadAssetVersionContext().then(() => {
+      refreshVersionControlOptions();
+      if (assetVersion.get() !== initialSelectedVersion && !signal.aborted) route();
+    }).catch(() => {});
+  }
+}
+
+function refreshVersionControlOptions() {
+  const select = $("#client-version");
+  if (!select) return;
+
+  const selected = assetVersion.get();
+  select.innerHTML =
+    '<option value="">LATEST</option>' +
+    assetVersion.list().slice().reverse().map(version =>
+      '<option value="' + esc(version) + '"' +
+      (selected === version ? ' selected' : '') +
+      '>BUILD ' + esc(version) + '</option>'
+    ).join("");
+  select.value = selected == null ? "" : String(selected);
+}
+
+window.addEventListener("hashchange", route);
+route();
