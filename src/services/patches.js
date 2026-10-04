@@ -1,4 +1,4 @@
-import { getPatches } from "../api/patches.js";
+import { getBigPatchDays, getPatches } from "../api/patches.js";
 
 function asArray(value) {
   if (Array.isArray(value)) return value;
@@ -16,6 +16,7 @@ export function normalizePatch(patch = {}) {
     guid: typeof patch?.guid === "object" ? patch.guid?.text ?? null : patch?.guid ?? null,
     author: patch?.author ?? null,
     category: typeof category === "object" ? category?.text ?? null : category ?? null,
+    source: patch?.source ?? null,
     creator: patch?.dc_creator ?? null,
     content: patch?.content_encoded ?? null,
     comments: patch?.slash_comments ?? null,
@@ -45,4 +46,11 @@ export async function loadPatchHistory(options = {}) {
     ...result,
     ...buildPatchHistoryViewModel(result?.data ?? result),
   };
+}
+
+
+export async function loadBigPatchDays(options = {}) {
+  const result = await getBigPatchDays(options);
+  const days = Array.isArray(result?.data) ? result.data.filter(value => typeof value === "string") : [];
+  return { ...result, data: days, raw: result?.data ?? null };
 }
