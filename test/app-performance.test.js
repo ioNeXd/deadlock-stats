@@ -12,8 +12,7 @@ const appSource = bootstrapSource + "\n" + runtimeSource + "\n" + dashboardSourc
 function extractTopLevelFunction(source, marker) {
   const start = source.indexOf(marker);
   assert.notEqual(start, -1);
-  const next = source.slice(start + marker.length).search(/\r?
-(?:async )?function /);
+  const next = source.slice(start + marker.length).search(/\r?\n(?:async )?function /);
   return next === -1 ? source.slice(start) : source.slice(start, start + marker.length + next);
 }
 
