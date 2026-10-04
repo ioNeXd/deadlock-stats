@@ -99,8 +99,43 @@ export function ingestLiveUrlsFromForm(values, options = {}) {
   return ingestLiveUrls(rows, options);
 }
 
-export function runLiveQuery(options = {}) {
-  return getLiveQuery(options);
+export function buildLiveQueryOptions({ query, matchId, broadcastUrl } = {}, options = {}) {
+  if (typeof query !== "string" || !query.trim()) throw new TypeError("query must be a non-empty string");
+  const normalizedMatchId = matchId === undefined || matchId === null || matchId === "" ? undefined : Number(matchId);
+  if (normalizedMatchId !== undefined && (!Number.isInteger(normalizedMatchId) || normalizedMatchId < 0)) {
+    throw new RangeError("matchId must be a non-negative integer");
+  }
+  const normalizedBroadcastUrl = typeof broadcastUrl === "string" && broadcastUrl.trim() ? broadcastUrl.trim() : undefined;
+  if (normalizedMatchId === undefined && !normalizedBroadcastUrl) {
+    throw new TypeError("matchId or broadcastUrl is required");
+  }
+  return {
+    ...options,
+    query: query.trim(),
+    match_id: normalizedMatchId,
+    broadcast_url: normalizedBroadcastUrl,
+  };
+}
+
+export function runLiveQuery(values = {}, options = {}) {
+  return getLiveQuery(buildLiveQueryOptions(values, options));
+}
+
+export function parseSseEventBlock(block = "") {
+  const event = { type: "message", data: "", id: null, retry: null };
+  const dataLines = [];
+  for (const rawLine of String(block).replace(/\\r/g, "").split("\n")) {
+    if (!rawLine || rawLine.startsWith(":")) continue;
+    const separator = rawLine.indexOf(":");
+    const field = separator === -1 ? rawLine : rawLine.slice(0, separator);
+    const value = separator === -1 ? "" : rawLine.slice(separator + 1).replace(/^ /, "");
+    if (field === "event") event.type = value || "message";
+    else if (field === "data") dataLines.push(value);
+    else if (field === "id") event.id = value;
+    else if (field === "retry" && /^\\d+$/.test(value)) event.retry = Number(value);
+  }
+  event.data = dataLines.join("\n");
+  return event;
 }
 
 export function createCustomMatchFromForm(values, options = {}) {
