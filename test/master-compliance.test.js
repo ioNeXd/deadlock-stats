@@ -11,7 +11,7 @@ function has(source, marker) {
 }
 
 test("master compliance: API status exposes health, transport, retry, version and patch context", () => {
-  const app = read("src/app.js");
+  const app = read("src/app-runtime.js");
   const service = read("src/services/api-status.js");
 
   has(service, '"/v1/info/health"');
