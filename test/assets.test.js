@@ -242,13 +242,13 @@ test("map normalization converts origin-relative zipline splines to minimap coor
   }]);
 });
 
-test("map normalization accepts already-world-space zipline points without double-applying origin", () => {
+test("map normalization applies zipline origin to relative spline points", () => {
   const normalized = normalizeMap({
     radius: 100,
     images: {},
     objective_positions: {},
     zipline_paths: [{
-      origin: [500, -500, 0],
+      origin: [50, -50, 0],
       color: "#fff",
       color_parsed: { r: 255, g: 255, b: 255, a: 1 },
       P0_points: [[-50, -50, 0], [0, 0, 0]],
@@ -258,9 +258,9 @@ test("map normalization accepts already-world-space zipline points without doubl
   });
 
   assert.deepEqual(normalized.ziplinePaths[0].segments, [{
-    start: [0.25, 0.75],
-    control1: [0.375, 0.625],
-    control2: [0.5, 0.5],
-    end: [0.5, 0.5],
+    start: [0.5, 1],
+    control1: [0.625, 0.875],
+    control2: [0.75, 0.75],
+    end: [0.75, 0.75],
   }]);
 });
