@@ -1902,31 +1902,79 @@ async function renderDataExplorer(signal) {
 }
 
 async function loadExplorer(signal) {
-  try {
-    const runtime = await loadDataExplorerRuntime();
-    const contractResult = await runtime.getOpenApiContract({ cacheTtlMs: 5 * 60_000, signal });
-    if (signal.aborted) return;
-    const operations = runtime.listApiOperations(contractResult.data);
-    const list = $("#operation-list");
-    const filter = $("#operation-filter");
+  const runtime = await loadDataExplorerRuntime();
+  const list = $("#operation-list");
+  const filter = $("#operation-filter");
+  let activeContract = null;
+  let activeOperations = [];
+
+  const bindOperationList = (contractResult, snapshot = false) => {
+    if (signal.aborted || !list || !filter) return;
+    activeContract = contractResult;
+    activeOperations = runtime.listApiOperations(contractResult);
     const renderList = () => {
       const query = filter.value.trim().toLowerCase();
-      const filtered = operations.filter(operation => !query || [operation.operationId, operation.path, operation.summary, ...operation.tags].join(" ").toLowerCase().includes(query));
-      list.innerHTML = filtered.map(operation => '<button class="operation-row" data-operation-key="' + esc(operation.operationKey) + '"><span class="method ' + operation.method.toLowerCase() + '">' + operation.method + '</span><span><b>' + esc(operation.operationId) + '</b><small>' + esc(operation.path) + '</small></span>' + (operation.deprecated ? "<em>deprecated</em>" : "") + "</button>").join("") || '<p class="muted">No operations match.</p>';
-      list.querySelectorAll(".operation-row").forEach(button => button.addEventListener("click", () => renderOperation(operations.find(operation => operation.operationKey === button.dataset.operationKey), signal, contractResult.data)));
+      const filtered = activeOperations.filter(operation =>
+        !query || [operation.operationId, operation.path, operation.summary, ...operation.tags]
+          .join(" ").toLowerCase().includes(query)
+      );
+      list.innerHTML = filtered.map(operation =>
+        '<button class="operation-row" data-operation-key="' + esc(operation.operationKey) + '">' +
+          '<span class="method ' + operation.method.toLowerCase() + '">' + operation.method + '</span>' +
+          '<span><b>' + esc(operation.operationId) + '</b><small>' + esc(operation.path) + '</small></span>' +
+          (operation.deprecated ? "<em>deprecated</em>" : "") +
+        "</button>"
+      ).join("") || '<p class="muted">No operations match.</p>';
+      list.querySelectorAll(".operation-row").forEach(button => button.addEventListener("click", () => {
+        const operation = activeOperations.find(item => item.operationKey === button.dataset.operationKey);
+        renderOperation(operation, signal, activeContract);
+      }));
     };
-    filter.addEventListener("input", renderList);
+    filter.oninput = renderList;
     renderList();
-    setConnection(true, "API connected");
+    if (!snapshot) setConnection(true, "API connected");
+  };
+
+  const loadSnapshot = async () => {
+    try {
+      const response = await fetch("./docs/api-openapi-inventory.json", { cache: "force-cache", signal });
+      if (!response.ok) throw new Error("OpenAPI inventory unavailable");
+      const inventory = await response.json();
+      const paths = {};
+      for (const operation of Array.isArray(inventory?.operations) ? inventory.operations : []) {
+        const method = String(operation?.method || "GET").toLowerCase();
+        if (!operation?.path || !HTTP_METHODS.includes(method)) continue;
+        paths[operation.path] ??= {};
+        paths[operation.path][method] = operation;
+      }
+      const contract = {
+        openapi: inventory?.openapi || "3.1.0",
+        info: { version: inventory?.api_version || "snapshot" },
+        paths,
+        components: { schemas: {} },
+      };
+      bindOperationList(contract, true);
+    } catch (error) {
+      if (!isAborted(error)) console.warn("OpenAPI inventory snapshot unavailable", error);
+    }
+  };
+
+  try {
+    await Promise.all([
+      loadSnapshot(),
+      runtime.getOpenApiContract({ cacheTtlMs: 10 * 60_000, signal }).then(result => {
+        if (signal.aborted) return;
+        bindOperationList(result.data, false);
+      }),
+    ]);
   } catch (error) {
     if (isAborted(error)) return;
-    const list = $("#operation-list");
-    if (!list) return;
-    list.innerHTML = '<p class="error-text">OpenAPI contract could not be loaded: ' + esc(error.message) + "</p>";
+    if (!activeOperations.length && list) {
+      list.innerHTML = '<p class="error-text">OpenAPI contract could not be loaded: ' + esc(error.message) + "</p>";
+    }
     setConnection(false, "API unavailable");
   }
 }
-
 function schemaPlaceholder(schema) {
   if (!schema) return "value";
   if (Array.isArray(schema.type)) return schema.type.join(" | ");
