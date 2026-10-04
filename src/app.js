@@ -485,7 +485,7 @@ async function renderHeroes(signal) {
       const heroArt = hero ? renderHeroArt(hero, "hero-performance", portrait) : "";
       const accent = colorToCss(hero?.colors?.ui);
       return '<a class="hero-performance-card" href="#/heroes/' + encodeURIComponent(item.heroId) + '"' + (accent ? ' style="--hero-accent:' + esc(accent) + '"' : "") + '>' +
-        '<div class="hero-performance-art">' + heroArt + '</div>' +
+        heroArt +
         '<div class="hero-performance-body"><div class="hero-performance-title"><div><small>HERO ' + esc(item.heroId) + '</small><h3>' + esc(nameOf(hero)) + '</h3></div><strong>' + esc(winRate == null ? "—" : winRate.toFixed(1) + "%") + '<small>WIN RATE</small></strong></div>' +
         '<div class="hero-performance-metrics"><span><small>MATCHES</small><b>' + esc(Number.isFinite(matches) ? matches.toLocaleString() : "—") + '</b></span><span><small>K / D / A</small><b>' + esc(kdaText) + '</b></span><span><small>DAMAGE</small><b>' + esc(Number.isFinite(Number(item.totalPlayerDamage)) ? Number(item.totalPlayerDamage).toLocaleString() : "—") + '</b></span><span><small>NET WORTH</small><b>' + esc(Number.isFinite(Number(item.totalNetWorth)) ? Number(item.totalNetWorth).toLocaleString() : "—") + '</b></span></div></div>' +
       '</a>';
