@@ -56,6 +56,11 @@ export function normalizeBadgeDistribution(result) {
 
 export function normalizeHeroStats(result) {
   const data = Array.isArray(result?.data) ? result.data : [];
+  const average = (total, matches) => {
+    const value = Number(total);
+    const count = Number(matches);
+    return Number.isFinite(value) && Number.isFinite(count) && count > 0 ? value / count : null;
+  };
   return data.map(item => ({
     heroId: item?.hero_id ?? null,
     bucket: item?.bucket ?? null,
@@ -66,6 +71,11 @@ export function normalizeHeroStats(result) {
     totalKills: item?.total_kills ?? null,
     totalDeaths: item?.total_deaths ?? null,
     totalAssists: item?.total_assists ?? null,
+    avgKills: average(item?.total_kills, item?.matches),
+    avgDeaths: average(item?.total_deaths, item?.matches),
+    avgAssists: average(item?.total_assists, item?.matches),
+    avgNetWorth: average(item?.total_net_worth, item?.matches),
+    avgPlayerDamage: average(item?.total_player_damage, item?.matches),
     totalNetWorth: item?.total_net_worth ?? null,
     totalLastHits: item?.total_last_hits ?? null,
     totalDenies: item?.total_denies ?? null,
