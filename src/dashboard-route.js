@@ -76,8 +76,8 @@ async function loadAssetVersionContext() {
   await applyAssetColors();
 }
 
-async function renderDashboard(signal) {
-  el.content.innerHTML = '<section class="dashboard-mosaic command-center-mosaic">' +
+async function renderDashboard({ content, signal }) {
+  content.innerHTML = '<section class="dashboard-mosaic command-center-mosaic">' +
       '<div class="hero-banner command-center-hero"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA / CITY NEVER SLEEPS</span><div id="dashboard-patch-copy"><span class="dashboard-patch-loading">LOADING LATEST MAJOR UPDATE…</span></div><div class="pills"><span>API-FIRST</span><span>OPENAPI</span><span>LIVE CONTRACT</span></div></div></div>' +
       '<article class="metric-card command-metric command-blue"><span>FETCHED MATCHES / 24H</span><strong id="matches-per-day">—</strong><small>API info</small></article>' +
     '</section>' +
