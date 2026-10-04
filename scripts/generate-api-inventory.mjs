@@ -77,7 +77,7 @@ await mkdir("docs", { recursive: true });
 await writeFile(OUT_JSON, JSON.stringify(payload, null, 2) + "\n", "utf8");
 
 const md = [
-  "# API Capability Matrix",
+  "# API Inventory",
   "",
   `Generated from \`${SPEC_URL}\` at ${generatedAt}. Do not edit generated rows by hand.`,
   "",
@@ -95,13 +95,13 @@ const md = [
 await writeFile(OUT_MD, md, "utf8");
 
 function extractRateLimit(text) {
-  const ip = text.match(/ip\s*\\|\s*([\\d,]+)\s*req\s*\\/\s*min/i)?.[1];
-  const key = text.match(/key\s*\\|\s*([\\d,]+)\s*req\s*\\/\s*min/i)?.[1];
-  const global = text.match(/global\s*\\|\s*([\\d,]+)\s*req\s*\\/\s*min/i)?.[1];
+  const ip = text.match(/ip\s*\|\s*([\d,]+)\s*req\s*\/\s*min/i)?.[1];
+  const key = text.match(/key\s*\|\s*([\d,]+)\s*req\s*\/\s*min/i)?.[1];
+  const global = text.match(/global\s*\|\s*([\d,]+)\s*req\s*\/\s*min/i)?.[1];
   return { ip: ip ? `${ip}req/min` : null, key: key ? `${key}req/min` : null, global: global ? `${global}req/min` : null };
 }
 
 function extractCache(text) {
-  const match = text.match(/cached for \\*\\*(\\d+)\s+(hour|hours|minute|minutes|day|days)\\*\\*/i);
+  const match = text.match(/cached for \*\*(\d+)\s+(hour|hours|minute|minutes|day|days)\*\*/i);
   return match ? `${match[1]} ${match[2]}` : null;
 }
