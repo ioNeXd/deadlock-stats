@@ -255,20 +255,6 @@ async function loadDashboard(signal) {
       }
     }
 
-    if (signal.aborted) return;
-    const patch = patchResult?.latestPatch;
-    const patchUrl = safeExternalUrl(patch?.link);
-    const patchTitle = esc(patch?.title ?? "Latest patch");
-    const patchDate = patch?.pub_date ? new Date(patch.pub_date).toLocaleDateString() : "Unknown date";
-    const patchMeta = esc(patch?.source?.toUpperCase() ?? "FEED") + " · " + esc(patchDate);
-    const patchElement = $("#latest-patch");
-    if (patchElement) {
-      patchElement.innerHTML = patch
-        ? (patchUrl
-          ? '<a href="' + esc(patchUrl) + '" target="_blank" rel="noopener noreferrer">' + patchTitle + '</a><small>' + patchMeta + '</small>'
-          : '<span>' + patchTitle + '</span><small>' + patchMeta + '</small>')
-        : "No patch feed entries returned.";
-    }
   }).catch(error => {
     if (!isAborted(error)) {
       const patchElement = $("#latest-patch");
