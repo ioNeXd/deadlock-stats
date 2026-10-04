@@ -279,7 +279,7 @@ test("hero detail snapshot composes current hero analytics sources", async t => 
     "/v1/analytics/hero-stats",
     "/v1/analytics/hero-synergy-stats",
   ]);
-  assert.deepEqual(snapshot.stats, [{ heroId: 7, bucket: null, wins: 12, losses: null, matches: 20, matchesPerBucket: null, totalKills: null, totalDeaths: null, totalAssists: null, totalNetWorth: null, totalLastHits: null, totalDenies: null, totalPlayerDamage: null, totalPlayerDamageTaken: null, totalBossDamage: null, totalCreepDamage: null, totalNeutralDamage: null, totalMaxHealth: null, totalShotsHit: null, totalShotsMissed: null, totalPermanentBuffs: null, permanentBuffMatches: null, totalFirstPermanentBuffTimeS: null, permanentBuffTimingMatches: null, raw: { hero_id: 7, matches: 20, wins: 12 } }]);
+  assert.deepEqual(snapshot.stats, [{ heroId: 7, bucket: null, wins: 12, losses: null, matches: 20, matchesPerBucket: null, totalKills: null, totalDeaths: null, totalAssists: null, avgKills: null, avgDeaths: null, avgAssists: null, avgNetWorth: null, avgPlayerDamage: null, totalNetWorth: null, totalLastHits: null, totalDenies: null, totalPlayerDamage: null, totalPlayerDamageTaken: null, totalBossDamage: null, totalCreepDamage: null, totalNeutralDamage: null, totalMaxHealth: null, totalShotsHit: null, totalShotsMissed: null, totalPermanentBuffs: null, permanentBuffMatches: null, totalFirstPermanentBuffTimeS: null, permanentBuffTimingMatches: null, raw: { hero_id: 7, matches: 20, wins: 12 } }]);
   assert.equal(snapshot.counters.length, 0);
   assert.equal(snapshot.synergies.length, 0);
   assert.equal(snapshot.builds.length, 0);
