@@ -89,7 +89,6 @@ test("advanced tools build custom match body against the current API contract", 
   assert.throws(() => buildCustomMatchBody({ cheats_enabled: "false" }), TypeError);
 });
 
-
 test("advanced tools UI exposes all CreateCustomRequest controls", async () => {
   const source = await (await import("node:fs/promises")).readFile(new URL("../src/advanced-tools-ui.js", import.meta.url), "utf8");
   for (const field of ["cheats_enabled", "corrupted_item_shop_spawn_minutes", "disable_auto_ready", "duplicate_heroes_enabled", "game_mode", "is_publicly_visible", "min_roster_size", "randomize_lanes", "server_region", "callback_url"]) {
@@ -104,7 +103,6 @@ test("advanced tools UI presents demo schema table summaries", async () => {
   assert.match(source, /arrowType/);
 });
 
-
 test("advanced tools validate live query requirements", () => {
   assert.deepEqual(buildLiveQueryOptions({ query: " select 1 ", matchId: "42" }), { query: "select 1", match_id: 42, broadcast_url: undefined });
   assert.throws(() => buildLiveQueryOptions({ query: "" }), TypeError);
@@ -112,13 +110,8 @@ test("advanced tools validate live query requirements", () => {
 });
 
 test("advanced tools parse SSE event fields and multiline data", () => {
-  const event = parseSseEventBlock("event: message
-id: 7
-data: {\"x\":1}
-data: next
-");
+  const event = parseSseEventBlock("event: message\nid: 7\ndata: {\\"x\\":1}\ndata: next\n");
   assert.equal(event.type, "message");
   assert.equal(event.id, "7");
-  assert.equal(event.data, '{"x":1}
-next');
+  assert.equal(event.data, '{"x":1}\nnext');
 });
