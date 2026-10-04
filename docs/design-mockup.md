@@ -221,3 +221,45 @@ Cursed Apple Design System
       ↓
 Pages / Components
 ```
+
+
+## Refinamento — Modern Cursed Apple
+
+A segunda versão troca a geometria rígida por uma linguagem **macOS-inspired**: superfícies arredondadas, transparência controlada, blur discreto, sombras macias e controles compactos.
+
+```text
+╭──────────────────────────────────────────────────────────────────────╮
+│ ◇ DEADLOCK STATS                                  ● API ONLINE       │
+│                                                                      │
+│  Dashboard   Matches   Heroes   Items   Analytics                    │
+│                                                                      │
+│  ╭──────────────────────────────────────────────────────────────╮    │
+│  │                 THE CITY NEVER SLEEPS.                       │    │
+│  │   Live Deadlock intelligence · official game assets          │    │
+│  │   [ API-FIRST ]   [ OPENAPI ]   [ LIVE ]                     │    │
+│  ╰──────────────────────────────────────────────────────────────╯    │
+│                                                                      │
+│  ╭──────────────╮ ╭──────────────╮ ╭──────────────╮ ╭──────────────╮ │
+│  │ MATCHES      │ │ PLAYERS      │ │ HEROES       │ │ API LATENCY  │ │
+│  │ LIVE         │ │ LIVE         │ │ 38           │ │ 42 ms        │ │
+│  ╰──────────────╯ ╰──────────────╯ ╰──────────────╯ ╰──────────────╯ │
+│                                                                      │
+│  HEROES                                                              │
+│  ╭────────────────╮ ╭────────────────╮ ╭────────────────╮            │
+│  │  REAL HERO ART │ │  REAL HERO ART │ │  REAL HERO ART │            │
+│  │ ╭────────────╮ │ │ ╭────────────╮ │ │ ╭────────────╮ │            │
+│  │ │ HERO NAME  │ │ │ │ HERO NAME  │ │ │ │ HERO NAME  │ │            │
+│  │ ╰────────────╯ │ │ ╰────────────╯ │ │ ╰────────────╯ │            │
+│  ╰────────────────╯ ╰────────────────╯ ╰────────────────╯            │
+╰──────────────────────────────────────────────────────────────────────╯
+```
+
+### Princípios da nova superfície
+
+- **18–28px** nos elementos principais, em vez de cantos rígidos.
+- Cards flutuam sobre o fundo, em vez de parecerem caixas de formulário.
+- Blur/transparência apenas onde ajudam a criar profundidade.
+- Sombras amplas e suaves, sem glow gamer exagerado.
+- Botões e filtros com aparência de controles nativos modernos.
+- Identidade Deadlock preservada através de brass, burgundy, tipografia editorial e assets oficiais.
+- Movimento curto e discreto; `prefers-reduced-motion` continua respeitado.
