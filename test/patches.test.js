@@ -47,7 +47,7 @@ test("patch API uses v2 feed and exposes major patch days", async () => {
 });
 
 test("patch history preserves unified feed source and isolates cadence failure", async () => {
-  const source = await (await import("node:fs/promises")).readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  const source = await (await import("node:fs/promises")).readFile(new URL("../src/app-runtime.js", import.meta.url), "utf8");
   const start = source.indexOf("async function renderPatches(signal");
   const end = source.indexOf("\nfunction renderNotFound", start);
   const route = source.slice(start, end);
