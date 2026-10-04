@@ -1,0 +1,206 @@
+/* Semantic game-color accents: color belongs to the content, not the whole chrome. */
+.item-asset-card{position:relative}
+.item-asset-card:before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+  background:var(--item-accent,var(--line-strong));
+  opacity:.95;
+  z-index:2;
+}
+.item-slot-weapon{--item-accent:var(--red)}
+.item-slot-spirit{--item-accent:var(--purple)}
+.item-slot-vitality{--item-accent:var(--green)}
+.item-slot-neutral{--item-accent:var(--blue)}
+.item-asset-card small{color:var(--item-accent,var(--cyan))}
+.item-asset-card:hover{
+  border-color:color-mix(in srgb,var(--item-accent,var(--blue)) 34%,var(--line));
+  box-shadow:0 18px 48px rgba(0,0,0,.3),0 0 30px color-mix(in srgb,var(--item-accent,var(--blue)) 8%,transparent);
+}
+.hero-card:nth-child(4n+1) .hero-info{--hero-accent:var(--blue)}
+.hero-card:nth-child(4n+2) .hero-info{--hero-accent:var(--purple)}
+.hero-card:nth-child(4n+3) .hero-info{--hero-accent:var(--green)}
+.hero-card:nth-child(4n) .hero-info{--hero-accent:var(--red)}
+
+
+/* Editorial hero cards — real artwork supplies the visual energy. */
+.hero-card-editorial{
+  min-height:260px;
+  isolation:isolate;
+  overflow:hidden;
+  border-radius:26px;
+  background:#101419;
+  transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease;
+}
+.hero-card-editorial img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  transform:scale(1.01);
+  transition:transform .55s cubic-bezier(.2,.7,.2,1),filter .35s ease;
+}
+.hero-card-editorial .hero-color-wash{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:
+    radial-gradient(circle at 72% 25%,color-mix(in srgb,var(--hero-accent) 42%,transparent),transparent 42%),
+    linear-gradient(180deg,transparent 18%,rgba(7,9,12,.08) 40%,rgba(7,9,12,.9) 100%);
+  mix-blend-mode:screen;
+  opacity:.7;
+  pointer-events:none;
+}
+.hero-card-editorial:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:2;
+  border:1px solid color-mix(in srgb,var(--hero-accent) 24%,var(--line));
+  border-radius:inherit;
+  pointer-events:none;
+}
+.hero-card-editorial .hero-info{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  z-index:3;
+  min-height:102px;
+  padding:16px 52px 15px 16px;
+  background:linear-gradient(135deg,rgba(8,11,15,.78),rgba(8,11,15,.48));
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;
+  backdrop-filter:blur(16px) saturate(1.2);
+}
+.hero-card-editorial .hero-info small{
+  color:var(--hero-accent);
+  letter-spacing:.12em;
+}
+.hero-card-editorial .hero-info h3{
+  margin:.3rem 0 .2rem;
+  color:#fff;
+  font-size:1.35rem;
+}
+.hero-card-editorial .hero-info p{
+  margin:0;
+  color:rgba(242,240,234,.72);
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.hero-card-index{
+  position:absolute;
+  right:16px;
+  top:16px;
+  color:rgba(255,255,255,.52);
+  font:600 .7rem/1 var(--font-mono,ui-monospace);
+}
+.hero-card-editorial:hover{
+  transform:translateY(-5px);
+  border-color:color-mix(in srgb,var(--hero-accent) 42%,var(--line-strong));
+  box-shadow:0 26px 70px rgba(0,0,0,.38),0 0 38px color-mix(in srgb,var(--hero-accent) 10%,transparent);
+}
+.hero-card-editorial:hover img{
+  transform:scale(1.055);
+  filter:saturate(1.08) contrast(1.04);
+}
+.hero-card-editorial:hover .hero-color-wash{opacity:.92}
+.hero-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+}
+@media(max-width:1100px){
+  .hero-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  .hero-grid{grid-template-columns:1fr}
+  .hero-card-editorial{min-height:230px}
+}
+
+
+/* Dashboard mosaic — editorial composition over uniform metric blocks. */
+.dashboard-mosaic{
+  display:grid;
+  grid-template-columns:minmax(0,1.55fr) minmax(220px,.75fr) minmax(220px,.75fr);
+  gap:14px;
+  margin-bottom:22px;
+}
+.dashboard-mosaic .hero-banner{
+  grid-row:span 2;
+  min-height:390px;
+  margin:0;
+  display:flex;
+  align-items:flex-end;
+}
+.dashboard-mosaic .metric-card{
+  min-height:188px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.dashboard-mosaic .metric-card:nth-child(2){background:linear-gradient(145deg,var(--surface-2),color-mix(in srgb,var(--blue) 14%,var(--surface)))}
+.dashboard-mosaic .metric-card:nth-child(3){background:linear-gradient(145deg,var(--surface-2),color-mix(in srgb,var(--purple) 14%,var(--surface)))}
+.dashboard-mosaic .metric-card:nth-child(4){background:linear-gradient(145deg,var(--surface-2),color-mix(in srgb,var(--green) 12%,var(--surface)))}
+.dashboard-mosaic .metric-card:nth-child(5){background:linear-gradient(145deg,var(--surface-2),color-mix(in srgb,var(--red) 12%,var(--surface)))}
+.dashboard-mosaic .metric-card strong{
+  font-size:clamp(2rem,4vw,3.5rem);
+}
+.dashboard-mosaic .metric-card span{color:var(--muted)}
+.dashboard-mosaic .metric-card small{color:rgba(242,240,234,.58)}
+.dashboard-mosaic + .section{margin-top:8px}
+@media(max-width:1000px){
+  .dashboard-mosaic{grid-template-columns:1fr 1fr}
+  .dashboard-mosaic .hero-banner{grid-row:span 2}
+}
+@media(max-width:650px){
+  .dashboard-mosaic{grid-template-columns:1fr}
+  .dashboard-mosaic .hero-banner{grid-row:auto;min-height:320px}
+  .dashboard-mosaic .metric-card{min-height:150px}
+}
+
+
+/* Map palette — let each gameplay layer carry its own visual language. */
+
+/* Dashboard: latest update lead */
+.command-center-hero{min-height:300px;background:
+  radial-gradient(circle at 82% 20%,rgba(93,169,233,.18),transparent 28%),
+  radial-gradient(circle at 64% 78%,rgba(104,195,138,.12),transparent 26%),
+  linear-gradient(90deg,rgba(13,12,11,.98),rgba(13,12,11,.78),rgba(13,12,11,.42)),var(--surface)}
+#dashboard-patch-copy{position:relative;max-width:760px}
+#dashboard-patch-copy h2{margin:10px 0 0;font-size:clamp(34px,5vw,64px);line-height:.94;letter-spacing:-.065em}
+#dashboard-patch-copy p{position:relative;max-width:680px;margin:18px 0 0;color:#c4bbb0;font-size:14px;line-height:1.75}
+.dashboard-patch-loading{display:inline-block;color:var(--muted);font:9px "DM Mono";letter-spacing:.16em}
+.dashboard-patch-date{display:block;margin-top:14px;color:var(--gold);font:8px "DM Mono";letter-spacing:.12em}
+@media(max-width:720px){
+  .command-center-hero{min-height:360px}
+  #dashboard-patch-copy h2{font-size:clamp(32px,12vw,48px)}
+}
+
+
+.inferno-test-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.inferno-test-count{font:10px var(--dl-mono);color:var(--dl-brass-bright);letter-spacing:.12em;text-transform:uppercase}
+.inferno-test-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.inferno-test-card{min-width:0;overflow:hidden;border:1px solid var(--dl-glass-border);border-radius:var(--dl-radius-lg);background:linear-gradient(180deg,rgba(31,27,23,.9),rgba(13,12,11,.96));box-shadow:var(--dl-soft-shadow)}
+.inferno-test-card figure{margin:0;display:grid;gap:0}
+.inferno-test-card-media{display:grid;place-items:center;min-height:220px;padding:14px;background:radial-gradient(circle at 50% 30%,rgba(198,162,106,.08),transparent 65%),#0b0a09}
+.inferno-test-card-media img{display:block;width:100%;height:220px;object-fit:contain}
+.inferno-test-card-meta{padding:12px;border-top:1px solid var(--dl-rule-soft)}
+.inferno-test-card-meta strong{display:block;margin-bottom:6px;font-family:var(--dl-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dl-brass)}
+.inferno-test-card-meta code{display:block;color:var(--dl-cream);font:9px/1.5 var(--dl-mono);overflow-wrap:anywhere;word-break:break-word}
+.inferno-test-status{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.inferno-test-error{color:#d98f8f}
+@media(max-width:700px){.inferno-test-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.inferno-test-card-media{min-height:170px}.inferno-test-card-media img{height:170px}}
+@media(max-width:470px){.inferno-test-grid{grid-template-columns:1fr}}
+
+.inferno-test-form{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) auto;align-items:end;gap:12px;margin:0 0 18px}
+.inferno-test-form .primary-button{min-height:44px}
+.inferno-test-meta{display:flex;gap:18px;flex-wrap:wrap;padding:12px 0 18px;color:var(--dl-muted);font:9px/1.5 var(--dl-mono);letter-spacing:.08em;text-transform:uppercase}
+.inferno-test-meta b{color:var(--dl-brass)}
+.inferno-test-card-meta small{display:block;margin:-1px 0 8px;color:var(--dl-muted);font:8px/1.4 var(--dl-mono);overflow-wrap:anywhere}
+@media(max-width:800px){.inferno-test-form{grid-template-columns:1fr 1fr}.inferno-test-form .primary-button{grid-column:1/-1}}
+@media(max-width:520px){.inferno-test-form{grid-template-columns:1fr}}
