@@ -73,21 +73,36 @@ function normalizeZiplinePath(path, radius) {
   const p2 = Array.isArray(path.P2_points) ? path.P2_points : [];
   const count = Math.min(p0.length, p1.length, p2.length);
     const offset = [Number(origin[0] ?? 0), Number(origin[1] ?? 0)];
-  const nodes = Array.from({ length: count }, (_, index) => ({
-    p0: mapWorldToRelative(p0[index], radius, offset),
-    p1: mapWorldToRelative(p1[index], radius, offset),
-    p2: mapWorldToRelative(p2[index], radius, offset),
-  }));
+  const nodes = Array.from({ length: count }, (_, index) => {
+    const position = p0[index];
+    const incoming = p1[index];
+    const outgoing = p2[index];
+    const worldPosition = mapWorldToRelative(position, radius, offset);
+    if (!worldPosition || !Array.isArray(incoming) || !Array.isArray(outgoing) || incoming.length < 2 || outgoing.length < 2) {
+      return null;
+    }
+    const incomingControl = mapWorldToRelative([
+      Number(position[0]) + Number(incoming[0]),
+      Number(position[1]) + Number(incoming[1]),
+      Number(position[2] ?? 0) + Number(incoming[2] ?? 0),
+    ], radius, offset);
+    const outgoingControl = mapWorldToRelative([
+      Number(position[0]) + Number(outgoing[0]),
+      Number(position[1]) + Number(outgoing[1]),
+      Number(position[2] ?? 0) + Number(outgoing[2] ?? 0),
+    ], radius, offset);
+    return { position: worldPosition, incomingControl, outgoingControl };
+  });
   const segments = [];
   for (let index = 0; index < nodes.length - 1; index += 1) {
     const current = nodes[index];
     const next = nodes[index + 1];
-    if (!current.p0 || !current.p2 || !next.p1 || !next.p0) continue;
+    if (!current?.position || !current?.outgoingControl || !next?.incomingControl || !next?.position) continue;
     segments.push({
-      start: current.p0,
-      control1: current.p2,
-      control2: next.p1,
-      end: next.p0,
+      start: current.position,
+      control1: current.outgoingControl,
+      control2: next.incomingControl,
+      end: next.position,
     });
   }
   return { ...path, segments };
