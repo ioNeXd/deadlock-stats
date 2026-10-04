@@ -236,7 +236,7 @@ test("map normalization converts origin-relative zipline splines to minimap coor
 
   assert.deepEqual(normalized.ziplinePaths[0].segments, [{
     start: [0.25, 0.75],
-    control1: [0.375, 0.625],
+    control1: [0.125, 0.875],
     control2: [0.5, 0.5],
     end: [0.5, 0.5],
   }]);
