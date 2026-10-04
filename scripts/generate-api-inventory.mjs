@@ -8,7 +8,7 @@ const OUT_MD = "docs/API_INVENTORY.md";
 
 const response = await fetch(SPEC_URL, {
   headers: { accept: "application/json" },
-  signal: AbortSignal.timeout(30_000),
+  signal: AbortSignal.timeout(120_000),
 });
 if (!response.ok) {
   throw new Error(`Failed to fetch OpenAPI spec: ${response.status} ${response.statusText}`);
