@@ -10,15 +10,16 @@ A static website on GitHub Pages that presents the data of the community-run Dea
 
 ## 2. Current state
 
-- **Phase: planning.** Design is settled, **no code exists yet**. Do not describe unbuilt features as working.
-- Next step: milestone **M0**, the spikes in ARCHITECTURE.md section 18, then one vertical slice.
+- **Phase: active implementation.** The repository contains a working Next.js/React M1 tier-list slice with static export for GitHub Pages.
+- `pnpm gen:api`, `pnpm gen:inventory`, and `pnpm build` are currently part of the validated local workflow.
+- The architecture document contains the original design plus an explicit current-implementation status note; do not describe planned modules as implemented.
 - Open maintainer decisions are listed in section 10.
 
 ## 3. Stack
 
 TypeScript (strict), Astro (static output), Preact with `@preact/signals`, `openapi-typescript`, `openapi-fetch`, uPlot, Biome, Vitest, Playwright, Lighthouse CI, pnpm, GitHub Actions, GitHub Pages.
 
-Commands (planned, confirm against `package.json` once the scaffold exists):
+Current commands:
 
 ```bash
 pnpm install
@@ -143,18 +144,18 @@ Keep this list current. When you discover a new trap, add it here.
 ## 9. Where things live (planned)
 
 ```
-apps/site/            Astro app: pages, islands, styles, i18n
-packages/api/         service layer, cache, scheduler
-packages/pipeline/    snapshots, tiers, patch index, diffs, validation
-packages/ui/          components and design tokens
-data/routes/          community map routes (committed, schema-validated)
-docs/                 API_INVENTORY.md, METHODOLOGY.md, RUNBOOK.md, adr/
-.github/workflows/    ci, deploy, snapshots, patch-watch, contract-test
+app/                  Next.js routes and static-export data routes
+components/           page and feature components
+lib/api/              API client, services, generated schema and snapshot helpers
+lib/i18n/             locale dictionaries and routing
+scripts/              generated API inventory
+docs/                 architecture and API inventory
+.github/workflows/    CI/deploy workflows (currently to be added)
 ```
 
 ## 10. Open questions (maintainer to decide)
 
-- Confirm the stack (TypeScript, Astro, Preact). It was chosen on the maintainer's delegation and is treated as decided unless changed by an ADR.
+- The original design selected Astro/Preact, but the current implementation is Next.js/React. Treat the current implementation as the source of truth for new code; update the architecture decision log before any larger migration.
 - Confirm the MIT license (recommended, not yet explicitly confirmed).
 - GitHub account type: personal first (default) or an organization.
 - Usage analytics: none by default.
