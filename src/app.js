@@ -638,8 +638,10 @@ async function renderAssetCatalog(kind, signal) {
         catalog.innerHTML = items.map(entity => {
           const image = resolveAssetImage(entity);
           const href = Number.isInteger(Number(entity.id)) ? "#/items/" + encodeURIComponent(entity.id) : null;
-          return '<article class="asset-card">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') +
-            '<div>' + (href ? '<a href="' + href + '">' : '') + '<small>ITEM</small><h3>' + esc(entity.name ?? "Unnamed") + '</h3>' + (href ? '</a>' : '') +
+          const slot = String(entity?.slotType ?? entity?.raw?.item_slot_type ?? entity?.raw?.slot ?? "").toLowerCase();
+          const accent = slot === "weapon" ? "weapon" : slot === "spirit" ? "spirit" : slot === "vitality" ? "vitality" : "neutral";
+          return '<article class="asset-card item-asset-card item-slot-' + accent + '">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') +
+            '<div>' + (href ? '<a href="' + href + '">' : '') + '<small>' + esc(slot ? slot.toUpperCase() : "ITEM") + '</small><h3>' + esc(entity.name ?? "Unnamed") + '</h3>' + (href ? '</a>' : '') +
             '<p>ID ' + esc(entity.id ?? "—") + ' · ' + esc(entity.type ?? "—") + '</p></div></article>';
         }).join("") || '<div class="panel"><p>No items matched the current filters.</p></div>';
         setConnection(true, "API connected");
