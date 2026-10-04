@@ -186,7 +186,6 @@ async function loadDashboard(signal) {
       renderHeroGrid(result.data);
     } catch (error) {
       if (isAborted(error)) return;
-      $("#asset-count").textContent = "—";
       $("#api-latency").textContent = "—";
       renderHeroGrid([]);
       console.error("Deadlock API hero catalog request failed", error);
@@ -195,11 +194,6 @@ async function loadDashboard(signal) {
 
   if (snapshot) {
     const info = snapshot.info?.data ?? {};
-    const tableSizes = info.table_sizes && typeof info.table_sizes === "object" ? info.table_sizes : {};
-    const knownRows = Object.values(tableSizes)
-      .map(table => Number(table?.rows))
-      .filter(Number.isFinite)
-      .reduce((sum, rows) => sum + rows, 0);
     $("#matches-per-day").textContent = Number.isFinite(Number(info.fetched_matches_per_day))
       ? Number(info.fetched_matches_per_day).toLocaleString()
       : "—";
