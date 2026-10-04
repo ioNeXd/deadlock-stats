@@ -47,7 +47,7 @@ function updateNavigation(name) {
 
 function renderDashboard(signal) {
   if (!dashboardPromise) dashboardPromise = import("./dashboard-route.js");
-  if (!dashboardStylesPromise) dashboardStylesPromise = ensureStylesheet("./styles-dashboard.css", "dashboard");
+  if (!dashboardStylesPromise) dashboardStylesPromise = ensureStylesheet("./src/styles-dashboard.css", "dashboard");
   Promise.all([dashboardPromise, dashboardStylesPromise]).then(([module]) => {
     if (signal.aborted) return;
     module.renderDashboard({ content, signal, assetVersion });
@@ -61,7 +61,7 @@ function renderDashboard(signal) {
 
 async function renderRuntime(signal) {
   if (!runtimePromise) runtimePromise = import("./app-runtime.js");
-  if (!pageStylesPromise) pageStylesPromise = ensureStylesheet("./styles-app-pages.css", "pages");
+  if (!pageStylesPromise) pageStylesPromise = ensureStylesheet("./src/styles-app-pages.css", "pages");
   const [runtime] = await Promise.all([runtimePromise, pageStylesPromise]);
   if (signal.aborted) return;
   runtime.route(signal);
