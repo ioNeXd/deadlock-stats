@@ -55,8 +55,9 @@ export function resolveAssetImage(entity, preferred = []) {
 
 function mapWorldToRelative(point, radius, offset = [0, 0]) {
   if (!Array.isArray(point) || point.length < 2 || !Number.isFinite(radius) || radius <= 0) return null;
-  const x = Number(point[0]) + Number(offset[0] ?? 0);
-  const y = Number(point[1]) + Number(offset[1] ?? 0);
+  const safeOffset = Array.isArray(offset) ? offset : [0, 0];
+  const x = Number(point[0]) + Number(safeOffset[0] ?? 0);
+  const y = Number(point[1]) + Number(safeOffset[1] ?? 0);
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
   return [
     (x + radius) / (2 * radius),
