@@ -4,7 +4,7 @@
 
 > **Disclaimer.** Almanaque is a fan project. It is not affiliated with or endorsed by Valve. *Deadlock* and all related names, images and assets are trademarks or property of Valve Corporation. Game assets are loaded at runtime from the Deadlock API CDN and are **not** part of this repository or its license.
 
-> **Status: planning phase.** The design is settled (see [ARCHITECTURE.md](ARCHITECTURE.md)); the code does not exist yet. Commands in this README describe the intended setup and will be confirmed when the scaffold lands.
+> **Status: active implementation.** The repository currently contains a working Next.js/React implementation of the M1 tier-list slice. The production build exports a static site for GitHub Pages.
 
 ---
 
@@ -46,15 +46,16 @@ Everything the Deadlock API offers is tracked in [`docs/API_INVENTORY.md`](docs/
 ## Tech stack
 
 - **TypeScript** (strict), one language for site and build pipeline
-- **Astro** (static output) with **Preact** islands and **@preact/signals**
-- **openapi-typescript** (types from the API spec) and **openapi-fetch** (tiny typed client)
-- **uPlot** for charts, plain `<canvas>` for the map
-- **Biome** (lint and format), **Vitest**, **Playwright**, **Lighthouse CI**
-- **pnpm**, **GitHub Actions**, **GitHub Pages**
+- **Next.js 16** with **React 19** and static export (`output: 'export'`)
+- **openapi-typescript** for generated API types
+- A small typed service layer in `lib/api`, with deterministic query serialization, in-flight de-duplication and transient-error retries
+- **pnpm** and **GitHub Pages** as the package/deployment targets
+
+The original architecture document describes the intended product architecture and remains the design reference; where it differs from the current implementation, the current implementation status is recorded there explicitly.
 
 Why this stack and what was rejected: [ARCHITECTURE.md](ARCHITECTURE.md#decision-log).
 
-## Quick start (planned)
+## Quick start
 
 ```bash
 pnpm install
@@ -66,14 +67,16 @@ pnpm build          # static build
 pnpm lighthouse     # performance budget check
 ```
 
-## Repository layout (planned)
+## Repository layout
 
 ```
-apps/site/          Astro site (pages, islands, styles, i18n)
-packages/api/       Typed service layer and cache (reusable on its own)
-packages/pipeline/  Build-time jobs: snapshots, tiers, patch index, diffs
-data/               Generated snapshots (not committed to main, see ARCHITECTURE)
-docs/               API inventory, methodology, ADRs, runbook
+app/                Next.js routes and static-export data routes
+components/         Page and UI components
+lib/api/            API client, services, generated OpenAPI types and snapshots
+lib/i18n/           Locale dictionaries and routing helpers
+scripts/            API inventory generation
+docs/               API inventory, methodology and architecture notes
+out/                Local/build artifact; never commit
 ```
 
 ## Languages
