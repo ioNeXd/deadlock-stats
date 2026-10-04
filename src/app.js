@@ -1158,7 +1158,7 @@ async function loadApiStatus(signal) {
 async function renderLeaderboard(signal) {
   const leaderboard = await loadLeaderboardRuntime();
   el.content.innerHTML =
-    '<section class="page-head"><span class="eyebrow">GAME / LEADERBOARD</span><h2>Leaderboard</h2><p>Current regional leaderboard data returned by the Deadlock API. The API refreshes this data hourly.</p></section>' +
+    '<section class="page-head leaderboard-page-head"><span class="eyebrow">RANKED CITY DESK / HOUR BY HOUR</span><h2>THE RANKINGS</h2><p>Regional leaderboard records returned by the current Deadlock API. Valve refreshes the leaderboard once per hour.</p><div class="leaderboard-page-kicker"><span>EUROPE</span><span>ASIA</span><span>NORTH AMERICA</span><span>SOUTH AMERICA</span><span>OCEANIA</span></div></section>' +
     '<section class="panel analytics-filter-panel"><form id="leaderboard-filters" class="analytics-filters">' +
     '<label class="field"><span>Region</span><select name="region"><option>Europe</option><option>Asia</option><option>NAmerica</option><option>SAmerica</option><option>Oceania</option></select></label>' +
     '<label class="field"><span>Leaderboard ID</span><input name="leaderboard_id" type="number" min="0" inputmode="numeric" placeholder="Current"></label>' +

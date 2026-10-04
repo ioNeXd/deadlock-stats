@@ -1881,3 +1881,48 @@ body{
  .players-page-head:after{font-size:100px}
  .player-results-grid{grid-template-columns:1fr}
 }
+
+
+/* Rankings Desk — competitive bulletin / standings board. */
+.leaderboard-page-head{
+  position:relative;overflow:hidden;padding:clamp(24px,4vw,44px);
+  border:1px solid color-mix(in srgb,var(--yellow) 26%,var(--line));
+  background:radial-gradient(circle at 88% 15%,color-mix(in srgb,var(--yellow) 13%,transparent),transparent 18rem),radial-gradient(circle at 12% 90%,color-mix(in srgb,var(--orange) 10%,transparent),transparent 22rem),linear-gradient(135deg,#171613,#111415);
+}
+.leaderboard-page-head:after{
+  content:"01";position:absolute;right:-6px;bottom:-42px;color:rgba(255,255,255,.025);
+  font:900 clamp(140px,25vw,300px)/.75 "DM Mono";letter-spacing:-.15em;transform:rotate(-8deg);
+}
+.leaderboard-page-head h2{position:relative;z-index:1;font-size:clamp(48px,8vw,92px);letter-spacing:-.08em;text-transform:uppercase}
+.leaderboard-page-head p{position:relative;z-index:1;max-width:720px}
+.leaderboard-page-kicker{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+.leaderboard-page-kicker span{padding:6px 9px;border:1px solid var(--line);font:8px "DM Mono";letter-spacing:.08em;color:var(--muted)}
+.leaderboard-page-head + .panel{margin-top:14px;border-color:color-mix(in srgb,var(--yellow) 20%,var(--line));background:linear-gradient(90deg,rgba(231,191,76,.045),transparent 55%),var(--panel)}
+.leaderboard-page-head + .panel .primary-button{background:linear-gradient(135deg,var(--yellow),var(--orange));color:#15120b}
+.leaderboard-page-head ~ .panel:last-child{margin-top:14px;border-color:color-mix(in srgb,var(--orange) 18%,var(--line))}
+.leaderboard-row{
+  position:relative;display:grid!important;grid-template-columns:minmax(230px,1.3fr) minmax(210px,1fr);
+  gap:18px;min-height:78px!important;padding:12px 15px!important;
+  border-bottom:1px solid var(--line)!important;overflow:hidden;
+  transition:background .16s ease,padding .16s ease;
+}
+.leaderboard-row:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--rank-accent,var(--yellow));opacity:.75}
+.leaderboard-row:hover{background:rgba(231,191,76,.035);padding-left:19px!important}
+.leaderboard-player{display:grid;grid-template-columns:52px 1fr;align-items:center;column-gap:10px}
+.leaderboard-position{font:700 20px "DM Mono";color:var(--rank-accent,var(--yellow))}
+.leaderboard-player strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leaderboard-player small,.leaderboard-rank small{display:block;grid-column:2;color:var(--muted);font:8px/1.55 "DM Mono";overflow-wrap:anywhere}
+.leaderboard-rank{display:grid;grid-template-columns:44px 1fr;align-items:center;column-gap:9px}
+.leaderboard-rank img{width:40px;height:40px;object-fit:contain}
+.leaderboard-rank strong{font-size:11px;color:var(--rank-accent,var(--yellow));text-transform:uppercase;letter-spacing:.04em}
+.leaderboard-rank-fallback{
+  width:40px;height:40px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--rank-accent,var(--yellow)) 45%,var(--line));
+  color:var(--rank-accent,var(--yellow));font:700 12px "DM Mono";
+}
+@media(max-width:700px){
+ .leaderboard-page-head h2{font-size:clamp(44px,14vw,68px)}
+ .leaderboard-page-head:after{font-size:150px}
+ .leaderboard-row{grid-template-columns:1fr;gap:8px}
+ .leaderboard-rank{grid-template-columns:40px 1fr}
+ .leaderboard-player small,.leaderboard-rank small{grid-column:2}
+}
