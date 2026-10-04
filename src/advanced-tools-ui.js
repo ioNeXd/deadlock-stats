@@ -90,6 +90,78 @@ function bindDemoExplorer(signal) {
     }
   });
 }
+export function renderLiveQuery() {
+  if (!location.hash.replace(/^#\/?/, "").startsWith("live")) return;
+  const signal = abortPrevious();
+  root.innerHTML = `
+    <section class="page-head live-page-head">
+      <span class="eyebrow">ADVANCED / REAL-TIME TELEMETRY</span>
+      <h2>THE LIVE QUERY DESK</h2>
+      <p>Run SQL against an active broadcast and read the official Server-Sent Events stream as it arrives. Choose a match or an API-provided broadcast URL.</p>
+      <div class="pills"><span>SSE</span><span>LIVE BROADCASTS</span><span>SQL</span><span>STREAM CONTROL</span></div>
+    </section>
+    <section class="dashboard-grid live-grid">
+      <article class="panel live-lab">
+        <div class="section-head"><div><span class="eyebrow">01 / CONNECT</span><h3>Open a stream</h3></div><span id="live-status" class="muted">READY</span></div>
+        <form id="live-form" class="tool-form">
+          <label>Match ID <input name="match_id" type="number" min="0" placeholder="optional"></label>
+          <label>Broadcast URL <input name="broadcast_url" type="url" placeholder="https://…"></label>
+          <label>SQL query <textarea name="query" rows="9" placeholder="select * from player_stats"></textarea></label>
+          <div class="panel-actions"><button class="button" type="submit">Start SSE query</button><button class="button" type="button" id="live-refresh">Find broadcasts</button><button class="button" type="button" id="live-stop">Stop stream</button></div>
+        </form>
+      </article>
+      <article class="panel live-output-panel">
+        <div class="section-head"><div><span class="eyebrow">02 / STREAM</span><h3>Live telemetry</h3></div><span class="muted">SERVER-SENT EVENTS</span></div>
+        <pre id="live-output" class="tool-output" aria-live="polite">Waiting for a live query.</pre>
+      </article>
+    </section>`;
+  bindLiveQuery(signal);
+}
+function bindLiveQuery(signal) {
+  const form = document.querySelector("#live-form");
+  const stop = () => controller?.abort();
+  document.querySelector("#live-stop").addEventListener("click", stop);
+  document.querySelector("#live-refresh").addEventListener("click", async () => {
+    write("#live-status", "DISCOVERING");
+    try {
+      const result = normalizeLiveUrls(await loadLiveUrls({ signal }));
+      write("#live-output", result.length ? result : "No live broadcasts returned.");
+      write("#live-status", result.length ? "LIVE SOURCES" : "NO SOURCES");
+    } catch (error) {
+      if (!signal.aborted) { write("#live-status", "ERROR"); write("#live-output", error.message); }
+    }
+  });
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(form));
+    if (!values.match_id && !values.broadcast_url) { write("#live-status", "INPUT REQUIRED"); write("#live-output", "Provide match_id or broadcast_url."); return; }
+    if (!values.query?.trim()) { write("#live-status", "INPUT REQUIRED"); write("#live-output", "Provide a SQL query."); return; }
+    write("#live-status", "CONNECTING");
+    try {
+      const result = await runLiveQuery({ query: values.query, matchId: values.match_id, broadcastUrl: values.broadcast_url }, { signal });
+      const stream = result.data;
+      if (!stream) throw new Error("The API returned no SSE stream.");
+      const reader = stream.getReader(), decoder = new TextDecoder();
+      let buffer = "";
+      while (!signal.aborted) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.replace(/\r\n/g, "\n").split("\n\n"); buffer = events.pop() ?? "";
+        for (const eventBlock of events) {
+          if (!eventBlock.trim()) continue;
+          const parsed = parseSseEventBlock(eventBlock);
+          write("#live-output", parsed.type === "message" ? parsed.data : parsed.type.toUpperCase() + ": " + parsed.data);
+          if (parsed.type === "end") { await reader.cancel(); break; }
+          if (parsed.type === "error") throw new Error(parsed.data || "Live query stream reported an error.");
+        }
+      }
+      if (!signal.aborted) write("#live-status", "ENDED");
+    } catch (error) {
+      if (!signal.aborted) { write("#live-status", "ERROR"); write("#live-output", error.message); }
+    }
+  });
+}
 export function renderAdvancedTools() {
   if (!location.hash.replace(/^#\/?/, "").startsWith("tools")) return;
   const signal = abortPrevious();
