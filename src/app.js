@@ -639,13 +639,17 @@ async function renderAssetCatalog(kind, signal) {
         });
         $("#asset-catalog-status").textContent = items.length + " FOUND";
         catalog.innerHTML = items.map(entity => {
-          const image = resolveAssetImage(entity);
+          const image = resolveAssetImage(entity, ["image_webp", "image"]);
           const href = Number.isInteger(Number(entity.id)) ? "#/items/" + encodeURIComponent(entity.id) : null;
           const slot = String(entity?.slotType ?? entity?.raw?.item_slot_type ?? entity?.raw?.slot ?? "").toLowerCase();
           const accent = slot === "weapon" ? "weapon" : slot === "spirit" ? "spirit" : slot === "vitality" ? "vitality" : "neutral";
-          return '<article class="asset-card item-asset-card item-slot-' + accent + '">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') +
-            '<div>' + (href ? '<a href="' + href + '">' : '') + '<small>' + esc(slot ? slot.toUpperCase() : "ITEM") + '</small><h3>' + esc(entity.name ?? "Unnamed") + '</h3>' + (href ? '</a>' : '') +
-            '<p>ID ' + esc(entity.id ?? "—") + ' · ' + esc(entity.type ?? "—") + '</p></div></article>';
+          const cost = Number(entity?.cost ?? entity?.raw?.cost);
+          const tier = entity?.tier ?? entity?.raw?.tier;
+          const description = entity?.description ?? entity?.raw?.description ?? "";
+          return '<article class="asset-card item-asset-card item-slot-' + accent + '">' +
+            '<div class="item-art-frame">' + (image ? '<img src="' + esc(image) + '" alt="' + esc(entity.name ?? "Item") + '" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') + '</div>' +
+            '<div class="item-copy">' + (href ? '<a href="' + href + '">' : '') + '<small>' + esc(slot ? slot.toUpperCase() : "ITEM") + '</small><h3>' + esc(entity.name ?? "Unnamed") + '</h3>' + (href ? '</a>' : '') +
+            '<p>' + esc(description || (entity.type ?? "Item")) + '</p><div class="item-meta"><b>' + (Number.isFinite(cost) ? esc(cost) : "—") + '</b><span>TIER ' + esc(tier ?? "—") + '</span></div></div></article>';
         }).join("") || '<div class="panel"><p>No items matched the current filters.</p></div>';
         setConnection(true, "API connected");
       } catch (error) {
