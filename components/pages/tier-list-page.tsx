@@ -7,6 +7,7 @@ import type { Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { computeTierRows } from '@/lib/tiers'
 import type { BandOption } from '@/components/tier/filter-bar'
+import { RankBandTheme } from '@/components/tier/rank-band-theme'
 import { TierListSwitcher } from '@/components/tier/tier-list-switcher'
 import { PageHeader } from './page-header'
 
@@ -18,7 +19,14 @@ export function buildBandOptions(ranks: RankEntity[], allLabel: string): BandOpt
       band.id === 'all'
         ? allLabel
         : `${byTier.get(low)?.name ?? low} – ${byTier.get(high)?.name ?? high}`
-    return { id: band.id, min: band.min, max: band.max, label }
+    return {
+      id: band.id,
+      min: band.min,
+      max: band.max,
+      label,
+      startColor: byTier.get(low)?.color ?? null,
+      endColor: byTier.get(high)?.color ?? null,
+    }
   })
 }
 
@@ -46,8 +54,9 @@ export async function TierListPage({ locale }: { locale: Locale }) {
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
-      <PageHeader eyebrow={t.tierList.eyebrow} title={t.tierList.title} lede={t.tierList.lede} />
-      <TierListSwitcher
+      <RankBandTheme bands={bands}>
+        <PageHeader eyebrow={t.tierList.eyebrow} title={t.tierList.title} lede={t.tierList.lede} />
+        <TierListSwitcher
         locale={locale}
         windows={windows}
         bands={bands}
@@ -55,8 +64,9 @@ export async function TierListPage({ locale }: { locale: Locale }) {
         heroes={heroes}
         items={items}
         heroRows={heroRows}
-        itemRows={itemRows}
-      />
+          itemRows={itemRows}
+        />
+      </RankBandTheme>
     </main>
   )
 }
