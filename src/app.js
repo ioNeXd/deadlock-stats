@@ -93,9 +93,8 @@ function setConnection(online, label) {
   el.status.textContent = label;
 }
 
-function renderHeroArt(hero, className = "hero-card") {
+function renderHeroArt(hero, className = "hero-card", portrait = "") {
   const background = resolveAssetImage(hero, ["background_image_webp", "background_image"]);
-  const portrait = resolveAssetImage(hero, ["hero_card_webp", "hero_card", "icon_hero_card_webp", "icon_hero_card"]);
   return '<div class="' + className + '-art" aria-hidden="true">' +
     (background ? '<img class="' + className + '-background" src="' + esc(background) + '" alt="" loading="lazy" decoding="async">' : '') +
     (portrait ? '<img class="' + className + '-portrait" src="' + esc(portrait) + '" alt="" loading="lazy" decoding="async">' : '') +
@@ -479,7 +478,7 @@ async function renderHeroes(signal) {
       const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? (wins / matches) * 100 : null;
       const kda = [item.totalKills, item.totalDeaths, item.totalAssists].map(Number);
       const kdaText = kda.every(Number.isFinite) ? kda.join(" / ") : "—";
-      const heroArt = hero ? renderHeroArt(hero, "hero-performance") : "";
+      const portrait = hero ? resolveAssetImage(hero, ["hero_card_webp", "hero_card", "icon_hero_card_webp", "icon_hero_card"]) : "";\n      const heroArt = hero ? renderHeroArt(hero, "hero-performance", portrait) : "";
       const accent = colorToCss(hero?.colors?.ui);
       return '<a class="hero-performance-card" href="#/heroes/' + encodeURIComponent(item.heroId) + '"' + (accent ? ' style="--hero-accent:' + esc(accent) + '"' : "") + '>' +
         '<div class="hero-performance-art">' + heroArt + '</div>' +
