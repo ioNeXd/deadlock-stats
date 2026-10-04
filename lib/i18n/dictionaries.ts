@@ -23,7 +23,7 @@ const en = {
     items: 'Items',
     switchLabel: 'Tier list type',
   },
-  heroes: 'Heroes',\n    items: 'Items',\n  },\n  tierList: {\n    eyebrow: 'Tier list',\n    title: 'Tier list',\n    lede: 'Compare heróis e itens em um só lugar, com o mesmo contexto de rank e patch.',\n    heroes: 'Heróis',\n    items: 'Itens',\n  },\n  heroes: {
+  heroes: {
     eyebrow: 'Tier list',
     title: 'Hero tier list',
     lede: 'Win rate and pick rate by rank band, smoothed so small samples do not mislead.',
