@@ -2758,7 +2758,8 @@ async function renderInfernoTest(signal) {
 
   try {
     const { findHero, loadHeroImageTest } = await import("./services/inferno-test.js");
-    const heroesResult = await import("./api/assets.js').then(api => api.getHeroes({ ...assetVersion.options(), signal }));
+    const { getHeroes } = await import("./api/assets.js");
+    const heroesResult = await getHeroes({ ...assetVersion.options(), signal });
     const heroes = heroesResult?.data?.data ?? heroesResult?.data ?? heroesResult?.raw?.data ?? heroesResult?.raw ?? [];
     const list = Array.isArray(heroes) ? heroes.slice().sort((a, b) => {
       const ai = Number(a?.hero_id ?? a?.id ?? a?.raw?.hero_id ?? a?.raw?.id ?? Number.MAX_SAFE_INTEGER);
