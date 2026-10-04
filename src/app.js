@@ -510,7 +510,6 @@ async function renderHeroes(signal) {
     event.preventDefault();
     load(Object.fromEntries(new FormData(form).entries()));
   });
-  rawButton.addEventListener("click", () => loadRaw(Object.fromEntries(new FormData(form).entries())));
   load(Object.fromEntries(new FormData(form).entries()));
 }
 
