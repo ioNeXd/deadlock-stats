@@ -1,4 +1,5 @@
 import { PICK_WEIGHT, TIER_CUTOFFS } from '@/lib/config'
+import type { HeroEntity, ItemEntity, StatsSnapshot } from '@/lib/api/types'
 
 export type Tier = (typeof TIER_CUTOFFS)[number][0]
 export const TIERS: Tier[] = TIER_CUTOFFS.map(([tier]) => tier)
@@ -92,4 +93,21 @@ export function computeTiers(
     s.tier = tierForRank(i, ranked.length)
   })
   return stats
+}
+
+
+export function computeTierRows(
+  snapshot: StatsSnapshot,
+  kind: 'heroes' | 'items',
+  entityMap: Map<number, HeroEntity | ItemEntity>,
+  minMatches: number,
+) {
+  const totalPicks = snapshot.heroes.rows.reduce((sum, row) => sum + row[3], 0)
+  const rows = snapshot[kind].rows
+    .map(([id, wins, , matches]) => ({ id, wins, matches }))
+    .filter((row) => entityMap.has(row.id))
+  return computeTiers(rows, totalPicks, { minMatches }).map((stat) => ({
+    ...stat,
+    entity: entityMap.get(stat.id)!,
+  }))
 }
