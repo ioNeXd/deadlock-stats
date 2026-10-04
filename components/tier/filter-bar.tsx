@@ -11,7 +11,6 @@ export interface BandOption {
   min: number
   max: number
   label: string
-  icon: string | null
 }
 
 interface Props {
@@ -43,9 +42,6 @@ export function FilterBar({ locale, windows, bands, patchId, bandId, onPatch, on
                 onClick={() => onBand(band.id)}
                 className="chamfer-sm flex h-10 items-center gap-2 bg-secondary px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground"
               >
-                {band.icon ? (
-                  <img src={band.icon || "/placeholder.svg"} alt="" width={22} height={22} className="size-[22px] object-contain" loading="lazy" decoding="async" />
-                ) : null}
                 <span>{band.label}</span>
               </button>
             )
