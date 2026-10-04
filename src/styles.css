@@ -244,6 +244,61 @@
   gap: 1rem;
 }
 
+.hero-performance-skeleton-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));
+  gap:1rem;
+}
+.hero-performance-skeleton{
+  min-height:11rem;
+  display:grid;
+  grid-template-columns:7rem 1fr;
+  overflow:hidden;
+  border:1px solid var(--border-color,rgba(255,255,255,.08));
+  border-radius:.9rem;
+  background:rgba(255,255,255,.018);
+}
+.hero-performance-skeleton i,
+.hero-performance-skeleton span{
+  display:block;
+  background:linear-gradient(90deg,rgba(255,255,255,.025),rgba(255,255,255,.07),rgba(255,255,255,.025));
+  background-size:220% 100%;
+  animation:hero-skeleton-pulse 1.4s ease-in-out infinite;
+}
+.hero-performance-skeleton i{
+  grid-row:1/-1;
+  min-height:11rem;
+}
+.hero-performance-skeleton span{
+  width:70%;
+  height:.7rem;
+  margin:1rem 1rem 0;
+}
+.hero-performance-skeleton span:last-child{
+  width:48%;
+  margin-top:0;
+}
+@keyframes hero-skeleton-pulse{
+  0%,100%{background-position:100% 0}
+  50%{background-position:0 0}
+}
+.hero-performance-art{
+  position:relative;
+  overflow:hidden;
+}
+.hero-performance-art:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,rgba(0,0,0,.05),rgba(0,0,0,.22));
+  pointer-events:none;
+}
+.hero-performance-wash{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,transparent 35%,rgba(0,0,0,.3));
+  pointer-events:none;
+}
 .hero-performance-card {
   position: relative;
   display: grid;
