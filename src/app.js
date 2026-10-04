@@ -50,7 +50,7 @@ function renderDashboard(signal) {
   if (!dashboardStylesPromise) dashboardStylesPromise = ensureStylesheet("./src/styles-dashboard.css", "dashboard");
   Promise.all([dashboardPromise, dashboardStylesPromise]).then(([module]) => {
     if (signal.aborted) return;
-    module.renderDashboard({ content, signal, assetVersion });
+    module.renderDashboard({ content, signal });
     module.bindVersionControl(() => route());
     module.loadDashboardVersionContext(() => route());
   }).catch(error => {
