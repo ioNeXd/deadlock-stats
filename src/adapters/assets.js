@@ -65,17 +65,6 @@ function mapWorldToRelative(point, radius, offset = [0, 0]) {
   ];
 }
 
-function chooseZiplineCoordinateMode(points, radius, origin) {
-  const candidates = [null, [Number(origin?.[0] ?? 0), Number(origin?.[1] ?? 0)]];
-  const score = offset => points.reduce((total, point) => {
-    if (!Array.isArray(point) || point.length < 2) return total;
-    const x = Number(point[0]) + Number(offset?.[0] ?? 0);
-    const y = Number(point[1]) + Number(offset?.[1] ?? 0);
-    return total + (Number.isFinite(x) && Number.isFinite(y) && Math.abs(x) <= radius && Math.abs(y) <= radius ? 1 : 0);
-  }, 0);
-  return score(candidates[1]) > score(candidates[0]) ? candidates[1] : candidates[0];
-}
-
 function normalizeZiplinePath(path, radius) {
   if (!path || typeof path !== "object" || !Number.isFinite(radius) || radius <= 0) return { ...path, segments: [] };
   const origin = Array.isArray(path.origin) ? path.origin : [0, 0, 0];
@@ -83,8 +72,7 @@ function normalizeZiplinePath(path, radius) {
   const p1 = Array.isArray(path.P1_points) ? path.P1_points : [];
   const p2 = Array.isArray(path.P2_points) ? path.P2_points : [];
   const count = Math.min(p0.length, p1.length, p2.length);
-  const allPoints = [...p0, ...p1, ...p2];
-  const offset = chooseZiplineCoordinateMode(allPoints, radius, origin);
+    const offset = [Number(origin[0] ?? 0), Number(origin[1] ?? 0)];
   const nodes = Array.from({ length: count }, (_, index) => ({
     p0: mapWorldToRelative(p0[index], radius, offset),
     p1: mapWorldToRelative(p1[index], radius, offset),
