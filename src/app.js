@@ -1247,7 +1247,7 @@ async function renderLeaderboard(signal) {
 async function renderBuilds(signal) {
   const buildsRuntime = await loadBuildsRuntime();
   el.content.innerHTML =
-    '<section class="page-head"><span class="eyebrow">GAME / BUILDS</span><h2>Builds</h2><p>Search the live build catalog using filters documented by the current Deadlock API.</p></section>' +
+    '<section class="page-head builds-page-head"><span class="eyebrow">FIELD MANUALS / LOADOUT ARCHIVE</span><h2>THE BUILD REGISTRY</h2><p>Search published hero builds from the current Deadlock API, with live filters, authorship and version metadata.</p><div class="builds-page-kicker"><span>LIVE CATALOG</span><span>HERO LOADOUTS</span><span>PATCH AWARE</span><span>COMMUNITY BUILDS</span></div></section>' +
     '<section class="panel analytics-filter-panel"><form id="build-filters" class="analytics-filters">' +
     '<label class="field"><span>Name</span><input name="search_name" type="search" placeholder="Build name"></label>' +
     '<label class="field"><span>Hero ID</span><input name="hero_id" type="number" min="0" inputmode="numeric"></label>' +
