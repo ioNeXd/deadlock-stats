@@ -17,24 +17,21 @@ A static website on GitHub Pages that presents the data of the community-run Dea
 
 ## 3. Stack
 
-TypeScript (strict), Astro (static output), Preact with `@preact/signals`, `openapi-typescript`, `openapi-fetch`, uPlot, Biome, Vitest, Playwright, Lighthouse CI, pnpm, GitHub Actions, GitHub Pages.
+TypeScript, Next.js 16 static export, React 19, `openapi-typescript`, the `lib/api` service layer, pnpm and GitHub Pages.
 
 Current commands:
 
 ```bash
 pnpm install
 pnpm gen:api        # regenerate types from the OpenAPI spec
-pnpm gen:inventory  # regenerate the API inventory skeleton from the spec
-pnpm dev:mock       # fixtures, no network
-pnpm dev            # live API
-pnpm test
-pnpm build
-pnpm lighthouse
+pnpm gen:inventory  # regenerate the API inventory from the spec
+pnpm dev            # local Next.js development server
+pnpm build          # production static export
 ```
 
 ## 4. Hard rules (do not break)
 
-1. **No direct `fetch` in UI or page code.** All data goes through the service layer in `packages/api`. If a function you need is missing, add it there and register it in the inventory.
+1. **No direct `fetch` in UI or page code.** All data goes through the service layer in `lib/api`. If a function you need is missing, add it there and register it in the inventory.
 2. **Types come from the spec.** Never hand-write response types for API data. Regenerate with `pnpm gen:api`.
 3. **Every API endpoint has an inventory entry** (`docs/API_INVENTORY.md` and the registry): id (`operationId`), path, group, flags (deprecated, unstable, patreon, internal), rate limit, API cache, site strategy (`snapshot`, `runtime`, `build`), where it is used, implementation status. CI fails if the spec has an endpoint missing from the inventory.
 4. **Do not commit Valve assets** (images, icons, video, sounds, fonts from the game). Load them from the API CDN at runtime. The MIT license does not cover them.
