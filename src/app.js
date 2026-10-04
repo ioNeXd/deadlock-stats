@@ -1104,8 +1104,8 @@ async function loadAnalytics(signal, filters = {}) {
 }
 
 async function renderApiStatus(signal) {
-  el.content.innerHTML = '<section class="page-head"><span class="eyebrow">SYSTEM / API</span><h2>API Status</h2><p>Live health probe for the documented Deadlock API infrastructure.</p></section>' +
-    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">HEALTH</span><h2 id="status-title">Checking…</h2></div><b id="status-badge">CHECKING</b></div><div id="status-metrics"></div></article><article class="panel"><span class="eyebrow">SERVICES</span><h2>Infrastructure</h2><div id="service-list"></div></article></section>';
+  el.content.innerHTML = '<section class="page-head status-page-head"><span class="eyebrow">SYSTEMS DESK / LIVE TELEMETRY</span><h2>THE SWITCHBOARD</h2><p>Live health telemetry for the Deadlock API: reachability, service state, response timing, HTTP status, rate-limit headers and the latest patch signal.</p><div class="status-page-kicker"><span>API HEALTH</span><span>INFRASTRUCTURE</span><span>LATENCY</span><span>PATCH SIGNAL</span></div></section>' +
+    '<section class="dashboard-grid status-main-grid"><article class="panel status-health-panel"><div class="section-head"><div><span class="eyebrow">HEALTH SIGNAL</span><h2 id="status-title">Checking…</h2></div><b id="status-badge">CHECKING</b></div><div id="status-metrics" class="status-metrics-grid"></div></article><article class="panel status-services-panel"><div class="section-head"><div><span class="eyebrow">CORE SERVICES</span><h2>Infrastructure</h2></div><span class="muted">LIVE PROBE</span></div><div id="service-list" class="status-service-list"></div></article></section>';
   loadApiStatus(signal);
 }
 

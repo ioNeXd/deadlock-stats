@@ -2064,3 +2064,99 @@ body{
   .analytics-page-head:before{font-size:100px}
   .analytics-page-kicker{gap:5px}
 }
+
+
+/* The Switchboard — infrastructure desk / live telemetry. */
+.status-page-head{
+  position:relative;overflow:hidden;padding:clamp(24px,4vw,46px);
+  border:1px solid color-mix(in srgb,var(--blue) 30%,var(--line));
+  background:
+    radial-gradient(circle at 84% 20%,color-mix(in srgb,var(--green) 14%,transparent),transparent 19rem),
+    radial-gradient(circle at 18% 90%,color-mix(in srgb,var(--orange) 10%,transparent),transparent 20rem),
+    linear-gradient(135deg,#101718,#121416);
+}
+.status-page-head:before{
+  content:"LIVE";position:absolute;right:-12px;bottom:-34px;
+  color:rgba(255,255,255,.026);font:900 clamp(100px,18vw,210px)/.8 "DM Mono";
+  letter-spacing:-.13em;transform:rotate(-7deg);pointer-events:none;
+}
+.status-page-head:after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,var(--green),var(--blue),var(--yellow),var(--orange));
+  opacity:.78;
+}
+.status-page-head h2,.status-page-head p,.status-page-kicker{position:relative;z-index:1}
+.status-page-head h2{font-size:clamp(48px,8vw,94px);letter-spacing:-.09em;text-transform:uppercase}
+.status-page-head p{max-width:790px}
+.status-page-kicker{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+.status-page-kicker span{
+  padding:6px 9px;border:1px solid var(--line);
+  font:8px "DM Mono";letter-spacing:.09em;color:var(--muted)
+}
+.status-main-grid{align-items:stretch}
+.status-main-grid>.panel{
+  min-height:100%;
+  border-color:color-mix(in srgb,var(--blue) 16%,var(--line));
+}
+.status-health-panel{
+  background:
+    radial-gradient(circle at 100% 0,rgba(104,195,138,.075),transparent 18rem),
+    var(--panel);
+}
+.status-services-panel{
+  border-color:color-mix(in srgb,var(--purple) 17%,var(--line))!important;
+  background:
+    radial-gradient(circle at 0 100%,rgba(157,131,230,.06),transparent 18rem),
+    var(--panel);
+}
+.status-metrics-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;margin-top:16px;
+}
+.status-metrics-grid .metric{
+  min-height:76px;padding:12px 13px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.018);
+}
+.status-metrics-grid .metric:nth-child(1){border-left:2px solid var(--blue)}
+.status-metrics-grid .metric:nth-child(2){border-left:2px solid var(--green)}
+.status-metrics-grid .metric:nth-child(3){border-left:2px solid var(--yellow)}
+.status-metrics-grid .metric:nth-child(4){border-left:2px solid var(--purple)}
+.status-metrics-grid .metric:nth-child(5){border-left:2px solid var(--orange)}
+.status-metrics-grid .metric:nth-child(6){border-left:2px solid var(--blue)}
+.status-metrics-grid .metric:nth-child(7){border-left:2px solid var(--red)}
+.status-metrics-grid .metric span,
+.status-service-list .metric span{
+  display:block;margin-bottom:7px;font:8px "DM Mono";letter-spacing:.08em;color:var(--muted)
+}
+.status-metrics-grid .metric strong{
+  display:block;font-size:13px;line-height:1.35;word-break:break-word
+}
+.status-metrics-grid .metric strong a{color:var(--yellow)}
+.status-service-list{display:grid;gap:7px;margin-top:16px}
+.status-service-list .metric{
+  position:relative;padding:13px 14px 13px 17px;
+  border:1px solid var(--line);background:rgba(255,255,255,.018);
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+}
+.status-service-list .metric:before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blue)
+}
+.status-service-list .metric:nth-child(1):before{background:var(--green)}
+.status-service-list .metric:nth-child(2):before{background:var(--blue)}
+.status-service-list .metric:nth-child(3):before{background:var(--purple)}
+.status-service-list .metric span{margin:0;text-transform:uppercase}
+.status-service-list .metric strong{font:10px "DM Mono";letter-spacing:.06em}
+#status-badge{
+  padding:7px 10px;border:1px solid var(--line);font:9px "DM Mono";letter-spacing:.08em
+}
+#status-badge.online{
+  border-color:color-mix(in srgb,var(--green) 55%,var(--line));
+  color:var(--green);background:rgba(104,195,138,.06)
+}
+.status-health-panel #status-title{max-width:500px;letter-spacing:-.035em}
+@media(max-width:720px){
+  .status-page-head h2{font-size:clamp(44px,13vw,68px)}
+  .status-page-head:before{font-size:110px}
+  .status-metrics-grid{grid-template-columns:1fr}
+}
