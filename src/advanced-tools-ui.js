@@ -61,12 +61,16 @@ export function renderAdvancedTools() {
       <article class="panel">
         <div class="section-head"><div><span class="eyebrow">CUSTOM MATCH</span><h3>Lobby controls</h3></div><span id="custom-status" class="muted">READY</span></div>
         <form id="custom-form" class="tool-form">
-          <label>Game mode <select name="game_mode"><option value="">API default</option><option value="normal">normal</option><option value="street_brawl">street_brawl</option></select></label>
-          <label>Server region <input name="server_region" placeholder="optional"></label>
-          <label>Roster size <input name="min_roster_size" type="number" min="0" placeholder="optional"></label>
+          <label>Game mode <select name="game_mode"><option value="">API default</option><option value="normal">normal</option><option value="street_brawl">street_brawl</option><option value="explore_n_y_c">explore_n_y_c</option><option value="internal">internal</option></select></label>
+          <label>Server region <select name="server_region"><option value="">API default</option><option value="europe">europe</option><option value="eu_amsterdam">eu_amsterdam</option><option value="eu_poland">eu_poland</option><option value="eu_stockholm">eu_stockholm</option><option value="eu_helsinki">eu_helsinki</option><option value="eu_falkenstein">eu_falkenstein</option><option value="eu_spain">eu_spain</option><option value="eu_east">eu_east</option><option value="eu_london">eu_london</option><option value="south_africa">south_africa</option><option value="us_west">us_west</option><option value="us_east">us_east</option><option value="us_north_central">us_north_central</option><option value="us_south_central">us_south_central</option><option value="us_south_east">us_south_east</option><option value="us_south_west">us_south_west</option><option value="australia">australia</option><option value="singapore">singapore</option><option value="japan">japan</option><option value="hong_kong">hong_kong</option><option value="mp_hong_kong">mp_hong_kong</option><option value="seoul">seoul</option><option value="chile">chile</option><option value="peru">peru</option><option value="argentina">argentina</option><option value="south_america">south_america</option></select></label>
+          <label>Roster size <input name="min_roster_size" type="number" min="0" step="1" placeholder="optional"></label>
+          <label>Corrupted shop spawn (min) <input name="corrupted_item_shop_spawn_minutes" type="number" min="0" step="1" placeholder="optional"></label>
           <label>Callback URL <input name="callback_url" type="url" placeholder="optional"></label>
           <label><input name="disable_auto_ready" type="checkbox"> Disable auto-ready</label>
           <label><input name="duplicate_heroes_enabled" type="checkbox"> Allow duplicate heroes</label>
+          <label><input name="cheats_enabled" type="checkbox"> Enable cheats</label>
+          <label><input name="is_publicly_visible" type="checkbox"> Publicly visible</label>
+          <label><input name="randomize_lanes" type="checkbox"> Randomize lanes</label>
           <div class="panel-actions"><button class="button" type="submit">Create lobby</button></div>
         </form>
         <div id="custom-actions" class="panel-actions" hidden>
@@ -179,18 +183,22 @@ function bind(signal) {
     event.preventDefault();
     const form = event.currentTarget;
     const values = Object.fromEntries(new FormData(form));
-    values.disable_auto_ready = form.elements.disable_auto_ready.checked;
-    values.duplicate_heroes_enabled = form.elements.duplicate_heroes_enabled.checked;
-    if (values.min_roster_size) values.min_roster_size = Number(values.min_roster_size);
+    for (const key of ["disable_auto_ready", "duplicate_heroes_enabled", "cheats_enabled", "is_publicly_visible", "randomize_lanes"]) {
+      values[key] = form.elements[key].checked;
+    }
+    if (values.min_roster_size !== "") values.min_roster_size = Number(values.min_roster_size);
+    if (values.corrupted_item_shop_spawn_minutes !== "") values.corrupted_item_shop_spawn_minutes = Number(values.corrupted_item_shop_spawn_minutes);
     const body = buildCustomMatchBody(values);
     write("#custom-status", "CREATING");
     try {
       const result = await createCustomMatchFromForm(body, { signal });
       const data = result.data ?? result;
       const partyId = data.party_id;
+      const partyCode = data.party_code;
       document.querySelector("#custom-lobby-id").value = partyId ?? "";
       document.querySelector("#custom-actions").hidden = !partyId;
       write("#custom-output", data);
+      if (partyCode) write("#custom-lobby-id", partyId ?? "");
       write("#custom-status", "CREATED");
     } catch (error) {
       if (signal.aborted) return;
