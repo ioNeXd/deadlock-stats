@@ -201,6 +201,11 @@ test("hero stats normalizer follows the current OpenAPI schema", () => {
     totalKills: 200,
     totalDeaths: 100,
     totalAssists: 300,
+    avgKills: 8,
+    avgDeaths: 4,
+    avgAssists: 12,
+    avgNetWorth: 20000,
+    avgPlayerDamage: 36000,
     totalNetWorth: 500000,
     totalLastHits: 1250,
     totalDenies: 180,
@@ -781,4 +786,23 @@ test("analytics source exposes failure-isolated route loading", async () => {
   const end = source.indexOf("\nfunction ", start);
   const route = end === -1 ? source.slice(start) : source.slice(start, end);
   assert.match(route, /Promise\.allSettled\(\[/);
+});
+
+test("hero stats averages are null when there are no matches", () => {
+  const [row] = normalizeHeroStats({
+    data: [{
+      hero_id: 7,
+      matches: 0,
+      total_kills: 10,
+      total_deaths: 2,
+      total_assists: 5,
+      total_net_worth: 1000,
+      total_player_damage: 2000,
+    }],
+  });
+  assert.equal(row.avgKills, null);
+  assert.equal(row.avgDeaths, null);
+  assert.equal(row.avgAssists, null);
+  assert.equal(row.avgNetWorth, null);
+  assert.equal(row.avgPlayerDamage, null);
 });
