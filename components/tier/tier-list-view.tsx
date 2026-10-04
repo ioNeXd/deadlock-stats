@@ -1,4 +1,3 @@
-import dynamic from 'next/dynamic'
 import type { HeroEntity, ItemEntity, PatchWindow, StatsSnapshot } from '@/lib/api/types'
 import { DEFAULT_BAND } from '@/lib/config'
 import { formatDate } from '@/lib/format'
@@ -6,11 +5,8 @@ import { interpolate, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import type { BandOption } from './filter-bar'
 import type { TierTableRow } from './tier-table'
+import { TierListInteractive } from './tier-list-interactive-loader'
 import { TierTableStatic } from './tier-table-static'
-
-const TierListInteractive = dynamic(() => import('./tier-list-interactive').then((module) => module.TierListInteractive), {
-  ssr: false,
-})
 
 type Props =
   | { kind: 'heroes'; entities: HeroEntity[] } & Shared
@@ -35,19 +31,29 @@ export function TierListView(props: Props) {
       : interpolate(t.filters.current, { start: formatDate(patch.start, locale) })
     : ''
   const strings = kind === 'heroes' ? t.heroes : t.items
+  const sample = initialSnapshot?.heroes.rows.reduce((sum, row) => sum + row[3], 0) ?? 0
 
   return (
     <section aria-labelledby="tier-heading" className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <dl className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm" aria-label={t.filters.label}>
-          <div className="flex gap-1.5"><dt className="sr-only">{t.filters.patch}</dt><dd className="font-medium text-foreground">{periodLabel}</dd></div>
-          <div className="flex gap-1.5"><dt className="sr-only">{t.filters.rank}</dt><dd className="text-muted-foreground">{band.label}</dd></div>
-          <div className="flex gap-1.5"><dt className="sr-only">Mode</dt><dd className="text-muted-foreground">{t.context.mode}</dd></div>
+          <div className="flex gap-1.5">
+            <dt className="sr-only">{t.filters.patch}</dt>
+            <dd className="font-medium text-foreground">{periodLabel}</dd>
+          </div>
+          <div className="flex gap-1.5">
+            <dt className="sr-only">{t.filters.rank}</dt>
+            <dd className="text-muted-foreground">{band.label}</dd>
+          </div>
+          <div className="flex gap-1.5">
+            <dt className="sr-only">{t.context.mode}</dt>
+            <dd className="text-muted-foreground">{t.context.mode}</dd>
+          </div>
           {initialSnapshot ? (
             <div className="flex gap-1.5">
               <dt className="sr-only">{t.context.sample}</dt>
               <dd className="tabular-nums text-muted-foreground">
-                {interpolate(t.context.sample, { n: String(initialSnapshot.heroes.rows.reduce((sum, row) => sum + row[3], 0)) })}
+                {interpolate(t.context.sample, { n: String(sample) })}
               </dd>
             </div>
           ) : null}
