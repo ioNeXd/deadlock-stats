@@ -43,12 +43,22 @@ export function normalizeRank(entity) { return normalizeEntity(entity); }
 export function normalizeItem(entity) { return normalizeEntity(entity); }
 
 
+function resolveAssetUrl(value) {
+  if (typeof value !== "string" || !value) return "";
+  if (/^(?:https?:)?\\/\\//i.test(value)) return value;
+  if (/^data:/i.test(value)) return value;
+  if (value.startsWith("/")) return "https://api.deadlock-api.com" + value;
+  if (/^(?:images|icons|assets)\\//i.test(value)) return "https://api.deadlock-api.com/" + value;
+  return value;
+}
+
 export function resolveAssetImage(entity, preferred = []) {
   const images = entity?.images && typeof entity.images === "object" ? entity.images : {};
   const candidates = [...preferred, ...IMAGE_FIELDS];
   for (const field of candidates) {
     const value = images[field] ?? entity?.raw?.images?.[field] ?? entity?.raw?.[field];
-    if (typeof value === "string" && value) return value;
+    const url = resolveAssetUrl(value);
+    if (url) return url;
   }
   return "";
 }
