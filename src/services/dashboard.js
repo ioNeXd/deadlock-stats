@@ -43,9 +43,9 @@ export function normalizeMajorPatch(patchesPayload, bigPatchDaysPayload, now = D
   return forumPatches
     .filter(patch => {
       const date = calendarDate(patch.pub_date);
-      return date && date < latestBigDay;
+      return date && date <= latestBigDay;
     })
-    .sort((a, b) => Math.abs(Date.parse(b.pub_date) - Date.parse(latestBigDay)) - Math.abs(Date.parse(a.pub_date) - Date.parse(latestBigDay)))[0] ?? null;
+    .sort((a, b) => Date.parse(b.pub_date ?? 0) - Date.parse(a.pub_date ?? 0))[0] ?? null;
 }
 
 export async function getDashboardCoreSnapshot(options = {}) {
