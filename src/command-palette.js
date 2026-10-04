@@ -68,6 +68,7 @@ function execute(index = state.index) {
 }
 
 function bind() {
+  loadStyles();
   if (document.querySelector("#command-palette")) return;
   const root = document.createElement("div");
   root.id = "command-palette";
@@ -94,11 +95,6 @@ function bind() {
     render();
   });
   document.addEventListener("keydown", event => {
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
-      event.preventDefault();
-      state.open ? close() : open();
-      return;
-    }
     if (!state.open) return;
     if (event.key === "Escape") {
       event.preventDefault();
@@ -118,8 +114,19 @@ function bind() {
   });
 }
 
+function loadStyles() {
+  if (document.querySelector('link[data-command-palette-styles]')) return;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = "./styles-command-palette.css";
+  link.dataset.commandPaletteStyles = "true";
+  document.head.appendChild(link);
+}
+
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", bind, { once: true });
 } else {
   bind();
 }
+
+export { open };
