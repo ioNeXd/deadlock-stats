@@ -1938,25 +1938,10 @@ async function loadExplorer(signal) {
 
   const loadSnapshot = async () => {
     try {
-      const response = await fetch("./docs/api-openapi-inventory.json", { cache: "force-cache", signal });
-      if (!response.ok) throw new Error("OpenAPI inventory unavailable");
-      const inventory = await response.json();
-      const paths = {};
-      for (const operation of Array.isArray(inventory?.operations) ? inventory.operations : []) {
-        const method = String(operation?.method || "GET").toLowerCase();
-        if (!operation?.path || !HTTP_METHODS.includes(method)) continue;
-        paths[operation.path] ??= {};
-        paths[operation.path][method] = operation;
-      }
-      const contract = {
-        openapi: inventory?.openapi || "3.1.0",
-        info: { version: inventory?.api_version || "snapshot" },
-        paths,
-        components: { schemas: {} },
-      };
-      bindOperationList(contract, true);
+      const { OPENAPI_SNAPSHOT } = await import("./api/openapi-snapshot.js");
+      bindOperationList(OPENAPI_SNAPSHOT, true);
     } catch (error) {
-      if (!isAborted(error)) console.warn("OpenAPI inventory snapshot unavailable", error);
+      if (!isAborted(error)) console.warn("OpenAPI UI snapshot unavailable", error);
     }
   };
 
