@@ -139,6 +139,14 @@ async function loadDashboard(signal) {
   loadCore();
   loadHeroes();
 
+  // Warm the live OpenAPI contract after first paint so Data Explorer can reuse
+  // the API client's in-memory cache instead of paying the contract latency later.
+  setTimeout(() => {
+    import("./services/versioning.js")
+      .then(runtime => runtime.getOpenApiContract({ cacheTtlMs: 10 * 60_000, timeoutMs: 8_000, retries: 0, dedupe: true }))
+      .catch(() => {});
+  }, 1200);
+
   dashboardRuntime.getDashboardActivitySnapshot(options).then(activityResult => {
     if (signal.aborted) return;
     const rows = Array.isArray(activityResult?.activity) ? activityResult.activity.slice(-7).reverse() : [];
