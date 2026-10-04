@@ -97,7 +97,7 @@ function renderHeroGrid(data) {
   const heroes = Array.isArray(data) ? data : (data?.data ?? []);
   const grid = $("#hero-grid");
   grid.innerHTML = heroes.slice(0, 8).map((hero, index) => {
-    const image = resolveAssetImage(hero, ["hero_card_critical_webp", "hero_card_critical", "background_image_webp", "background_image"]);
+    const image = resolveAssetImage(hero, ["icon_image_small_webp", "icon_image_small", "icon_hero_card_webp", "icon_hero_card", "background_image_webp", "background_image"]);
     const heroColor = colorToCss(hero?.colors?.ui);
     const accent = heroColor || ["#5da9e9", "#9d83e6", "#68c38a", "#d86b6b"][index % 4];
     const description = hero?.description ?? hero?.role ?? hero?.playstyle ?? "Deadlock hero";
@@ -460,7 +460,7 @@ async function renderHeroes(signal) {
       const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? (wins / matches) * 100 : null;
       const kda = [item.totalKills, item.totalDeaths, item.totalAssists].map(Number);
       const kdaText = kda.every(Number.isFinite) ? kda.join(" / ") : "—";
-      const image = hero ? resolveAssetImage(hero, ["hero_card_critical_webp", "hero_card_critical", "icon_hero_card_webp", "icon_hero_card"]) : "";
+      const image = hero ? resolveAssetImage(hero, ["icon_image_small_webp", "icon_image_small", "icon_hero_card_webp", "icon_hero_card"]) : "";
       const accent = colorToCss(hero?.colors?.ui);
       return '<a class="hero-performance-card" href="#/heroes/' + encodeURIComponent(item.heroId) + '"' + (accent ? ' style="--hero-accent:' + esc(accent) + '"' : "") + '>' +
         '<div class="hero-performance-art">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') + '</div>' +
