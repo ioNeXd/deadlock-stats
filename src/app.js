@@ -436,8 +436,10 @@ async function renderHeroDetail(heroId, signal) {
 }
 
 async function renderHeroes(signal) {
-  const analytics = await loadAnalyticsRuntime();
-  const assetsRuntime = await loadAssetsRuntime();
+  const [{ ...analytics }, assetsRuntime] = await Promise.all([
+    loadAnalyticsRuntime(),
+    loadAssetsRuntime(),
+  ]);
   const { listHeroes } = assetsRuntime;
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">GAME / HERO INTELLIGENCE</span><h2>Heroes</h2><p>Hero roster, performance and combat statistics from the live Deadlock analytics API.</p></section>' +
     '<section class="panel analytics-filter-panel"><div class="section-head"><div><span class="eyebrow">SCOPE</span><h2>Hero statistics</h2></div><b id="heroes-status">LOADING</b></div>' +
@@ -481,8 +483,12 @@ async function renderHeroes(signal) {
       const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? (wins / matches) * 100 : null;
       const kda = [item.avgKills, item.avgDeaths, item.avgAssists].map(Number);
       const kdaText = kda.every(Number.isFinite) ? kda.map(value => value.toFixed(1)).join(" / ") : "—";
-      const portrait = hero ? resolveAssetImage(hero, ["hero_card_webp", "hero_card", "icon_hero_card_webp", "icon_hero_card"]) : "";
-      const heroArt = hero ? renderHeroArt(hero, "hero-performance", portrait) : "";
+      const portrait = hero ? resolveAssetImage(hero, ["icon_hero_card_webp", "icon_hero_card", "hero_card_webp", "hero_card"]) : "";
+      const heroArt = hero
+        ? '<div class="hero-performance-art" aria-hidden="true">' +
+          (portrait ? '<img class="hero-performance-portrait" src="' + esc(portrait) + '" alt="" loading="lazy" decoding="async">' : '') +
+          '<span class="hero-performance-wash"></span></div>'
+        : "";
       const accent = colorToCss(hero?.colors?.ui);
       return '<a class="hero-performance-card" href="#/heroes/' + encodeURIComponent(item.heroId) + '"' + (accent ? ' style="--hero-accent:' + esc(accent) + '"' : "") + '>' +
         heroArt +
@@ -494,36 +500,61 @@ async function renderHeroes(signal) {
     $("#heroes-status").textContent = rows.length + " HEROES";
   };
 
+  const renderCatalogState = () => {
+    if (!catalog.length) {
+      $("#heroes-list").innerHTML = '<div class="hero-performance-skeleton-grid" aria-hidden="true">' +
+        Array.from({ length: 8 }, () => '<div class="hero-performance-skeleton"><i></i><span></span><span></span></div>').join("") +
+        '</div>';
+      return;
+    }
+    renderRows($("#heroes-filters").elements.search.value);
+  };
+
   const load = async values => {
     $("#heroes-status").textContent = "LOADING";
-    $("#heroes-list").innerHTML = '<p class="muted">Loading hero statistics…</p>';
+    $("#heroes-list").innerHTML = '<div class="hero-performance-skeleton-grid" aria-hidden="true">' +
+      Array.from({ length: 8 }, () => '<div class="hero-performance-skeleton"><i></i><span></span><span></span></div>').join("") +
+      '</div>';
     try {
       const filters = normalizeAnalyticsFilters(values);
-      const [heroCatalog, heroStats] = await Promise.all([
-        listHeroes({ ...assetVersion.options(), signal }),
-        analytics.getHeroStatsSnapshot({ ...assetVersion.options(), ...filters, signal }),
-      ]);
+      const catalogPromise = listHeroes({ ...assetVersion.options(), signal });
+      const statsPromise = analytics.getHeroStatsSnapshot({ ...assetVersion.options(), ...filters, signal });
+
+      const heroCatalog = await catalogPromise;
       if (signal.aborted) return;
       catalog = heroCatalog.data ?? [];
-      stats = heroStats ?? [];
-      const active = stats.filter(item => item?.heroId != null);
-      const appearances = active.reduce((sum, item) => sum + (Number(item.matches) || 0), 0);
-      const validRates = active
-        .map(item => Number(item.matches) > 0 ? Number(item.wins) / Number(item.matches) * 100 : NaN)
-        .filter(Number.isFinite);
-      const topRate = validRates.length ? Math.max(...validRates) : null;
-      $("#heroes-summary").innerHTML = [
-        ["HEROES WITH DATA", active.length.toLocaleString(), "filtered roster"],
-        ["TOTAL HERO APPEARANCES", appearances.toLocaleString(), "returned by API"],
-        ["TOP WIN RATE", topRate == null ? "—" : topRate.toFixed(1) + "%", "minimum sample respected"],
-        ["DATA WINDOW", values.min_unix_timestamp && values.max_unix_timestamp ? "CUSTOM" : "30D", "analytics scope"],
-      ].map(([label, value, note]) => '<article class="metric-card"><span>' + label + '</span><strong>' + esc(value) + '</strong><small>' + esc(note) + '</small></article>').join("");
-      renderRows(values.search);
-      setConnection(true, "API connected");
+      renderCatalogState();
+
+      try {
+        const heroStats = await statsPromise;
+        if (signal.aborted) return;
+        stats = heroStats ?? [];
+        const active = stats.filter(item => item?.heroId != null);
+        const appearances = active.reduce((sum, item) => sum + (Number(item.matches) || 0), 0);
+        const validRates = active
+          .map(item => Number(item.matches) > 0 ? Number(item.wins) / Number(item.matches) * 100 : NaN)
+          .filter(Number.isFinite);
+        const topRate = validRates.length ? Math.max(...validRates) : null;
+        $("#heroes-summary").innerHTML = [
+          ["HEROES WITH DATA", active.length.toLocaleString(), "filtered roster"],
+          ["TOTAL HERO APPEARANCES", appearances.toLocaleString(), "returned by API"],
+          ["TOP WIN RATE", topRate == null ? "—" : topRate.toFixed(1) + "%", "minimum sample respected"],
+          ["DATA WINDOW", values.min_unix_timestamp && values.max_unix_timestamp ? "CUSTOM" : "30D", "analytics scope"],
+        ].map(([label, value, note]) => '<article class="metric-card"><span>' + label + '</span><strong>' + esc(value) + '</strong><small>' + esc(note) + '</small></article>').join("");
+        renderRows(values.search);
+        $("#heroes-status").textContent = active.length + " HEROES";
+        setConnection(true, "API connected");
+      } catch (error) {
+        if (isAborted(error)) return;
+        $("#heroes-status").textContent = "PARTIAL";
+        renderCatalogState();
+        setConnection(true, "API connected");
+        console.warn("Deadlock hero analytics request failed after catalog load", error);
+      }
     } catch (error) {
       if (isAborted(error)) return;
       $("#heroes-status").textContent = "ERROR";
-      $("#heroes-list").innerHTML = '<p class="error-text">Hero statistics failed: ' + esc(error.message) + '</p>';
+      $("#heroes-list").innerHTML = '<p class="error-text">Hero catalog failed: ' + esc(error.message) + '</p>';
       setConnection(false, "API unavailable");
     }
   };
