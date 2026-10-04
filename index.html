@@ -8,7 +8,24 @@
   <title>Deadlock Stats</title>
   <link rel="preconnect" href="https://api.deadlock-api.com" crossorigin>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="src/styles.css">
+<style id="critical-shell">
+  :root{color-scheme:dark;background:#0a0908}
+  html,body{margin:0;min-height:100%;background:#0a0908;color:#eee5d8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  body{min-height:100vh}
+  .app-shell{min-height:100vh;display:flex}
+  .sidebar{width:268px;flex:0 0 268px;box-sizing:border-box}
+  .main{flex:1;min-width:0;box-sizing:border-box;padding:26px clamp(20px,4vw,72px) 80px}
+  .initial-shell{min-height:58vh;display:grid;align-content:start;gap:20px}
+  .initial-shell-kicker{font:8px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.24em;color:#c6a26a}
+  .initial-shell h2{max-width:720px;margin:0;font:500 clamp(46px,7vw,86px)/.88 Georgia,"Times New Roman",serif;letter-spacing:-.045em}
+  .initial-shell p{max-width:610px;color:#a69b8d;font-size:13px;line-height:1.8}
+  .initial-shell-status{display:inline-flex;width:max-content;padding:8px 12px;border:1px solid rgba(214,184,132,.18);border-radius:999px;color:#c6a26a;font:9px ui-monospace,SFMono-Regular,Menlo,monospace}
+  .topbar{min-height:55px}
+  @media(max-width:900px){.sidebar{width:228px;flex-basis:228px}}
+  @media(max-width:720px){.app-shell{display:block}.sidebar{width:auto}.main{padding:20px 14px 54px}.initial-shell h2{font-size:50px}}
+</style>
+  <link rel="preload" href="src/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="src/styles.css"></noscript>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -34,7 +51,12 @@
       <header class="topbar">
         <div><span class="eyebrow">CURSED APPLE // INTELLIGENCE</span><h1>Command Center</h1></div>
       </header>
-      <div id="page-content"></div>
+      <div id="page-content"><div class="initial-shell" aria-live="polite">
+  <span class="initial-shell-kicker">LIVE DATA / CITY NEVER SLEEPS</span>
+  <h2>Command Center</h2>
+  <p>Deadlock intelligence is loading from the official API.</p>
+  <span class="initial-shell-status">CONNECTING TO API</span>
+</div></div>
     </main>
   </div>
   <script type="module" src="src/app.js"></script>
