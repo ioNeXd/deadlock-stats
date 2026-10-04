@@ -156,11 +156,8 @@ function beginRoute() {
 
 async function renderDashboard(signal) {
   el.content.innerHTML = '<section class="dashboard-mosaic command-center-mosaic">' +
-      '<div class="hero-banner command-center-hero"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA / CITY NEVER SLEEPS</span><h2>Data from the streets.</h2><p>Explore Deadlock through live game data and visual assets delivered directly by the API.</p><div class="pills"><span>API-FIRST</span><span>OPENAPI</span><span>LIVE CONTRACT</span></div></div></div>' +
+      '<div class="hero-banner command-center-hero"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA / CITY NEVER SLEEPS</span><div id="dashboard-patch-copy"><span class="dashboard-patch-loading">LOADING LATEST UPDATE…</span></div><div class="pills"><span>API-FIRST</span><span>OPENAPI</span><span>LIVE CONTRACT</span></div></div></div>' +
       '<article class="metric-card command-metric command-blue"><span>FETCHED MATCHES / 24H</span><strong id="matches-per-day">—</strong><small>API info</small></article>' +
-      '<article class="metric-card command-metric command-green"><span>DATABASE TABLES</span><strong id="table-count">—</strong><small>reported by API</small></article>' +
-      '<article class="metric-card command-metric command-yellow"><span>KNOWN ROWS</span><strong id="known-rows">—</strong><small>reported table sizes</small></article>' +
-      '<article class="metric-card command-metric command-purple"><span>HERO ASSETS</span><strong id="asset-count">—</strong><small>current catalog response</small></article>' +
     '</section>' +
     '<section class="section"><div class="section-head"><div><span class="eyebrow">ROSTER</span><h2>Heroes in the city</h2></div><a href="#/heroes">View all →</a></div><div id="hero-grid" class="hero-grid" aria-live="polite"></div></section>' +
     '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(API_BASE_URL.replace("https://", "")) + '</strong></div><div class="metric"><span>Hero response</span><strong id="api-latency">—</strong></div><div class="metric"><span>Latest patch</span><strong id="latest-patch" class="patch-link">Loading…</strong></div></article><article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article></section>' +
@@ -185,7 +182,6 @@ async function loadDashboard(signal) {
       const assetsRuntime = await loadAssetsRuntime();
       const result = await assetsRuntime.listHeroes(options);
       if (signal.aborted) return;
-      $("#asset-count").textContent = result.data.length;
       $("#api-latency").textContent = result.latencyMs + " ms";
       renderHeroGrid(result.data);
     } catch (error) {
@@ -207,13 +203,10 @@ async function loadDashboard(signal) {
     $("#matches-per-day").textContent = Number.isFinite(Number(info.fetched_matches_per_day))
       ? Number(info.fetched_matches_per_day).toLocaleString()
       : "—";
-    $("#table-count").textContent = Object.keys(tableSizes).length || "—";
-    $("#known-rows").textContent = knownRows ? knownRows.toLocaleString() : "—";
+    $("#latest-patch").textContent = "Loading…";
 
   } else {
     $("#matches-per-day").textContent = "—";
-    $("#table-count").textContent = "—";
-    $("#known-rows").textContent = "—";
     $("#latest-patch").textContent = "Patch feed unavailable.";
   }
 
@@ -247,6 +240,21 @@ async function loadDashboard(signal) {
   });
 
   dashboardRuntime.getDashboardPatchSnapshot(options).then(patchResult => {
+    if (signal.aborted) return;
+    const patch = patchResult?.latestPatch;
+    const patchCopy = $("#dashboard-patch-copy");
+    if (patchCopy) {
+      if (!patch) {
+        patchCopy.innerHTML = '<span class="eyebrow">LATEST UPDATE</span><h2>Update unavailable.</h2><p>The current patch feed did not return an update.</p>';
+      } else {
+        const title = esc(patch.title ?? "Latest update");
+        const rawContent = String(patch.content ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        const excerpt = esc(rawContent.slice(0, 280) + (rawContent.length > 280 ? "…" : ""));
+        const date = patch.pub_date ? new Date(patch.pub_date).toLocaleDateString() : "";
+        patchCopy.innerHTML = '<span class="eyebrow">LATEST UPDATE / ' + esc(patch.source?.toUpperCase() ?? "PATCH FEED") + '</span><h2>' + title + '</h2><p>' + (excerpt || "The latest update is live in the official patch feed.") + '</p>' + (date ? '<small class="dashboard-patch-date">' + esc(date) + '</small>' : "");
+      }
+    }
+
     if (signal.aborted) return;
     const patch = patchResult?.latestPatch;
     const patchUrl = safeExternalUrl(patch?.link);
