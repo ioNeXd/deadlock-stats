@@ -51,7 +51,7 @@ test("leaderboard service preserves normalized entries and raw payload", async (
 });
 
 test("leaderboard UI exposes raw download action", async () => {
-  const source = await (await import("node:fs/promises")).readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  const source = await (await import("node:fs/promises")).readFile(new URL("../src/app-runtime.js", import.meta.url), "utf8");
   const start = source.indexOf("async function renderLeaderboard(signal");
   const end = source.indexOf("\nasync function renderBuilds", start);
   const route = source.slice(start, end);
