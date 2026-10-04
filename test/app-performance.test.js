@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+const [bootstrapSource, runtimeSource, dashboardSource] = await Promise.all([\n  readFile(new URL("../src/app.js", import.meta.url), "utf8"),\n  readFile(new URL("../src/app-runtime.js", import.meta.url), "utf8"),\n  readFile(new URL("../src/dashboard-route.js", import.meta.url), "utf8"),\n]);\nconst appSource = bootstrapSource + "\n" + runtimeSource + "\n" + dashboardSource;
 
 function extractTopLevelFunction(source, marker) {
   const start = source.indexOf(marker);
