@@ -71,7 +71,7 @@ export function getRanks(locale: Locale): Promise<RankEntity[]> {
       return {
         tier: rank.tier,
         name: rank.name,
-        icon: images.small_subrank1_webp ?? images.large_webp ?? null,
+        icon: images.small_webp ?? images.small_subrank1_webp ?? images.large_webp ?? null,
       }
     })
   })
