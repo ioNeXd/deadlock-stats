@@ -13,7 +13,7 @@ function pickName(entity) {
 }
 
 const IMAGE_FIELDS = [
-  "background_image","background_image_webp","hero_card_critical","hero_card_critical_webp",
+  "background_image","background_image_webp","hero_card","hero_card_webp","hero_card_critical","hero_card_critical_webp",
   "hero_card_gloat","hero_card_gloat_webp","icon_hero_card","icon_hero_card_webp",
   "icon_image_small","icon_image_small_webp","minimap_image","minimap_image_webp",
   "name_image","top_bar_vertical_image","top_bar_vertical_image_webp","vote_sticker",
