@@ -2768,7 +2768,9 @@ function route() {
   else if (routeName === "maps") renderMaps(signal);
   else if (routeName === "patches") renderPatches(signal);
   else if (routeName === "data") renderDataExplorer(signal);
-  else if (routeName === "graphql") renderGraphql(signal);\n  else if (routeName === "demos") loadAdvancedToolsRuntime().then(runtime => runtime.renderDemoExplorer());\n  else if (routeName === "live") loadAdvancedToolsRuntime().then(runtime => runtime.renderLiveQuery());
+  else if (routeName === "graphql") renderGraphql(signal);
+  else if (routeName === "demos") loadAdvancedToolsRuntime().then(runtime => runtime.renderDemoExplorer({ signal }));
+  else if (routeName === "live") loadAdvancedToolsRuntime().then(runtime => runtime.renderLiveQuery({ signal }));
   else if (routeName === "tools") renderAdvancedTools(signal);
   else if (routeName === "heroes" && routeParts[1]) renderHeroDetail(routeParts[1], signal);
   else if (routeName === "heroes") renderHeroes(signal);
