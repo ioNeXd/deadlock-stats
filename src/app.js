@@ -107,12 +107,16 @@ function renderHeroGrid(data) {
   const heroes = Array.isArray(data) ? data : (data?.data ?? []);
   const grid = $("#hero-grid");
   grid.innerHTML = heroes.slice(0, 8).map((hero, index) => {
-    const portrait = resolveHeroArtImages(hero).card;
+    // Dashboard cards are small; use the API's compact hero-card asset instead
+    // of downloading the full-resolution background artwork.
+    const portrait = resolveHeroCardImage(hero);
     const heroColor = colorToCss(hero?.colors?.ui);
     const accent = heroColor || ["#5da9e9", "#9d83e6", "#68c38a", "#d86b6b"][index % 4];
     const description = hero?.description ?? hero?.role ?? hero?.playstyle ?? "Deadlock hero";
     return '<a class="hero-card hero-card-editorial" href="#/heroes" style="--hero-accent:' + esc(accent) + '">' +
-      renderHeroArt(hero, "hero-card") +
+      '<div class="hero-card-art" aria-hidden="true">' +
+      (portrait ? '<img class="hero-card-portrait" src="' + esc(portrait) + '" alt="" loading="lazy" decoding="async">' : '') +
+      '</div>' +
       '<div class="hero-color-wash" aria-hidden="true"></div>' +
       '<div class="hero-info"><small>HERO / ' + esc(hero?.role ?? "ROSTER") + '</small><h3>' + esc(nameOf(hero)) + '</h3><p>' + esc(description) + '</p><span class="hero-card-index">' + String(index + 1).padStart(2, "0") + '</span></div></a>';
   }).join("") || '<article class="panel"><p>No hero assets returned.</p></article>';
