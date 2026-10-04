@@ -22,7 +22,7 @@ test("heroes route uses live asset and analytics contracts", () => {
 test("heroes route uses normal API portraits instead of fabricated artwork", () => {
   const source = heroRouteSource();
   assert.match(source, /resolveAssetImage\(hero, \[/);
-  assert.match(source, /hero_card_gloat_webp/);
+  assert.match(source, /icon_hero_card_webp/);
 });
 
 test("hero detail isolates analytics and asset availability", () => {
