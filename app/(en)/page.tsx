@@ -1,10 +1,10 @@
-import { TierPage } from '@/components/pages/tier-page'
+import { HomePage } from '@/components/pages/home-page'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { pageMetadata } from '@/lib/metadata'
 
 const t = getDictionary('en')
-export const metadata = pageMetadata('en', '/', t.heroes.title, t.heroes.lede)
+export const metadata = pageMetadata('en', '/', t.site.name, t.site.description)
 
 export default function Page() {
-  return <TierPage locale="en" kind="heroes" />
+  return <HomePage locale="en" />
 }
