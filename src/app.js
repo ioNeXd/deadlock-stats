@@ -964,7 +964,7 @@ async function loadAnalytics(signal, filters = {}) {
       ? heroRows.map(item => {
           const hero = heroesById.get(String(item.heroId));
           const name = hero ? nameOf(hero) : "Hero " + item.heroId;
-          const image = hero ? resolveAssetImage(hero, ["icon_hero_card_webp", "icon_hero_card", "hero_card_critical_webp", "hero_card_critical"]) : null;
+          const image = hero ? resolveAssetImage(hero, ["icon_image_small_webp", "icon_image_small", "icon_hero_card_webp", "icon_hero_card"]) : null;
           const matches = Number(item.matches);
           const wins = Number(item.wins);
           const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? ((wins / matches) * 100).toFixed(1) + "%" : "—";
@@ -1428,7 +1428,7 @@ async function renderMatchDetail(matchId, signal) {
       });
       const kda = ["kills", "deaths", "assists"].every(key => player?.[key] != null)
         ? player.kills + "/" + player.deaths + "/" + player.assists : "—";
-      const image = hero ? resolveAssetImage(hero, ["icon_image_small_webp", "icon_image_small", "hero_card_critical_webp", "hero_card_critical"]) : "";
+      const image = hero ? resolveAssetImage(hero, ["icon_image_small_webp", "icon_image_small", "icon_hero_card_webp", "icon_hero_card"]) : "";
       return '<article class="match-player-card">' +
         (image ? '<img class="match-player-hero" src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '') +
         '<span class="eyebrow">PLAYER ' + (index + 1) + '</span>' +
