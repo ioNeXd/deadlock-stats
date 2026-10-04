@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { PatchWindow } from '@/lib/api/types'
 import { formatDate } from '@/lib/format'
 import { interpolate, type Locale } from '@/lib/i18n/config'
@@ -38,7 +38,7 @@ export function FilterBar({ locale, windows, bands, patchId, bandId, onPatch, on
             const active = band.id === bandId
             const rankStyle =
               band.startColor && band.endColor
-                ? ({ '--rank-start': band.startColor, '--rank-end': band.endColor } as React.CSSProperties)
+                ? ({ '--rank-start': band.startColor, '--rank-end': band.endColor } as CSSProperties)
                 : undefined
             return (
               <button
@@ -49,7 +49,7 @@ export function FilterBar({ locale, windows, bands, patchId, bandId, onPatch, on
                 style={rankStyle}
                 className="rank-band-button chamfer-sm flex h-10 items-center gap-2 bg-secondary px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground aria-pressed:text-foreground"
               >
-                <span>{band.label}</span>
+                <span className="relative z-10">{band.label}</span>
               </button>
             )
           })}
