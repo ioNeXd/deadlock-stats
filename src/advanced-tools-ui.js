@@ -8,6 +8,7 @@ import {
   loadDemoSchema,
   loadLiveUrls,
   normalizeDemoStatus,
+  parseSseEventBlock,
   normalizeDemoSchema,
   normalizeLiveUrls,
   runLiveQuery,
@@ -131,7 +132,7 @@ function bind(signal) {
     }
     write("#live-status", "CONNECTING");
     try {
-      const result = await runLiveQuery({ query: values.query, match_id: values.match_id || undefined, broadcast_url: values.broadcast_url || undefined, signal });
+      const result = await runLiveQuery({ query: values.query, matchId: values.match_id, broadcastUrl: values.broadcast_url }, { signal });
       const stream = result.data;
       if (!stream) throw new Error("The API returned no SSE stream.");
       const reader = stream.getReader();
@@ -141,10 +142,18 @@ function bind(signal) {
         const { value, done } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split("\n\n");
+        const events = buffer.replace(/\r\n/g, "\n").split("\n\n");
         buffer = events.pop() ?? "";
         for (const event of events) {
-          if (event.trim()) write("#live-output", event);
+          if (!event.trim()) continue;
+          const parsed = parseSseEventBlock(event);
+          const payload = parsed.data;
+          write("#live-output", parsed.type === "message" ? payload : parsed.type.toUpperCase() + ": " + payload);
+          if (parsed.type === "end") {
+            await reader.cancel();
+            break;
+          }
+          if (parsed.type === "error") throw new Error(payload || "Live query stream reported an error.");
         }
       }
       write("#live-status", signal.aborted ? "CANCELLED" : "ENDED");
