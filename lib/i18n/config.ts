@@ -4,7 +4,7 @@ export type Locale = (typeof LOCALES)[number]
 export const INTL_LOCALE: Record<Locale, string> = { en: 'en-US', 'pt-br': 'pt-BR' }
 export const HTML_LANG: Record<Locale, string> = { en: 'en', 'pt-br': 'pt-BR' }
 
-export type SitePath = '/' | '/items' | '/methodology' | '/status'
+export type SitePath = '/' | '/tierlist' | '/items' | '/methodology' | '/status'
 
 export function localePath(locale: Locale, path: SitePath | string) {
   if (locale === 'en') return path
@@ -19,5 +19,5 @@ export function stripLocale(pathname: string) {
 }
 
 export function interpolate(template: string, vars: Record<string, string | number>) {
-  return template.replace(/\{(\w+)\}/g, (_, key: string) => String(vars[key] ?? `{${key}}`))
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => String(vars[key] ?? `{key}`))
 }
