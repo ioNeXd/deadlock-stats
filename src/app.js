@@ -1,13 +1,5 @@
 import { API_BASE_URL } from "./api/client.js";
 const content = document.querySelector("#page-content");
-function loadFullStylesheet() {
-  if (document.querySelector('link[data-deferred-styles]')) return;
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = "src/styles.css";
-  link.dataset.deferredStyles = "true";
-  document.head.appendChild(link);
-}
 
 const navItems = [...document.querySelectorAll(".nav-item")];
 let routeController = null;
@@ -69,7 +61,6 @@ function route() {
 
 window.addEventListener("hashchange", route);
 route();
-requestAnimationFrame(() => requestAnimationFrame(loadFullStylesheet));
 
 const idle = window.requestIdleCallback || (callback => setTimeout(callback, 5000));
 idle(() => {
