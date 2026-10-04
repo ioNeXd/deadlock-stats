@@ -481,7 +481,7 @@ async function renderHeroes(signal) {
       const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? (wins / matches) * 100 : null;
       const kda = [item.totalKills, item.totalDeaths, item.totalAssists].map(Number);
       const kdaText = kda.every(Number.isFinite) ? kda.join(" / ") : "—";
-      const portrait = hero ? resolveAssetImage(hero, ["hero_card_webp", "hero_card", "icon_hero_card_webp", "icon_hero_card"]) : "";
+      const portrait = hero ? resolveHeroCardImage(hero) : "";
       const heroArt = hero ? renderHeroArt(hero, "hero-performance", portrait) : "";
       const accent = colorToCss(hero?.colors?.ui);
       return '<a class="hero-performance-card" href="#/heroes/' + encodeURIComponent(item.heroId) + '"' + (accent ? ' style="--hero-accent:' + esc(accent) + '"' : "") + '>' +
