@@ -11,7 +11,7 @@ import { DEFAULT_BAND, MIN_MATCHES } from '@/lib/config'
 import { formatDate } from '@/lib/format'
 import { interpolate, type Locale, localePath } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
-import { computeTierRows, type TierStat } from '@/lib/tiers'
+import { computeTierRows } from '@/lib/tiers'
 import { useQueryState } from '@/lib/use-query-state'
 import { ContextStrip } from './context-strip'
 import { type BandOption, FilterBar } from './filter-bar'
@@ -31,10 +31,6 @@ interface Shared {
 
 const SORT_KEYS: SortKey[] = ['score', 'winRate', 'pickRate', 'matches', 'name']
 const SLOTS: ItemSlot[] = ['weapon', 'vitality', 'spirit']
-
-function snapshotRows(snapshot: StatsSnapshot, kind: 'heroes' | 'items') {
-  return snapshot[kind].rows.map(([id, wins, , matches]) => ({ id, wins, matches }))
-}
 
 export function TierListView(props: Props) {
   const { kind, locale, windows, bands, initialSnapshot } = props
