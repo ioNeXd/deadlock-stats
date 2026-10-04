@@ -57,20 +57,45 @@ test("advanced tools build demo query contract", () => {
   assert.throws(() => buildDemoQueryBody({ matchId: 1, query: "   " }), TypeError);
 });
 
-test("advanced tools build custom match body without empty values", () => {
+test("advanced tools build custom match body against the current API contract", () => {
   assert.deepEqual(buildCustomMatchBody({
-    game_mode: "normal",
-    callback_url: "",
+    game_mode: "street_brawl",
+    server_region: "south_america",
+    callback_url: " https://example.test/callback ",
     cheats_enabled: false,
-    randomize_lanes: null,
+    disable_auto_ready: true,
+    duplicate_heroes_enabled: true,
+    is_publicly_visible: false,
+    randomize_lanes: true,
     min_roster_size: 0,
+    corrupted_item_shop_spawn_minutes: 5,
+    ignored_future_field: "drop",
   }), {
-    game_mode: "normal",
+    game_mode: "street_brawl",
+    server_region: "south_america",
+    callback_url: "https://example.test/callback",
     cheats_enabled: false,
+    disable_auto_ready: true,
+    duplicate_heroes_enabled: true,
+    is_publicly_visible: false,
+    randomize_lanes: true,
     min_roster_size: 0,
+    corrupted_item_shop_spawn_minutes: 5,
   });
+  assert.throws(() => buildCustomMatchBody({ game_mode: "invalid" }), RangeError);
+  assert.throws(() => buildCustomMatchBody({ server_region: "invalid" }), RangeError);
+  assert.throws(() => buildCustomMatchBody({ min_roster_size: -1 }), RangeError);
+  assert.throws(() => buildCustomMatchBody({ corrupted_item_shop_spawn_minutes: 1.5 }), RangeError);
+  assert.throws(() => buildCustomMatchBody({ cheats_enabled: "false" }), TypeError);
 });
 
+
+test("advanced tools UI exposes all CreateCustomRequest controls", async () => {
+  const source = await (await import("node:fs/promises")).readFile(new URL("../src/advanced-tools-ui.js", import.meta.url), "utf8");
+  for (const field of ["cheats_enabled", "corrupted_item_shop_spawn_minutes", "disable_auto_ready", "duplicate_heroes_enabled", "game_mode", "is_publicly_visible", "min_roster_size", "randomize_lanes", "server_region", "callback_url"]) {
+    assert.match(source, new RegExp(field));
+  }
+});
 
 test("advanced tools UI presents demo schema table summaries", async () => {
   const source = await (await import("node:fs/promises")).readFile(new URL("../src/advanced-tools-ui.js", import.meta.url), "utf8");
