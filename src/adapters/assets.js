@@ -53,6 +53,21 @@ export function resolveAssetImage(entity, preferred = []) {
   return "";
 }
 
+export function resolveHeroCardImage(hero) {
+  return resolveAssetImage(hero, ["hero_card_webp", "hero_card"]);
+}
+
+export function resolveHeroBackgroundImage(hero) {
+  return resolveAssetImage(hero, ["background_image_webp", "background_image"]);
+}
+
+export function resolveHeroArtImages(hero) {
+  return {
+    background: resolveHeroBackgroundImage(hero),
+    card: resolveHeroCardImage(hero),
+  };
+}
+
 function mapWorldToRelative(point, radius, offset = [0, 0]) {
   if (!Array.isArray(point) || point.length < 2 || !Number.isFinite(radius) || radius <= 0) return null;
   const safeOffset = Array.isArray(offset) ? offset : [0, 0];
