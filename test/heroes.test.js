@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 
-const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+const appSource = await readFile(new URL("../src/app-runtime.js", import.meta.url), "utf8");
 
 function heroRouteSource() {
   const start = appSource.indexOf("async function renderHeroes");
