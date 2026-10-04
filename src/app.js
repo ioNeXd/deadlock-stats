@@ -97,7 +97,7 @@ function renderHeroGrid(data) {
   const heroes = Array.isArray(data) ? data : (data?.data ?? []);
   const grid = $("#hero-grid");
   grid.innerHTML = heroes.slice(0, 8).map((hero, index) => {
-    const image = resolveAssetImage(hero, ["hero_card_gloat_webp", "hero_card_gloat", "background_image_webp", "background_image"]);
+    const image = resolveAssetImage(hero, ["icon_hero_card_webp", "icon_hero_card", "background_image_webp", "background_image"]);
     const heroColor = colorToCss(hero?.colors?.ui);
     const accent = heroColor || ["#5da9e9", "#9d83e6", "#68c38a", "#d86b6b"][index % 4];
     const description = hero?.description ?? hero?.role ?? hero?.playstyle ?? "Deadlock hero";
