@@ -1,0 +1,104 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --color-tier-s: var(--tier-s);
+  --color-tier-a: var(--tier-a);
+  --color-tier-b: var(--tier-b);
+  --color-tier-c: var(--tier-c);
+  --color-tier-d: var(--tier-d);
+  --color-tier-f: var(--tier-f);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/* One theme file: a fork re-themes from here. Ledger dark with brass ink. */
+:root {
+  color-scheme: dark;
+  --background: oklch(0.165 0.008 60);
+  --foreground: oklch(0.92 0.022 85);
+  --card: oklch(0.198 0.01 60);
+  --card-foreground: oklch(0.92 0.022 85);
+  --popover: oklch(0.21 0.01 60);
+  --popover-foreground: oklch(0.92 0.022 85);
+  --primary: oklch(0.8 0.125 78);
+  --primary-foreground: oklch(0.18 0.012 60);
+  --secondary: oklch(0.245 0.012 60);
+  --secondary-foreground: oklch(0.92 0.022 85);
+  --muted: oklch(0.235 0.01 60);
+  --muted-foreground: oklch(0.7 0.02 80);
+  --accent: oklch(0.27 0.018 70);
+  --accent-foreground: oklch(0.95 0.02 85);
+  --destructive: oklch(0.64 0.17 35);
+  --border: oklch(0.31 0.012 60);
+  --input: oklch(0.31 0.012 60);
+  --ring: oklch(0.8 0.125 78);
+  --radius: 0.375rem;
+
+  --tier-s: oklch(0.82 0.14 80);
+  --tier-a: oklch(0.76 0.09 95);
+  --tier-b: oklch(0.8 0.025 85);
+  --tier-c: oklch(0.66 0.02 80);
+  --tier-d: oklch(0.66 0.11 50);
+  --tier-f: oklch(0.62 0.16 32);
+}
+
+@utility chamfer {
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+@utility chamfer-sm {
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: 'tnum' 1;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+.tier-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 56px;
+}
