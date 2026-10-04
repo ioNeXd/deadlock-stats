@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 
 const SPEC_URL = process.env.DEADLOCK_OPENAPI_URL ?? "https://api.deadlock-api.com/openapi.json";
-const OUT_JSON = "docs/api-capability-matrix.json";
-const OUT_MD = "docs/api-capability-matrix.md";
+const OUT_JSON = "docs/API_INVENTORY.json";
+const OUT_MD = "docs/API_INVENTORY.md";
 
 const response = await fetch(SPEC_URL, {
   headers: { accept: "application/json" },
@@ -33,7 +33,7 @@ for (const [path, pathItem] of Object.entries(spec.paths)) {
     }
 
     const description = String(operation.description ?? operation.summary ?? "")
-      .replace(/\\s+/g, " ")
+      .replace(/\s+/g, " ")
       .trim();
 
     const tags = Array.isArray(operation.tags) ? operation.tags.map(String) : [];
@@ -95,13 +95,13 @@ const md = [
 await writeFile(OUT_MD, md, "utf8");
 
 function extractRateLimit(text) {
-  const ip = text.match(/ip\\s*\\|\\s*([\\d,]+)\\s*req\\s*\\/\\s*min/i)?.[1];
-  const key = text.match(/key\\s*\\|\\s*([\\d,]+)\\s*req\\s*\\/\\s*min/i)?.[1];
-  const global = text.match(/global\\s*\\|\\s*([\\d,]+)\\s*req\\s*\\/\\s*min/i)?.[1];
+  const ip = text.match(/ip\s*\\|\s*([\\d,]+)\s*req\s*\\/\s*min/i)?.[1];
+  const key = text.match(/key\s*\\|\s*([\\d,]+)\s*req\s*\\/\s*min/i)?.[1];
+  const global = text.match(/global\s*\\|\s*([\\d,]+)\s*req\s*\\/\s*min/i)?.[1];
   return { ip: ip ? `${ip}req/min` : null, key: key ? `${key}req/min` : null, global: global ? `${global}req/min` : null };
 }
 
 function extractCache(text) {
-  const match = text.match(/cached for \\*\\*(\\d+)\\s+(hour|hours|minute|minutes|day|days)\\*\\*/i);
+  const match = text.match(/cached for \\*\\*(\\d+)\s+(hour|hours|minute|minutes|day|days)\\*\\*/i);
   return match ? `${match[1]} ${match[2]}` : null;
 }
