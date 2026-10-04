@@ -2533,7 +2533,11 @@ async function renderMaps(signal) {
       if (node) node.hidden = !visible;
     };
     document.querySelectorAll("[data-map-layer]").forEach(input => {
-      input.addEventListener("change", event => setMarkerGroup(event.target.dataset.mapLayer, event.target.checked));
+      input.addEventListener("change", event => {
+        const layer = event.currentTarget.dataset.mapLayer;
+        setMarkerGroup(layer, event.currentTarget.checked);
+      });
+      setMarkerGroup(input.dataset.mapLayer, input.checked);
     });
 
     const selection = $("#map-selection");
