@@ -353,8 +353,8 @@ async function renderHeroDetail(heroId, signal) {
     const summary = [
       ["MATCHES", model.overview.matches == null ? "—" : model.overview.matches.toLocaleString()],
       ["WIN RATE", model.overview.winRate == null ? "—" : model.overview.winRate.toFixed(1) + "%"],
-      ["K / D / A", [model.overview.kills, model.overview.deaths, model.overview.assists].map(Number).every(Number.isFinite) ? [model.overview.kills, model.overview.deaths, model.overview.assists].join(" / ") : "—"],
-      ["PLAYER DAMAGE", Number.isFinite(Number(model.overview.playerDamage)) ? Number(model.overview.playerDamage).toLocaleString() : "—"],
+      ["K / D / A AVG", [model.overview.avgKills, model.overview.avgDeaths, model.overview.avgAssists].map(Number).every(Number.isFinite) ? [model.overview.avgKills, model.overview.avgDeaths, model.overview.avgAssists].map(value => value.toFixed(1)).join(" / ") : "—"],
+      ["PLAYER DAMAGE AVG", Number.isFinite(Number(model.overview.avgPlayerDamage)) ? Number(model.overview.avgPlayerDamage).toLocaleString(undefined, { maximumFractionDigits: 0 }) : "—"],
       ["LAST HITS", Number.isFinite(Number(model.overview.lastHits)) ? Number(model.overview.lastHits).toLocaleString() : "—"],
       ["DENIES", Number.isFinite(Number(model.overview.denies)) ? Number(model.overview.denies).toLocaleString() : "—"],
     ];
