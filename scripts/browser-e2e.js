@@ -79,7 +79,7 @@ if (await page.locator("#build-filters").count()) {
 await open("leaderboard");
 if (await page.locator("#leaderboard-filters").count()) {
   await page.locator("#leaderboard-filters select[name='region']").selectOption("SAmerica");
-  await page.locator("#leaderboard-filters").getByRole("button").click();
+  await page.locator("#leaderboard-filters").getByRole("button", { name: "Load leaderboard" }).click();
   await page.waitForTimeout(300);
   console.log("PASS leaderboard filters");
 } else {
