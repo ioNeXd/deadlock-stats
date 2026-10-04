@@ -36,15 +36,22 @@ export async function probeApiStatus(options = {}) {
     retries: options.retries ?? 0,
   };
 
-  const [healthResult, infoResult] = await Promise.allSettled([
-    getApiHealth(requestOptions),
-    getApiInfo(requestOptions),
-  ]);
+  // Health is the authoritative connectivity signal. Do not make the optional
+  // /v1/info request delay the status transition when it is slow or unavailable.
+  const infoPromise = getApiInfo(requestOptions).catch(error => error);
+  const healthResult = await Promise.allSettled([getApiHealth(requestOptions)]);
+  const health = healthResult[0].status === "fulfilled" ? healthResult[0].value : null;
+  const healthError = healthResult[0].status === "rejected" ? healthResult[0].reason : null;
 
-  const health = healthResult.status === "fulfilled" ? healthResult.value : null;
-  const healthError = healthResult.status === "rejected" ? healthResult.reason : null;
-  const info = infoResult.status === "fulfilled" ? infoResult.value : null;
-  const infoError = infoResult.status === "rejected" ? infoResult.reason : null;
+  // Keep the extra metadata bounded. The status indicator must not wait for a
+  // potentially slow /v1/info response after health has already succeeded.
+  const infoResult = await Promise.race([
+    infoPromise.then(value => ({ value })),
+    new Promise(resolve => setTimeout(() => resolve({ value: null }), 750)),
+  ]);
+  const infoValue = infoResult.value;
+  const info = infoValue instanceof Error ? null : infoValue;
+  const infoError = infoValue instanceof Error ? infoValue : null;
 
   if (healthError && (healthError?.code === "ABORTED" || healthError?.name === "AbortError")) {
     throw healthError;
