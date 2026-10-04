@@ -2594,11 +2594,19 @@ function sanitizePatchHtml(value) {
 async function renderPatches(signal) {
   el.content.innerHTML =
     '<section class="page-head"><span class="eyebrow">HISTORY / PATCH NOTES</span><h2>Patch History</h2><p>Official patch-note feed returned by the Deadlock API. The page preserves the feed content and exposes the source link when provided.</p></section>' +
-    '<section class="panel"><div class="section-head"><div><span class="eyebrow">PATCH FEED</span><h2 id="patch-history-count">Loading…</h2></div><span id="patch-history-status">LIVE API</span></div><div id="patch-history" class="patch-history" aria-live="polite"><p>Loading patch history…</p></div></section>';
+    '<section class="panel"><div class="section-head"><div><span class="eyebrow">PATCH FEED</span><h2 id="patch-history-count">Loading…</h2></div><span id="patch-history-status">LIVE API</span></div><div id="patch-big-days" class="muted">Loading major patch dates…</div><div id="patch-history" class="patch-history" aria-live="polite"><p>Loading patch history…</p></div></section>';
 
   try {
-    const { loadPatchHistory } = await import("./services/patches.js");
-    const result = await loadPatchHistory({ signal });
+    const { loadBigPatchDays, loadPatchHistory } = await import("./services/patches.js");
+    const [historySettlement, bigDaysSettlement] = await Promise.allSettled([
+      loadPatchHistory({ signal }),
+      loadBigPatchDays({ signal }),
+    ]);
+    if (historySettlement.status !== "fulfilled") throw historySettlement.reason;
+    const result = historySettlement.value;
+    const bigDays = bigDaysSettlement.status === "fulfilled" ? bigDaysSettlement.value.data ?? [] : [];
+    const bigDaysElement = $("#patch-big-days");
+    bigDaysElement.textContent = bigDays.length ? "Major patch dates: " + bigDays.slice(0, 6).map(day => new Date(day).toLocaleDateString()).join(" · ") : "Major patch dates unavailable";
     if (signal.aborted) return;
     const container = $("#patch-history");
     const patches = result.patches ?? [];
@@ -2612,7 +2620,7 @@ async function renderPatches(signal) {
 
     container.innerHTML = patches.map((patch, index) => {
       const date = patch.pubDate ? new Date(patch.pubDate).toLocaleDateString() : "Unknown date";
-      const source = patch.author || patch.creator || patch.category || "PATCH FEED";
+      const source = patch.source || patch.author || patch.creator || patch.category || "PATCH FEED";
       const safeLink = safeExternalUrl(patch.link);
       const content = patch.content ? sanitizePatchHtml(String(patch.content)) : "";
       return '<article class="patch-card' + (index === 0 ? ' expanded' : '') + '">' +
