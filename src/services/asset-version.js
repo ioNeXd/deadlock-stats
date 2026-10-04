@@ -85,7 +85,10 @@ export function createAssetVersionContext({ storage = globalThis.localStorage } 
     },
 
     options(extra = {}) {
-      return selectedVersion == null ? { ...extra } : { ...extra, clientVersion: selectedVersion };
+      // Do not send a stale persisted version before the live version catalog has
+      // validated it. Unknown client_version values can legitimately return 404.
+      const versionIsKnown = selectedVersion == null || versions.includes(selectedVersion);
+      return !versionIsKnown || selectedVersion == null ? { ...extra } : { ...extra, clientVersion: selectedVersion };
     },
   };
 }
