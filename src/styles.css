@@ -915,3 +915,44 @@ body{
   .hero-grid{grid-template-columns:1fr}
   .hero-card-editorial{min-height:230px}
 }
+
+
+/* Dashboard mosaic — editorial composition over uniform metric blocks. */
+.dashboard-mosaic{
+  display:grid;
+  grid-template-columns:minmax(0,1.55fr) minmax(220px,.75fr) minmax(220px,.75fr);
+  gap:14px;
+  margin-bottom:22px;
+}
+.dashboard-mosaic .hero-banner{
+  grid-row:span 2;
+  min-height:390px;
+  margin:0;
+  display:flex;
+  align-items:flex-end;
+}
+.dashboard-mosaic .metric-card{
+  min-height:188px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.dashboard-mosaic .metric-card:nth-child(2){background:linear-gradient(145deg,var(--surface-2),color-mix(in srgb,var(--blue) 14%,var(--surface)))}
+.dashboard-mosaic .metric-card:nth-child(3){background:linear-gradient(145deg,var(--surface-2),color-mix(in srgb,var(--purple) 14%,var(--surface)))}
+.dashboard-mosaic .metric-card:nth-child(4){background:linear-gradient(145deg,var(--surface-2),color-mix(in srgb,var(--green) 12%,var(--surface)))}
+.dashboard-mosaic .metric-card:nth-child(5){background:linear-gradient(145deg,var(--surface-2),color-mix(in srgb,var(--red) 12%,var(--surface)))}
+.dashboard-mosaic .metric-card strong{
+  font-size:clamp(2rem,4vw,3.5rem);
+}
+.dashboard-mosaic .metric-card span{color:var(--muted)}
+.dashboard-mosaic .metric-card small{color:rgba(242,240,234,.58)}
+.dashboard-mosaic + .section{margin-top:8px}
+@media(max-width:1000px){
+  .dashboard-mosaic{grid-template-columns:1fr 1fr}
+  .dashboard-mosaic .hero-banner{grid-row:span 2}
+}
+@media(max-width:650px){
+  .dashboard-mosaic{grid-template-columns:1fr}
+  .dashboard-mosaic .hero-banner{grid-row:auto;min-height:320px}
+  .dashboard-mosaic .metric-card{min-height:150px}
+}
