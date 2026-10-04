@@ -1,6 +1,6 @@
 # Architecture
 
-Status: **design complete, implementation not started.** Items marked **[validate]** are assumptions that must be confirmed by a short spike before code depends on them (see [Spikes](#spikes-to-run-first)).
+Status: **design reference + active implementation.** The original design below is preserved for rationale. The current code is a Next.js 16/React 19 static-export implementation. Items marked **[validate]** are assumptions that still require confirmation before new code depends on them.
 
 ## 1. Goals and non-goals
 
@@ -19,23 +19,15 @@ Status: **design complete, implementation not started.** Items marked **[validat
 ## 2. System overview
 
 ```
-            Deadlock API (api.deadlock-api.com)  +  asset CDN
-                  |                                   |
-   +--------------+--------------+                    |
-   |  Build pipeline (Actions)   |                    |
-   |  - fetch assets by patch    |                    |
-   |  - fetch stats snapshots    |                    |
-   |  - validate against spec    |                    |
-   |  - compute tiers, patch idx |                    |
-   |  - sanitize 3rd-party text  |                    |
-   +--------------+--------------+                    |
-                  | static JSON + HTML                 |
-                  v                                    |
-          GitHub Pages (static) <----------------------+  images at runtime
-                  |
-                  v
-   Browser: Astro pages (prerendered) + Preact islands
-            -> service layer -> snapshot | cache | live API
+Deadlock API + asset CDN
+        ↓
+lib/api client + services
+        ↓
+Next.js server components / static data routes
+        ↓
+Next.js static export (`out/`)
+        ↓
+GitHub Pages
 ```
 
 Three layers:
@@ -339,7 +331,7 @@ Short ADR-style records. Move each into `docs/adr/` when the repo exists.
 | # | Decision | Status | Why |
 |---|---|---|---|
 | 1 | TypeScript (strict) | Decided (delegated to maintainer's recommendation) | Spec has hundreds of schemas and changes per patch; generated types catch drift; one language for site and pipeline |
-| 2 | Astro (static) with Preact islands and signals | Decided (same) | Zero JS by default, prerendered pages, tiny islands; Preact has the largest contributor familiarity; Solid's speed edge is not measurable here |
+| 2 | Astro (static) with Preact islands and signals | Historical design decision | The initial design selected Astro/Preact, but the implemented application uses Next.js 16/React 19 static export. New work must follow the current implementation unless a migration is explicitly approved |
 | 3 | `openapi-typescript` + `openapi-fetch`, not the official generated clients | Decided | Generated clients carry runtime weight and classes; we need types only |
 | 4 | Hybrid data: build-time snapshots plus runtime API | Decided | Instant common views, resilience to API outage, respect for rate limits |
 | 5 | Rank bands from `bucket=avg_badge` (heroes) and per-band requests (items) | Decided | `item-stats` has no rank bucket |
