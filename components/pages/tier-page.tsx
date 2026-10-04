@@ -2,9 +2,10 @@ import { fetchTierStats, STATS_FETCH } from '@/lib/api/analytics'
 import { getHeroes, getItems, getRanks } from '@/lib/api/assets'
 import { getPatchWindows } from '@/lib/api/patches'
 import type { RankEntity } from '@/lib/api/types'
-import { DEFAULT_BAND, RANK_BANDS } from '@/lib/config'
+import { DEFAULT_BAND, MIN_MATCHES, RANK_BANDS } from '@/lib/config'
 import type { Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
+import { computeTierRows } from '@/lib/tiers'
 import type { BandOption } from '@/components/tier/filter-bar'
 import { TierListView } from '@/components/tier/tier-list-view'
 import { PageHeader } from './page-header'
@@ -28,6 +29,10 @@ export async function TierPage({ locale, kind }: { locale: Locale; kind: 'heroes
   const initialSnapshot = windows[0]
     ? await fetchTierStats(windows[0], DEFAULT_BAND, STATS_FETCH).catch(() => null)
     : null
+  const entities = kind === 'heroes' ? await getHeroes(locale) : await getItems(locale)
+  const initialRows = initialSnapshot
+    ? computeTierRows(initialSnapshot, kind, new Map(entities.map((entity) => [entity.id, entity])), MIN_MATCHES[kind])
+    : []
   const strings = kind === 'heroes' ? t.heroes : t.items
 
   return (
@@ -36,16 +41,17 @@ export async function TierPage({ locale, kind }: { locale: Locale; kind: 'heroes
       {kind === 'heroes' ? (
         <TierListView
           kind="heroes"
-          entities={await getHeroes(locale)}
+          entities={entities}
           locale={locale}
           windows={windows}
           bands={bands}
           initialSnapshot={initialSnapshot}
+          initialRows={initialRows}
         />
       ) : (
         <TierListView
           kind="items"
-          entities={await getItems(locale)}
+          entities={entities}
           locale={locale}
           windows={windows}
           bands={bands}
