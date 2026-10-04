@@ -3,28 +3,37 @@ import test from "node:test";
 
 import { collectInfernoImageCandidates } from "../src/services/inferno-test.js";
 
-test("collectInfernoImageCandidates includes official hero and ability image URLs and removes duplicates", () => {
+test("collectInfernoImageCandidates includes every image field returned for the hero", () => {
   const result = collectInfernoImageCandidates({
     hero: {
+      hero_id: 1,
+      name: "Infernus",
       images: {
-        card: "https://assets.deadlock-api.com/images/heroes/inferno_card.png",
-        minimap: "https://assets.deadlock-api.com/images/heroes/inferno_mm.png",
-      },
-      abilities: {
-        napalm: {
-          image: "https://assets.deadlock-api.com/images/abilities/napalm.png",
-        },
+        background_image: "https://assets.deadlock-api.com/images/heroes/infernus_background.png",
+        hero_card_gloat_webp: "https://assets.deadlock-api.com/images/heroes/infernus_card_gloat.webp",
+        weapon_image_webp: "https://assets.deadlock-api.com/images/heroes/infernus_gun.webp",
       },
     },
-    imageRegistry: {
-      hero_card: "https://assets.deadlock-api.com/images/heroes/inferno_card.png",
-      unrelated: "https://assets.deadlock-api.com/images/heroes/haze_card.png",
-    },
+    items: [],
   });
 
   assert.deepEqual(result.map(item => item.url), [
-    "https://assets.deadlock-api.com/images/abilities/napalm.png",
-    "https://assets.deadlock-api.com/images/heroes/inferno_card.png",
-    "https://assets.deadlock-api.com/images/heroes/inferno_mm.png",
+    "https://assets.deadlock-api.com/images/heroes/infernus_background.png",
+    "https://assets.deadlock-api.com/images/heroes/infernus_card_gloat.webp",
+    "https://assets.deadlock-api.com/images/heroes/infernus_gun.webp",
+  ]);
+});
+
+test("collectInfernoImageCandidates includes images from hero-scoped items", () => {
+  const result = collectInfernoImageCandidates({
+    hero: { name: "Infernus", images: {} },
+    items: [{
+      name: "Afterburn",
+      images: { icon: "https://assets.deadlock-api.com/images/abilities/infernus_afterburn.png" },
+    }],
+  });
+
+  assert.deepEqual(result.map(item => item.url), [
+    "https://assets.deadlock-api.com/images/abilities/infernus_afterburn.png",
   ]);
 });
