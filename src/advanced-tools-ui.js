@@ -28,6 +28,68 @@ const abortPrevious = () => {
   return controller.signal;
 };
 
+export function renderDemoExplorer() {
+  if (!location.hash.replace(/^#\/?/, "").startsWith("demos")) return;
+  const signal = abortPrevious();
+  root.innerHTML = `
+    <section class="page-head demo-page-head">
+      <span class="eyebrow">ADVANCED / DEMO INTELLIGENCE</span>
+      <h2>THE DEMO ARCHIVE</h2>
+      <p>Inspect a match demo's queryable schema, compose SQL against its entity and event tables, and monitor queued extraction jobs through the official Deadlock API.</p>
+      <div class="pills"><span>SCHEMA</span><span>SQL EXTRACTION</span><span>PARQUET / NDJSON</span><span>JOB STATUS</span></div>
+    </section>
+    <section class="dashboard-grid demo-grid">
+      <article class="panel demo-lab">
+        <div class="section-head"><div><span class="eyebrow">01 / SCHEMA</span><h3>Inspect tables</h3></div><span id="demo-status" class="muted">READY</span></div>
+        <form id="demo-form" class="tool-form">
+          <label>Match ID <input name="match_id" type="number" min="0" placeholder="optional for schema"></label>
+          <label>Output format <select name="format"><option value="">Default</option><option value="parquet">Parquet</option><option value="ndjson">NDJSON</option></select></label>
+          <label>SQL extraction <textarea name="query" rows="9" placeholder="select * from player_stats limit 20"></textarea></label>
+          <div class="panel-actions"><button class="button" type="button" id="demo-schema">Inspect schema</button><button class="button" type="submit">Queue extraction</button></div>
+        </form>
+      </article>
+      <article class="panel demo-output-panel">
+        <div class="section-head"><div><span class="eyebrow">02 / TELEMETRY</span><h3>Extraction result</h3></div><span class="muted">RAW RESPONSE</span></div>
+        <pre id="demo-output" class="tool-output" aria-live="polite">No demo operation yet.</pre>
+      </article>
+    </section>`;
+  bindDemoExplorer(signal);
+}
+function bindDemoExplorer(signal) {
+  const demoForm = document.querySelector("#demo-form");
+  const schemaButton = document.querySelector("#demo-schema");
+  schemaButton.addEventListener("click", async () => {
+    const matchId = demoForm.elements.match_id.value;
+    write("#demo-status", "LOADING");
+    try {
+      const result = await loadDemoSchema(matchId, { signal });
+      const model = normalizeDemoSchema(result);
+      const summary = model.tables.map(table => table.name + " (" + table.columns.length + " columns)\n" + table.columns.map(column => "  " + column.name + ": " + column.arrowType).join("\n")).join("\n\n");
+      write("#demo-output", summary || model.raw);
+      write("#demo-status", "READY · " + model.tables.length + " tables");
+    } catch (error) {
+      if (signal.aborted) return;
+      write("#demo-status", "ERROR");
+      write("#demo-output", error.message);
+    }
+  });
+  demoForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    write("#demo-status", "QUEUING");
+    try {
+      const values = Object.fromEntries(new FormData(demoForm));
+      const result = await submitDemoQueryFromForm(values, { signal });
+      const model = normalizeDemoStatus(result);
+      write("#demo-output", model.raw);
+      write("#demo-status", model.status ?? "QUEUED");
+      if (model.jobId) pollDemo(model.jobId, signal);
+    } catch (error) {
+      if (signal.aborted) return;
+      write("#demo-status", "ERROR");
+      write("#demo-output", error.message);
+    }
+  });
+}
 export function renderAdvancedTools() {
   if (!location.hash.replace(/^#\/?/, "").startsWith("tools")) return;
   const signal = abortPrevious();
