@@ -32,3 +32,13 @@ async function renderHeroDetail", start);
   assert.match(route, /does not describe GraphQL operations/);
   assert.doesNotMatch(route, /graphql-frame/);
 });
+
+
+test("GraphQL capability is explicitly bounded by the published contract", async () => {
+  const source = await (await import("node:fs/promises")).readFile(new URL("../docs/graphql-capability.md", import.meta.url), "utf8");
+  assert.match(source, /GET \\/v1\\/graphql/);
+  assert.match(source, /ADVANCED/);
+  assert.match(source, /does not publish a GraphQL query\\/mutation\\/subscription schema/);
+  assert.match(source, /does not invent a local GraphQL schema/);
+  assert.match(source, /official GraphiQL/);
+});
