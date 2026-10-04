@@ -1254,22 +1254,30 @@ async function renderBuilds(signal) {
       const result = await buildsRuntime.listBuilds({ ...assetVersion.options(), ...filters, signal });
       if (signal.aborted) return;
       const builds = result.data ?? [];
+      const heroesResult = await (async () => {
+        try { return await (await loadAssetsRuntime()).listHeroes({ ...assetVersion.options(), signal }); } catch { return { data: [] }; }
+      })();
+      if (signal.aborted) return;
+      const heroMap = new Map((heroesResult.data ?? []).map(hero => [Number(hero?.id), hero]));
       $("#build-status").textContent = builds.length + " FOUND";
-      list.innerHTML = builds.map(build => {
+      list.innerHTML = builds.map((build, index) => {
         const hero = build.hero_build ?? {};
         const details = hero.details ?? {};
         const categories = Array.isArray(details.mod_categories) ? details.mod_categories.length : 0;
         const tags = Array.isArray(hero.tags) ? hero.tags.length : 0;
         const heroId = hero.hero_id;
         const buildId = hero.hero_build_id ?? build.build_id;
+        const heroAsset = heroMap.get(Number(heroId));
+        const heroImage = resolveAssetImage(heroAsset, ["background_image_webp", "hero_card_critical_webp", "background_image"]);
+        const heroColor = colorToCss(heroAsset?.colors?.ui);
         const href = Number.isInteger(Number(heroId)) && Number.isInteger(Number(buildId))
           ? '#/builds/' + encodeURIComponent(heroId) + '/' + encodeURIComponent(buildId)
           : null;
-        return '<article class="analytics-table-row">' +
-          '<span>' + (href ? '<a href="' + href + '"><strong>' : '<strong>') + esc(hero.name ?? "Unnamed build") + (href ? '</strong></a>' : '</strong>') +
-          '<small>Build #' + esc(buildId ?? "—") + ' · Hero ' + esc(heroId ?? "—") + '</small></span>' +
-          '<span><strong>v' + esc(hero.version ?? "—") + '</strong><small>Author ' + esc(hero.author_account_id ?? "—") + ' · ' + esc(categories) + ' categories · ' + esc(tags) + ' tags</small></span>' +
-          '<span><small>Favorites ' + esc(build.num_favorites ?? 0) + '</small><small>Weekly ' + esc(build.num_weekly_favorites ?? 0) + '</small></span>' +
+        return '<article class="build-card" style="' + (heroColor ? "--build-accent:" + esc(heroColor) : "") + '">' +
+          '<div class="build-art">' + (heroImage ? '<img src="' + esc(heroImage) + '" alt="' + esc(hero.name ?? heroAsset?.name ?? "Hero") + '" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') + '<div class="build-art-shade"></div><b class="build-index">' + String(index + 1).padStart(2, "0") + '</b></div>' +
+          '<div class="build-copy"><small>BUILD / HERO ' + esc(heroId ?? "—") + '</small>' +
+          (href ? '<a href="' + href + '"><h3>' + esc(hero.name ?? heroAsset?.name ?? "Unnamed build") + '</h3></a>' : '<h3>' + esc(hero.name ?? heroAsset?.name ?? "Unnamed build") + '</h3>') +
+          '<p>Version ' + esc(hero.version ?? "—") + ' · Author ' + esc(hero.author_account_id ?? "—") + '</p><div class="build-stats"><span>' + esc(categories) + ' categories</span><span>' + esc(tags) + ' tags</span><strong>★ ' + esc(build.num_favorites ?? 0) + '</strong><em>Weekly ' + esc(build.num_weekly_favorites ?? 0) + '</em></div></div>' +
           '</article>';
       }).join("") || '<p class="muted">No builds matched the current filters.</p>';
     } catch (error) {
