@@ -8,6 +8,7 @@ import {
   loadDemoSchema,
   loadLiveUrls,
   normalizeDemoStatus,
+  normalizeDemoSchema,
   normalizeLiveUrls,
   runLiveQuery,
   submitDemoQueryFromForm,
@@ -93,7 +94,10 @@ function bind(signal) {
     write("#demo-status", "LOADING");
     try {
       const result = await loadDemoSchema(matchId, { signal });
-      write("#demo-output", result.data);
+      const model = normalizeDemoSchema(result);
+      const summary = model.tables.map(table => table.name + " (" + table.columns.length + " columns)\n" + table.columns.map(column => "  " + column.name + ": " + column.arrowType).join("\n")).join("\n\n");
+      write("#demo-output", summary || model.raw);
+      write("#demo-status", "READY · " + model.tables.length + " tables");
       write("#demo-status", "READY");
     } catch (error) {
       if (signal.aborted) return;
