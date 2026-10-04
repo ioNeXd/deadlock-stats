@@ -1,3 +1,6 @@
 # ZAP Baseline rule configuration
 # 10049 is an informational beta cacheability rule. The dedicated security server intentionally uses no-store, so this rule reports expected behavior rather than a vulnerability.
 10049	IGNORE	(Non-Storable Content / Storable and Cacheable Content)
+
+# 10109 is an informational modern-web-app fingerprint; this native ES-module SPA intentionally triggers it and it is not a vulnerability.
+10109\tIGNORE\t(Modern Web Application)
