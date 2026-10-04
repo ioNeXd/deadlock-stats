@@ -58,5 +58,5 @@ test("leaderboard UI exposes raw download action", async () => {
   assert.match(route, /Download raw/);
   assert.match(route, /downloadHeroLeaderboardRaw/);
   assert.match(route, /downloadLeaderboardRaw/);
-  assert.match(route, /application\\/octet-stream/);
+  assert.match(route, /application\/octet-stream/);
 });
