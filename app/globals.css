@@ -18,12 +18,8 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
   --color-background: var(--background);
   --color-tier-s: var(--tier-s);
   --color-tier-a: var(--tier-a);
@@ -37,7 +33,6 @@
   --radius-xl: calc(var(--radius) * 1.4);
 }
 
-/* One theme file: a fork re-themes from here. Ledger dark with brass ink. */
 :root {
   color-scheme: dark;
   --background: oklch(0.165 0.008 60);
@@ -46,8 +41,6 @@
   --card-foreground: oklch(0.92 0.022 85);
   --popover: oklch(0.21 0.01 60);
   --popover-foreground: oklch(0.92 0.022 85);
-  --primary: oklch(0.8 0.125 78);
-  --primary-foreground: oklch(0.18 0.012 60);
   --secondary: oklch(0.245 0.012 60);
   --secondary-foreground: oklch(0.92 0.022 85);
   --muted: oklch(0.235 0.01 60);
@@ -73,7 +66,7 @@
 }
 
 @utility chamfer-sm {
-  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 5px);
 }
 
 @layer base {
@@ -96,6 +89,42 @@
       transition-duration: 0.01ms !important;
     }
   }
+}
+
+.rank-band-theme {
+  --rank-start: transparent;
+  --rank-end: transparent;
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--radius);
+  transition: background-color 180ms ease;
+}
+
+.rank-band-theme::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--rank-start), var(--rank-end));
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.rank-band-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.rank-band-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, var(--rank-start), var(--rank-end));
+  opacity: 0.18;
+  pointer-events: none;
 }
 
 .tier-row {
