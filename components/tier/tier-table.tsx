@@ -1,6 +1,5 @@
 'use client'
 
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import type { HeroEntity, ItemEntity } from '@/lib/api/types'
 import { formatCompact, formatInteger, formatPercent } from '@/lib/format'
@@ -52,7 +51,7 @@ function SortHeader({
   sortLabel: string
 }) {
   const active = sort === column
-  const Icon = !active ? ArrowUpDown : dir === 'asc' ? ArrowUp : ArrowDown
+  const icon = !active ? '↕' : dir === 'asc' ? '↑' : '↓'
   return (
     <th
       scope="col"
@@ -70,7 +69,7 @@ function SortHeader({
         )}
       >
         {label}
-        <Icon aria-hidden className="size-3.5" />
+        <span aria-hidden className="text-[0.8rem] leading-none">{icon}</span>
       </button>
     </th>
   )
