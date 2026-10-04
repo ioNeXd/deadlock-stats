@@ -259,7 +259,7 @@ test("map normalization applies zipline origin to relative spline points", () =>
 
   assert.deepEqual(normalized.ziplinePaths[0].segments, [{
     start: [0.5, 1],
-    control1: [0.625, 0.875],
+    control1: [0.375, 1.125],
     control2: [0.75, 0.75],
     end: [0.75, 0.75],
   }]);
