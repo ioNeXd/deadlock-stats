@@ -1183,12 +1183,27 @@ async function renderLeaderboard(signal) {
         : await leaderboard.loadLeaderboard(values.region, { ...options, signal });
       if (signal.aborted) return;
       const entries = result.data ?? [];
+      const assetsRuntime = await loadAssetsRuntime();
+      const rankResult = await assetsRuntime.listRanks(options);
+      if (signal.aborted) return;
+      const rankMap = new Map((rankResult.data ?? []).map(rank => [Number(rank?.tier), rank]));
       $("#leaderboard-status").textContent = entries.length + " PLAYERS";
       list.innerHTML = entries.map((entry, index) => {
+        const badge = Number(entry?.rank);
+        const tier = Number.isFinite(badge) && badge > 0 ? Math.floor(badge / 10) : 0;
+        const subrank = Number.isFinite(badge) && badge > 0 ? badge % 10 : 0;
+        const rank = rankMap.get(tier);
+        const rankName = rank?.name ? rank.name + (subrank ? " " + subrank : "") : (badge ? "Rank " + badge : "Unranked");
+        const rankColor = rank?.color ? colorToCss(rank.color) : "";
+        const images = rank?.images ?? rank?.raw?.images ?? {};
+        const rankImage = subrank >= 1 && subrank <= 6
+          ? safeExternalUrl(images["subrank" + subrank + "_webp"] ?? images["subrank" + subrank])
+          : null;
         const heroes = Array.isArray(entry.top_hero_ids) ? entry.top_hero_ids.join(", ") : "—";
-        return '<article class="analytics-table-row">' +
-          '<span><strong>#' + esc(index + 1) + ' · ' + esc(entry.account_name ?? "Unknown account") + '</strong><small>Account IDs: ' + esc((entry.possible_account_ids ?? []).join(", ") || "—") + '</small></span>' +
-          '<span><strong>Rank ' + esc(entry.rank ?? "—") + '</strong><small>Top hero IDs: ' + esc(heroes) + '</small></span>' +
+        return '<article class="analytics-table-row leaderboard-row" style="' + (rankColor ? "--rank-accent:" + esc(rankColor) : "") + '">' +
+          '<span class="leaderboard-player"><b class="leaderboard-position">#' + esc(index + 1) + '</b><strong>' + esc(entry.account_name ?? "Unknown account") + '</strong><small>Account IDs: ' + esc((entry.possible_account_ids ?? []).join(", ") || "—") + '</small></span>' +
+          '<span class="leaderboard-rank">' + (rankImage ? '<img src="' + esc(rankImage) + '" alt="' + esc(rankName) + '" loading="lazy" decoding="async">' : '<span class="leaderboard-rank-fallback">' + esc(tier ? tier : "—") + '</span>') +
+          '<strong>' + esc(rankName) + '</strong><small>Badge ' + esc(badge || "—") + ' · Top heroes: ' + esc(heroes) + '</small></span>' +
           '</article>';
       }).join("") || '<p class="muted">No leaderboard entries returned.</p>';
     } catch (error) {
