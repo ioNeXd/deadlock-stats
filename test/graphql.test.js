@@ -36,6 +36,6 @@ test("GraphQL capability is explicitly bounded by the published contract", async
   assert.match(source, /GET \/v1\/graphql/);
   assert.match(source, /ADVANCED/);
   assert.match(source, /does\s+not\s+publish a GraphQL query[\\/]mutation[\\/]subscription schema/);
-  assert.match(source, /does\s+not\s+invent a local GraphQL schema/);
+  assert.match(source, /does\s+\*\*not\*\*\s+invent a local GraphQL schema/);
   assert.match(source, /official GraphiQL/);
 });
