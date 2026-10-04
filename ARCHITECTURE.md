@@ -30,11 +30,31 @@ Next.js static export (`out/`)
 GitHub Pages
 ```
 
-Three layers:
+Three layers in the current implementation:
 
-1. **Build pipeline** (scheduled GitHub Actions): produces snapshots and prerendered pages.
-2. **Static site** (Astro): HTML first, JavaScript only for interactive islands.
-3. **Runtime** (browser): one service layer that resolves data from memory, snapshot, IndexedDB or the live API, in that order.
+1. **Build**: Next.js static export calls the existing services and produces HTML/JSON in `out/`.
+2. **Application**: Next.js server components and route handlers compose pages and static data.
+3. **API layer**: `lib/api` centralizes HTTP, query serialization, in-flight de-duplication and transient retries.
+
+The original Astro/Preact and scheduled-pipeline design remains documented below as future architecture, not as a description of code that already exists.
+
+### 2.1 Current implementation boundary
+
+Implemented:
+- Next.js 16 + React 19 static export.
+- Hero and item tier-list pages.
+- EN/PT-BR i18n structure.
+- API services for assets, analytics and patch windows.
+- Static `/data/stats/...` JSON routes generated during production build.
+- Generated OpenAPI types and API inventory.
+
+Not yet implemented:
+- GitHub Actions CI/deploy pipeline beyond build validation.
+- Automated snapshot/patch workflows.
+- Unit/contract/E2E test suite.
+- Broader M2+ modules.
+
+`out/` is a build artifact only and must never be committed to `main`.
 
 ## 3. Data strategy
 
