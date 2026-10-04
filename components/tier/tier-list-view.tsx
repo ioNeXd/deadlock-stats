@@ -8,11 +8,9 @@ import type { TierTableRow } from './tier-table'
 import { TierListInteractive } from './tier-list-interactive-loader'
 import { TierTableStatic } from './tier-table-static'
 
-type Props =
-  | { kind: 'heroes'; entities: HeroEntity[] } & Shared
-  | { kind: 'items'; entities: ItemEntity[] } & Shared
-
-interface Shared {
+interface Props {
+  kind: 'heroes' | 'items'
+  entities: HeroEntity[] | ItemEntity[]
   locale: Locale
   windows: PatchWindow[]
   bands: BandOption[]
