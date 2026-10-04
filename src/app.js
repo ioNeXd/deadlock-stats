@@ -1863,7 +1863,7 @@ async function renderPlayerDetail(accountId, signal) {
 }
 
 async function renderDataExplorer(signal) {
-  el.content.innerHTML = '<section class="page-head"><span class="eyebrow">TOOLS / DATA</span><h2>Data Explorer</h2><p>Inspect and execute documented API operations from the live OpenAPI contract.</p></section>' +
+  el.content.innerHTML = '<section class="page-head explorer-page-head"><span class="eyebrow">ARCHIVES / API INTELLIGENCE</span><h2>THE ARCHIVE TERMINAL</h2><p>Inspect and execute the current Deadlock API contract. Every operation, parameter, schema, response and request is derived from the live OpenAPI document.</p><div class="explorer-page-kicker"><span>LIVE CONTRACT</span><span>REQUEST LAB</span><span>SCHEMA INDEX</span><span>RAW TELEMETRY</span></div></section>' +
     '<section class="explorer"><aside class="explorer-list"><input id="operation-filter" class="explorer-search" type="search" aria-label="Filter API operations" placeholder="Filter operations…"><div id="operation-list"></div></aside><article class="panel explorer-main"><div id="explorer-empty"><span class="eyebrow">CONTRACT</span><h3>Select an operation</h3><p>The explorer is populated from the live OpenAPI contract.</p></div><div id="operation-detail" hidden></div></article></section>';
   loadExplorer(signal);
 }
