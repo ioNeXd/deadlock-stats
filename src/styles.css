@@ -1780,3 +1780,61 @@ body{
   .item-art-frame,.item-art-frame img{min-height:132px}
   .item-copy{padding:13px}
 }
+
+
+/* Match Wire — sports bulletin / noir city desk. */
+.matches-page-head{
+  position:relative;overflow:hidden;padding:clamp(24px,4vw,44px);
+  border:1px solid color-mix(in srgb,var(--red) 22%,var(--line));
+  background:radial-gradient(circle at 88% 16%,color-mix(in srgb,var(--yellow) 12%,transparent),transparent 17rem),radial-gradient(circle at 15% 95%,color-mix(in srgb,var(--blue) 12%,transparent),transparent 21rem),linear-gradient(135deg,#151214,#101315);
+}
+.matches-page-head:after{
+  content:"MATCH";position:absolute;right:-12px;bottom:-34px;
+  color:rgba(255,255,255,.025);font:900 clamp(90px,18vw,220px)/.8 "DM Mono";letter-spacing:-.12em;transform:rotate(-7deg);
+}
+.matches-page-head h2{position:relative;z-index:1;font-size:clamp(44px,7vw,84px);letter-spacing:-.075em;text-transform:uppercase}
+.matches-page-head p{position:relative;z-index:1;max-width:680px}
+.matches-page-kicker{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+.matches-page-kicker span{padding:6px 9px;border:1px solid var(--line);font:8px "DM Mono";letter-spacing:.1em;color:var(--muted)}
+.matches-page-head + .dashboard-grid{margin-top:14px}
+.matches-page-head + .dashboard-grid>.panel:first-child{border-color:color-mix(in srgb,var(--red) 24%,var(--line));background:linear-gradient(90deg,rgba(185,74,82,.045),transparent 50%),var(--panel)}
+.matches-page-head + .dashboard-grid>.panel:first-child .section-head b{color:#ef8d93}
+.matches-page-head + .dashboard-grid>.panel:nth-child(2){border-color:color-mix(in srgb,var(--blue) 22%,var(--line));background:linear-gradient(90deg,rgba(93,169,233,.04),transparent 50%),var(--panel)}
+.match-row{
+  position:relative;min-height:62px!important;padding:11px 14px!important;
+  border-bottom:1px solid var(--line)!important;
+  transition:background .16s ease,padding .16s ease;
+}
+.match-row:before{content:"";width:3px;align-self:stretch;background:var(--blue);opacity:.5}
+.match-row:hover{padding-left:18px!important;background:rgba(93,169,233,.055)}
+#active-match-list .match-row:before{background:var(--red)}
+.matchup-meta{color:var(--muted)!important}
+.matches-page-head ~ .panel:last-child{
+  border-color:color-mix(in srgb,var(--purple) 18%,var(--line));
+  background:radial-gradient(circle at 100% 0,rgba(157,131,230,.055),transparent 18rem),var(--panel);
+}
+.match-detail-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:7px}
+.match-detail-summary .metric{
+  border:1px solid var(--line);background:rgba(255,255,255,.018);padding:11px;
+}
+.match-detail-summary .metric span{color:var(--blue-bright)}
+.match-player-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:9px;margin-top:14px}
+.match-player-card{
+  position:relative;overflow:hidden;min-height:170px;padding:13px;
+  border:1px solid var(--line);background:#101314;
+}
+.match-player-card:before{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,var(--blue),var(--purple),var(--orange))}
+.match-player-hero{
+  float:right;width:58px;height:58px;object-fit:cover;margin:-3px -3px 8px 8px;
+  border:1px solid rgba(255,255,255,.12);
+}
+.match-player-card strong{display:block;margin:6px 0 4px;font-size:13px}
+.match-player-card small{display:block;color:var(--muted);font:8px/1.65 "DM Mono"}
+.match-raw{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.match-raw summary{cursor:pointer;color:var(--yellow);font:9px "DM Mono";letter-spacing:.08em}
+.match-raw pre{max-height:360px;overflow:auto;margin-top:9px;padding:12px;background:#090b0c;border:1px solid var(--line);font:8px/1.6 "DM Mono";white-space:pre-wrap;word-break:break-word}
+@media(max-width:720px){
+  .matches-page-head h2{font-size:clamp(42px,13vw,64px)}
+  .matches-page-head:after{font-size:100px}
+  .match-player-grid{grid-template-columns:1fr}
+}
