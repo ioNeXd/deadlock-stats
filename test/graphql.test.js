@@ -20,3 +20,15 @@ test("GraphQL playground targets the official API endpoint", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("GraphQL explorer does not invent an undocumented local query schema", async () => {
+  const source = await (await import("node:fs/promises")).readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  const start = source.indexOf("function renderGraphql(signal)");
+  const end = source.indexOf("\
+async function renderHeroDetail", start);
+  const route = source.slice(start, end);
+  assert.match(route, /Official API-hosted GraphiQL/);
+  assert.match(route, /does not describe GraphQL operations/);
+  assert.doesNotMatch(route, /graphql-frame/);
+});
