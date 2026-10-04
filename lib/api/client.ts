@@ -75,6 +75,3 @@ async function fetchWithTransientRetry(url: string, init?: RequestInit): Promise
   }
 }
 
-  inFlight.set(url, request)
-  return request
-}
