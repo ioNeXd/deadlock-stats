@@ -956,3 +956,54 @@ body{
   .dashboard-mosaic .hero-banner{grid-row:auto;min-height:320px}
   .dashboard-mosaic .metric-card{min-height:150px}
 }
+
+
+/* Map palette — let each gameplay layer carry its own visual language. */
+.map-panel{
+  background:
+    radial-gradient(circle at 18% 22%,color-mix(in srgb,var(--green) 7%,transparent),transparent 28%),
+    radial-gradient(circle at 82% 70%,color-mix(in srgb,var(--purple) 8%,transparent),transparent 30%),
+    var(--surface);
+}
+.map-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:10px;
+}
+.map-toolbar strong{display:block;margin-top:5px;font:12px var(--font-mono,ui-monospace);color:var(--text)}
+.map-toggles{display:flex;flex-wrap:wrap;gap:7px}
+.map-toggles label{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:rgba(18,22,27,.72);
+  color:var(--muted);
+  font:9px var(--font-mono,ui-monospace);
+  cursor:pointer;
+}
+.map-toggles label:has(input:checked){
+  color:var(--text);
+  border-color:color-mix(in srgb,var(--blue) 36%,var(--line));
+  background:color-mix(in srgb,var(--blue) 9%,var(--surface));
+}
+.map-toggles input{accent-color:var(--blue)}
+.map-marker{
+  border-color:color-mix(in srgb,var(--blue) 62%,var(--line));
+  background:rgba(8,11,15,.88);
+  box-shadow:0 4px 18px rgba(0,0,0,.5),0 0 14px color-mix(in srgb,var(--blue) 15%,transparent);
+}
+.objective-marker{border-color:var(--amber);background:color-mix(in srgb,var(--amber) 16%,rgba(8,11,15,.9))}
+.objective-core{border-color:var(--red);background:color-mix(in srgb,var(--red) 20%,rgba(8,11,15,.9))}
+.camp-marker{border-color:var(--green);box-shadow:0 4px 18px rgba(0,0,0,.5),0 0 14px color-mix(in srgb,var(--green) 16%,transparent)}
+.camp-medium{border-color:var(--amber)}
+.camp-strong{border-color:var(--red)}
+.camp-vault{border-color:var(--purple)}
+.map-zipline-path{filter:drop-shadow(0 0 4px color-mix(in srgb,var(--zipline-color,var(--cyan)) 40%,transparent))}
+.map-selection{
+  border-color:color-mix(in srgb,var(--cyan) 20%,var(--line));
+}
