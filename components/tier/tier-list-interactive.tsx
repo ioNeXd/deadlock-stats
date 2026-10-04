@@ -17,11 +17,9 @@ import { ContextStrip } from './context-strip'
 import { type BandOption, FilterBar } from './filter-bar'
 import { type SortDir, type SortKey, TierTable, type TierTableRow } from './tier-table'
 
-type Props =
-  | { kind: 'heroes'; entities: HeroEntity[] } & Shared
-  | { kind: 'items'; entities: ItemEntity[] } & Shared
-
-interface Shared {
+interface Props {
+  kind: 'heroes' | 'items'
+  entities: HeroEntity[] | ItemEntity[]
   locale: Locale
   windows: PatchWindow[]
   bands: BandOption[]
