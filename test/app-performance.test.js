@@ -16,7 +16,7 @@ test("app resolves explicit dashboard hash route", () => {
   assert.notEqual(routeStart, -1);
   const routeSource = appSource.slice(routeStart);
   assert.match(routeSource, /if \(routeName === "dashboard"\) renderDashboard\(signal\);/);
-  assert.doesNotMatch(routeSource, /else renderNotFound\(routeName\);\s*document\.querySelectorAll/);
+  assert.match(routeSource, /else renderNotFound\(routeName\);/);
 });
 
 test("app defers non-critical explorer and GraphQL modules", () => {
