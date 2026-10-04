@@ -613,7 +613,7 @@ async function renderAssetCatalog(kind, signal) {
   const { listHeroes, listRanks, listItems, listItemsByHeroId, listItemsBySlotType, listItemsByType } = assetsRuntime;
   if (kind === "items") {
     el.content.innerHTML =
-      '<section class="page-head"><span class="eyebrow">GAME / ITEMS</span><h2>Items</h2><p>Item, ability, weapon and upgrade definitions from the current Deadlock API.</p></section>' +
+      '<section class="page-head item-page-head"><span class="eyebrow">ARSENAL / FIELD ARCHIVE</span><h2>THE ARMORY</h2><p>Browse official item definitions, equipment classes and upgrade data from the current Deadlock API contract.</p><div class="item-page-kicker"><span>WEAPON</span><span>VITALITY</span><span>SPIRIT</span><span>LIVE ASSETS</span></div></section>' +
       '<section class="panel analytics-filter-panel"><form id="item-catalog-filters" class="analytics-filters">' +
       '<label class="field"><span>Search</span><input name="search" type="search" placeholder="Item name or class"></label>' +
       '<label class="field"><span>Source</span><select name="scope"><option value="all">All items</option><option value="hero">By hero</option><option value="slot">By slot type</option><option value="type">By type</option></select></label>' +
