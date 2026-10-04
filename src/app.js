@@ -326,7 +326,9 @@ async function renderHeroDetail(heroId, signal) {
     if (hero) {
       $("#hero-detail-name").textContent = nameOf(hero);
       const showcase = $("#hero-detail-showcase");
-      const background = resolveAssetImage(hero, ["background_image_webp", "background_image", "hero_card_gloat_webp", "hero_card_gloat", "hero_card_critical_webp", "hero_card_critical", "top_bar_vertical_image_webp", "top_bar_vertical_image"]);
+      const heroArt = resolveHeroArtImages(hero);
+      const background = heroArt.background;
+      const card = heroArt.card;
       const icon = resolveAssetImage(hero, ["icon_hero_card_webp", "icon_hero_card", "icon_image_small_webp", "icon_image_small"]);
       const accent = colorToCss(hero?.colors?.ui) || "var(--blue)";
       const role = hero?.role ?? hero?.playstyle ?? "HERO";
@@ -340,7 +342,7 @@ async function renderHeroDetail(heroId, signal) {
             '<h3>' + esc(nameOf(hero)) + '</h3>' +
             '<p>' + esc(hero?.description ?? hero?.lore ?? "Live hero intelligence from the Deadlock API.") + '</p>' +
           '</div>' +
-          (icon ? '<img class="hero-detail-icon" src="' + esc(icon) + '" alt="' + esc(nameOf(hero)) + ' icon">' : '') +
+          (card ? '<img class="hero-detail-card" src="' + esc(card) + '" alt="" aria-hidden="true">' : (icon ? '<img class="hero-detail-icon" src="' + esc(icon) + '" alt="' + esc(nameOf(hero)) + ' icon">' : '')) +
           '<div class="hero-detail-stamp">HERO<br><strong>#' + esc(numericHeroId) + '</strong></div>' +
         '</div>';
     }
