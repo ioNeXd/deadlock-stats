@@ -4,6 +4,36 @@ Audited: 2026-10-03
 Branch: `new-site`
 PR: #1
 
+## Final API/OpenAPI audit — CLOSED
+
+The current public contract was rechecked against the repository inventory using the official API contract and its published OpenAPI mirror.
+
+- Live contract: `https://api.deadlock-api.com/openapi.json`
+- Published mirror: `https://github.com/deadlock-api/openapi-clients/blob/master/openapi.json`
+- OpenAPI version: `3.1.0`
+- API version: `0.1.0`
+- Server: `https://api.deadlock-api.com`
+- Paths: **126 / 126**
+- Operations: **129 / 129**
+- Parameters: **704 / 704**
+- Schemas: **232 / 232**
+- Security schemes: **2 / 2**
+- Deprecated operations: **14**
+- Documented content types: **7**
+- Operation drift: **0 added / 0 removed / 0 changed**
+- Schema drift: **0 added / 0 removed**
+- Unclassified current operations: **0**
+- Unclassified current parameters: **0**
+
+Parameter classification reconciliation is complete: **626 `SUPPORTED_UI`**, **25 `SUPPORTED_API_ONLY`**, **50 `DEPRECATED`**, **3 `INTERNAL`**.
+
+Operation classification reconciliation is complete: **85 `UI`**, **18 `API-ONLY`**, **5 `ADVANCED`**, **14 `DEPRECATED`**, **7 `INTERNAL`**.
+
+The current contract also confirms the seven response content types tracked by the inventory:
+`application/json`, `application/octet-stream`, `image/png`, `image/webp`, `text/event-stream`, `text/html`, and `text/plain`. Current request bodies are documented as JSON.
+
+No API contract changes were required by this final audit. The repository inventory and capability matrix already match the current published contract exactly.
+
 ## Evidence
 
 - Current public OpenAPI was consulted at `https://api.deadlock-api.com/openapi.json`.
@@ -16,6 +46,7 @@ PR: #1
 
 | Area | Status | Evidence |
 | --- | --- | --- |
+| Final API/OpenAPI audit | CLOSED | Current public contract reconciled with repository inventory: 126 paths, 129 operations, 704 parameters, 232 schemas, zero drift |
 | API client | CLOSED | cache/dedupe, retries, Retry-After, timeout, abort, auth headers, content-type parsing and binary/SSE handling covered by tests |
 | API Status | CLOSED | health/info composition, latency/status/error/rate-limit extraction and UI covered; live `/v1/info/health` and `/v1/info` probes pass in CI |
 | Data Explorer | CLOSED | OpenAPI operation discovery, refs, schemas, request bodies, response headers/links, auth inputs, request copy and error display covered |
