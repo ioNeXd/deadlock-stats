@@ -1731,10 +1731,20 @@ async function renderPlayerDetail(accountId, signal) {
     }, 0);
 
     const renderHeroRows = () => {
-      const heroRows = model.heroStats.slice(0, 20).map(row => '<tr><td><a href="#/heroes/' + esc(row.hero_id ?? "") + '">' + esc(heroName(row.hero_id ?? "—")) + '</a></td><td>' + esc(row.matches_played ?? "—") + '</td><td>' + esc(row.wins ?? "—") + '</td><td>' + esc(row.kills ?? "—") + '</td><td>' + esc(row.deaths ?? "—") + '</td><td>' + esc(row.assists ?? "—") + '</td></tr>').join("");
-      $("#player-detail-heroes").innerHTML = heroRows
-        ? '<div class="data-table-wrap"><table><thead><tr><th>Hero</th><th>Matches</th><th>Wins</th><th>Kills</th><th>Deaths</th><th>Assists</th></tr></thead><tbody>' + heroRows + '</tbody></table></div>'
-        : '<p class="muted">No hero stats returned.</p>';
+      const heroRows = model.heroStats.slice(0, 20).map((row, index) => {
+        const hero = heroMap.get(String(row.hero_id));
+        const image = hero ? resolveAssetImage(hero, ["icon_image_small_webp", "icon_image_small", "hero_card_critical_webp", "hero_card_critical"]) : "";
+        const matches = Number(row.matches_played);
+        const wins = Number(row.wins);
+        const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? Math.round((wins / matches) * 100) : null;
+        const accent = colorToCss(hero?.colors?.ui) || ["#5da9e9","#9d83e6","#68c38a","#d86b6b"][index % 4];
+        return '<article class="player-hero-stat" style="--player-hero-accent:' + esc(accent) + '">' +
+          '<div class="player-hero-art">' + (image ? '<img src="' + esc(image) + '" alt="' + esc(heroName(row.hero_id ?? "—")) + '" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') + '</div>' +
+          '<div class="player-hero-copy"><small>HERO / ' + esc(row.hero_id ?? "—") + '</small><a href="#/heroes/' + esc(row.hero_id ?? "") + '"><h3>' + esc(heroName(row.hero_id ?? "—")) + '</h3></a>' +
+          '<div class="player-hero-metrics"><span>' + esc(row.matches_played ?? "—") + ' matches</span><span>' + esc(row.wins ?? "—") + ' wins</span>' + (winRate == null ? '' : '<strong>' + esc(winRate) + '% WR</strong>') + '</div>' +
+          '<p>K/D/A ' + esc(row.kills ?? "—") + ' / ' + esc(row.deaths ?? "—") + ' / ' + esc(row.assists ?? "—") + '</p></div></article>';
+      }).join("");
+      $("#player-detail-heroes").innerHTML = heroRows || '<p class="muted">No hero stats returned.</p>';
     };
     renderHeroRows();
     $("#player-detail-heroes").innerHTML = '<p class="muted">Loading hero stats…</p>';
