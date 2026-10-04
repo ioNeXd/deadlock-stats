@@ -1,9 +1,6 @@
 import { API_BASE_URL } from "./api/client.js";
-import { createAssetVersionContext } from "./services/asset-version.js";
-
 const content = document.querySelector("#page-content");
 const navItems = [...document.querySelectorAll(".nav-item")];
-const assetVersion = createAssetVersionContext();
 let routeController = null;
 let runtimePromise = null;
 let dashboardPromise = null;
@@ -44,7 +41,7 @@ async function renderRuntime(signal) {
   if (!runtimePromise) runtimePromise = import("./app-runtime.js");
   const runtime = await runtimePromise;
   if (signal.aborted) return;
-  runtime.route();
+  runtime.route(signal);
 }
 
 function route() {
