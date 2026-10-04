@@ -178,14 +178,6 @@ async function renderDashboard(signal) {
 async function loadDashboard(signal) {
   const dashboardRuntime = await loadDashboardRuntime();
   const options = { ...assetVersion.options(), signal };
-  let snapshot = null;
-  try {
-    snapshot = await dashboardRuntime.getDashboardCoreSnapshot(options);
-  } catch (error) {
-    if (isAborted(error)) return;
-    console.error("Deadlock API dashboard core request failed", error);
-  }
-  if (signal.aborted) return;
 
   const loadHeroes = async () => {
     try {
@@ -194,6 +186,11 @@ async function loadDashboard(signal) {
       if (signal.aborted) return;
       $("#api-latency").textContent = result.latencyMs + " ms";
       renderHeroGrid(result.data);
+      if ($("#api-badge").textContent === "CHECKING") {
+        setConnection(true, "API connected");
+        $("#api-badge").textContent = "ONLINE";
+        $("#api-badge").classList.add("online");
+      }
     } catch (error) {
       if (isAborted(error)) return;
       $("#api-latency").textContent = "—";
@@ -202,18 +199,32 @@ async function loadDashboard(signal) {
     }
   };
 
-  if (snapshot) {
-    const info = snapshot.info?.data ?? {};
-    $("#matches-per-day").textContent = Number.isFinite(Number(info.fetched_matches_per_day))
-      ? Number(info.fetched_matches_per_day).toLocaleString()
-      : "—";
-    $("#latest-patch").textContent = "Loading…";
+  const loadCore = async () => {
+    try {
+      const snapshot = await dashboardRuntime.getDashboardCoreSnapshot(options);
+      if (signal.aborted) return;
+      const info = snapshot?.info?.data ?? {};
+      $("#matches-per-day").textContent = Number.isFinite(Number(info.fetched_matches_per_day))
+        ? Number(info.fetched_matches_per_day).toLocaleString()
+        : "—";
+      $("#latest-patch").textContent = "Loading…";
+      setConnection(true, "API connected");
+      $("#api-badge").textContent = "ONLINE";
+      $("#api-badge").classList.add("online");
+    } catch (error) {
+      if (isAborted(error)) return;
+      $("#matches-per-day").textContent = "—";
+      $("#latest-patch").textContent = "Patch feed unavailable.";
+      setConnection(false, "API unavailable");
+      $("#api-badge").textContent = "OFFLINE";
+      $("#api-badge").classList.remove("online");
+      console.error("Deadlock API dashboard core request failed", error);
+    }
+  };
 
-  } else {
-    $("#matches-per-day").textContent = "—";
-    $("#latest-patch").textContent = "Patch feed unavailable.";
-  }
-
+  // Critical dashboard requests start together. The hero catalog no longer waits
+  // for /v1/info, while activity and patch data remain independently degraded.
+  loadCore();
   loadHeroes();
 
   dashboardRuntime.getDashboardActivitySnapshot(options).then(activityResult => {
@@ -258,27 +269,14 @@ async function loadDashboard(signal) {
         patchCopy.innerHTML = '<span class="eyebrow">LATEST MAJOR UPDATE / ' + esc(patch.source?.toUpperCase() ?? "PATCH FEED") + '</span><h2>' + title + '</h2><p>' + (excerpt || "The latest update is live in the official patch feed.") + '</p>' + (date ? '<small class="dashboard-patch-date">' + esc(date) + '</small>' : "");
       }
     }
-
   }).catch(error => {
-    if (!isAborted(error)) {
-      const patchElement = $("#latest-patch");
-      if (patchElement) patchElement.textContent = "Patch feed unavailable.";
-      console.error("Deadlock API patch feed request failed", error);
-    }
+    if (isAborted(error)) return;
+    const patchElement = $("#latest-patch");
+    if (patchElement) patchElement.textContent = "Patch feed unavailable.";
+    console.error("Deadlock API patch feed request failed", error);
   });
-
-  if (snapshot) {
-    setConnection(true, "API connected");
-    $("#api-badge").textContent = "ONLINE";
-    $("#api-badge").classList.add("online");
-  } else {
-    setConnection(false, "API unavailable");
-    $("#api-badge").textContent = "OFFLINE";
-    renderHeroGrid([]);
-  }
-
-
 }
+
 
 function renderGraphql(signal) {
   const playgroundUrl = API_BASE_URL + "/v1/graphql";
