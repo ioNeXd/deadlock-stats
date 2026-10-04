@@ -11,7 +11,7 @@ import { DEFAULT_BAND, MIN_MATCHES } from '@/lib/config'
 import { formatDate } from '@/lib/format'
 import { interpolate, type Locale, localePath } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
-import { computeTiers, type TierStat } from '@/lib/tiers'
+import { computeTierRows, type TierStat } from '@/lib/tiers'
 import { useQueryState } from '@/lib/use-query-state'
 import { ContextStrip } from './context-strip'
 import { type BandOption, FilterBar } from './filter-bar'
@@ -26,6 +26,7 @@ interface Shared {
   windows: PatchWindow[]
   bands: BandOption[]
   initialSnapshot: StatsSnapshot | null
+  initialRows: TierTableRow[]
 }
 
 const SORT_KEYS: SortKey[] = ['score', 'winRate', 'pickRate', 'matches', 'name']
@@ -67,13 +68,9 @@ export function TierListView(props: Props) {
 
   const allRows = useMemo<TierTableRow[]>(() => {
     if (!data) return []
-    const totalPicks = data.snapshot.heroes.rows.reduce((sum, row) => sum + row[3], 0)
-    const known = snapshotRows(data.snapshot, kind).filter((r) => entityMap.has(r.id))
-    return computeTiers(known, totalPicks, { minMatches: MIN_MATCHES[kind] }).map((stat: TierStat) => ({
-      ...stat,
-      entity: entityMap.get(stat.id)!,
-    }))
-  }, [data, kind, entityMap])
+    if (isDefault && props.initialRows.length > 0) return props.initialRows
+    return computeTierRows(data.snapshot, kind, entityMap, MIN_MATCHES[kind])
+  }, [data, kind, entityMap, isDefault, props.initialRows])
 
   const visibleRows = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase()
