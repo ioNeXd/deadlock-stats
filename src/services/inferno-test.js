@@ -1,22 +1,14 @@
-import { findHeroByName, listImages } from "./assets.js";
+import { getHeroes, getItemsByHeroId } from "../api/assets.js";
 
 const IMAGE_EXTENSIONS = /\.(?:png|jpe?g|webp|gif|svg|avif)(?:[?#].*)?$/i;
-const INFERNO_TERMS = [
-  "inferno",
-  "infernus",
-  "hero_infernus",
-  "napalm",
-  "flame_dash",
-  "afterburn",
-  "concussive_combustion",
-];
+const INFERNO_TERMS = ["inferno", "infernus", "hero_infernus", "napalm", "flame_dash", "afterburn", "concussive_combustion"];
 
 function asText(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
 function looksLikeImage(value) {
-  return IMAGE_EXTENSIONS.test(value) || /(?:^|[/._-])(?:image|icon|portrait|card|hud|minimap)(?:[/._-]|$)/i.test(value);
+  return IMAGE_EXTENSIONS.test(value) || /(?:^|[/._-])(?:image|icon|portrait|card|hud|minimap|sticker|weapon)(?:[/._-]|$)/i.test(value);
 }
 
 function absoluteAssetUrl(value) {
@@ -32,33 +24,21 @@ function normalizeTermText(value) {
   return asText(value).toLowerCase().replace(/[^a-z0-9]+/g, "_");
 }
 
-function matchesInfernoContext(value, context = "") {
-  const text = (String(value ?? "") + " " + String(context ?? "")).toLowerCase();
-  return INFERNO_TERMS.some(term => text.includes(term));
-}
-
 function collectImageCandidates(value, context = "", output = [], seen = new Set()) {
   if (typeof value === "string") {
     const url = absoluteAssetUrl(value);
-    if (url && looksLikeImage(value) && matchesInfernoContext(value, context)) {
-      output.push({ url, context: context || "asset" });
-    }
+    if (url && looksLikeImage(value)) output.push({ url, context: context || "asset" });
     return output;
   }
-
   if (!value || typeof value !== "object" || seen.has(value)) return output;
   seen.add(value);
-
   if (Array.isArray(value)) {
     value.forEach((item, index) => collectImageCandidates(item, context + "[" + index + "]", output, seen));
     return output;
   }
-
   for (const [key, child] of Object.entries(value)) {
-    const nextContext = context ? context + "." + key : key;
-    collectImageCandidates(child, nextContext, output, seen);
+    collectImageCandidates(child, context ? context + "." + key : key, output, seen);
   }
-
   return output;
 }
 
@@ -71,42 +51,58 @@ function dedupeCandidates(candidates) {
   return [...byUrl.values()].sort((a, b) => a.url.localeCompare(b.url));
 }
 
-export function collectInfernoImageCandidates({ hero, imageRegistry } = {}) {
+export function collectInfernoImageCandidates({ hero, items = [] } = {}) {
   const candidates = [];
   collectImageCandidates(hero?.raw ?? hero, "hero", candidates);
-  collectImageCandidates(imageRegistry, "image_registry", candidates);
 
-  // The current official hero registry uses these ability names. Including them
-  // lets the exhaustive image-registry scan catch ability artwork whose filename
-  // does not itself contain "inferno/infernus".
-  const abilityNames = ["napalm", "flame dash", "afterburn", "concussive combustion"];
-  const all = [];
-  for (const candidate of candidates) {
-    const context = normalizeTermText(candidate.context + " " + candidate.url);
-    if (INFERNO_TERMS.some(term => context.includes(term)) ||
-        abilityNames.some(name => context.includes(normalizeTermText(name)))) {
-      all.push(candidate);
+  for (const item of Array.isArray(items) ? items : []) {
+    const context = JSON.stringify(item).toLowerCase();
+    if (INFERNO_TERMS.some(term => context.includes(term))) {
+      collectImageCandidates(item?.raw ?? item, "hero_item", candidates);
     }
   }
 
-  return dedupeCandidates(all);
+  // Ability/item responses are already scoped to the hero by the API.
+  // Keep all image fields returned there, while hero assets are restricted to
+  // the selected hero object itself.
+  return dedupeCandidates(candidates);
+}
+
+function unwrapCollection(result) {
+  return result?.data?.data ?? result?.data ?? result?.raw?.data ?? result?.raw ?? [];
+}
+
+function findInfernoHero(heroes) {
+  const list = Array.isArray(heroes) ? heroes : [];
+  return list.find(hero => {
+    const name = String(hero?.name ?? hero?.class_name ?? hero?.raw?.name ?? "").toLowerCase();
+    return name === "inferno" || name === "infernus" || name.includes("infernus");
+  }) ?? null;
 }
 
 export async function loadInfernoImageTest(options = {}) {
-  const [heroResult, imageResult] = await Promise.all([
-    findHeroByName("Inferno", options).catch(async () => findHeroByName("Infernus", options)),
-    listImages(options),
-  ]);
+  const heroesResult = await getHeroes(options);
+  const heroes = unwrapCollection(heroesResult);
+  const hero = findInfernoHero(heroes);
+  if (!hero) {
+    const error = new Error("Inferno/Infernus was not found in /v1/assets/heroes");
+    error.status = 404;
+    throw error;
+  }
 
-  const hero = heroResult?.data ?? null;
-  const imageRegistry = imageResult?.data ?? imageResult?.raw ?? null;
-  const images = collectInfernoImageCandidates({ hero, imageRegistry });
+  const heroId = hero.hero_id ?? hero.id ?? hero.raw?.hero_id ?? hero.raw?.id;
+  let items = [];
+  if (heroId !== undefined && heroId !== null) {
+    const itemsResult = await getItemsByHeroId(heroId, options);
+    items = unwrapCollection(itemsResult);
+  }
+
+  const images = collectInfernoImageCandidates({ hero, items });
 
   return {
     hero,
     images,
-    imageRegistryAvailable: imageRegistry != null,
-    heroEndpoint: heroResult?.url ?? "",
-    imageRegistryEndpoint: imageResult?.url ?? "",
+    heroEndpoint: "/v1/assets/heroes",
+    itemsEndpoint: heroId != null ? "/v1/assets/items/by-hero-id/" + heroId : "",
   };
 }
