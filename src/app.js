@@ -61,7 +61,7 @@ function route() {
 window.addEventListener("hashchange", route);
 route();
 
-const idle = window.requestIdleCallback || (callback => setTimeout(callback, 1200));
+const idle = window.requestIdleCallback || (callback => setTimeout(callback, 5000));
 idle(() => {
   import("./command-palette.js").catch(() => {});
   import("./sw-register.js").catch(() => {});
