@@ -2425,3 +2425,18 @@ body{
   .custom-match-id-box{grid-template-columns:1fr}
   .custom-match-id-box .button{width:100%}
 }
+
+/* Dashboard: latest update lead */
+.command-center-hero{min-height:300px;background:
+  radial-gradient(circle at 82% 20%,rgba(93,169,233,.18),transparent 28%),
+  radial-gradient(circle at 64% 78%,rgba(104,195,138,.12),transparent 26%),
+  linear-gradient(90deg,rgba(13,12,11,.98),rgba(13,12,11,.78),rgba(13,12,11,.42)),var(--surface)}
+#dashboard-patch-copy{position:relative;max-width:760px}
+#dashboard-patch-copy h2{margin:10px 0 0;font-size:clamp(34px,5vw,64px);line-height:.94;letter-spacing:-.065em}
+#dashboard-patch-copy p{position:relative;max-width:680px;margin:18px 0 0;color:#c4bbb0;font-size:14px;line-height:1.75}
+.dashboard-patch-loading{display:inline-block;color:var(--muted);font:9px "DM Mono";letter-spacing:.16em}
+.dashboard-patch-date{display:block;margin-top:14px;color:var(--gold);font:8px "DM Mono";letter-spacing:.12em}
+@media(max-width:720px){
+  .command-center-hero{min-height:360px}
+  #dashboard-patch-copy h2{font-size:clamp(32px,12vw,48px)}
+}
