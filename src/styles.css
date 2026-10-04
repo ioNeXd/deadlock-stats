@@ -618,3 +618,175 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .asset-card{border:1px solid var(--dl-glass-border);border-radius:18px;overflow:hidden;box-shadow:var(--dl-soft-shadow);transition:transform .22s ease,border-color .22s ease}.asset-card:hover{transform:translateY(-3px);border-color:rgba(198,162,106,.22)}
 @media(max-width:720px){.sidebar{margin:6px 6px 0;height:calc(100vh - 6px);border-radius:18px}.hero-banner,.panel,.quote,.explorer-list,.explorer-main{border-radius:18px}.dashboard-metrics{border-radius:18px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+
+
+/* Living Palette 2.0 — Deadlock-inspired neutral foundation with content-driven color. */
+:root{
+  --bg:#0b0d10;
+  --surface:#12161b;
+  --surface-2:#181d23;
+  --surface-3:#20262d;
+  --line:rgba(226,232,238,.12);
+  --line-strong:rgba(226,232,238,.2);
+  --gold:#c7a96b;
+  --gold2:#e2c98f;
+  --text:#f2f0ea;
+  --muted:#9ca4ad;
+  --green:#68c38a;
+  --wine:#d66b72;
+  --blue:#5da9e9;
+  --cyan:#64c8d8;
+  --purple:#9d83e6;
+  --red:#d86b6b;
+  --amber:#d8a35d;
+  --ui-radius-sm:12px;
+  --ui-radius-md:16px;
+  --ui-radius-lg:22px;
+  --ui-radius-xl:28px;
+}
+body{
+  background:
+    radial-gradient(circle at 12% 8%,rgba(93,169,233,.08),transparent 28rem),
+    radial-gradient(circle at 88% 18%,rgba(157,131,230,.07),transparent 30rem),
+    radial-gradient(circle at 70% 85%,rgba(104,195,138,.055),transparent 28rem),
+    var(--bg);
+}
+.sidebar{
+  border-right-color:var(--line);
+  background:rgba(11,13,16,.78);
+}
+.brand{border-bottom-color:var(--line)}
+.brand-mark{border-color:var(--line-strong);color:var(--gold2)}
+.brand small{color:var(--muted)}
+.nav-item{
+  border-radius:var(--ui-radius-sm);
+  color:var(--muted);
+}
+.nav-item:hover{background:rgba(255,255,255,.045);color:var(--text)}
+.nav-item.active{
+  border-color:var(--line-strong);
+  color:var(--text);
+  background:linear-gradient(90deg,rgba(93,169,233,.14),rgba(157,131,230,.06),transparent);
+  box-shadow:0 8px 28px rgba(0,0,0,.18);
+}
+.eyebrow,.section-head>a{color:var(--blue)}
+.hero-banner{
+  border-color:var(--line);
+  border-radius:var(--ui-radius-xl);
+  background:
+    linear-gradient(90deg,rgba(11,13,16,.97),rgba(11,13,16,.7),rgba(11,13,16,.25)),
+    linear-gradient(120deg,rgba(93,169,233,.14),rgba(157,131,230,.11) 52%,rgba(104,195,138,.08)),
+    var(--surface);
+  box-shadow:0 24px 80px rgba(0,0,0,.38);
+}
+.hero-banner:before{border-color:rgba(226,232,238,.07);border-radius:calc(var(--ui-radius-xl) - 8px)}
+.pills span{
+  border-color:var(--line);
+  border-radius:999px;
+  color:var(--muted);
+  background:rgba(255,255,255,.035);
+}
+.dashboard-metrics,.dashboard-grid,.analytics-grid{gap:12px}
+.metric-card,.panel{
+  border-color:var(--line);
+  border-radius:var(--ui-radius-lg);
+  background:linear-gradient(145deg,rgba(24,29,35,.82),rgba(18,22,27,.72));
+  box-shadow:0 12px 38px rgba(0,0,0,.18);
+}
+.metric-card span{color:var(--cyan)}
+.metric-card strong{color:var(--text)}
+.hero-card{
+  border-color:var(--line);
+  border-radius:var(--ui-radius-lg);
+  background:var(--surface);
+  box-shadow:0 14px 40px rgba(0,0,0,.2);
+}
+.hero-card img{
+  filter:saturate(.96) contrast(1.03);
+}
+.hero-card:hover{
+  border-color:var(--line-strong);
+  box-shadow:0 20px 55px rgba(0,0,0,.32);
+}
+.hero-card:after{
+  background:
+    linear-gradient(180deg,transparent 22%,rgba(7,9,12,.16) 48%,rgba(7,9,12,.94) 100%);
+}
+.hero-info{
+  padding:13px 14px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--ui-radius-md);
+  background:rgba(10,13,17,.52);
+  backdrop-filter:blur(14px);
+}
+.hero-info small{color:var(--hero-accent,var(--blue))}
+.patch-link a{color:var(--gold2)}
+.panel b,.method,.operation-title>b{
+  border-radius:999px;
+  border-color:var(--line);
+}
+.explorer-list,.explorer-main,.asset-card{
+  border-color:var(--line);
+  border-radius:var(--ui-radius-lg);
+  overflow:hidden;
+}
+.explorer-list{background:rgba(18,22,27,.72)}
+.operation-row{border-bottom-color:rgba(226,232,238,.07)}
+.operation-row:hover{background:rgba(93,169,233,.07)}
+.operation-row em{color:var(--cyan)}
+.method{color:var(--text);background:rgba(255,255,255,.035)}
+.method.get{color:var(--green)}
+.field>span{color:var(--cyan)}
+.field input,.field select,.field textarea{
+  border-color:var(--line);
+  border-radius:var(--ui-radius-sm);
+  background:rgba(9,12,15,.72);
+}
+.primary-button{
+  border-color:rgba(93,169,233,.5);
+  border-radius:999px;
+  background:rgba(93,169,233,.12);
+  color:#b9ddfa;
+  box-shadow:0 8px 24px rgba(93,169,233,.08);
+}
+.primary-button:hover{background:rgba(93,169,233,.19)}
+.result-box pre{
+  border-color:var(--line);
+  border-radius:var(--ui-radius-md);
+  background:#0a0d10;
+}
+.asset-card{
+  background:linear-gradient(145deg,var(--surface-2),var(--surface));
+  box-shadow:0 12px 34px rgba(0,0,0,.2);
+}
+.asset-card img{opacity:1}
+.asset-card small{color:var(--cyan)}
+.asset-placeholder{
+  background:linear-gradient(135deg,#10151a,#1a2027);
+}
+.version-control{
+  border-color:var(--line);
+  border-radius:999px;
+  background:rgba(18,22,27,.78);
+  box-shadow:0 8px 24px rgba(0,0,0,.16);
+}
+.version-control span{color:var(--cyan)}
+.version-control select{
+  background:transparent;
+  color:var(--text);
+}
+.analytics-bar-row>div{
+  background:rgba(255,255,255,.055);
+  border-color:var(--line);
+  border-radius:999px;
+}
+.analytics-bar-row i{
+  background:linear-gradient(90deg,var(--blue),var(--purple),var(--cyan));
+}
+.sidebar-status{border-top-color:var(--line)}
+.page-head p,.muted{color:var(--muted)}
+.error-text{border-radius:var(--ui-radius-md);background:rgba(216,107,107,.07)}
+@media(max-width:720px){
+  .sidebar{border-bottom-color:var(--line)}
+  .hero-banner{border-radius:var(--ui-radius-lg)}
+}
