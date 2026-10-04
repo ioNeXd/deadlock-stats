@@ -156,11 +156,11 @@ function beginRoute() {
 
 async function renderDashboard(signal) {
   el.content.innerHTML = '<section class="dashboard-mosaic command-center-mosaic">' +
-      '<div class="hero-banner command-center-hero"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA / CITY NEVER SLEEPS</span><div id="dashboard-patch-copy"><span class="dashboard-patch-loading">LOADING LATEST UPDATE…</span></div><div class="pills"><span>API-FIRST</span><span>OPENAPI</span><span>LIVE CONTRACT</span></div></div></div>' +
+      '<div class="hero-banner command-center-hero"><div><div class="dashboard-controls">' + renderVersionControl() + '</div><span class="eyebrow">LIVE DATA / CITY NEVER SLEEPS</span><div id="dashboard-patch-copy"><span class="dashboard-patch-loading">LOADING LATEST MAJOR UPDATE…</span></div><div class="pills"><span>API-FIRST</span><span>OPENAPI</span><span>LIVE CONTRACT</span></div></div></div>' +
       '<article class="metric-card command-metric command-blue"><span>FETCHED MATCHES / 24H</span><strong id="matches-per-day">—</strong><small>API info</small></article>' +
     '</section>' +
     '<section class="section"><div class="section-head"><div><span class="eyebrow">ROSTER</span><h2>Heroes in the city</h2></div><a href="#/heroes">View all →</a></div><div id="hero-grid" class="hero-grid" aria-live="polite"></div></section>' +
-    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(API_BASE_URL.replace("https://", "")) + '</strong></div><div class="metric"><span>Hero response</span><strong id="api-latency">—</strong></div><div class="metric"><span>Latest patch</span><strong id="latest-patch" class="patch-link">Loading…</strong></div></article><article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article></section>' +
+    '<section class="dashboard-grid"><article class="panel"><div class="section-head"><div><span class="eyebrow">SYSTEM</span><h2>API connection</h2></div><b id="api-badge">CHECKING</b></div><div class="metric"><span>Endpoint</span><strong>' + esc(API_BASE_URL.replace("https://", "")) + '</strong></div><div class="metric"><span>Hero response</span><strong id="api-latency">—</strong></div><div class="metric"><span>Latest major update</span><strong id="latest-patch" class="patch-link">Loading…</strong></div></article><article class="panel quote"><span>“</span><p>Data should feel like it belongs to the world it describes.</p><small>DEADLOCK STATS / NEW SITE</small></article></section>' +
     '<section class="panel"><div class="section-head"><div><span class="eyebrow">ACTIVITY</span><h2>Recent game activity</h2></div><b id="dashboard-activity-status">LOADING</b></div><div id="dashboard-activity" class="dashboard-activity"><p class="muted">Loading daily game statistics…</p></div></section>';
   loadDashboard(signal);
 }
@@ -239,7 +239,7 @@ async function loadDashboard(signal) {
     const patchCopy = $("#dashboard-patch-copy");
     if (patchCopy) {
       if (!patch) {
-        patchCopy.innerHTML = '<span class="eyebrow">LATEST UPDATE</span><h2>Major update unavailable.</h2><p>The current patch feed did not return a major update.</p>';
+        patchCopy.innerHTML = '<span class="eyebrow">LATEST MAJOR UPDATE</span><h2>Major update unavailable.</h2><p>The current patch feed did not return a major update.</p>';
       } else {
         const title = esc(patch.title ?? "Latest update");
         const rawContent = String(patch.content ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
