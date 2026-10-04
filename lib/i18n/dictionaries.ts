@@ -21,6 +21,7 @@ const en = {
     lede: 'Compare heroes and items in one place, with the same rank and patch context.',
     heroes: 'Heroes',
     items: 'Items',
+    switchLabel: 'Tier list type',
   },
   heroes: 'Heroes',\n    items: 'Items',\n  },\n  tierList: {\n    eyebrow: 'Tier list',\n    title: 'Tier list',\n    lede: 'Compare heróis e itens em um só lugar, com o mesmo contexto de rank e patch.',\n    heroes: 'Heróis',\n    items: 'Itens',\n  },\n  heroes: {
     eyebrow: 'Tier list',
@@ -237,6 +238,7 @@ export function getDictionary(locale: Locale) {
     lede: 'Compare heróis e itens em um só lugar, com o mesmo contexto de rank e patch.',
     heroes: 'Heróis',
     items: 'Itens',
+    switchLabel: 'Tipo de tier list',
   },
   heroes: 'Heroes',
     items: 'Items',
