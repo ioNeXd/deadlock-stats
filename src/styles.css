@@ -1683,3 +1683,37 @@ body{
   .hero-card:hover,.hero-performance-card:hover{transform:none}
   .hero-card img,.hero-performance-art img{transition:none}
 }
+
+
+/* City Atlas — map as an editorial cartographic surface. */
+.map-page-head{position:relative;padding:clamp(22px,4vw,42px);overflow:hidden;border:1px solid color-mix(in srgb,var(--blue) 22%,var(--line));background:radial-gradient(circle at 88% 20%,color-mix(in srgb,var(--green) 16%,transparent),transparent 18rem),radial-gradient(circle at 12% 80%,color-mix(in srgb,var(--orange) 10%,transparent),transparent 20rem),linear-gradient(135deg,rgba(14,20,22,.96),rgba(18,16,14,.9))}
+.map-page-head:after{content:"";position:absolute;right:-7rem;top:-9rem;width:25rem;height:25rem;border:1px solid color-mix(in srgb,var(--yellow) 24%,transparent);border-radius:50%;box-shadow:0 0 0 3rem color-mix(in srgb,var(--purple) 4%,transparent),0 0 0 8rem color-mix(in srgb,var(--blue) 3%,transparent)}
+.map-page-head h2{position:relative;z-index:1;font-size:clamp(42px,7vw,82px);letter-spacing:-.07em;text-transform:uppercase}
+.map-page-head p{position:relative;z-index:1;max-width:650px}
+.map-page-kicker{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+.map-page-kicker span{padding:6px 8px;border:1px solid var(--line);color:var(--muted);font:8px "DM Mono";letter-spacing:.1em}
+.map-toolbar{border-color:color-mix(in srgb,var(--blue) 20%,var(--line));background:linear-gradient(90deg,color-mix(in srgb,var(--blue) 5%,transparent),transparent 42%),var(--surface,var(--panel))}
+.map-toolbar>div:first-child strong{color:var(--blue-bright)}
+.map-toggles label{border-color:color-mix(in srgb,var(--blue) 18%,var(--line));background:rgba(255,255,255,.018);transition:border-color .18s ease,background .18s ease,color .18s ease}
+.map-toggles label:has(input:checked){color:var(--text);border-color:color-mix(in srgb,var(--blue) 55%,var(--line));background:color-mix(in srgb,var(--blue) 9%,transparent)}
+.map-toggles input{accent-color:var(--blue-bright)}
+.map-layout{gap:14px}
+.map-panel{padding:10px;border-color:color-mix(in srgb,var(--green) 18%,var(--line));background:#0b1010}
+.map-stage{min-height:620px;background:linear-gradient(rgba(88,129,112,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(88,129,112,.035) 1px,transparent 1px),#090d0e;background-size:32px 32px}
+.map-canvas{box-shadow:0 22px 80px rgba(0,0,0,.45);outline:1px solid rgba(255,255,255,.06)}
+.map-base{filter:saturate(.92) contrast(1.04)} .map-mid{opacity:.94}.map-mid_tunnels{opacity:.8}.map-rat_tunnels{opacity:.72}.map-frame{opacity:.9}
+.map-ziplines{z-index:7}
+.map-zipline-path{stroke:var(--zipline-color,var(--yellow));stroke-width:4;opacity:.72;filter:drop-shadow(0 0 4px color-mix(in srgb,var(--zipline-color,var(--yellow)) 45%,transparent))}
+.map-zipline-path:hover{opacity:1}
+.map-marker{width:26px;height:26px;border-color:color-mix(in srgb,var(--blue-bright) 70%,white);background:rgba(7,12,13,.9);color:var(--yellow);box-shadow:0 0 0 3px rgba(7,12,13,.35),0 5px 16px rgba(0,0,0,.5)}
+.map-marker:hover{border-color:var(--yellow);box-shadow:0 0 0 4px rgba(232,200,91,.12),0 8px 20px rgba(0,0,0,.55)}
+.objective-marker{border-color:var(--yellow);color:var(--yellow);background:rgba(37,29,10,.82)}
+.objective-core{border-color:var(--orange);color:#ef9b63;box-shadow:0 0 0 5px rgba(217,119,63,.1),0 5px 20px rgba(0,0,0,.5)}
+.camp-marker{border-color:var(--green-bright);color:var(--green-bright)} .camp-weak{border-color:#78b98a}.camp-medium{border-color:var(--yellow)}.camp-strong{border-color:var(--orange)}.camp-vault{border-color:var(--purple-bright)}
+.entity-marker{border-color:color-mix(in srgb,var(--purple) 55%,var(--line));color:var(--purple-bright)}
+.map-controls button{border-color:color-mix(in srgb,var(--blue) 30%,var(--line));background:rgba(8,13,14,.92)}
+.map-controls button:hover{border-color:var(--blue-bright);color:var(--blue-bright)}
+.map-legend{border-color:color-mix(in srgb,var(--purple) 20%,var(--line));background:radial-gradient(circle at 100% 0,color-mix(in srgb,var(--purple) 7%,transparent),transparent 15rem),var(--surface,var(--panel))}
+.map-legend h3{text-transform:uppercase;letter-spacing:.03em}.map-summary span{color:var(--blue-bright)}.map-summary strong{color:var(--text)}.map-detail .eyebrow{color:var(--green-bright)}
+.map-selection{border-color:color-mix(in srgb,var(--orange) 22%,var(--line));background:rgba(217,119,63,.025);padding:15px}.map-selection .eyebrow{color:#ef9b63}.map-selection h4{color:var(--text);text-transform:uppercase}.map-selection pre{background:#090c0d;border-color:var(--line)}
+@media(max-width:720px){.map-page-head h2{font-size:clamp(40px,13vw,62px)}.map-stage{min-height:420px}.map-page-kicker{gap:5px}}

@@ -2466,7 +2466,7 @@ function bindVersionControl() {
 async function renderMaps(signal) {
   const assetsRuntime = await loadAssetsRuntime();
   el.content.innerHTML =
-    '<section class="page-head"><span class="eyebrow">GAME / MAP INTELLIGENCE</span><h2>Map Explorer</h2><p>Live map geometry and official map layers from the Deadlock asset contract. Coordinates and markers are rendered directly from the API response.</p></section>' +
+    '<section class="page-head map-page-head"><span class="eyebrow">CITY ATLAS / MAP INTELLIGENCE</span><h2>THE CURSED APPLE</h2><p>Explore official Deadlock map geometry, districts, objectives and transit lines directly from the asset contract.</p><div class="map-page-kicker"><span>ATLAS 01</span><span>LIVE GEOMETRY</span><span>API SOURCE</span></div></section>' +
     '<section class="map-toolbar panel"><div><span class="eyebrow">MAP DATA</span><strong id="map-build">LATEST BUILD</strong></div><div class="map-toggles" role="group" aria-label="Map layers">' +
     '<label><input type="checkbox" data-map-layer="objectives" checked> Objectives</label>' +
     '<label><input type="checkbox" data-map-layer="camps" checked> Neutral camps</label>' +
