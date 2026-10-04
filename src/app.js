@@ -93,6 +93,15 @@ function setConnection(online, label) {
   el.status.textContent = label;
 }
 
+function renderHeroArt(hero, className = "hero-card") {
+  const background = resolveAssetImage(hero, ["background_image_webp", "background_image"]);
+  const portrait = resolveAssetImage(hero, ["hero_card_webp", "hero_card", "icon_hero_card_webp", "icon_hero_card"]);
+  return '<div class="' + className + '-art" aria-hidden="true">' +
+    (background ? '<img class="' + className + '-background" src="' + esc(background) + '" alt="" loading="lazy" decoding="async">' : '') +
+    (portrait ? '<img class="' + className + '-portrait" src="' + esc(portrait) + '" alt="" loading="lazy" decoding="async">' : '') +
+    '<span class="' + className + '-wash"></span></div>';
+}
+
 function renderHeroGrid(data) {
   const heroes = Array.isArray(data) ? data : (data?.data ?? []);
   const grid = $("#hero-grid");
@@ -103,8 +112,7 @@ function renderHeroGrid(data) {
     const accent = heroColor || ["#5da9e9", "#9d83e6", "#68c38a", "#d86b6b"][index % 4];
     const description = hero?.description ?? hero?.role ?? hero?.playstyle ?? "Deadlock hero";
     return '<a class="hero-card hero-card-editorial" href="#/heroes" style="--hero-accent:' + esc(accent) + '">' +
-      (background ? '<img class="hero-card-background" src="' + esc(background) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') +
-      (portrait ? '<img class="hero-card-portrait" src="' + esc(portrait) + '" alt="' + esc(nameOf(hero)) + '" loading="lazy" decoding="async">' : '') +
+      renderHeroArt(hero, "hero-card") +
       '<div class="hero-color-wash" aria-hidden="true"></div>' +
       '<div class="hero-info"><small>HERO / ' + esc(hero?.role ?? "ROSTER") + '</small><h3>' + esc(nameOf(hero)) + '</h3><p>' + esc(description) + '</p><span class="hero-card-index">' + String(index + 1).padStart(2, "0") + '</span></div></a>';
   }).join("") || '<article class="panel"><p>No hero assets returned.</p></article>';
@@ -471,10 +479,10 @@ async function renderHeroes(signal) {
       const winRate = Number.isFinite(matches) && matches > 0 && Number.isFinite(wins) ? (wins / matches) * 100 : null;
       const kda = [item.totalKills, item.totalDeaths, item.totalAssists].map(Number);
       const kdaText = kda.every(Number.isFinite) ? kda.join(" / ") : "—";
-      const image = hero ? resolveAssetImage(hero, ["background_image_webp", "background_image", "hero_card_gloat_webp", "hero_card_gloat", "hero_card_critical_webp", "hero_card_critical", "icon_hero_card_webp", "icon_hero_card"]) : "";
+      const heroArt = hero ? renderHeroArt(hero, "hero-performance") : "";
       const accent = colorToCss(hero?.colors?.ui);
       return '<a class="hero-performance-card" href="#/heroes/' + encodeURIComponent(item.heroId) + '"' + (accent ? ' style="--hero-accent:' + esc(accent) + '"' : "") + '>' +
-        '<div class="hero-performance-art">' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy" decoding="async">' : '<div class="asset-placeholder">NO ART</div>') + '</div>' +
+        '<div class="hero-performance-art">' + heroArt + '</div>' +
         '<div class="hero-performance-body"><div class="hero-performance-title"><div><small>HERO ' + esc(item.heroId) + '</small><h3>' + esc(nameOf(hero)) + '</h3></div><strong>' + esc(winRate == null ? "—" : winRate.toFixed(1) + "%") + '<small>WIN RATE</small></strong></div>' +
         '<div class="hero-performance-metrics"><span><small>MATCHES</small><b>' + esc(Number.isFinite(matches) ? matches.toLocaleString() : "—") + '</b></span><span><small>K / D / A</small><b>' + esc(kdaText) + '</b></span><span><small>DAMAGE</small><b>' + esc(Number.isFinite(Number(item.totalPlayerDamage)) ? Number(item.totalPlayerDamage).toLocaleString() : "—") + '</b></span><span><small>NET WORTH</small><b>' + esc(Number.isFinite(Number(item.totalNetWorth)) ? Number(item.totalNetWorth).toLocaleString() : "—") + '</b></span></div></div>' +
       '</a>';
