@@ -2451,7 +2451,7 @@ async function renderMaps(signal) {
     '<label><input type="checkbox" data-map-layer="camps" checked> Neutral camps</label>' +
     '<label><input type="checkbox" data-map-layer="entities" checked> Entities</label>' +
     '<label><input type="checkbox" data-map-layer="ziplines" checked> Ziplines</label>' +
-    '</div></section>' +
+    '</div><div id="map-image-toggles" class="map-toggles map-image-toggles" role="group" aria-label="Map image layers"></div></section>' +
     '<section class="map-layout"><article class="panel map-panel"><div class="map-controls"><button type="button" id="map-zoom-out" aria-label="Zoom out">−</button><button type="button" id="map-zoom-reset">100%</button><button type="button" id="map-zoom-in" aria-label="Zoom in">+</button></div><div id="map-stage" class="map-stage" aria-live="polite"><div class="map-loading">Loading map data…</div></div></article>' +
     '<aside class="panel map-legend"><span class="eyebrow">MAP INDEX</span><h3>Live layers</h3><div id="map-summary" class="map-summary"></div><div id="map-details" class="map-details"></div><div id="map-selection" class="map-selection" aria-live="polite"><span class="eyebrow">SELECTION</span><p>Choose a marker to inspect its API data.</p></div></aside></section>';
 
@@ -2539,6 +2539,25 @@ async function renderMaps(signal) {
       });
       setMarkerGroup(input.dataset.mapLayer, input.checked);
     });
+
+    const imageToggleContainer = $("#map-image-toggles");
+    if (imageToggleContainer) {
+      const imageLayerEntries = [];
+      if (base) imageLayerEntries.push(["base", "Base map"]);
+      layers.forEach(([name]) => imageLayerEntries.push([name, name.replaceAll("_", " ")]));
+
+      imageToggleContainer.innerHTML = imageLayerEntries.map(([name, label]) =>
+        '<label><input type="checkbox" data-map-image="' + esc(name) + '" checked> ' + esc(label) + '</label>'
+      ).join("");
+
+      imageToggleContainer.querySelectorAll("[data-map-image]").forEach(input => {
+        input.addEventListener("change", event => {
+          const layer = event.currentTarget.dataset.mapImage;
+          const node = stage.querySelector(layer === "base" ? ".map-base" : ".map-" + layer);
+          if (node) node.hidden = !event.currentTarget.checked;
+        });
+      });
+    }
 
     const selection = $("#map-selection");
     const showSelection = (type, title, data) => {
