@@ -2738,6 +2738,51 @@ async function renderPatches(signal) {
   }
 }
 
+
+async function renderInfernoTest(signal) {
+  el.content.innerHTML =
+    '<section class="page-head"><span class="eyebrow">TEST / INFERNO ASSET LAB</span><h2>Inferno — All Images</h2><p>Exhaustive visual inspection of Inferno/Infernus image references exposed by the official Deadlock asset API. Every rendered card prints the absolute asset URL below the image.</p></section>' +
+    '<section class="panel"><div class="inferno-test-toolbar"><div><span class="eyebrow">OFFICIAL ASSET REGISTRY</span><strong id="inferno-test-count">SCANNING…</strong></div><div id="inferno-test-status" class="inferno-test-status"><span>API</span><b>LOADING</b></div></div><div id="inferno-test-grid" class="inferno-test-grid" aria-live="polite"><p class="muted">Fetching Inferno hero data and the complete image registry…</p></div></section>';
+
+  try {
+    const { loadInfernoImageTest } = await import("./services/inferno-test.js");
+    const result = await loadInfernoImageTest({ ...assetVersion.options(), signal });
+    if (signal.aborted) return;
+
+    const count = $("#inferno-test-count");
+    const status = $("#inferno-test-status");
+    const grid = $("#inferno-test-grid");
+    const images = Array.isArray(result.images) ? result.images : [];
+
+    if (count) count.textContent = images.length + " VERIFIED IMAGE REFERENCES";
+    if (status) {
+      status.innerHTML = '<span>API</span><b class="online">ONLINE</b>';
+    }
+
+    grid.innerHTML = images.length
+      ? images.map((image, index) =>
+          '<article class="inferno-test-card">' +
+            '<figure>' +
+              '<div class="inferno-test-card-media"><img src="' + esc(image.url) + '" alt="Inferno asset ' + (index + 1) + '" loading="lazy" decoding="async"></div>' +
+              '<figcaption class="inferno-test-card-meta">' +
+                '<strong>ASSET ' + String(index + 1).padStart(2, "0") + '</strong>' +
+                '<code>' + esc(image.url) + '</code>' +
+              '</figcaption>' +
+            '</figure>' +
+          '</article>'
+        ).join("")
+      : '<p class="muted">No Inferno-related image references were returned by the current official asset registry.</p>';
+
+    setConnection(true, "API connected");
+  } catch (error) {
+    if (isAborted(error)) return;
+    $("#inferno-test-count").textContent = "UNAVAILABLE";
+    $("#inferno-test-status").innerHTML = '<span>API</span><b class="inferno-test-error">OFFLINE</b>';
+    $("#inferno-test-grid").innerHTML = '<p class="error-text">Inferno asset scan failed: ' + esc(error.message) + '</p>';
+    setConnection(false, "API unavailable");
+  }
+}
+
 function renderNotFound(routeName) {
   el.content.innerHTML = '<section class="page-head"><span class="eyebrow">NAVIGATION / 404</span><h2>Route not found</h2><p>The route <code>' +
     esc('#/' + routeName) +
@@ -2769,6 +2814,7 @@ function route() {
   else if (routeName === "maps") renderMaps(signal);
   else if (routeName === "patches") renderPatches(signal);
   else if (routeName === "data") renderDataExplorer(signal);
+  else if (routeName === "teste") renderInfernoTest(signal);
   else if (routeName === "graphql") renderGraphql(signal);
   else if (routeName === "demos") loadAdvancedToolsRuntime().then(runtime => runtime.renderDemoExplorer({ signal }));
   else if (routeName === "live") loadAdvancedToolsRuntime().then(runtime => runtime.renderLiveQuery({ signal }));
