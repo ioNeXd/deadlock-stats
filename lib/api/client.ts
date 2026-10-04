@@ -45,7 +45,7 @@ export function apiGet<T>(path: string, params: QueryParams = {}, init?: Request
   const pending = inFlight.get(url)
   if (pending) return pending as Promise<T>
 
-  const request = fetch(url, { ...init, headers: { accept: 'application/json', ...init?.headers } })
+  const request = fetchWithTransientRetry(url, init)
     .then(async (res) => {
       if (res.status === 429) throw new RateLimitError(Number(res.headers.get('retry-after') ?? 0))
       if (res.status === 404) throw new NotFoundError(path)
@@ -53,6 +53,27 @@ export function apiGet<T>(path: string, params: QueryParams = {}, init?: Request
       return (await res.json()) as T
     })
     .finally(() => inFlight.delete(url))
+
+  inFlight.set(url, request)
+  return request
+}
+
+const TRANSIENT_STATUSES = new Set([500, 502, 503, 504])
+const MAX_TRANSIENT_RETRIES = 3
+
+async function fetchWithTransientRetry(url: string, init?: RequestInit): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    const response = await fetch(url, {
+      ...init,
+      headers: { accept: 'application/json', ...init?.headers },
+    })
+    if (!TRANSIENT_STATUSES.has(response.status) || attempt >= MAX_TRANSIENT_RETRIES) return response
+
+    const retryAfter = Number(response.headers.get('retry-after') ?? 0)
+    const delayMs = retryAfter > 0 ? retryAfter * 1000 : 1000 * 2 ** attempt
+    await new Promise((resolve) => setTimeout(resolve, delayMs))
+  }
+}
 
   inFlight.set(url, request)
   return request
