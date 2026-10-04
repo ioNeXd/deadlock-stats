@@ -1205,3 +1205,67 @@ body{
   .build-art{min-height:150px;max-height:190px}
   .build-copy{padding:17px}
 }
+
+
+/* Match intelligence — turn live/recent feeds into an editorial control room. */
+.match-row{
+  position:relative;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:16px;
+  min-height:76px;
+  padding:12px 14px!important;
+  border:1px solid transparent!important;
+  border-radius:14px;
+  margin-bottom:6px;
+  background:linear-gradient(100deg,rgba(93,169,233,.055),rgba(18,22,27,.3));
+  transition:transform .2s ease,border-color .2s ease,background .2s ease;
+}
+.match-row:before{
+  content:"";
+  width:3px;
+  position:absolute;
+  left:0;top:10px;bottom:10px;
+  border-radius:3px;
+  background:var(--blue);
+}
+.match-row:hover{
+  transform:translateX(3px);
+  border-color:rgba(93,169,233,.25)!important;
+  background:linear-gradient(100deg,rgba(93,169,233,.11),rgba(18,22,27,.5));
+}
+.match-row strong{font-size:12px}
+.matchup-meta{margin-top:5px;color:var(--muted);font:8px var(--font-mono,ui-monospace)!important}
+.match-row>strong{
+  padding:6px 9px;
+  border-radius:8px;
+  color:var(--cyan);
+  background:rgba(100,200,216,.07);
+  font:8px var(--font-mono,ui-monospace);
+}
+.match-player-card{
+  position:relative;
+  min-height:118px;
+  padding:14px!important;
+  overflow:hidden;
+  border-radius:15px;
+  border-color:color-mix(in srgb,var(--match-player-accent,var(--blue)) 20%,var(--line));
+  background:
+    radial-gradient(circle at 100% 0,color-mix(in srgb,var(--match-player-accent,var(--blue)) 11%,transparent),transparent 45%),
+    var(--surface-2);
+}
+.match-player-card:after{
+  content:"";
+  position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--match-player-accent,var(--blue));
+}
+.match-player-card .match-player-hero{
+  width:52px;height:52px;
+  border-radius:13px;
+  border-color:color-mix(in srgb,var(--match-player-accent,var(--blue)) 38%,var(--line));
+  box-shadow:0 6px 18px color-mix(in srgb,var(--match-player-accent,var(--blue)) 13%,transparent);
+}
+.match-raw{
+  border-top-color:var(--line-strong);
+}
