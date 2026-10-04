@@ -1620,6 +1620,7 @@ body{
   font-size:13px;
   line-height:1.7;
 }
+.hero-detail-card{position:absolute;z-index:2;right:clamp(70px,10vw,150px);bottom:0;width:min(48vw,560px);height:96%;object-fit:contain;object-position:center bottom;filter:saturate(.98) contrast(1.04) drop-shadow(0 18px 26px rgba(0,0,0,.5));pointer-events:none}
 .hero-detail-icon{
   position:absolute;
   right:clamp(32px,6vw,90px);
