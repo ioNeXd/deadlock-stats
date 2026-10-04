@@ -235,17 +235,17 @@ async function loadDashboard(signal) {
 
   dashboardRuntime.getDashboardPatchSnapshot(options).then(patchResult => {
     if (signal.aborted) return;
-    const patch = patchResult?.latestPatch;
+    const patch = patchResult?.latestMajorPatch;
     const patchCopy = $("#dashboard-patch-copy");
     if (patchCopy) {
       if (!patch) {
-        patchCopy.innerHTML = '<span class="eyebrow">LATEST UPDATE</span><h2>Update unavailable.</h2><p>The current patch feed did not return an update.</p>';
+        patchCopy.innerHTML = '<span class="eyebrow">LATEST UPDATE</span><h2>Major update unavailable.</h2><p>The current patch feed did not return a major update.</p>';
       } else {
         const title = esc(patch.title ?? "Latest update");
         const rawContent = String(patch.content ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
         const excerpt = esc(rawContent.slice(0, 280) + (rawContent.length > 280 ? "…" : ""));
         const date = patch.pub_date ? new Date(patch.pub_date).toLocaleDateString() : "";
-        patchCopy.innerHTML = '<span class="eyebrow">LATEST UPDATE / ' + esc(patch.source?.toUpperCase() ?? "PATCH FEED") + '</span><h2>' + title + '</h2><p>' + (excerpt || "The latest update is live in the official patch feed.") + '</p>' + (date ? '<small class="dashboard-patch-date">' + esc(date) + '</small>' : "");
+        patchCopy.innerHTML = '<span class="eyebrow">LATEST MAJOR UPDATE / ' + esc(patch.source?.toUpperCase() ?? "PATCH FEED") + '</span><h2>' + title + '</h2><p>' + (excerpt || "The latest update is live in the official patch feed.") + '</p>' + (date ? '<small class="dashboard-patch-date">' + esc(date) + '</small>' : "");
       }
     }
 
