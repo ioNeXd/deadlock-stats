@@ -1838,3 +1838,46 @@ body{
   .matches-page-head:after{font-size:100px}
   .match-player-grid{grid-template-columns:1fr}
 }
+
+
+/* Player Files — editorial archive / identity desk. */
+.players-page-head{
+  position:relative;overflow:hidden;padding:clamp(24px,4vw,44px);
+  border:1px solid color-mix(in srgb,var(--green) 24%,var(--line));
+  background:radial-gradient(circle at 88% 15%,color-mix(in srgb,var(--green) 13%,transparent),transparent 18rem),radial-gradient(circle at 12% 95%,color-mix(in srgb,var(--purple) 11%,transparent),transparent 22rem),linear-gradient(135deg,#111716,#111316);
+}
+.players-page-head:after{
+  content:"FILES";position:absolute;right:-8px;bottom:-30px;color:rgba(255,255,255,.025);
+  font:900 clamp(90px,18vw,210px)/.8 "DM Mono";letter-spacing:-.12em;transform:rotate(-7deg);
+}
+.players-page-head h2{position:relative;z-index:1;font-size:clamp(42px,7vw,82px);letter-spacing:-.075em;text-transform:uppercase}
+.players-page-head p{position:relative;z-index:1;max-width:700px}
+.players-page-kicker{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+.players-page-kicker span{padding:6px 9px;border:1px solid var(--line);font:8px "DM Mono";letter-spacing:.1em;color:var(--muted)}
+.players-page-head + .panel{margin-top:14px;border-color:color-mix(in srgb,var(--green) 20%,var(--line));background:linear-gradient(90deg,rgba(104,195,138,.045),transparent 55%),var(--panel)}
+.players-page-head + .panel .primary-button{background:linear-gradient(135deg,var(--green),var(--blue));color:#08100c}
+.players-page-head ~ .dashboard-grid{margin-top:14px}
+.players-page-head ~ .dashboard-grid>.panel:first-child{border-color:color-mix(in srgb,var(--blue) 20%,var(--line))}
+.players-page-head ~ .dashboard-grid>.panel:nth-child(2){border-color:color-mix(in srgb,var(--purple) 20%,var(--line))}
+.player-results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.player-record{
+  position:relative;display:grid;grid-template-columns:64px 1fr;gap:12px;
+  padding:13px;border:1px solid var(--line);background:#101314;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease;
+}
+.player-record:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(var(--green),var(--blue))}
+.player-record:hover{transform:translateY(-2px);border-color:rgba(104,195,138,.35);background:#131718}
+.player-record-avatar{
+  width:64px;height:64px;object-fit:cover;border:1px solid rgba(255,255,255,.12);
+  background:#090b0c;
+}
+.player-record-index{font:8px "DM Mono";color:var(--green);letter-spacing:.1em}
+.player-record-name{display:block;margin:4px 0;font-size:14px}
+.player-record-meta{display:block;color:var(--muted);font:8px/1.6 "DM Mono";word-break:break-word}
+.player-record-open{display:inline-block;margin-top:9px;color:var(--yellow);font:8px "DM Mono";letter-spacing:.08em}
+.player-record-empty{padding:18px;border:1px dashed var(--line);color:var(--muted);font:9px "DM Mono"}
+@media(max-width:620px){
+ .players-page-head h2{font-size:clamp(40px,13vw,62px)}
+ .players-page-head:after{font-size:100px}
+ .player-results-grid{grid-template-columns:1fr}
+}

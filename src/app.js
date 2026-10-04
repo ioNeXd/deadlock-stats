@@ -1587,7 +1587,7 @@ async function renderMatches(signal) {
 async function renderPlayers(signal) {
   const players = await loadPlayersRuntime();
   el.content.innerHTML =
-    '<section class="page-head"><span class="eyebrow">GAME / PLAYERS</span><h2>Players</h2><p>Search Steam profiles and inspect public Deadlock player data from the current API contract.</p></section>' +
+    '<section class="page-head players-page-head"><span class="eyebrow">CITY RECORDS / PLAYER ARCHIVE</span><h2>THE PLAYER FILES</h2><p>Search public Steam profiles and open player records from the current Deadlock API contract.</p><div class="players-page-kicker"><span>PUBLIC RECORDS</span><span>STEAM PROFILES</span><span>FIELD DOSSIERS</span></div></section>' +
     '<section class="panel"><form id="player-search" class="analytics-filters">' +
       '<label class="field"><span>Player search</span><input name="query" type="search" required placeholder="Steam name or account ID"></label>' +
       '<label class="field"><span>Results</span><input name="limit" type="number" min="1" max="1000" value="25"></label>' +
