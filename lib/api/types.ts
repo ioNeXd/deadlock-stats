@@ -34,6 +34,8 @@ export interface RankEntity {
   tier: number
   name: string
   icon: string | null
+  /** API-provided hex color for this rank tier. */
+  color: string | null
 }
 
 export interface PatchWindow {
