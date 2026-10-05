@@ -30,8 +30,8 @@ export function TierListSwitcher(props: Props) {
         {(['heroes', 'items'] as const).map((value) => {
           const active = value === kind
           const className = active
-            ? 'chamfer-sm bg-primary px-4 py-2 font-display text-base font-semibold uppercase tracking-wider text-primary-foreground transition-colors'
-            : 'chamfer-sm px-4 py-2 font-display text-base font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+            ? 'bg-primary px-4 py-2 font-display text-base font-semibold uppercase tracking-wider text-primary-foreground transition-colors'
+            : 'px-4 py-2 font-display text-base font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
           return (
             <button
               key={value}
