@@ -121,33 +121,70 @@ function BuildCard({
 
 function ItemCard({ item, labels }: { item: HeroBuildView['items'][number]; labels: Dictionary['heroPage']['builds'] }) {
   const tone = item.slot === 'vitality'
-    ? 'border-emerald-400/45 text-emerald-100'
+    ? {
+        frame: 'border-emerald-400/55',
+        glow: 'bg-emerald-400/10',
+        label: 'text-emerald-100',
+      }
     : item.slot === 'weapon'
-      ? 'border-orange-400/45 text-orange-100'
-      : 'border-violet-400/45 text-violet-100'
+      ? {
+          frame: 'border-orange-400/55',
+          glow: 'bg-orange-400/10',
+          label: 'text-orange-100',
+        }
+      : {
+          frame: 'border-violet-400/55',
+          glow: 'bg-violet-400/10',
+          label: 'text-violet-100',
+        }
 
   return (
-    <div className={`group relative aspect-[3/4] min-w-0 overflow-hidden border bg-black/30 shadow-[0_10px_24px_rgba(0,0,0,0.24)] ${tone}`}>
-      {item.backer ? (
-        <>
-          <img src={item.backer.backer.webp} alt="" aria-hidden className="absolute inset-0 size-full object-cover opacity-90" />
-          <img src={item.backer.color.webp} alt="" aria-hidden className="absolute inset-0 size-full object-cover opacity-80 mix-blend-screen" />
-          <img src={item.backer.mask.webp} alt="" aria-hidden className="absolute inset-0 size-full object-cover opacity-75" />
-        </>
-      ) : null}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-black/10" />
-      <div className="absolute inset-x-1 top-1 flex items-start justify-between gap-1">
-        <span className="max-w-[70%] truncate bg-black/55 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider">{item.name}</span>
-        <div className="flex gap-1">
-          {item.isActive ? <span className="bg-black/65 px-1 py-0.5 text-[8px] font-bold uppercase">{labels.active}</span> : null}
-          {item.isImbued ? <span className="bg-black/65 px-1 py-0.5 text-[8px] font-bold uppercase">I</span> : null}
+    <article className={`group min-w-0 overflow-hidden border bg-black/35 shadow-[0_10px_24px_rgba(0,0,0,0.24)] transition-transform duration-200 hover:-translate-y-0.5 ${tone.frame}`}>
+      <div className={`relative aspect-square overflow-hidden ${tone.glow}`}>
+        {item.backer ? (
+          <>
+            <img src={item.backer.backer.webp} alt="" aria-hidden className="absolute inset-0 size-full object-cover opacity-95" />
+            <img src={item.backer.color.webp} alt="" aria-hidden className="absolute inset-0 size-full object-cover opacity-95 mix-blend-screen" />
+            <img src={item.backer.mask.webp} alt="" aria-hidden className="absolute inset-0 size-full object-cover opacity-85" />
+          </>
+        ) : null}
+
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.12),transparent_62%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
+
+        {item.icon ? (
+          <img
+            src={item.icon}
+            alt=""
+            width={128}
+            height={128}
+            className="absolute inset-0 m-auto size-[72%] object-contain drop-shadow-[0_10px_16px_rgba(0,0,0,0.75)] transition-transform duration-200 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 grid place-items-center p-2 text-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {item.name}
+          </div>
+        )}
+
+        <div className="absolute inset-x-1 top-1 flex items-start justify-between gap-1">
+          <span className={`bg-black/65 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${tone.label}`}>
+            {item.slot}
+          </span>
+          <div className="flex gap-1">
+            {item.isActive ? <span className="bg-black/70 px-1 py-0.5 text-[8px] font-bold uppercase text-foreground">{labels.active}</span> : null}
+            {item.isImbued ? <span className="bg-black/70 px-1 py-0.5 text-[8px] font-bold uppercase text-primary">I</span> : null}
+          </div>
         </div>
       </div>
-      {item.icon ? <img src={item.icon} alt="" width={72} height={72} className="absolute inset-0 m-auto size-[58%] object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.6)] transition-transform duration-200 group-hover:scale-105" /> : null}
-      <div className="absolute inset-x-1 bottom-1 flex items-center justify-between gap-1">
-        <span className="truncate bg-black/55 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider">{item.category}</span>
-        {item.isImbued ? <span className="bg-black/65 px-1.5 py-0.5 text-[9px] font-bold uppercase">Imbued</span> : null}
+
+      <div className="min-w-0 border-t border-border/50 bg-black/35 px-2 py-1.5">
+        <div className={`truncate text-[10px] font-semibold uppercase leading-tight tracking-wide ${tone.label}`} title={item.name}>
+          {item.name}
+        </div>
+        <div className="mt-0.5 truncate text-[8px] uppercase tracking-wider text-muted-foreground" title={item.category}>
+          {item.category}
+        </div>
       </div>
-    </div>
+    </article>
   )
 }
