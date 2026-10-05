@@ -113,6 +113,9 @@ export function computeTierRows(
         wins,
         matches,
         kda: totalDeaths > 0 ? (totalKills + totalAssists) / totalDeaths : totalKills + totalAssists,
+        avgKills: matches > 0 ? totalKills / matches : 0,
+        avgDeaths: matches > 0 ? totalDeaths / matches : 0,
+        avgAssists: matches > 0 ? totalAssists / matches : 0,
         avgDamage: matches > 0 ? totalPlayerDamage / matches : 0,
         avgNetWorth: matches > 0 ? totalNetWorth / matches : 0,
       }
