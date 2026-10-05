@@ -2,7 +2,7 @@ import { GAME_MODE } from '@/lib/config'
 import { getItemTooltipBackers, getItems } from './assets'
 import { apiGet } from './client'
 import type { Locale } from '@/lib/i18n/config'
-import type { HeroAsset, HeroEntity, ItemAsset } from './types'
+import type { HeroEntity, ItemAsset, ItemSlot } from './types'
 import type { components } from './schema'
 
 type Build = components['schemas']['Build']
@@ -20,6 +20,7 @@ export interface HeroBuildItem {
   slot: 'weapon' | 'vitality' | 'spirit'
   isActive: boolean
   isImbued: boolean
+  backer: { backer: { png: string; webp: string }; color: { png: string; webp: string }; mask: { png: string; webp: string } } | null
 }
 
 export interface HeroBuildSkill {
@@ -53,6 +54,7 @@ function toView(
   build: Build,
   items: Map<number, { name: string; icon: string | null; slot: 'weapon' | 'vitality' | 'spirit'; isActive: boolean; isImbued: boolean }>,
   abilities: Map<number, { name: string; icon: string | null }>,
+  tooltipBackers: Record<ItemSlot, { backer: { png: string; webp: string }; color: { png: string; webp: string }; mask: { png: string; webp: string } }> | null,
 ): HeroBuildView {
   const details = build.hero_build.details
   const buildItems: HeroBuildItem[] = []
@@ -73,6 +75,7 @@ function toView(
         slot: asset.slot,
         isActive: asset.isActive,
         isImbued: asset.isImbued,
+        backer: tooltipBackers?.[asset.slot] ?? null,
       })
     }
   }
@@ -179,7 +182,7 @@ export async function getHeroBuildSections(
   const makeViews = (rows: HeroBuildStats[]) =>
     rows.flatMap((stat) => {
       const build = detailMap.get(stat.hero_build_id)
-      return build ? [toView(stat, build, itemMap, abilities)] : []
+      return build ? [toView(stat, build, itemMap, abilities, tooltipBackers)] : []
     })
 
   return {
