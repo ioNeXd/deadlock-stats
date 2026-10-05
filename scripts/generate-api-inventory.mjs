@@ -21,6 +21,11 @@ if (!spec || typeof spec !== "object" || !spec.paths || typeof spec.paths !== "o
 
 const methods = new Set(["get", "post", "put", "patch", "delete", "options", "head", "trace"]);
 const rows = [];
+const IMPLEMENTED_ENDPOINTS = {
+  hero_build_stats: ["components/pages/hero-page.tsx", "lib/api/builds.ts"],
+  fetch_build_live: ["lib/api/builds.ts"],
+  get_items_by_hero_id: ["lib/api/builds.ts"],
+};
 
 for (const [path, pathItem] of Object.entries(spec.paths)) {
   if (!pathItem || typeof pathItem !== "object") continue;
@@ -56,8 +61,8 @@ for (const [path, pathItem] of Object.entries(spec.paths)) {
       rateLimit: extractRateLimit(text),
       apiCache: extractCache(text),
       siteStrategy: deprecated ? "ignore" : "runtime",
-      usedBy: [],
-      implementationStatus: "planned",
+      usedBy: IMPLEMENTED_ENDPOINTS[String(operationId)] ?? [],
+      implementationStatus: IMPLEMENTED_ENDPOINTS[String(operationId)] ? "implemented" : "planned",
     });
   }
 }
