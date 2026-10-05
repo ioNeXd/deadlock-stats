@@ -64,7 +64,7 @@ export async function TierListPage({ locale }: { locale: Locale }) {
           <div className="absolute inset-0 bg-background/80" />
         </div>
       ) : null}
-      <main id="main" className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
+      <main id="main" className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 border border-border/70 bg-card/40 px-6 py-10 shadow-[0_18px_60px_rgba(0,0,0,0.18)] md:px-8 md:py-12">
         <RankBandTheme bands={bands}>
         <PageHeader eyebrow={t.tierList.eyebrow} title={t.tierList.title} lede={t.tierList.lede} />
         <TierListSwitcher
