@@ -38,8 +38,18 @@ export async function fetchTierStats(
       corrupted_items: 'exclude',
     },
     heroes: {
-      columns: ['hero_id', 'wins', 'losses', 'matches'],
-      rows: heroes.map((r) => [r.hero_id, r.wins, r.losses, r.matches]),
+      columns: ['hero_id', 'wins', 'losses', 'matches', 'total_kills', 'total_deaths', 'total_assists', 'total_player_damage', 'total_net_worth'],
+      rows: heroes.map((r) => [
+        r.hero_id,
+        r.wins,
+        r.losses,
+        r.matches,
+        r.total_kills,
+        r.total_deaths,
+        r.total_assists,
+        r.total_player_damage,
+        r.total_net_worth,
+      ]),
     },
     items: {
       columns: ['item_id', 'wins', 'losses', 'matches', 'players'],
