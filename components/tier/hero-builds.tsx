@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type MouseEvent } from 'react'
 import { Check, Clipboard } from 'lucide-react'
 import type { Locale } from '@/lib/i18n/config'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -72,7 +72,7 @@ function BuildCard({
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  async function copyBuildId(event: React.MouseEvent<HTMLButtonElement>) {
+  async function copyBuildId(event: MouseEvent<HTMLButtonElement>) {
     event.stopPropagation()
     try {
       await navigator.clipboard.writeText(String(build.id))
@@ -85,20 +85,26 @@ function BuildCard({
 
   return (
     <article className="relative border border-border/60 bg-background/45">
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-        aria-label={open ? labels.collapse : labels.expand}
-        className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-card/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
-      >
+      <div className="flex w-full items-center gap-3 p-4 text-left">
         <div className="flex shrink-0 flex-col items-center gap-1.5">
           <span className="font-display text-2xl font-bold tabular-nums text-muted-foreground">{String(index + 1).padStart(2, '0')}</span>
-          <button type="button" onClick={copyBuildId} aria-label={labels.copy} title={labels.copy} className="rounded-sm p-1 text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          <button
+            type="button"
+            onClick={copyBuildId}
+            aria-label={labels.copy}
+            title={labels.copy}
+            className="rounded-sm border border-border bg-card/70 p-1.5 text-muted-foreground shadow-sm transition-colors hover:border-primary/60 hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
             {copied ? <Check className="size-3.5" aria-hidden /> : <Clipboard className="size-3.5" aria-hidden />}
           </button>
         </div>
-        <div className="min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
+          aria-label={open ? labels.collapse : labels.expand}
+          className="min-w-0 flex-1 text-left transition-colors hover:bg-card/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
+        >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h3 className="font-display text-xl font-semibold uppercase tracking-wide text-foreground">{build.name}</h3>
@@ -113,9 +119,17 @@ function BuildCard({
             <span><strong className="font-semibold text-foreground">{formatCompact(build.popularity, locale)}</strong> {labels.matches}</span>
             <span><strong className="font-semibold text-foreground">{formatCompact(build.players, locale)}</strong> {labels.players}</span>
           </div>
-        </div>
-        <span aria-hidden className="ml-2 shrink-0 text-lg text-muted-foreground">{open ? '−' : '+'}</span>
-      </button>
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
+          aria-label={open ? labels.collapse : labels.expand}
+          className="ml-2 shrink-0 p-2 text-lg text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          {open ? '−' : '+'}
+        </button>
+      </div>
 
       {copied ? (
         <div role="status" className="absolute left-1/2 top-2 z-20 -translate-x-1/2 border border-primary/40 bg-background/95 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary shadow-lg">
