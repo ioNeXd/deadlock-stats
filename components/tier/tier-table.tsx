@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import type { HeroEntity, ItemEntity } from '@/lib/api/types'
 import { formatCompact, formatInteger, formatPercent } from '@/lib/format'
-import { interpolate, type Locale } from '@/lib/i18n/config'
+import { interpolate, localePath, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import type { TierStat } from '@/lib/tiers'
 import { cn } from '@/lib/utils'
@@ -199,7 +199,7 @@ function Row({ row, kind, locale, maxPick }: { row: TierTableRow; kind: 'heroes'
             </div>
           )
           return kind === 'heroes' ? (
-            <Link href={`/heroes/${row.entity.id}`} className="block hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <Link href={localePath(locale, `/heroes/${row.entity.id}`)} className="block hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               {content}
             </Link>
           ) : content
