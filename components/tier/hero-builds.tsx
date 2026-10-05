@@ -146,7 +146,7 @@ function BuildCard({
             {build.itemGroups.length > 0 ? (
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 {build.itemGroups.map((group, groupIndex) => (
-                  <ItemGroup key={`${group.name}-${groupIndex}`} group={group} labels={labels} />
+                  <ItemGroup key={`${group.name}-${groupIndex}`} group={group} />
                 ))}
               </div>
             ) : <span className="mt-2 block text-xs text-muted-foreground">—</span>}
@@ -171,9 +171,9 @@ function BuildCard({
   )
 }
 
-function ItemGroup({ group, labels }: { group: HeroBuildView['itemGroups'][number]; labels: Dictionary['heroPage']['builds'] }) {
+function ItemGroup({ group }: { group: HeroBuildView['itemGroups'][number] }) {
   return (
-    <section className="border border-border/50 bg-black/15 p-2.5">
+    <section className={`border bg-black/15 p-2.5 ${group.optional ? 'border-cyan-300/70 shadow-[0_0_18px_rgba(103,232,249,0.08)]' : 'border-border/50'}`}>
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
         <div className="min-w-0">
           <h5 className="font-display text-xs font-semibold uppercase tracking-wide text-foreground">
@@ -186,13 +186,13 @@ function ItemGroup({ group, labels }: { group: HeroBuildView['itemGroups'][numbe
         </span>
       </div>
       <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-5 md:grid-cols-6">
-        {group.items.map((item) => <ItemCard key={item.id} item={item} labels={labels} />)}
+        {group.items.map((item) => <ItemCard key={item.id} item={item} />)}
       </div>
     </section>
   )
 }
 
-function ItemCard({ item, labels }: { item: HeroBuildView['itemGroups'][number]['items'][number]; labels: Dictionary['heroPage']['builds'] }) {
+function ItemCard({ item }: { item: HeroBuildView['itemGroups'][number]['items'][number] }) {
   const tone = item.slot === 'vitality'
     ? {
         frame: 'border-emerald-400/55',
@@ -239,15 +239,13 @@ function ItemCard({ item, labels }: { item: HeroBuildView['itemGroups'][number][
           </div>
         )}
 
-        <div className="absolute inset-x-1 bottom-7 flex justify-center gap-1">
-          {item.isActive ? <span className="bg-black/75 px-1 py-0.5 text-[7px] font-bold uppercase text-foreground">{labels.active}</span> : null}
-          {item.isImbued ? <span className="bg-black/75 px-1 py-0.5 text-[7px] font-bold uppercase text-primary">I</span> : null}
-        </div>
-      </div>
-
-      <div className="absolute inset-x-0 bottom-0 border-t border-border/50 bg-black/75 px-1.5 py-1">
-        <div className={`truncate text-center text-[9px] font-semibold uppercase leading-tight tracking-wide ${tone.label}`} title={item.name}>
-          {item.name}
+        <div className="absolute inset-x-0 bottom-0 min-h-8 border-t border-border/50 bg-black/80 px-1 py-1">
+          <div
+            className={`flex min-h-6 items-center justify-center text-center text-[clamp(7px,0.8vw,9px)] font-semibold uppercase leading-tight tracking-wide ${tone.label}`}
+            title={item.name}
+          >
+            {item.name}
+          </div>
         </div>
       </div>
     </article>
