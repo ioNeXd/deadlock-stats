@@ -1,33 +1,19 @@
 import type { Locale } from '@/lib/i18n/config'
+import type { Dictionary } from '@/lib/i18n/dictionaries'
 import { formatCompact, formatPercent } from '@/lib/format'
 import type { HeroBuildSections, HeroBuildView } from '@/lib/api/builds'
 
 export function HeroBuilds({
   locale,
   sections,
+  labels,
 }: {
   locale: Locale
   sections: HeroBuildSections
+  labels: Dictionary['heroPage']['builds']
 }) {
-  const t = locale === 'pt-br'
-    ? {
-        popular: 'Builds populares',
-        winRate: 'Maior winrate',
-        matches: 'partidas',
-        players: 'jogadores',
-        items: 'Itens',
-        skillPath: 'Skill path',
-        empty: 'Nenhuma build disponível para este período.',
-      }
-    : {
-        popular: 'Popular builds',
-        winRate: 'Highest win rate',
-        matches: 'matches',
-        players: 'players',
-        items: 'Items',
-        skillPath: 'Skill path',
-        empty: 'No builds available for this period.',
-      }
+  const t: Dictionary['heroPage']['builds'] = labels
+
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -46,13 +32,13 @@ function BuildSection({
   title: string
   locale: Locale
   builds: HeroBuildView[]
-  labels: { matches: string; players: string; items: string; skillPath: string; empty: string }
+  labels: Dictionary['heroPage']['builds']
 }) {
   return (
     <section className="border border-border/70 bg-card/40 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.12)] md:p-5">
       <div className="mb-4 flex items-end justify-between gap-3">
         <h2 className="font-display text-2xl font-bold uppercase tracking-wide text-foreground">{title}</h2>
-        <span className="text-xs uppercase tracking-wider text-muted-foreground">Top 3</span>
+        <span className="text-xs uppercase tracking-wider text-muted-foreground">{labels.top}</span>
       </div>
 
       {builds.length > 0 ? (
@@ -77,7 +63,7 @@ function BuildCard({
   build: HeroBuildView
   index: number
   locale: Locale
-  labels: { matches: string; players: string; items: string; skillPath: string }
+  labels: Dictionary['heroPage']['builds']
 }) {
   return (
     <article className="border border-border/60 bg-background/45 p-4">
@@ -87,11 +73,11 @@ function BuildCard({
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h3 className="font-display text-xl font-semibold uppercase tracking-wide text-foreground">{build.name}</h3>
-              <p className="mt-1 text-xs text-muted-foreground">ID {build.id}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{labels.id} {build.id}</p>
             </div>
             <div className="text-right tabular-nums">
               <div className="font-display text-xl font-semibold text-foreground">{formatPercent(build.winRate, locale)}</div>
-              <div className="text-xs text-muted-foreground">win rate</div>
+              <div className="text-xs text-muted-foreground">{labels.winRate}</div>
             </div>
           </div>
 
