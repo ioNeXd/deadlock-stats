@@ -16,6 +16,9 @@ export type TierTableRow = TierStat & {
   kda?: number
   avgDamage?: number
   avgNetWorth?: number
+  avgKills?: number
+  avgDeaths?: number
+  avgAssists?: number
 }
 
 interface Props {
@@ -186,7 +189,7 @@ function Row({ row, kind, locale, maxPick }: { row: TierTableRow; kind: 'heroes'
               </span>
             ) : row.kda !== undefined ? (
               <span className="text-xs text-muted-foreground tabular-nums">
-                {t.table.kda} {row.kda.toFixed(2)} · {t.table.avgDamage} {formatCompact(row.avgDamage ?? 0, locale)} · {t.table.avgNetWorth} {formatCompact(row.avgNetWorth ?? 0, locale)}
+                {t.table.kda} {row.kda.toFixed(2)} · {t.table.kills} {row.avgKills?.toFixed(2)} · {t.table.assists} {row.avgAssists?.toFixed(2)} · {t.table.deaths} {row.avgDeaths?.toFixed(2)} · {t.table.avgDamage} {formatCompact(row.avgDamage ?? 0, locale)} · {t.table.avgNetWorth} {formatCompact(row.avgNetWorth ?? 0, locale)}
               </span>
             ) : null}
           </span>
