@@ -18,7 +18,7 @@ export function RankBandTheme({ bands, children }: { bands: BandOption[]; childr
   ) as CSSProperties
 
   return (
-    <div className="rank-band-theme flex flex-col gap-6 px-1 py-1" style={style}>
+    <div className="rank-band-theme flex flex-col gap-6 border border-border/70 bg-card/40 px-4 py-4 shadow-[0_18px_60px_rgba(0,0,0,0.18)] md:px-6 md:py-6" style={style}>
       {children}
     </div>
   )
