@@ -92,7 +92,7 @@ export function TierTable({ locale, kind, rows, totalRows, loading, sort, dir, o
   )
 
   return (
-    <div className="chamfer border border-border bg-card">
+    <div className="rounded-md border border-border bg-card">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[560px] border-collapse text-sm">
           <caption className="sr-only">{caption}</caption>
