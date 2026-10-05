@@ -90,13 +90,13 @@ function BuildCard({
 
           <div className="mt-4">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{labels.items}</h4>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {build.items.length > 0 ? (
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
-                  {build.items.map((item) => <ItemCard key={`${item.category}-${item.id}`} item={item} labels={labels} />)}
-                </div>
-              ) : <span className="text-xs text-muted-foreground">—</span>}
-            </div>
+            {build.itemGroups.length > 0 ? (
+              <div className="mt-3 space-y-4">
+                {build.itemGroups.map((group, groupIndex) => (
+                  <ItemGroup key={`${group.name}-${groupIndex}`} group={group} labels={labels} />
+                ))}
+              </div>
+            ) : <span className="mt-2 block text-xs text-muted-foreground">—</span>}
           </div>
 
           <div className="mt-4">
@@ -119,7 +119,29 @@ function BuildCard({
 }
 
 
-function ItemCard({ item, labels }: { item: HeroBuildView['items'][number]; labels: Dictionary['heroPage']['builds'] }) {
+function ItemGroup({ group, labels }: { group: HeroBuildView['itemGroups'][number]; labels: Dictionary['heroPage']['builds'] }) {
+  return (
+    <section className="border border-border/50 bg-black/15 p-3">
+      <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-2">
+        <div className="min-w-0">
+          <h5 className="font-display text-sm font-semibold uppercase tracking-wide text-foreground">
+            {group.name}
+            {group.optional ? <span className="ml-2 text-[9px] font-medium tracking-wider text-muted-foreground">OPTIONAL</span> : null}
+          </h5>
+          {group.description ? <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">{group.description}</p> : null}
+        </div>
+        <span className="text-[9px] tabular-nums uppercase tracking-wider text-muted-foreground">
+          {group.items.length}
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+        {group.items.map((item) => <ItemCard key={item.id} item={item} labels={labels} />)}
+      </div>
+    </section>
+  )
+}
+
+function ItemCard({ item, labels }: { item: HeroBuildView['itemGroups'][number]['items'][number]; labels: Dictionary['heroPage']['builds'] }) {
   const tone = item.slot === 'vitality'
     ? {
         frame: 'border-emerald-400/55',
@@ -166,23 +188,15 @@ function ItemCard({ item, labels }: { item: HeroBuildView['items'][number]; labe
           </div>
         )}
 
-        <div className="absolute inset-x-1 top-1 flex items-start justify-between gap-1">
-          <span className={`bg-black/65 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${tone.label}`}>
-            {item.slot}
-          </span>
-          <div className="flex gap-1">
-            {item.isActive ? <span className="bg-black/70 px-1 py-0.5 text-[8px] font-bold uppercase text-foreground">{labels.active}</span> : null}
-            {item.isImbued ? <span className="bg-black/70 px-1 py-0.5 text-[8px] font-bold uppercase text-primary">I</span> : null}
-          </div>
+        <div className="absolute inset-x-1 top-1 flex justify-end gap-1">
+          {item.isActive ? <span className="bg-black/70 px-1 py-0.5 text-[8px] font-bold uppercase text-foreground">{labels.active}</span> : null}
+          {item.isImbued ? <span className="bg-black/70 px-1 py-0.5 text-[8px] font-bold uppercase text-primary">I</span> : null}
         </div>
       </div>
 
       <div className="min-w-0 border-t border-border/50 bg-black/35 px-2 py-1.5">
         <div className={`truncate text-[10px] font-semibold uppercase leading-tight tracking-wide ${tone.label}`} title={item.name}>
           {item.name}
-        </div>
-        <div className="mt-0.5 truncate text-[8px] uppercase tracking-wider text-muted-foreground" title={item.category}>
-          {item.category}
         </div>
       </div>
     </article>
