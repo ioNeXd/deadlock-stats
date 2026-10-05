@@ -1,6 +1,7 @@
 'use client'
 
 import type { CSSProperties } from 'react'
+import Link from 'next/link'
 import type { HeroEntity, ItemEntity } from '@/lib/api/types'
 import { formatCompact, formatInteger, formatPercent } from '@/lib/format'
 import { interpolate, type Locale } from '@/lib/i18n/config'
@@ -159,8 +160,7 @@ function Row({ row, kind, locale, maxPick }: { row: TierTableRow; kind: 'heroes'
         )}
       </td>
       <th scope="row" className="px-3 py-2 text-left font-normal">
-        <div className="flex items-center gap-3">
-          <span
+        <Link href={kind === 'heroes' ? `/heroes/${row.entity.id}` : '#'} className="flex items-center gap-3 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             style={style}
             className={cn(
               'flex size-10 shrink-0 items-center justify-center rounded-sm bg-muted',
@@ -193,7 +193,7 @@ function Row({ row, kind, locale, maxPick }: { row: TierTableRow; kind: 'heroes'
               </span>
             ) : null}
           </span>
-        </div>
+        </Link>
       </th>
       <td className="px-3 py-2 text-right tabular-nums">
         <div className={cn('font-semibold', !lowData && 'text-foreground')}>{formatPercent(row.smoothed, locale)}</div>
