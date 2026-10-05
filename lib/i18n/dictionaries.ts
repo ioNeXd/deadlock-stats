@@ -49,6 +49,8 @@ const en = {
       items: 'Items',
       skillPath: 'Skill path',
       empty: 'No builds available for this period.',
+      active: 'Active',
+      imbued: 'Imbued',
     },
   },
   heroes: {
@@ -202,6 +204,8 @@ const ptBr: Dictionary = {
       items: 'Itens',
       skillPath: 'Skill path',
       empty: 'Nenhuma build disponível para este período.',
+      active: 'Ativo',
+      imbued: 'Imbuído',
     },
   },
   heroes: {
