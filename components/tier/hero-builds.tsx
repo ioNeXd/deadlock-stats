@@ -91,12 +91,11 @@ function BuildCard({
           <div className="mt-4">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{labels.items}</h4>
             <div className="mt-2 flex flex-wrap gap-2">
-              {build.items.length > 0 ? build.items.map((item) => (
-                <span key={`${item.category}-${item.id}`} className="inline-flex items-center gap-2 border border-border/60 bg-card px-2 py-1 text-xs text-foreground">
-                  {item.icon ? <img src={item.icon} alt="" width={24} height={24} className="size-6 object-contain" /> : null}
-                  <span>{item.name}</span>
-                </span>
-              )) : <span className="text-xs text-muted-foreground">—</span>}
+              {build.items.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+                  {build.items.map((item) => <ItemCard key={`${item.category}-${item.id}`} item={item} />)}
+                </div>
+              ) : <span className="text-xs text-muted-foreground">—</span>}
             </div>
           </div>
 
@@ -116,5 +115,39 @@ function BuildCard({
         </div>
       </div>
     </article>
+  )
+}
+
+
+function ItemCard({ item }: { item: HeroBuildView['items'][number] }) {
+  const tone = item.slot === 'vitality'
+    ? 'border-emerald-400/45 text-emerald-100'
+    : item.slot === 'weapon'
+      ? 'border-orange-400/45 text-orange-100'
+      : 'border-violet-400/45 text-violet-100'
+
+  return (
+    <div className={\`group relative aspect-[3/4] min-w-0 overflow-hidden border bg-black/30 shadow-[0_10px_24px_rgba(0,0,0,0.24)] \${tone}\`}>
+      {item.backer ? (
+        <>
+          <img src={item.backer.backer.webp} alt="" aria-hidden className="absolute inset-0 size-full object-cover opacity-90" />
+          <img src={item.backer.color.webp} alt="" aria-hidden className="absolute inset-0 size-full object-cover opacity-80 mix-blend-screen" />
+          <img src={item.backer.mask.webp} alt="" aria-hidden className="absolute inset-0 size-full object-cover opacity-75" />
+        </>
+      ) : null}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-black/10" />
+      <div className="absolute inset-x-1 top-1 flex items-start justify-between gap-1">
+        <span className="max-w-[70%] truncate bg-black/55 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider">{item.name}</span>
+        <div className="flex gap-1">
+          {item.isActive ? <span className="bg-black/65 px-1 py-0.5 text-[8px] font-bold uppercase">A</span> : null}
+          {item.isImbued ? <span className="bg-black/65 px-1 py-0.5 text-[8px] font-bold uppercase">I</span> : null}
+        </div>
+      </div>
+      {item.icon ? <img src={item.icon} alt="" width={72} height={72} className="absolute inset-0 m-auto size-[58%] object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.6)] transition-transform duration-200 group-hover:scale-105" /> : null}
+      <div className="absolute inset-x-1 bottom-1 flex items-center justify-between gap-1">
+        <span className="truncate bg-black/55 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider">{item.category}</span>
+        {item.isImbued ? <span className="bg-black/65 px-1.5 py-0.5 text-[9px] font-bold uppercase">Imbued</span> : null}
+      </div>
+    </div>
   )
 }
