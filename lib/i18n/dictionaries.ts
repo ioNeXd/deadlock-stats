@@ -51,6 +51,8 @@ const en = {
       empty: 'No builds available for this period.',
       active: 'Active',
       imbued: 'Imbued',
+      expand: 'Expand build',
+      collapse: 'Collapse build',
     },
   },
   heroes: {
@@ -206,6 +208,8 @@ const ptBr: Dictionary = {
       empty: 'Nenhuma build disponível para este período.',
       active: 'Ativo',
       imbued: 'Imbuído',
+      expand: 'Abrir build',
+      collapse: 'Fechar build',
     },
   },
   heroes: {
