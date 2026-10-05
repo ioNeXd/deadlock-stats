@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import type { Locale } from '@/lib/i18n/config'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import { formatCompact, formatPercent } from '@/lib/format'
@@ -16,7 +19,7 @@ export function HeroBuilds({
 
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="space-y-6">
       <BuildSection title={t.popular} locale={locale} builds={sections.popular} labels={t} />
       <BuildSection title={t.winRate} locale={locale} builds={sections.highestWinRate} labels={t} />
     </div>
@@ -65,9 +68,17 @@ function BuildCard({
   locale: Locale
   labels: Dictionary['heroPage']['builds']
 }) {
+  const [open, setOpen] = useState(false)
+
   return (
-    <article className="border border-border/60 bg-background/45 p-4">
-      <div className="flex items-start gap-3">
+    <article className="border border-border/60 bg-background/45">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        aria-label={open ? labels.collapse : labels.expand}
+        className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-card/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
+      >
         <span className="font-display text-2xl font-bold tabular-nums text-muted-foreground">{String(index + 1).padStart(2, '0')}</span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -80,13 +91,17 @@ function BuildCard({
               <div className="text-xs text-muted-foreground">{labels.winRate}</div>
             </div>
           </div>
-
-          {build.description ? <p className="mt-3 text-sm text-muted-foreground">{build.description}</p> : null}
-
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs tabular-nums text-muted-foreground">
             <span><strong className="font-semibold text-foreground">{formatCompact(build.popularity, locale)}</strong> {labels.matches}</span>
             <span><strong className="font-semibold text-foreground">{formatCompact(build.players, locale)}</strong> {labels.players}</span>
           </div>
+        </div>
+        <span aria-hidden className="ml-2 shrink-0 text-lg text-muted-foreground">{open ? '−' : '+'}</span>
+      </button>
+
+      {open ? (
+        <div className="border-t border-border/60 px-4 pb-4">
+          {build.description ? <p className="pt-4 text-sm text-muted-foreground">{build.description}</p> : null}
 
           <div className="mt-4">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{labels.items}</h4>
@@ -113,11 +128,10 @@ function BuildCard({
             </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </article>
   )
 }
-
 
 function ItemGroup({ group, labels }: { group: HeroBuildView['itemGroups'][number]; labels: Dictionary['heroPage']['builds'] }) {
   return (
