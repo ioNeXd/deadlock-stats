@@ -18,14 +18,16 @@ function once<T>(key: string, load: () => Promise<T>): Promise<T> {
   return pending
 }
 
-function collectAlleyImages(value: unknown, key = '', result: string[] = []): string[] {
-  if (result.length >= 3) return result
+function collectNamedImages(value: unknown, target: string, key = '', result: string[] = [], underTarget = false): string[] {
+  const matchesTarget = underTarget || key.toLowerCase().includes(target.toLowerCase())
   if (typeof value === 'string') {
-    if (key.toLowerCase().includes('alley') || value.toLowerCase().includes('/alley')) {
+    if (matchesTarget || value.toLowerCase().includes(target.toLowerCase())) {
       try {
         const url = new URL(value)
         const cdn = new URL(ASSET_CDN)
-        if (url.protocol === 'https:' && url.origin === cdn.origin) result.push(url.toString())
+        if (url.protocol === 'https:' && url.origin === cdn.origin && !result.includes(url.toString())) {
+          result.push(url.toString())
+        }
       } catch {
         // Ignore malformed or non-CDN entries from the public asset index.
       }
@@ -33,25 +35,32 @@ function collectAlleyImages(value: unknown, key = '', result: string[] = []): st
     return result
   }
   if (Array.isArray(value)) {
-    for (const item of value) collectAlleyImages(item, key, result)
+    for (const item of value) collectNamedImages(item, target, key, result, matchesTarget)
     return result
   }
   if (typeof value !== 'object' || value === null) return result
   for (const [childKey, childValue] of Object.entries(value)) {
-    collectAlleyImages(childValue, childKey, result)
-    if (result.length >= 3) break
+    collectNamedImages(childValue, target, childKey, result, matchesTarget)
   }
   return result
 }
 
-export function getAlleyBackground(): Promise<string | null> {
-  return once('assets:latest:images:alley', async () => {
+function getNamedImageBackground(name: string): Promise<string | null> {
+  return once('assets:latest:images:' + name, async () => {
     const index = await apiGet<unknown>('/v1/assets/images', {}, ASSET_CACHE)
     if (!index || typeof index !== 'object') return null
-    const images = collectAlleyImages(index)
+    const images = collectNamedImages(index, name)
     const preferred = images.find((url) => /\.webp(?:$|[?#])/i.test(url))
     return preferred ?? images[0] ?? null
   })
+}
+
+export function getAlleyBackground(): Promise<string | null> {
+  return getNamedImageBackground('alley')
+}
+
+export function getTierListBackground(): Promise<string | null> {
+  return getNamedImageBackground('background_gothic')
 }
 
 export function getHeroes(locale: Locale): Promise<HeroEntity[]> {
