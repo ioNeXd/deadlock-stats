@@ -189,7 +189,7 @@ function Row({ row, kind, locale, maxPick }: { row: TierTableRow; kind: 'heroes'
               </span>
             ) : row.kda !== undefined ? (
               <span className="text-xs text-muted-foreground tabular-nums">
-                {t.table.kda} {row.kda.toFixed(2)} · {row.avgKills?.toFixed(2)} / {row.avgAssists?.toFixed(2)} / {row.avgDeaths?.toFixed(2)} · <strong className="font-semibold">{t.table.avgDamage} {formatCompact(row.avgDamage ?? 0, locale)}</strong> · <strong className="font-semibold">{t.table.avgNetWorth} {formatCompact(row.avgNetWorth ?? 0, locale)}</strong>
+                <strong className="font-semibold">{t.table.kda}</strong> {row.kda.toFixed(2)} · {row.avgKills?.toFixed(2)} / {row.avgAssists?.toFixed(2)} / {row.avgDeaths?.toFixed(2)} · <strong className="font-semibold">{t.table.avgDamage}</strong> {formatCompact(row.avgDamage ?? 0, locale)} · <strong className="font-semibold">{t.table.avgNetWorth}</strong> {formatCompact(row.avgNetWorth ?? 0, locale)}
               </span>
             ) : null}
           </span>
