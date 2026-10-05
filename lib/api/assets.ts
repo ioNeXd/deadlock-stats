@@ -83,7 +83,7 @@ export function getHeroes(locale: Locale): Promise<HeroEntity[]> {
 
 const SLOTS: ItemSlot[] = ['weapon', 'vitality', 'spirit']
 
-export function getItems(locale: Locale): Promise<ItemEntity[]> {
+export async function getItems(locale: Locale): Promise<ItemEntity[]> {
   return once(`assets:latest:items:${locale}`, async () => {
     // Response is ~2 MB, above the Next data-cache limit; memoized per process instead.
     const items = await apiGet<ItemAsset[]>(
@@ -103,6 +103,8 @@ export function getItems(locale: Locale): Promise<ItemEntity[]> {
         slot,
         tier: Number(raw.item_tier ?? 0),
         cost: Number(raw.cost ?? 0),
+        isActive: raw.is_active_item === true,
+        isImbued: raw.imbue != null,
       })
     }
     return result
