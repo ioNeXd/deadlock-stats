@@ -167,7 +167,7 @@ function Row({ row, kind, locale, maxPick }: { row: TierTableRow; kind: 'heroes'
                 height={40}
                 loading="lazy"
                 decoding="async"
-                className={cn('size-full object-cover', item && 'p-1 object-contain', lowData && 'opacity-60')}
+                className={cn('size-full object-contain', item && 'p-1', lowData && 'opacity-60')}
               />
             ) : null}
           </span>
