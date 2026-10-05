@@ -53,6 +53,8 @@ const en = {
       imbued: 'Imbued',
       expand: 'Expand build',
       collapse: 'Collapse build',
+      copy: 'Copy build ID',
+      copied: 'Copied',
     },
   },
   heroes: {
@@ -210,6 +212,8 @@ const ptBr: Dictionary = {
       imbued: 'Imbuído',
       expand: 'Abrir build',
       collapse: 'Fechar build',
+      copy: 'Copiar ID da build',
+      copied: 'Copiado',
     },
   },
   heroes: {
