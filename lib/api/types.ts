@@ -58,6 +58,6 @@ export interface StatsSnapshot {
     max_average_badge: number
     corrupted_items: 'exclude'
   }
-  heroes: { columns: ['hero_id', 'wins', 'losses', 'matches']; rows: number[][] }
+  heroes: { columns: ['hero_id', 'wins', 'losses', 'matches', 'total_kills', 'total_deaths', 'total_assists', 'total_player_damage', 'total_net_worth']; rows: number[][] }
   items: { columns: ['item_id', 'wins', 'losses', 'matches', 'players']; rows: number[][] }
 }
