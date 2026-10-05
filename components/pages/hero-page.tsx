@@ -25,8 +25,8 @@ export async function HeroPage({ locale, id }: { locale: Locale; id: number }) {
 
   const window = windows[0]
   const snapshot = window ? await fetchTierStats(window, DEFAULT_BAND, STATS_FETCH).catch(() => null) : null
-  const entityMap = new Map([[hero.id, hero]])
-  const row = snapshot ? computeTierRows(snapshot, 'heroes', entityMap, MIN_MATCHES.heroes).find((entry) => entry.id === hero.id) : undefined
+  const heroMap = new Map(heroes.map((entity) => [entity.id, entity]))
+  const row = snapshot ? computeTierRows(snapshot, 'heroes', heroMap, MIN_MATCHES.heroes).find((entry) => entry.id === hero.id) : undefined
   const periodLabel = window
     ? window.end
       ? `${new Date(window.start * 1000).toLocaleDateString(locale === 'pt-br' ? 'pt-BR' : 'en-US')} – ${new Date(window.end * 1000).toLocaleDateString(locale === 'pt-br' ? 'pt-BR' : 'en-US')}`
