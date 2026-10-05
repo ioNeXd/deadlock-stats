@@ -36,14 +36,14 @@ export async function RootShell({ locale, children }: { locale: Locale; children
           </div>
         ) : null}
         <div className="relative z-10 flex min-h-dvh flex-col">
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
-        >
-          {t.site.skipToContent}
-        </a>
-        <SiteHeader locale={locale} />
-        <div className="flex-1">{children}</div>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
+          >
+            {t.site.skipToContent}
+          </a>
+          <SiteHeader locale={locale} />
+          <div className="flex-1">{children}</div>
           <SiteFooter locale={locale} />
         </div>
       </body>
