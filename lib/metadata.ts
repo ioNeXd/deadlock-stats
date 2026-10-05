@@ -20,7 +20,7 @@ export function layoutMetadata(locale: Locale): Metadata {
   }
 }
 
-export function pageMetadata(locale: Locale, path: SitePath, title: string, description: string): Metadata {
+export function pageMetadata(locale: Locale, path: SitePath | string, title: string, description: string): Metadata {
   return {
     title,
     description,
