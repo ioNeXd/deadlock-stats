@@ -55,7 +55,7 @@ export function ContextStrip({ locale, periodLabel, bandLabel, result, loading }
           <dd className="flex items-center gap-2">
             <span
               className={cn(
-                'chamfer-sm inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider',
+                'inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider',
                 loading ? 'bg-secondary text-muted-foreground' : result?.source === 'live' ? 'bg-accent text-foreground' : 'bg-secondary text-primary',
               )}
             >
