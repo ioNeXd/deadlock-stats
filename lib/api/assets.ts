@@ -17,6 +17,43 @@ function once<T>(key: string, load: () => Promise<T>): Promise<T> {
   return pending
 }
 
+type ImageIndex = Record<string, ImageIndex | string> | string | ImageIndex[]
+
+function collectAlleyImages(value: ImageIndex, key = '', result: string[] = []): string[] {
+  if (result.length >= 3) return result
+  if (typeof value === 'string') {
+    if (key.toLowerCase().includes('alley') || value.toLowerCase().includes('/alley')) {
+      try {
+        const url = new URL(value)
+        const cdn = new URL(ASSET_CDN)
+        if (url.protocol === 'https:' && url.origin === cdn.origin) result.push(url.toString())
+      } catch {
+        // Ignore malformed or non-CDN entries from the public asset index.
+      }
+    }
+    return result
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) collectAlleyImages(item, key, result)
+    return result
+  }
+  for (const [childKey, childValue] of Object.entries(value)) {
+    collectAlleyImages(childValue, childKey, result)
+    if (result.length >= 3) break
+  }
+  return result
+}
+
+export function getAlleyBackground(): Promise<string | null> {
+  return once('assets:latest:images:alley', async () => {
+    const index = await apiGet<unknown>('/v1/assets/images', {}, ASSET_CACHE)
+    if (!index || typeof index !== 'object') return null
+    const images = collectAlleyImages(index as ImageIndex)
+    const preferred = images.find((url) => /\.webp(?:$|[?#])/i.test(url))
+    return preferred ?? images[0] ?? null
+  })
+}
+
 export function getHeroes(locale: Locale): Promise<HeroEntity[]> {
   return once(`assets:latest:heroes:${locale}`, async () => {
     const heroes = await apiGet<HeroAsset[]>(
