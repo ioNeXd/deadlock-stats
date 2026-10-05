@@ -28,6 +28,8 @@ export interface ItemEntity {
   slot: ItemSlot
   tier: number
   cost: number
+  isActive: boolean
+  isImbued: boolean
 }
 
 export interface RankEntity {
