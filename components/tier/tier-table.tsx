@@ -11,7 +11,12 @@ import { TierBadge } from './tier-badge'
 
 export type SortKey = 'score' | 'winRate' | 'pickRate' | 'matches' | 'name'
 export type SortDir = 'asc' | 'desc'
-export type TierTableRow = TierStat & { entity: HeroEntity | ItemEntity }
+export type TierTableRow = TierStat & {
+  entity: HeroEntity | ItemEntity
+  kda?: number
+  avgDamage?: number
+  avgNetWorth?: number
+}
 
 interface Props {
   locale: Locale
@@ -178,6 +183,10 @@ function Row({ row, kind, locale, maxPick }: { row: TierTableRow; kind: 'heroes'
                 <span className={SLOT_COLOR[item.slot]}>{t.slots[item.slot]}</span>
                 {' · '}T{item.tier}
                 {item.cost ? ` · ${interpolate(t.table.cost, { n: formatInteger(item.cost, locale) })}` : null}
+              </span>
+            ) : row.kda !== undefined ? (
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {t.table.kda} {row.kda.toFixed(2)} · {t.table.avgDamage} {formatCompact(row.avgDamage ?? 0, locale)} · {t.table.avgNetWorth} {formatCompact(row.avgNetWorth ?? 0, locale)}
               </span>
             ) : null}
           </span>
