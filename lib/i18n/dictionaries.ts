@@ -72,7 +72,7 @@ const en = {
     cost: '{n} souls',
     kda: 'KDA',
     avgDamage: 'DMG',
-    avgNetWorth: 'Souls',
+    avgNetWorth: 'Net worth',
   },
   context: {
     sample: '{n} hero picks',
@@ -194,7 +194,7 @@ const ptBr: Dictionary = {
     cost: '{n} almas',
     kda: 'KDA',
     avgDamage: 'Dano',
-    avgNetWorth: 'Almas',
+    avgNetWorth: 'Patrimônio',
   },
   context: {
     sample: '{n} escolhas de herói',
