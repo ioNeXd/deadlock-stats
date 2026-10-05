@@ -16,11 +16,17 @@ export interface HeroBuildItem {
   id: number
   name: string
   icon: string | null
-  category: string
   slot: 'weapon' | 'vitality' | 'spirit'
   isActive: boolean
   isImbued: boolean
   backer: { backer: { png: string; webp: string }; color: { png: string; webp: string }; mask: { png: string; webp: string } } | null
+}
+
+export interface HeroBuildItemGroup {
+  name: string
+  description: string | null
+  optional: boolean
+  items: HeroBuildItem[]
 }
 
 export interface HeroBuildSkill {
@@ -40,7 +46,7 @@ export interface HeroBuildView {
   players: number
   winRate: number
   popularity: number
-  items: HeroBuildItem[]
+  itemGroups: HeroBuildItemGroup[]
   skillPath: HeroBuildSkill[]
 }
 
@@ -57,25 +63,35 @@ function toView(
   tooltipBackers: Record<ItemSlot, { backer: { png: string; webp: string }; color: { png: string; webp: string }; mask: { png: string; webp: string } }> | null,
 ): HeroBuildView {
   const details = build.hero_build.details
-  const buildItems: HeroBuildItem[] = []
+  const itemGroups: HeroBuildItemGroup[] = []
   const seenItems = new Set<number>()
 
   for (const category of details.mod_categories) {
+    const categoryItems: HeroBuildItem[] = []
+
     for (const mod of category.mods ?? []) {
       const id = mod.ability_id
       if (seenItems.has(id)) continue
       const asset = items.get(id)
       if (!asset) continue
       seenItems.add(id)
-      buildItems.push({
+      categoryItems.push({
         id,
         name: asset.name,
         icon: asset.icon,
-        category: category.name,
         slot: asset.slot,
         isActive: asset.isActive,
         isImbued: asset.isImbued,
         backer: tooltipBackers?.[asset.slot] ?? null,
+      })
+    }
+
+    if (categoryItems.length > 0) {
+      itemGroups.push({
+        name: category.name,
+        description: category.description ?? null,
+        optional: category.optional === true,
+        items: categoryItems,
       })
     }
   }
@@ -100,7 +116,7 @@ function toView(
     players: stat.players,
     winRate: stat.matches > 0 ? stat.wins / stat.matches : 0,
     popularity: stat.matches,
-    items: buildItems,
+    itemGroups,
     skillPath,
   }
 }
