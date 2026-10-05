@@ -1,3 +1,4 @@
+import { ASSET_CDN } from '@/lib/config'
 import type { Locale } from '@/lib/i18n/config'
 import { apiGet } from './client'
 import type { HeroAsset, HeroEntity, ItemAsset, ItemEntity, ItemSlot, RankAsset, RankEntity } from './types'
@@ -17,9 +18,7 @@ function once<T>(key: string, load: () => Promise<T>): Promise<T> {
   return pending
 }
 
-type ImageIndex = Record<string, ImageIndex | string> | string | ImageIndex[]
-
-function collectAlleyImages(value: ImageIndex, key = '', result: string[] = []): string[] {
+function collectAlleyImages(value: unknown, key = '', result: string[] = []): string[] {
   if (result.length >= 3) return result
   if (typeof value === 'string') {
     if (key.toLowerCase().includes('alley') || value.toLowerCase().includes('/alley')) {
