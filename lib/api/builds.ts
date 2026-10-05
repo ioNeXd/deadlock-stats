@@ -1,5 +1,5 @@
 import { GAME_MODE } from '@/lib/config'
-import { getItems } from './assets'
+import { getItemTooltipBackers, getItems } from './assets'
 import { apiGet } from './client'
 import type { Locale } from '@/lib/i18n/config'
 import type { HeroAsset, HeroEntity, ItemAsset } from './types'
@@ -17,6 +17,9 @@ export interface HeroBuildItem {
   name: string
   icon: string | null
   category: string
+  slot: 'weapon' | 'vitality' | 'spirit'
+  isActive: boolean
+  isImbued: boolean
 }
 
 export interface HeroBuildSkill {
@@ -48,7 +51,7 @@ export interface HeroBuildSections {
 function toView(
   stat: HeroBuildStats,
   build: Build,
-  items: Map<number, { name: string; icon: string | null }>,
+  items: Map<number, { name: string; icon: string | null; slot: 'weapon' | 'vitality' | 'spirit'; isActive: boolean; isImbued: boolean }>,
   abilities: Map<number, { name: string; icon: string | null }>,
 ): HeroBuildView {
   const details = build.hero_build.details
@@ -67,6 +70,9 @@ function toView(
         name: asset.name,
         icon: asset.icon,
         category: category.name,
+        slot: asset.slot,
+        isActive: asset.isActive,
+        isImbued: asset.isImbued,
       })
     }
   }
@@ -137,13 +143,14 @@ export async function getHeroBuildSections(
   locale: Locale,
   start?: number,
 ): Promise<HeroBuildSections> {
-  const [stats, items, abilities] = await Promise.all([
+  const [stats, items, abilities, tooltipBackers] = await Promise.all([
     fetchHeroBuildStats(hero.id, start),
     getItems(locale),
     getAbilityAssets(locale, hero.id),
+    getItemTooltipBackers(),
   ])
 
-  const itemMap = new Map(items.map((item) => [item.id, { name: item.name, icon: item.icon }]))
+  const itemMap = new Map(items.map((item) => [item.id, { name: item.name, icon: item.icon, slot: item.slot, isActive: item.isActive, isImbued: item.isImbued }]))
 
   const popularStats = [...stats]
     .sort((a, b) => b.matches - a.matches || b.players - a.players || b.hero_build_id - a.hero_build_id)
