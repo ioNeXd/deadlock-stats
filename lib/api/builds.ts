@@ -64,7 +64,7 @@ function toView(
     for (const mod of category.mods ?? []) {
       const id = mod.ability_id
       if (seenItems.has(id)) continue
-      const asset = items.get(id) ?? abilities.get(id)
+      const asset = items.get(id)
       if (!asset) continue
       seenItems.add(id)
       buildItems.push({
