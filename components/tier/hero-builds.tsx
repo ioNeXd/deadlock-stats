@@ -144,7 +144,7 @@ function BuildCard({
           <div className="mt-4">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{labels.items}</h4>
             {build.itemGroups.length > 0 ? (
-              <div className="mt-3 space-y-4">
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
                 {build.itemGroups.map((group, groupIndex) => (
                   <ItemGroup key={`${group.name}-${groupIndex}`} group={group} labels={labels} />
                 ))}
@@ -173,10 +173,10 @@ function BuildCard({
 
 function ItemGroup({ group, labels }: { group: HeroBuildView['itemGroups'][number]; labels: Dictionary['heroPage']['builds'] }) {
   return (
-    <section className="border border-border/50 bg-black/15 p-3">
-      <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-2">
+    <section className="border border-border/50 bg-black/15 p-2.5">
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
         <div className="min-w-0">
-          <h5 className="font-display text-sm font-semibold uppercase tracking-wide text-foreground">
+          <h5 className="font-display text-xs font-semibold uppercase tracking-wide text-foreground">
             {group.name}
           </h5>
           {group.description ? <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">{group.description}</p> : null}
@@ -185,7 +185,7 @@ function ItemGroup({ group, labels }: { group: HeroBuildView['itemGroups'][numbe
           {group.items.length}
         </span>
       </div>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+      <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-5 md:grid-cols-6">
         {group.items.map((item) => <ItemCard key={item.id} item={item} labels={labels} />)}
       </div>
     </section>
@@ -231,7 +231,7 @@ function ItemCard({ item, labels }: { item: HeroBuildView['itemGroups'][number][
             alt=""
             width={128}
             height={128}
-            className="absolute inset-0 m-auto size-[72%] object-contain drop-shadow-[0_10px_16px_rgba(0,0,0,0.75)] transition-transform duration-200 group-hover:scale-105"
+            className="absolute inset-0 size-full object-contain p-1 drop-shadow-[0_10px_16px_rgba(0,0,0,0.75)] transition-transform duration-200 group-hover:scale-105"
           />
         ) : (
           <div className="absolute inset-0 grid place-items-center p-2 text-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -239,14 +239,14 @@ function ItemCard({ item, labels }: { item: HeroBuildView['itemGroups'][number][
           </div>
         )}
 
-        <div className="absolute inset-x-1 top-1 flex justify-end gap-1">
-          {item.isActive ? <span className="bg-black/70 px-1 py-0.5 text-[8px] font-bold uppercase text-foreground">{labels.active}</span> : null}
-          {item.isImbued ? <span className="bg-black/70 px-1 py-0.5 text-[8px] font-bold uppercase text-primary">I</span> : null}
+        <div className="absolute inset-x-1 bottom-7 flex justify-center gap-1">
+          {item.isActive ? <span className="bg-black/75 px-1 py-0.5 text-[7px] font-bold uppercase text-foreground">{labels.active}</span> : null}
+          {item.isImbued ? <span className="bg-black/75 px-1 py-0.5 text-[7px] font-bold uppercase text-primary">I</span> : null}
         </div>
       </div>
 
-      <div className="min-w-0 border-t border-border/50 bg-black/35 px-2 py-1.5">
-        <div className={`truncate text-[10px] font-semibold uppercase leading-tight tracking-wide ${tone.label}`} title={item.name}>
+      <div className="absolute inset-x-0 bottom-0 border-t border-border/50 bg-black/75 px-1.5 py-1">
+        <div className={`truncate text-center text-[9px] font-semibold uppercase leading-tight tracking-wide ${tone.label}`} title={item.name}>
           {item.name}
         </div>
       </div>
