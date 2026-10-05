@@ -1,5 +1,5 @@
 import { fetchTierStats, STATS_FETCH } from '@/lib/api/analytics'
-import { getHeroes, getItems, getRanks } from '@/lib/api/assets'
+import { getHeroes, getItems, getRanks, getTierListBackground } from '@/lib/api/assets'
 import { getPatchWindows } from '@/lib/api/patches'
 import type { RankEntity } from '@/lib/api/types'
 import { DEFAULT_BAND, MIN_MATCHES, RANK_BANDS } from '@/lib/config'
@@ -32,10 +32,11 @@ export function buildBandOptions(ranks: RankEntity[], allLabel: string): BandOpt
 
 export async function TierListPage({ locale }: { locale: Locale }) {
   const t = getDictionary(locale)
-  const [windows, ranks, entities] = await Promise.all([
+  const [windows, ranks, entities, background] = await Promise.all([
     getPatchWindows(),
     getRanks(locale).catch(() => []),
     Promise.all([getHeroes(locale), getItems(locale)]),
+    getTierListBackground().catch(() => null),
   ])
   const bands = buildBandOptions(ranks, t.filters.allRanks)
   const initialSnapshot = windows[0]
@@ -53,7 +54,16 @@ export async function TierListPage({ locale }: { locale: Locale }) {
     : []
 
   return (
-    <main id="main" className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
+    <main id="main" className="relative isolate mx-auto flex w-full max-w-6xl flex-col gap-6 overflow-visible px-4 py-8 md:py-10">
+      {background ? (
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[var(--radius)]">
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
+            style={{ backgroundImage: `url("${background}")` }}
+          />
+          <div className="absolute inset-0 bg-background/80" />
+        </div>
+      ) : null}
       <RankBandTheme bands={bands}>
         <PageHeader eyebrow={t.tierList.eyebrow} title={t.tierList.title} lede={t.tierList.lede} />
         <TierListSwitcher
