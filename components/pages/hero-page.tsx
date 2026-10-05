@@ -1,4 +1,5 @@
 import { fetchTierStats, STATS_FETCH } from '@/lib/api/analytics'
+import { getHeroBuildSections } from '@/lib/api/builds'
 import { getHeroes } from '@/lib/api/assets'
 import { getPatchWindows } from '@/lib/api/patches'
 import { DEFAULT_BAND, MIN_MATCHES } from '@/lib/config'
@@ -7,6 +8,7 @@ import { interpolate, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { computeTierRows } from '@/lib/tiers'
 import { ContextStrip } from '@/components/tier/context-strip'
+import { HeroBuilds } from '@/components/tier/hero-builds'
 import { TierBadge } from '@/components/tier/tier-badge'
 import { PageHeader } from './page-header'
 
@@ -24,7 +26,10 @@ export async function HeroPage({ locale, id }: { locale: Locale; id: number }) {
   }
 
   const window = windows[0]
-  const snapshot = window ? await fetchTierStats(window, DEFAULT_BAND, STATS_FETCH).catch(() => null) : null
+  const [snapshot, buildSections] = await Promise.all([
+    window ? fetchTierStats(window, DEFAULT_BAND, STATS_FETCH).catch(() => null) : Promise.resolve(null),
+    getHeroBuildSections(hero, locale, window?.start).catch(() => null),
+  ])
   const heroMap = new Map(heroes.map((entity) => [entity.id, entity]))
   const row = snapshot ? computeTierRows(snapshot, 'heroes', heroMap, MIN_MATCHES.heroes).find((entry) => entry.id === hero.id) : undefined
   const periodLabel = window
@@ -69,6 +74,8 @@ export async function HeroPage({ locale, id }: { locale: Locale; id: number }) {
 
         <ContextStrip locale={locale} periodLabel={periodLabel} bandLabel={t.filters.allRanks} result={statsResult} loading={false} />
       </section>
+
+      {buildSections ? <HeroBuilds locale={locale} sections={buildSections} labels={t.heroPage.builds} /> : null}
     </main>
   )
 }
