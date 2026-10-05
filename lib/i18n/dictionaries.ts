@@ -70,6 +70,9 @@ const en = {
     emptyHint: 'Try a wider rank band or another patch window.',
     count: '{shown} of {total}',
     cost: '{n} souls',
+    kda: 'KDA',
+    avgDamage: 'DMG',
+    avgNetWorth: 'Souls',
   },
   context: {
     sample: '{n} hero picks',
@@ -189,6 +192,9 @@ const ptBr: Dictionary = {
     emptyHint: 'Tente uma faixa de rank maior ou outra janela de patch.',
     count: '{shown} de {total}',
     cost: '{n} almas',
+    kda: 'KDA',
+    avgDamage: 'Dano',
+    avgNetWorth: 'Almas',
   },
   context: {
     sample: '{n} escolhas de herói',
