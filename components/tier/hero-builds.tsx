@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Check, Clipboard } from 'lucide-react'
 import type { Locale } from '@/lib/i18n/config'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 import { formatCompact, formatPercent } from '@/lib/format'
@@ -69,9 +70,21 @@ function BuildCard({
   labels: Dictionary['heroPage']['builds']
 }) {
   const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  async function copyBuildId(event: React.MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation()
+    try {
+      await navigator.clipboard.writeText(String(build.id))
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1600)
+    } catch {
+      setCopied(false)
+    }
+  }
 
   return (
-    <article className="border border-border/60 bg-background/45">
+    <article className="relative border border-border/60 bg-background/45">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -79,7 +92,12 @@ function BuildCard({
         aria-label={open ? labels.collapse : labels.expand}
         className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-card/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
       >
-        <span className="font-display text-2xl font-bold tabular-nums text-muted-foreground">{String(index + 1).padStart(2, '0')}</span>
+        <div className="flex shrink-0 flex-col items-center gap-1.5">
+          <span className="font-display text-2xl font-bold tabular-nums text-muted-foreground">{String(index + 1).padStart(2, '0')}</span>
+          <button type="button" onClick={copyBuildId} aria-label={labels.copy} title={labels.copy} className="rounded-sm p-1 text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            {copied ? <Check className="size-3.5" aria-hidden /> : <Clipboard className="size-3.5" aria-hidden />}
+          </button>
+        </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -98,6 +116,12 @@ function BuildCard({
         </div>
         <span aria-hidden className="ml-2 shrink-0 text-lg text-muted-foreground">{open ? '−' : '+'}</span>
       </button>
+
+      {copied ? (
+        <div role="status" className="absolute left-1/2 top-2 z-20 -translate-x-1/2 border border-primary/40 bg-background/95 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary shadow-lg">
+          {labels.copied}
+        </div>
+      ) : null}
 
       {open ? (
         <div className="border-t border-border/60 px-4 pb-4">
