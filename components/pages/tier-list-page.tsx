@@ -54,9 +54,9 @@ export async function TierListPage({ locale }: { locale: Locale }) {
     : []
 
   return (
-    <main id="main" className="relative isolate mx-auto flex w-full max-w-6xl flex-col gap-6 overflow-visible px-4 py-8 md:py-10">
+    <>
       {background ? (
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[var(--radius)]">
+        <div aria-hidden className="pointer-events-none fixed inset-0 z-0">
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
             style={{ backgroundImage: `url("${background}")` }}
@@ -64,7 +64,8 @@ export async function TierListPage({ locale }: { locale: Locale }) {
           <div className="absolute inset-0 bg-background/80" />
         </div>
       ) : null}
-      <RankBandTheme bands={bands}>
+      <main id="main" className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
+        <RankBandTheme bands={bands}>
         <PageHeader eyebrow={t.tierList.eyebrow} title={t.tierList.title} lede={t.tierList.lede} />
         <TierListSwitcher
         locale={locale}
@@ -76,7 +77,8 @@ export async function TierListPage({ locale }: { locale: Locale }) {
         heroRows={heroRows}
           itemRows={itemRows}
         />
-      </RankBandTheme>
-    </main>
+        </RankBandTheme>
+      </main>
+    </>
   )
 }
