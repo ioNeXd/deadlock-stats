@@ -39,7 +39,7 @@ export function TierBadge({ tier, label, className }: { tier: Tier; label: strin
       role="img"
       aria-label={label}
       className={cn(
-        'chamfer-sm inline-flex h-9 w-12 items-center justify-center gap-1 font-display text-xl font-bold leading-none',
+        'inline-flex h-9 w-12 items-center justify-center gap-1 font-display text-xl font-bold leading-none',
         TIER_STYLE[tier],
         className,
       )}
