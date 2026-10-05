@@ -104,7 +104,19 @@ export function computeTierRows(
 ) {
   const totalPicks = snapshot.heroes.rows.reduce((sum, row) => sum + row[3], 0)
   const rows = snapshot[kind].rows
-    .map(([id, wins, , matches]) => ({ id, wins, matches }))
+    .map((row) => {
+      const [id, wins, , matches] = row
+      if (kind !== 'heroes') return { id, wins, matches }
+      const [, , , , totalKills, totalDeaths, totalAssists, totalPlayerDamage, totalNetWorth] = row
+      return {
+        id,
+        wins,
+        matches,
+        kda: totalDeaths > 0 ? (totalKills + totalAssists) / totalDeaths : totalKills + totalAssists,
+        avgDamage: matches > 0 ? totalPlayerDamage / matches : 0,
+        avgNetWorth: matches > 0 ? totalNetWorth / matches : 0,
+      }
+    })
     .filter((row) => entityMap.has(row.id))
   return computeTiers(rows, totalPicks, { minMatches }).map((stat) => ({
     ...stat,
