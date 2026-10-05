@@ -67,7 +67,7 @@ export function computeTiers(
   const eligible = valid.filter((r) => r.matches >= minMatches)
   const { mean, strength } = estimatePrior(eligible)
 
-  const stats: TierStat[] = valid.map((r) => {
+  const stats: (TierStat & T)[] = valid.map((r) => {
     const [low, high] = wilson(r.wins, r.matches)
     return {
       ...r,
