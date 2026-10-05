@@ -126,7 +126,6 @@ function ItemGroup({ group, labels }: { group: HeroBuildView['itemGroups'][numbe
         <div className="min-w-0">
           <h5 className="font-display text-sm font-semibold uppercase tracking-wide text-foreground">
             {group.name}
-            {group.optional ? <span className="ml-2 text-[9px] font-medium tracking-wider text-muted-foreground">OPTIONAL</span> : null}
           </h5>
           {group.description ? <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">{group.description}</p> : null}
         </div>
