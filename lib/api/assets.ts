@@ -2,6 +2,7 @@ import { ASSET_CDN } from '@/lib/config'
 import type { Locale } from '@/lib/i18n/config'
 import { apiGet } from './client'
 import type { HeroAsset, HeroEntity, ItemAsset, ItemEntity, ItemSlot, RankAsset, RankEntity } from './types'
+import type { components } from './schema'
 
 const API_LANGUAGE: Record<Locale, string> = { en: 'english', 'pt-br': 'brazilian' }
 const ASSET_CACHE = { next: { revalidate: 86400 } } satisfies RequestInit
@@ -128,5 +129,14 @@ export function getRanks(locale: Locale): Promise<RankEntity[]> {
         color: normalizeRankColor(rank.color),
       }
     })
+  })
+}
+
+export type ItemTooltipBacker = components['schemas']['ItemTooltipBacker']
+
+export async function getItemTooltipBackers(): Promise<Record<ItemSlot, ItemTooltipBacker> | null> {
+  return once('assets:latest:generic-data:item-tooltip-backers', async () => {
+    const data = await apiGet<components['schemas']['GenericData']>('/v1/assets/generic-data', {}, ASSET_CACHE)
+    return data.item_tooltip_backers ?? null
   })
 }
