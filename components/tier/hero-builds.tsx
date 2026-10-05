@@ -127,7 +127,7 @@ function ItemCard({ item, labels }: { item: HeroBuildView['items'][number]; labe
       : 'border-violet-400/45 text-violet-100'
 
   return (
-    <div className={\`group relative aspect-[3/4] min-w-0 overflow-hidden border bg-black/30 shadow-[0_10px_24px_rgba(0,0,0,0.24)] \${tone}\`}>
+    <div className={`group relative aspect-[3/4] min-w-0 overflow-hidden border bg-black/30 shadow-[0_10px_24px_rgba(0,0,0,0.24)] ${tone}`}>
       {item.backer ? (
         <>
           <img src={item.backer.backer.webp} alt="" aria-hidden className="absolute inset-0 size-full object-cover opacity-90" />
