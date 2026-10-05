@@ -36,6 +36,7 @@ function collectAlleyImages(value: unknown, key = '', result: string[] = []): st
     for (const item of value) collectAlleyImages(item, key, result)
     return result
   }
+  if (typeof value !== 'object' || value === null) return result
   for (const [childKey, childValue] of Object.entries(value)) {
     collectAlleyImages(childValue, childKey, result)
     if (result.length >= 3) break
@@ -47,7 +48,7 @@ export function getAlleyBackground(): Promise<string | null> {
   return once('assets:latest:images:alley', async () => {
     const index = await apiGet<unknown>('/v1/assets/images', {}, ASSET_CACHE)
     if (!index || typeof index !== 'object') return null
-    const images = collectAlleyImages(index as ImageIndex)
+    const images = collectAlleyImages(index)
     const preferred = images.find((url) => /\.webp(?:$|[?#])/i.test(url))
     return preferred ?? images[0] ?? null
   })
