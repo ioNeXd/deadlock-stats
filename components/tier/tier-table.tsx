@@ -161,87 +161,68 @@ function Row({ row, kind, locale, maxPick }: { row: TierTableRow; kind: 'heroes'
       </td>
       <th scope="row" className="p-0 text-left font-normal">
         {kind === 'heroes' ? (
-          <Link
-            href={localePath(locale, `/heroes/${row.entity.id}`)}
-            className="flex w-full items-center px-3 py-2 hover:bg-accent/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          <Link href={localePath(locale, `/heroes/${row.entity.id}`)} className="block w-full px-3 py-2 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+            <div className="flex items-center gap-3">
+          <span
+            style={style}
+            className={cn(
+              'flex size-10 shrink-0 items-center justify-center rounded-sm bg-muted',
+              hero?.color && 'bg-[color-mix(in_oklch,var(--hero)_35%,var(--muted))]',
+            )}
           >
-            <div className="flex w-full items-center gap-3">
-            
-              <span
-                style={style}
-                className={cn(
-                  'flex size-10 shrink-0 items-center justify-center rounded-sm bg-muted',
-                  hero?.color && 'bg-[color-mix(in_oklch,var(--hero)_35%,var(--muted))]',
-                )}
-              >
-                {row.entity.icon ? (
-                  <img
-                    src={row.entity.icon || "/placeholder.svg"}
-                    alt=""
-                    width={40}
-                    height={40}
-                    loading="lazy"
-                    decoding="async"
-                    className={cn('size-full object-contain', item && 'p-1', lowData && 'opacity-60')}
-                  />
-                ) : null}
+            {row.entity.icon ? (
+              <img
+                src={row.entity.icon || "/placeholder.svg"}
+                alt=""
+                width={40}
+                height={40}
+                loading="lazy"
+                decoding="async"
+                className={cn('size-full object-contain', item && 'p-1', lowData && 'opacity-60')}
+              />
+            ) : null}
+          </span>
+          <span className="flex min-w-0 flex-col">
+            <span className={cn('truncate font-medium', !lowData && 'text-foreground')}>{row.entity.name}</span>
+            {row.kda !== undefined ? (
+              <span className="text-xs text-muted-foreground tabular-nums">
+                <strong className="font-semibold">{t.table.kda}</strong> {row.kda.toFixed(2)} · {row.avgKills?.toFixed(2)} / {row.avgAssists?.toFixed(2)} / {row.avgDeaths?.toFixed(2)} · <strong className="font-semibold">{t.table.avgDamage}</strong> {formatCompact(row.avgDamage ?? 0, locale)} · <strong className="font-semibold">{t.table.avgNetWorth}</strong> {formatCompact(row.avgNetWorth ?? 0, locale)}
               </span>
-              <span className="flex min-w-0 flex-col">
-                <span className={cn('truncate font-medium', !lowData && 'text-foreground')}>{row.entity.name}</span>
-                {item ? (
-                  <span className="text-xs text-muted-foreground">
-                    <span className={SLOT_COLOR[item.slot]}>{t.slots[item.slot]}</span>
-                    {' · '}T{item.tier}
-                    {item.cost ? ` · ${interpolate(t.table.cost, { n: formatInteger(item.cost, locale) })}` : null}
-                  </span>
-                ) : row.kda !== undefined ? (
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    <strong className="font-semibold">{t.table.kda}</strong> {row.kda.toFixed(2)} · {row.avgKills?.toFixed(2)} / {row.avgAssists?.toFixed(2)} / {row.avgDeaths?.toFixed(2)} · <strong className="font-semibold">{t.table.avgDamage}</strong> {formatCompact(row.avgDamage ?? 0, locale)} · <strong className="font-semibold">{t.table.avgNetWorth}</strong> {formatCompact(row.avgNetWorth ?? 0, locale)}
-                  </span>
-                ) : null}
-              </span>
-            </div>
-            
-            </div>
+            ) : null}
+          </span>
+        </div>
           </Link>
         ) : (
-          <div className="flex items-center gap-3 px-3 py-2">
-            
-              <span
-                style={style}
-                className={cn(
-                  'flex size-10 shrink-0 items-center justify-center rounded-sm bg-muted',
-                  hero?.color && 'bg-[color-mix(in_oklch,var(--hero)_35%,var(--muted))]',
-                )}
-              >
-                {row.entity.icon ? (
-                  <img
-                    src={row.entity.icon || "/placeholder.svg"}
-                    alt=""
-                    width={40}
-                    height={40}
-                    loading="lazy"
-                    decoding="async"
-                    className={cn('size-full object-contain', item && 'p-1', lowData && 'opacity-60')}
-                  />
-                ) : null}
-              </span>
-              <span className="flex min-w-0 flex-col">
-                <span className={cn('truncate font-medium', !lowData && 'text-foreground')}>{row.entity.name}</span>
-                {item ? (
-                  <span className="text-xs text-muted-foreground">
-                    <span className={SLOT_COLOR[item.slot]}>{t.slots[item.slot]}</span>
-                    {' · '}T{item.tier}
-                    {item.cost ? ` · ${interpolate(t.table.cost, { n: formatInteger(item.cost, locale) })}` : null}
-                  </span>
-                ) : row.kda !== undefined ? (
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    <strong className="font-semibold">{t.table.kda}</strong> {row.kda.toFixed(2)} · {row.avgKills?.toFixed(2)} / {row.avgAssists?.toFixed(2)} / {row.avgDeaths?.toFixed(2)} · <strong className="font-semibold">{t.table.avgDamage}</strong> {formatCompact(row.avgDamage ?? 0, locale)} · <strong className="font-semibold">{t.table.avgNetWorth}</strong> {formatCompact(row.avgNetWorth ?? 0, locale)}
-                  </span>
-                ) : null}
-              </span>
-            </div>
-            
+          <div className="px-3 py-2">
+            <div className="flex items-center gap-3">
+          <span
+            style={style}
+            className={cn(
+              'flex size-10 shrink-0 items-center justify-center rounded-sm bg-muted',
+              hero?.color && 'bg-[color-mix(in_oklch,var(--hero)_35%,var(--muted))]',
+            )}
+          >
+            {row.entity.icon ? (
+              <img
+                src={row.entity.icon || "/placeholder.svg"}
+                alt=""
+                width={40}
+                height={40}
+                loading="lazy"
+                decoding="async"
+                className={cn('size-full object-contain', item && 'p-1', lowData && 'opacity-60')}
+              />
+            ) : null}
+          </span>
+          <span className="flex min-w-0 flex-col">
+            <span className={cn('truncate font-medium', !lowData && 'text-foreground')}>{row.entity.name}</span>
+            <span className="text-xs text-muted-foreground">
+              <span className={SLOT_COLOR[item!.slot]}>{t.slots[item!.slot]}</span>
+              {' · '}T{item!.tier}
+              {item!.cost ? ` · ${interpolate(t.table.cost, { n: formatInteger(item!.cost, locale) })}` : null}
+            </span>
+          </span>
+        </div>
           </div>
         )}
       </th>
