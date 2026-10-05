@@ -18,6 +18,12 @@ export interface TierStat extends RawStat {
   pickRate: number
   score: number
   tier: Tier | null
+  kda?: number
+  avgKills?: number
+  avgDeaths?: number
+  avgAssists?: number
+  avgDamage?: number
+  avgNetWorth?: number
 }
 
 /** Wilson score interval (95% by default). */
@@ -67,7 +73,7 @@ export function computeTiers(
   const eligible = valid.filter((r) => r.matches >= minMatches)
   const { mean, strength } = estimatePrior(eligible)
 
-  const stats: (TierStat & T)[] = valid.map((r) => {
+  const stats: TierStat[] = valid.map((r) => {
     const [low, high] = wilson(r.wins, r.matches)
     return {
       ...r,
