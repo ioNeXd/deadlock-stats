@@ -155,7 +155,7 @@ function Row({ row, kind, locale, maxPick }: { row: TierTableRow; kind: 'heroes'
           <span
             style={style}
             className={cn(
-              'flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-muted',
+              'flex size-10 shrink-0 items-center justify-center rounded-sm bg-muted',
               hero?.color && 'bg-[color-mix(in_oklch,var(--hero)_35%,var(--muted))]',
             )}
           >
