@@ -29,7 +29,7 @@ interface Props {
 export function FilterBar({ locale, windows, bands, patchId, bandId, onPatch, onBand, children }: Props) {
   const t = getDictionary(locale)
   return (
-    <div className="chamfer flex flex-col gap-4 border border-border bg-card p-4">
+    <div className="rounded-md flex flex-col gap-4 border border-border bg-card p-4">
       <h2 className="sr-only">{t.filters.label}</h2>
       <fieldset>
         <legend className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.filters.rank}</legend>
@@ -47,7 +47,7 @@ export function FilterBar({ locale, windows, bands, patchId, bandId, onPatch, on
                 aria-pressed={active}
                 onClick={() => onBand(band.id)}
                 style={rankStyle}
-                className="rank-band-button chamfer-sm flex h-10 items-center gap-2 bg-secondary px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground aria-pressed:text-foreground"
+                className="rank-band-button rounded-sm flex h-10 items-center gap-2 bg-secondary px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground aria-pressed:text-foreground"
               >
                 <span className="relative z-10">{band.label}</span>
               </button>
@@ -64,7 +64,7 @@ export function FilterBar({ locale, windows, bands, patchId, bandId, onPatch, on
             id="patch-window"
             value={patchId}
             onChange={(e) => onPatch(e.target.value)}
-            className="chamfer-sm h-10 w-full bg-input/60 px-3 text-sm text-foreground focus:bg-input"
+            className="rounded-sm h-10 w-full bg-input/60 px-3 text-sm text-foreground focus:bg-input"
           >
             {windows.map((w) => (
               <option key={w.id} value={w.id}>
