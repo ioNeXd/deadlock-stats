@@ -62,7 +62,7 @@ export async function HeroPage({ locale, id }: { locale: Locale; id: number }) {
         </div>
 
         {row ? (
-          <div className="grid gap-px border border-border/60 bg-border/60 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid gap-px border border-border/60 bg-border/60 sm:grid-cols-3">
             <div className="bg-card px-4 py-3">
               <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.kda}</dt>
               <dd className="mt-1 font-display text-xl font-semibold tabular-nums text-foreground">{row.kda?.toFixed(2) ?? '—'}</dd>
