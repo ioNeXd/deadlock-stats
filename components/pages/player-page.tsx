@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Swords, Users, History, Trophy } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy } from 'lucide-react'
 import { ApiError } from '@/lib/api/client'
 import {
   fetchPlayerEnemies,
@@ -59,7 +59,7 @@ function DataTable({ title, data, empty }: { title: string; data: unknown[] | nu
   )
 }
 
-function StatCard({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
+function StatCard({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
   return <div className="border border-border bg-card/80 p-4"><div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">{icon}{label}</div><p className="mt-2 font-display text-2xl font-bold text-primary">{value}</p></div>
 }
 
@@ -116,7 +116,7 @@ export function PlayerPage({ locale }: { locale: Locale }) {
     }).catch(() => setSearchError(t.searchError))
   }, [selectPlayer, t.notFound, t.searchError])
 
-  async function handleSearch(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!query.trim()) return
     setSearching(true)
@@ -163,7 +163,7 @@ export function PlayerPage({ locale }: { locale: Locale }) {
           <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
             {selected.avatar ? <img src={selected.avatar} alt="" className="size-20 rounded-full border-2 border-primary/50 object-cover" /> : <span className="grid size-20 place-items-center rounded-full bg-muted"><UserRound size={34} /></span>}
             <div className="min-w-0 flex-1"><p className="text-xs uppercase tracking-[0.2em] text-primary">{t.profile}</p><h2 className="mt-1 break-words font-display text-3xl font-bold uppercase">{selected.personaname || t.unknownPlayer}</h2><p className="mt-1 text-sm text-muted-foreground">SteamID3: {accountId}</p></div>
-            {selected.profile_url ? <a href={selected.profile_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 self-start border border-border px-3 py-2 text-sm hover:bg-accent">{t.steamProfile}<ExternalLink size={14} /></a> : null}
+            {selected.profileurl ? <a href={selected.profile_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 self-start border border-border px-3 py-2 text-sm hover:bg-accent">{t.steamProfile}<ExternalLink size={14} /></a> : null}
           </div>
           <div className="grid gap-px border-t border-border bg-border sm:grid-cols-3">
             <StatCard label={t.matches30d} value={formatNumber(selected.matches_played_last_30d)} icon={<History size={15} />} />
