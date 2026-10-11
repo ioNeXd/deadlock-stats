@@ -195,7 +195,7 @@ const ptBr: Dictionary = {
     mainNav: 'Principal',
     language: 'Idioma',
   },
-  nav: { tierlist: 'Tier list', player: 'Jogador', heroes: 'Heróis', items: 'Itens', metodologia: 'Metodologia', methodology: 'Metodologia', status: 'Status' },
+  nav: { tierlist: 'Tier list', player: 'Jogador', heroes: 'Heróis', items: 'Itens', methodology: 'Metodologia', status: 'Status' },
   footer: {
     disclaimer: 'Projeto de fã, sem afiliação ou endosso da Valve. Deadlock e os recursos relacionados pertencem à Valve.',
     data: 'Dados da Deadlock API da comunidade.',
