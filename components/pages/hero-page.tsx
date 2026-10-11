@@ -62,11 +62,25 @@ export async function HeroPage({ locale, id }: { locale: Locale; id: number }) {
         </div>
 
         {row ? (
-          <div className="grid gap-px border border-border/60 bg-border/60 sm:grid-cols-3 lg:grid-cols-6">
-            <Metric label={t.heroPage.kda} value={row.kda?.toFixed(2) ?? '—'} />
-            <Metric label={t.heroPage.avgKills} value={row.avgKills?.toFixed(2) ?? '—'} />
-            <Metric label={t.heroPage.avgAssists} value={row.avgAssists?.toFixed(2) ?? '—'} />
-            <Metric label={t.heroPage.avgDeaths} value={row.avgDeaths?.toFixed(2) ?? '—'} />
+          <div className="grid gap-px border border-border/60 bg-border/60 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="bg-card px-4 py-3">
+              <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.kda}</dt>
+              <dd className="mt-1 font-display text-xl font-semibold tabular-nums text-foreground">{row.kda?.toFixed(2) ?? '—'}</dd>
+              <div className="mt-2 grid grid-cols-3 gap-2 border-t border-border/60 pt-2">
+                <div>
+                  <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.avgKills}</dt>
+                  <dd className="text-sm font-semibold tabular-nums text-foreground">{row.avgKills?.toFixed(2) ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.avgDeaths}</dt>
+                  <dd className="text-sm font-semibold tabular-nums text-foreground">{row.avgDeaths?.toFixed(2) ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.avgAssists}</dt>
+                  <dd className="text-sm font-semibold tabular-nums text-foreground">{row.avgAssists?.toFixed(2) ?? '—'}</dd>
+                </div>
+              </div>
+            </div>
             <Metric label={t.heroPage.avgDamage} value={formatCompact(row.avgDamage ?? 0, locale)} />
             <Metric label={t.heroPage.avgNetWorth} value={formatCompact(row.avgNetWorth ?? 0, locale)} />
           </div>
