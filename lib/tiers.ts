@@ -127,8 +127,32 @@ export function computeTierRows(
       }
     })
     .filter((row) => entityMap.has(row.id))
-  return computeTiers(rows, totalPicks, { minMatches }).map((stat) => ({
+  const stats = computeTiers(rows, totalPicks, { minMatches }).map((stat) => ({
     ...stat,
     entity: entityMap.get(stat.id)!,
   }))
+
+  // Keep API-listed heroes visible even before analytics has enough data for them.
+  // Zero-match rows deliberately have no tier and must never affect ranking or rates.
+  if (kind === 'heroes') {
+    const knownIds = new Set(rows.map((row) => row.id))
+    for (const entity of entityMap.values()) {
+      if (knownIds.has(entity.id)) continue
+      stats.push({
+        id: entity.id,
+        wins: 0,
+        matches: 0,
+        winRate: 0,
+        smoothed: 0.5,
+        low: 0,
+        high: 1,
+        pickRate: 0,
+        score: Number.NEGATIVE_INFINITY,
+        tier: null,
+        entity: entity as HeroEntity,
+      })
+    }
+  }
+
+  return stats
 }

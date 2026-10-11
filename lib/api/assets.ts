@@ -72,7 +72,7 @@ export function getHeroes(locale: Locale): Promise<HeroEntity[]> {
       ASSET_CACHE,
     )
     return heroes
-      .filter((hero) => hero.player_selectable && !hero.disabled && !hero.in_development)
+      .filter((hero) => !hero.disabled && !hero.in_development)
       .map((hero) => ({
         id: hero.id,
         name: hero.name,
