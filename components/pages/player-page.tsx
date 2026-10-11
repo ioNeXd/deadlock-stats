@@ -29,7 +29,7 @@ function formatNumber(value: unknown) {
   return JSON.stringify(value)
 }
 
-function DataTable({ title, data, empty }: { title: string; data: unknown[] | null; empty: string }) {
+function DataTable({ title, data, empty, accountNick, accountIdLabel }: { title: string; data: unknown[] | null; empty: string; accountNick?: string; accountIdLabel?: string }) {
   const [open, setOpen] = useState(false)
   const rows = useMemo(() => (data ?? []).map((value, index) => ({
     index,
@@ -62,7 +62,7 @@ function DataTable({ title, data, empty }: { title: string; data: unknown[] | nu
                     <tr key={`${index}-${key}`} className="border-t border-border/70 align-top">
                       {fieldIndex === 0 ? <td rowSpan={Object.keys(record).length} className="px-4 py-2 font-mono text-muted-foreground">{index + 1}</td> : null}
                       <th scope="row" className="whitespace-nowrap px-4 py-2 font-medium text-muted-foreground">{key.replaceAll('_', ' ')}</th>
-                      <td className="max-w-[34rem] break-words px-4 py-2 font-mono text-xs">{formatNumber(value)}</td>
+                      <td className="max-w-[34rem] break-words px-4 py-2 font-mono text-xs">{key === 'account_id' && accountIdLabel === key ? (accountNick || formatNumber(value)) : formatNumber(value)}</td>
                     </tr>
                   )))}
                 </tbody>
@@ -177,7 +177,7 @@ export function PlayerPage({ locale }: { locale: Locale }) {
         <section className="border border-border bg-card/90">
           <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
             {selected.avatar ? <img src={selected.avatar} alt="" className="size-20 rounded-full border-2 border-primary/50 object-cover" /> : <span className="grid size-20 place-items-center rounded-full bg-muted"><UserRound size={34} /></span>}
-            <div className="min-w-0 flex-1"><p className="text-xs uppercase tracking-[0.2em] text-primary">{t.profile}</p><h2 className="mt-1 break-words font-display text-3xl font-bold uppercase">{selected.personaname || t.unknownPlayer}</h2><p className="mt-1 text-sm text-muted-foreground">SteamID3: {accountId}</p></div>
+            <div className="min-w-0 flex-1"><p className="text-xs uppercase tracking-[0.2em] text-primary">{t.profile}</p><h2 className="mt-1 break-words font-display text-3xl font-bold uppercase">{selected.personaname || t.unknownPlayer}</h2><div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground"><p>SteamID3: {accountId}</p><p>{t.accountId}: {accountId}</p></div></div>
             {selected.profileurl ? <a href={selected.profileurl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 self-start border border-border px-3 py-2 text-sm hover:bg-accent">{t.steamProfile}<ExternalLink size={14} /></a> : null}
           </div>
           <div className="grid gap-px border-t border-border bg-border sm:grid-cols-3">
@@ -189,7 +189,7 @@ export function PlayerPage({ locale }: { locale: Locale }) {
         {rank.error ? <p role="status" className="border border-border px-4 py-3 text-sm text-muted-foreground"><ShieldAlert className="mr-2 inline" size={16} />{rank.error}</p> : null}
         <div className="grid gap-4 lg:grid-cols-2">
           <DataTable title={t.rankDetails} data={rank.data ? [rank.data] : null} empty={rank.loading ? t.loading : rank.error || t.noData} />
-          <DataTable title={t.matchHistory} data={history.data as unknown[] | null} empty={history.loading ? t.loading : history.error || t.noData} />
+          <DataTable title={t.matchHistory} data={history.data as unknown[] | null} empty={history.loading ? t.loading : history.error || t.noData} accountNick={selected.personaname || t.unknownPlayer} accountIdLabel="account_id" />
           <DataTable title={t.mates} data={mates.data as unknown[] | null} empty={mates.loading ? t.loading : mates.error || t.noData} />
           <DataTable title={t.enemies} data={enemies.data as unknown[] | null} empty={enemies.loading ? t.loading : enemies.error || t.noData} />
         </div>
