@@ -64,23 +64,30 @@ export async function HeroPage({ locale, id }: { locale: Locale; id: number }) {
         {row ? (
           <div className="grid gap-px border border-border/60 bg-border/60 sm:grid-cols-3">
             <div className="bg-card px-4 py-3">
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.kda}</dt>
-                <dd className="font-display text-xl font-semibold tabular-nums text-foreground">{row.kda?.toFixed(2) ?? '—'}</dd>
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">({locale === 'pt-br' ? 'KDA-Médio' : 'Avg. KDA'})</span>
-              </div>
-              <div className="mt-2 grid grid-cols-3 gap-2 border-t border-border/60 pt-2">
-                <div>
-                  <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.avgKills}</dt>
-                  <dd className="text-sm font-semibold tabular-nums text-foreground">{row.avgKills?.toFixed(2) ?? '—'}</dd>
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.kda}</dt>
+                  <dd className="mt-1 font-display text-xl font-semibold tabular-nums text-foreground">{row.kda?.toFixed(2) ?? '—'}</dd>
+                  <div className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">({locale === 'pt-br' ? 'KDA-Médio' : 'Avg. KDA'})</div>
                 </div>
-                <div>
-                  <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.avgDeaths}</dt>
-                  <dd className="text-sm font-semibold tabular-nums text-foreground">{row.avgDeaths?.toFixed(2) ?? '—'}</dd>
-                </div>
-                <div>
-                  <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.avgAssists}</dt>
-                  <dd className="text-sm font-semibold tabular-nums text-foreground">{row.avgAssists?.toFixed(2) ?? '—'}</dd>
+                <div className="grid shrink-0 grid-cols-3 gap-x-2 text-right">
+                  <div>
+                    <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.avgKills}</dt>
+                    <dd className="mt-1 text-sm font-semibold tabular-nums text-foreground">{row.avgKills?.toFixed(2) ?? '—'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">/</dt>
+                    <dd className="mt-1 text-sm font-semibold text-muted-foreground">/</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.avgDeaths}</dt>
+                    <dd className="mt-1 text-sm font-semibold tabular-nums text-foreground">{row.avgDeaths?.toFixed(2) ?? '—'}</dd>
+                  </div>
+                  <div className="col-span-3 mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-x-2">
+                    <span className="text-sm font-semibold tabular-nums text-foreground">{row.avgAssists?.toFixed(2) ?? '—'}</span>
+                    <span className="text-sm text-muted-foreground">/</span>
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t.heroPage.avgAssists}</span>
+                  </div>
                 </div>
               </div>
             </div>
