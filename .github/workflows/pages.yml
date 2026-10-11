@@ -3,6 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  schedule:
+    # Refresh game assets and statically generated hero routes as new heroes release.
+    - cron: '17 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -29,12 +32,6 @@ jobs:
         with:
           version: 12.3.4
           run_install: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
