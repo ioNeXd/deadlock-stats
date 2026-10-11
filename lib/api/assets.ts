@@ -68,11 +68,11 @@ export function getHeroes(locale: Locale): Promise<HeroEntity[]> {
   return once(`assets:latest:heroes:${locale}`, async () => {
     const heroes = await apiGet<HeroAsset[]>(
       '/v1/assets/heroes',
-      { language: API_LANGUAGE[locale], only_active: true },
+      { language: API_LANGUAGE[locale] },
       ASSET_CACHE,
     )
     return heroes
-      .filter((hero) => !hero.disabled && !hero.in_development)
+      .filter((hero) => !hero.disabled)
       .map((hero) => ({
         id: hero.id,
         name: hero.name,
