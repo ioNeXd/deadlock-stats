@@ -90,7 +90,6 @@ export async function getItems(locale: Locale): Promise<ItemEntity[]> {
     const items = await apiGet<ItemAsset[]>(
       '/v1/assets/items/by-type/upgrade',
       { language: API_LANGUAGE[locale] },
-      ASSET_CACHE,
     )
     const result: ItemEntity[] = []
     for (const item of items) {
