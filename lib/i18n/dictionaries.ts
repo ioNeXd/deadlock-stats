@@ -9,7 +9,7 @@ const en = {
     mainNav: 'Main',
     language: 'Language',
   },
-  nav: { tierlist: 'Tier List', heroes: 'Heroes', items: 'Items', methodology: 'Methodology', status: 'Status' },
+  nav: { tierlist: 'Tier List', player: 'Player', heroes: 'Heroes', items: 'Items', methodology: 'Methodology', status: 'Status' },
   footer: {
     disclaimer: 'Fan project, not affiliated with or endorsed by Valve. Deadlock and related assets are property of Valve.',
     data: 'Data from the community Deadlock API.',
@@ -195,7 +195,7 @@ const ptBr: Dictionary = {
     mainNav: 'Principal',
     language: 'Idioma',
   },
-  nav: { tierlist: 'Tier list', heroes: 'Heróis', items: 'Itens', methodology: 'Metodologia', status: 'Status' },
+  nav: { tierlist: 'Tier list', player: 'Jogador', heroes: 'Heróis', items: 'Itens', metodologia: 'Metodologia', methodology: 'Metodologia', status: 'Status' },
   footer: {
     disclaimer: 'Projeto de fã, sem afiliação ou endosso da Valve. Deadlock e os recursos relacionados pertencem à Valve.',
     data: 'Dados da Deadlock API da comunidade.',
