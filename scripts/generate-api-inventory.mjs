@@ -22,6 +22,11 @@ if (!spec || typeof spec !== "object" || !spec.paths || typeof spec.paths !== "o
 const methods = new Set(["get", "post", "put", "patch", "delete", "options", "head", "trace"]);
 const rows = [];
 const IMPLEMENTED_ENDPOINTS = {
+  steam_search: ["components/pages/player-page.tsx", "lib/api/players.ts"],
+  rank: ["components/pages/player-page.tsx", "lib/api/players.ts"],
+  match_history: ["components/pages/player-page.tsx", "lib/api/players.ts"],
+  mate_stats: ["components/pages/player-page.tsx", "lib/api/players.ts"],
+  enemy_stats: ["components/pages/player-page.tsx", "lib/api/players.ts"],
   hero_build_stats: ["components/pages/hero-page.tsx", "lib/api/builds.ts"],
   fetch_build_live: ["lib/api/builds.ts"],
   get_items_by_hero_id: ["lib/api/builds.ts"],
