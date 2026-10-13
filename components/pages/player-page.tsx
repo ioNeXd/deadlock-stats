@@ -46,7 +46,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
     netWorth: string; damage: string; duration: string; unavailable: string
     loading: string; result: string; win: string; loss: string
     showing: string; previous: string; next: string; page: string
-    gameMode: string; normalGame: string; matchId: string; souls: string; lastHits: string
+    gameMode: string; normalGame: string; gameModes: Record<number, string>; matchModes: Record<number, string>; unknownGameMode: string; unknownMatchMode: string; matchId: string; souls: string; lastHits: string
     items: string; unknownHero: string; today: string; yesterday: string; daysAgo: string; matchIdLabel: string
   }
 }) {
@@ -298,7 +298,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           <span className="relative flex w-[40%] min-w-0 shrink-0 items-stretch border-r border-border">
             <span className="flex min-w-0 flex-1 flex-col justify-center gap-1 px-2 py-2 sm:px-3">
               <span className="flex min-w-0 items-center justify-between gap-2 text-[9px] font-bold uppercase tracking-wider text-primary sm:text-[10px]">
-                <span className="truncate">{match.game_mode === 1 ? labels.normalGame : `${labels.gameMode}: ${formatNumber(match.game_mode)}`}</span>
+                <span className="truncate">{`${labels.gameModes[match.game_mode] ?? `${labels.unknownGameMode} (${match.game_mode})`} ${labels.matchModes[match.match_mode] ?? `${labels.unknownMatchMode} (${match.match_mode})`}`}</span>
                 <span className="inline-flex shrink-0 items-center gap-1 normal-case tracking-normal text-muted-foreground"><CalendarDays size={11} aria-hidden /><span>{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(match.start_time * 1000))}</span><span>({(() => { const elapsedSeconds = Math.max(0, Math.floor(Date.now() / 1000 - match.start_time)); const elapsedDays = Math.floor(elapsedSeconds / 86400); if (elapsedDays > 0) return labels.daysAgo.replace('{count}', String(elapsedDays)); const elapsedHours = Math.floor(elapsedSeconds / 3600); if (elapsedHours > 0) return locale === 'pt-br' ? `há ${elapsedHours} h` : `${elapsedHours}h ago`; const elapsedMinutes = Math.floor(elapsedSeconds / 60); return elapsedMinutes > 0 ? (locale === 'pt-br' ? `há ${elapsedMinutes} min` : `${elapsedMinutes}m ago`) : labels.today })()})</span></span>
               </span>
               <span className="flex min-w-0 items-center gap-2">
@@ -371,7 +371,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" className="size-20 shrink-0 border border-border bg-background object-cover" /> : <div className="grid size-20 shrink-0 place-items-center border border-border bg-background font-mono text-sm">{match.hero_id}</div>}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    <span>{labels.matchId} #{id}</span><span>·</span><span>{match.game_mode === 1 ? labels.normalGame : `${labels.gameMode} ${match.game_mode}`}</span>
+                    <span>{labels.matchId} #{id}</span><span>·</span><span>{`${labels.gameModes[match.game_mode] ?? `${labels.unknownGameMode} (${match.game_mode})`} ${labels.matchModes[match.match_mode] ?? `${labels.unknownMatchMode} (${match.match_mode})`}`}</span>
                   </div>
                   <h4 className="mt-1 font-display text-2xl font-bold uppercase">{match.player_match_outcome === 1 ? labels.win : labels.loss}</h4>
                   <p className="mt-1 text-sm text-muted-foreground">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`} <span className="px-1">·</span> {new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(match.start_time * 1000))} <span className="px-1">·</span> {labels.duration} {duration === null ? '—' : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</p>
