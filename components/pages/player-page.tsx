@@ -131,7 +131,6 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       })
       await Promise.all(workers)
       if (cancelled) return
-      if (Object.keys(found).length) setMatchSummaries((current) => ({ ...current, ...found }))
       const ids = [...accountIds]
       const profiles = await Promise.all(Array.from({ length: Math.ceil(ids.length / 100) }, (_, index) => fetchSteamProfiles(ids.slice(index * 100, (index + 1) * 100)).catch(() => [])))
       if (cancelled) return
@@ -139,6 +138,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       for (const profile of profiles.flat()) {
         if (typeof profile.account_id === 'number' && typeof profile.personaname === 'string' && profile.personaname.trim()) names[profile.account_id] = profile.personaname.trim()
       }
+      if (Object.keys(found).length) setMatchSummaries((current) => ({ ...current, ...found }))
       if (Object.keys(names).length) setSummaryNames((current) => ({ ...current, ...names }))
     })()
     return () => { cancelled = true }
