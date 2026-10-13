@@ -47,7 +47,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
     loading: string; result: string; win: string; loss: string
     showing: string; previous: string; next: string; page: string
     gameMode: string; matchId: string; souls: string; lastHits: string
-    items: string; unknownHero: string; today: string; yesterday: string; daysAgo: string
+    items: string; unknownHero: string; today: string; yesterday: string; daysAgo: string; matchIdLabel: string
   }
 }) {
   const [openedMatchId, setOpenedMatchId] = useState<string | null>(null)
@@ -296,7 +296,10 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
         <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex min-h-[132px] w-full items-stretch gap-0 overflow-hidden text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
           <span className="flex w-[40%] min-w-0 shrink-0 items-stretch border-r border-border">
-            <span className="flex min-w-0 flex-1 flex-col justify-center gap-2 px-2 py-2 sm:px-3">
+            <span className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 px-2 py-2 sm:px-3">
+              <span className="flex min-w-0 justify-end">
+                <span className="border border-border/70 bg-background/70 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-foreground/90 sm:text-[11px]">{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(match.start_time * 1000))}</span>
+              </span>
               <span className="flex min-w-0 items-center gap-2">
                 {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-10 shrink-0 border border-border bg-background object-cover sm:size-12" /> : <span className="grid size-10 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-12">{match.hero_id}</span>}
                 <span className="min-w-0 flex-1">
@@ -305,7 +308,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 </span>
               </span>
               <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                {([{ label: 'K', value: match.player_kills, tone: 'text-emerald-400', bar: 'bg-emerald-500' }, { label: 'D', value: match.player_deaths, tone: 'text-rose-400', bar: 'bg-rose-500' }, { label: 'A', value: match.player_assists, tone: 'text-sky-400', bar: 'bg-sky-500' }] as const).map((stat) => <span key={stat.label} className={`inline-flex items-center gap-0.5 font-mono tabular-nums ${stat.tone}`}><span className="text-sm font-extrabold leading-none sm:text-base">{formatNumber(stat.value)}</span><span className="text-[9px] font-bold">{stat.label}</span><span aria-hidden className={`ml-0.5 h-0.5 w-3 ${stat.bar}`} /></span>)}
+                {([{ label: 'K', value: match.player_kills, tone: 'text-emerald-400' }, { label: 'D', value: match.player_deaths, tone: 'text-rose-400' }, { label: 'A', value: match.player_assists, tone: 'text-sky-400' }] as const).map((stat, index) => <span key={stat.label} className="inline-flex items-center gap-1"><span className={`inline-flex items-center gap-0.5 font-mono tabular-nums ${stat.tone}`}><span className="text-sm font-extrabold leading-none sm:text-base">{formatNumber(stat.value)}</span><span className="text-[9px] font-bold">{stat.label}</span></span>{index < 2 ? <span aria-hidden className="px-0.5 font-mono text-sm font-bold text-muted-foreground/80">\\</span> : null}</span>)}
                 <span className="shrink-0 font-mono text-[10px] font-semibold tabular-nums text-muted-foreground">({((match.player_kills + match.player_assists) / Math.max(1, match.player_deaths)).toFixed(2)} KDA)</span>
               </span>
               <span className="inline-flex w-fit max-w-full items-center gap-1.5 border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[10px] text-amber-200">
@@ -313,9 +316,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 <span className="shrink-0 font-semibold uppercase tracking-wide">{labels.souls}</span>
                 <span className="truncate font-mono text-xs font-extrabold tabular-nums">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span>
               </span>
-              <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] leading-tight text-muted-foreground">
-                <span>{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(match.start_time * 1000))}</span>
-                <span aria-hidden>·</span>
+              <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[10px] leading-tight text-muted-foreground sm:text-[11px]">
                 <span>{(() => {
                   const elapsedSeconds = Math.max(0, Math.floor(Date.now() / 1000 - match.start_time))
                   const elapsedDays = Math.floor(elapsedSeconds / 86400)
@@ -325,7 +326,8 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   const elapsedMinutes = Math.floor(elapsedSeconds / 60)
                   return elapsedMinutes > 0 ? (locale === 'pt-br' ? `há ${elapsedMinutes} min` : `${elapsedMinutes}m ago`) : labels.today
                 })()}</span>
-                <span className="ml-auto shrink-0 font-mono">#{id}</span>
+                <span aria-hidden>·</span>
+                <span className="shrink-0 font-mono font-semibold text-foreground/90">{labels.matchIdLabel}: #{id}</span>
               </span>
             </span>
           </span>
