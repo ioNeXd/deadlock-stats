@@ -284,7 +284,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
     </section>
   }
 
-  return <section className="border border-border bg-card/80">
+  return <section className="w-full max-w-[800px] border border-border bg-card/80">
     <h3 className="border-b border-border px-4 py-3 font-display text-lg font-bold uppercase tracking-wide">{labels.title}</h3>
     {loading && !matches ? <p className="px-4 py-5 text-sm text-muted-foreground">{labels.loading}</p> : null}
     {error ? <p className="px-4 py-5 text-sm text-muted-foreground">{error}</p> : null}
@@ -293,10 +293,10 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       const id = String(match.match_id)
       const isOpen = openedMatchId === id
       return <li key={id}>
-        <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex min-h-40 w-full items-stretch gap-0 text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+        <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex w-full items-stretch gap-0 text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
-          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-3 px-3 py-3 sm:gap-4 sm:px-4 xl:flex-nowrap">
-            <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1.5 xl:flex-nowrap">
+          <span className="flex min-w-0 flex-1 flex-col items-stretch gap-3 px-3 py-3 sm:px-4">
+            <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
               {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-11 shrink-0 border border-border bg-background object-cover sm:size-12" /> : <span className="grid size-11 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-12">{match.hero_id}</span>}
               <span className="font-mono text-xs text-muted-foreground">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')}</span>
               <span className="font-mono text-sm font-bold tabular-nums sm:text-base">{match.player_kills}/{match.player_deaths}/{match.player_assists} <span className="font-normal text-muted-foreground">({(() => { const valid = visibleMatches.filter((entry) => entry.player_deaths > 0); const average = valid.length ? valid.reduce((sum, entry) => sum + entry.player_kills / entry.player_deaths, 0) / valid.length : 0; return average ? average.toFixed(1) : '—' })()})</span></span>
@@ -305,11 +305,11 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
               <span className="text-xs text-muted-foreground">({(() => { const days = Math.floor((Date.now() - match.start_time * 1000) / 86400000); if (days <= 0) return labels.today; if (days === 1) return labels.yesterday; return labels.daysAgo.replace('{count}', String(days)) })()})</span>
               <span className="ml-auto shrink-0 whitespace-nowrap font-mono text-[11px] text-muted-foreground">#{id}</span>
             </span>
-            <span className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-2 md:flex-none md:w-[34rem] xl:w-[40rem]">
+            <span className="grid min-w-0 w-full grid-cols-1 gap-2 sm:grid-cols-2">
               {[0, 1].map((team) => {
                 const teamPlayers = (matchSummaries[id] ?? []).filter((player) => player.team === team).slice(0, 6)
                 const teamLabel = team === 0 ? labels.team0 : labels.team1
-                return <span key={team} className="grid min-w-0 grid-cols-1 content-center gap-y-1.5 border border-border/70 bg-background/35 p-2 sm:p-2.5">
+                return <span key={team} className="grid min-w-0 grid-cols-1 content-center gap-y-1 border border-border/70 bg-background/35 p-1.5 sm:p-2">
                   <span className="col-span-full text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{teamLabel}</span>
                   {teamPlayers.length ? teamPlayers.map((player, index) => {
                     const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
@@ -323,11 +323,11 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                     const assists = typeof player.assists === 'number' ? player.assists : last?.assists
                     const netWorth = typeof player.net_worth === 'number' ? player.net_worth : typeof player.networth === 'number' ? player.networth : last?.net_worth
                     const compactNumber = (value: unknown) => typeof value === 'number' ? new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value) : formatNumber(value)
-                    return <span key={accountId ?? index} title={name} className="flex min-w-0 items-center gap-2 text-xs leading-5">
-                      {hero?.icon ? <img src={hero.icon} alt="" loading="lazy" className="size-5 shrink-0 border border-border/70 object-cover" /> : <span className="size-5 shrink-0 border border-border/70 bg-muted" />}
+                    return <span key={accountId ?? index} title={name} className="flex min-w-0 items-center gap-1.5 text-[11px] leading-4">
+                      {hero?.icon ? <img src={hero.icon} alt="" loading="lazy" className="size-4 shrink-0 border border-border/70 object-cover" /> : <span className="size-4 shrink-0 border border-border/70 bg-muted" />}
                       <span className={`min-w-0 flex-1 truncate ${accountId === selectedAccountId ? 'font-bold text-primary' : 'text-foreground/90'}`}>{name}</span>
-                      <span className="shrink-0 font-mono tabular-nums text-muted-foreground">{formatNumber(kills)}/{formatNumber(deaths)}/{formatNumber(assists)}</span>
-                      <span className="shrink-0 font-mono tabular-nums text-foreground/80">{compactNumber(netWorth)}</span>
+                      <span className="shrink-0 whitespace-nowrap font-mono text-[10px] tabular-nums text-muted-foreground">{formatNumber(kills)}/{formatNumber(deaths)}/{formatNumber(assists)}</span>
+                      <span className="shrink-0 whitespace-nowrap font-mono text-[10px] tabular-nums text-foreground/80">{compactNumber(netWorth)}</span>
                     </span>
                   }) : <span className="col-span-full text-[10px] text-muted-foreground">{labels.loading}</span>}
                 </span>
