@@ -1,6 +1,5 @@
 'use client'
 
-import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import type { HeroEntity, ItemEntity } from '@/lib/api/types'
 import { formatCompact, formatInteger, formatPercent } from '@/lib/format'
@@ -8,6 +7,7 @@ import { interpolate, localePath, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import type { TierStat } from '@/lib/tiers'
 import { cn } from '@/lib/utils'
+import { HeroIcon } from '@/components/ui/hero-icon'
 import { TierBadge } from './tier-badge'
 
 export type SortKey = 'score' | 'winRate' | 'pickRate' | 'matches' | 'name'
@@ -147,7 +147,6 @@ function Row({ row, kind, locale, maxPick }: { row: TierTableRow; kind: 'heroes'
   const lowData = row.tier === null
   const hero = kind === 'heroes' ? (row.entity as HeroEntity) : null
   const item = kind === 'items' ? (row.entity as ItemEntity) : null
-  const style = hero?.color ? ({ '--hero': `rgb(${hero.color})` } as CSSProperties) : undefined
   const margin = (row.high - row.low) / 2
 
   return (
@@ -163,25 +162,14 @@ function Row({ row, kind, locale, maxPick }: { row: TierTableRow; kind: 'heroes'
         {kind === 'heroes' ? (
           <Link href={localePath(locale, `/heroes/${row.entity.id}`)} className="block w-full px-3 py-2 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
             <div className="flex items-center gap-3">
-          <span
-            style={style}
-            className={cn(
-              'flex size-10 shrink-0 items-center justify-center rounded-sm bg-muted',
-              hero?.color && 'bg-[color-mix(in_oklch,var(--hero)_35%,var(--muted))]',
-            )}
-          >
-            {row.entity.icon ? (
-              <img
-                src={row.entity.icon || "/placeholder.svg"}
-                alt=""
-                width={40}
-                height={40}
-                loading="lazy"
-                decoding="async"
-                className={cn('size-full object-contain', item && 'p-1', lowData && 'opacity-60')}
-              />
-            ) : null}
-          </span>
+          <HeroIcon
+            icon={row.entity.icon}
+            color={hero?.color}
+            size="size-10"
+            width={40}
+            height={40}
+            imageClassName={cn(item && 'p-1', lowData && 'opacity-60')}
+/>
           <span className="flex min-w-0 flex-col">
             <span className={cn('truncate font-medium', !lowData && 'text-foreground')}>{row.entity.name}</span>
             {row.kda !== undefined ? (
@@ -195,25 +183,14 @@ function Row({ row, kind, locale, maxPick }: { row: TierTableRow; kind: 'heroes'
         ) : (
           <div className="px-3 py-2">
             <div className="flex items-center gap-3">
-          <span
-            style={style}
-            className={cn(
-              'flex size-10 shrink-0 items-center justify-center rounded-sm bg-muted',
-              hero?.color && 'bg-[color-mix(in_oklch,var(--hero)_35%,var(--muted))]',
-            )}
-          >
-            {row.entity.icon ? (
-              <img
-                src={row.entity.icon || "/placeholder.svg"}
-                alt=""
-                width={40}
-                height={40}
-                loading="lazy"
-                decoding="async"
-                className={cn('size-full object-contain', item && 'p-1', lowData && 'opacity-60')}
-              />
-            ) : null}
-          </span>
+          <HeroIcon
+            icon={row.entity.icon}
+            color={hero?.color}
+            size="size-10"
+            width={40}
+            height={40}
+            imageClassName={cn(item && 'p-1', lowData && 'opacity-60')}
+/>
           <span className="flex min-w-0 flex-col">
             <span className={cn('truncate font-medium', !lowData && 'text-foreground')}>{row.entity.name}</span>
             <span className="text-xs text-muted-foreground">
