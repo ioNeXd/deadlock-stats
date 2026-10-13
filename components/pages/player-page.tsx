@@ -16,6 +16,7 @@ import {
   type SteamProfile,
 } from '@/lib/api/players'
 import { PageHeader } from './page-header'
+import { HeroIcon } from '@/components/ui/hero-icon'
 import type { Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 
@@ -244,7 +245,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           return <li key={accountId ?? index} className={accountId === selectedAccountId ? 'bg-primary/5' : ''}>
             <div className="flex items-center gap-3 px-3 py-3">
               <span className="w-5 shrink-0 text-center font-mono text-[11px] text-muted-foreground">{index + 1}</span>
-              {hero?.icon ? <span style={hero.color ? ({ '--hero': `rgb(${hero.color})` } as React.CSSProperties) : undefined} className={`flex size-12 shrink-0 items-center justify-center rounded-sm bg-muted ${hero.color ? 'bg-[color-mix(in_oklch,var(--hero)_35%,var(--muted))]' : ''}`}><img src={hero.icon} alt="" loading="lazy" decoding="async" className="size-full object-contain" /></span> : <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-muted font-mono text-xs text-muted-foreground">{heroId ?? '—'}</span>}
+              {hero ? <HeroIcon icon={hero.icon} color={hero.color} size="size-12" /> : <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-muted font-mono text-xs text-muted-foreground">{heroId ?? '—'}</span>}
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                   <span className="truncate font-semibold">{hero?.name ?? (heroId === null ? labels.unknownHero : `${labels.hero} #${heroId}`)}</span>
@@ -302,7 +303,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 <span className="inline-flex shrink-0 items-center gap-1 normal-case tracking-normal text-muted-foreground"><CalendarDays size={11} aria-hidden /><span>{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(match.start_time * 1000))}</span><span>({(() => { const elapsedSeconds = Math.max(0, Math.floor(Date.now() / 1000 - match.start_time)); const elapsedDays = Math.floor(elapsedSeconds / 86400); if (elapsedDays > 0) return labels.daysAgo.replace('{count}', String(elapsedDays)); const elapsedHours = Math.floor(elapsedSeconds / 3600); if (elapsedHours > 0) return locale === 'pt-br' ? `há ${elapsedHours} h` : `${elapsedHours}h ago`; const elapsedMinutes = Math.floor(elapsedSeconds / 60); return elapsedMinutes > 0 ? (locale === 'pt-br' ? `há ${elapsedMinutes} min` : `${elapsedMinutes}m ago`) : labels.today })()})</span></span>
               </span>
               <span className="flex min-w-0 items-center gap-2">
-                {heroById.get(match.hero_id)?.icon ? <span style={heroById.get(match.hero_id)?.color ? ({ '--hero': `rgb(${heroById.get(match.hero_id)?.color})` } as React.CSSProperties) : undefined} className={`flex size-10 shrink-0 items-center justify-center rounded-sm bg-muted sm:size-12 ${heroById.get(match.hero_id)?.color ? 'bg-[color-mix(in_oklch,var(--hero)_35%,var(--muted))]' : ''}`}><img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" width={48} height={48} loading="lazy" decoding="async" className="size-full object-contain" /></span> : <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-muted font-mono text-xs sm:size-12">{match.hero_id}</span>}
+                {heroById.get(match.hero_id) ? <HeroIcon icon={heroById.get(match.hero_id)?.icon} color={heroById.get(match.hero_id)?.color} size="size-10 sm:size-12" width={48} height={48} /> : <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-muted font-mono text-xs sm:size-12">{match.hero_id}</span>}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`}</span>
                   <span className="mt-0.5 block font-mono text-base font-bold tabular-nums text-foreground sm:text-lg">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')} <span className="font-sans text-[9px] font-medium uppercase tracking-wide text-muted-foreground">{labels.duration}</span></span>
@@ -349,7 +350,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   const finalStats = stats.length ? asRecord(stats[stats.length - 1]) : null
                   const kd = [kills ?? finalStats?.kills, deaths ?? finalStats?.deaths, assists ?? finalStats?.assists].map((value) => typeof value === 'number' ? formatNumber(value) : '—').join('/')
                   return <span key={accountId ?? index} className={`flex min-h-[15px] flex-1 items-center gap-1 ${accountId === selectedAccountId ? 'font-bold text-primary' : 'text-foreground/90'}`}>
-                    {hero?.icon ? <span style={hero.color ? ({ '--hero': `rgb(${hero.color})` } as React.CSSProperties) : undefined} className={`flex size-[14px] shrink-0 items-center justify-center rounded-sm bg-muted sm:size-[15px] ${hero.color ? 'bg-[color-mix(in_oklch,var(--hero)_35%,var(--muted))]' : ''}`}><img src={hero.icon} alt="" loading="lazy" decoding="async" className="size-full object-contain" /></span> : <span className="grid size-[14px] shrink-0 place-items-center rounded-sm bg-muted font-mono text-[7px] sm:size-[15px]">{heroId ?? '·'}</span>}
+                    {hero ? <HeroIcon icon={hero.icon} color={hero.color} size="size-[14px] sm:size-[15px]" /> : <span className="grid size-[14px] shrink-0 place-items-center rounded-sm bg-muted font-mono text-[7px] sm:size-[15px]">{heroId ?? '·'}</span>}
                     <span title={name} className="min-w-0 flex-1 truncate text-[10px] leading-none sm:text-[11px]">{name}</span>
                     <span className="shrink-0 font-mono text-[9px] tabular-nums text-muted-foreground sm:text-[10px]">{kd}</span>
                   </span>
@@ -368,7 +369,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           {!metadataLoading && !metadataError && matchInfo ? <>
             <div className={match.player_match_outcome === 1 ? 'border border-emerald-500/30 bg-emerald-500/5 p-4' : 'border border-rose-500/25 bg-rose-500/5 p-4'}>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                {heroById.get(match.hero_id)?.icon ? <span style={heroById.get(match.hero_id)?.color ? ({ '--hero': `rgb(${heroById.get(match.hero_id)?.color})` } as React.CSSProperties) : undefined} className={`flex size-20 shrink-0 items-center justify-center rounded-sm bg-muted ${heroById.get(match.hero_id)?.color ? 'bg-[color-mix(in_oklch,var(--hero)_35%,var(--muted))]' : ''}`}><img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" className="size-full object-contain" /></span> : <div className="grid size-20 shrink-0 place-items-center rounded-sm bg-muted font-mono text-sm">{match.hero_id}</div>}
+                {heroById.get(match.hero_id) ? <HeroIcon icon={heroById.get(match.hero_id)?.icon} color={heroById.get(match.hero_id)?.color} size="size-20" /> : <div className="grid size-20 shrink-0 place-items-center rounded-sm bg-muted font-mono text-sm">{match.hero_id}</div>}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     <span>{labels.matchId} #{id}</span><span>·</span><span>{`${labels.gameModes[match.game_mode] ?? `${labels.unknownGameMode} (${match.game_mode})`} ${labels.matchModes[match.match_mode] ?? `${labels.unknownMatchMode} (${match.match_mode})`}`}</span>
