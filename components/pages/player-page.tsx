@@ -288,10 +288,11 @@ export function PlayerPage({ locale }: { locale: Locale }) {
           <div className="grid gap-px border-t border-border bg-border sm:grid-cols-3">
             <StatCard label={t.matches30d} value={formatNumber(selected.matches_played_last_30d)} icon={<History size={15} />} />
             <StatCard label={t.lastTeamRank} value={formatNumber(selected.last_team_avg_badge)} icon={<Trophy size={15} />} />
-            <StatCard label={t.rank} value={rankData ? formatNumber(rankData.badge ?? rankData.rank ?? '—') : (rank.loading ? t.loading : '—')} icon={<Trophy size={15} />} />
+            <StatCard label="Badge" value={rankData ? formatNumber(rankData.badge ?? '—') : (rank.loading ? t.loading : '—')} icon={<Trophy size={15} />} />
+            <StatCard label={t.rank} value={rankData ? formatNumber(rankData.rank ?? '—') : (rank.loading ? t.loading : '—')} icon={<Trophy size={15} />} />
+            <StatCard label="Subrank" value={rankData ? formatNumber(rankData.subrank ?? '—') : (rank.loading ? t.loading : '—')} icon={<Trophy size={15} />} />
           </div>
         </section>
-          <DataTable title={t.rankDetails} data={rank.data ? [rank.data] : null} empty={rank.loading ? t.loading : rank.error || t.noData} />
         </div>
         {rank.error ? <p role="status" className="border border-border px-4 py-3 text-sm text-muted-foreground"><ShieldAlert className="mr-2 inline" size={16} />{rank.error}</p> : null}
         <div className="grid gap-4 lg:grid-cols-2">
