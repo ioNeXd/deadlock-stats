@@ -296,7 +296,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
         <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group relative flex min-h-[132px] w-full items-stretch gap-0 overflow-hidden text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
           <span className="relative flex w-[40%] min-w-0 shrink-0 items-stretch border-r border-border">
-            <span className="flex min-w-0 flex-1 flex-col justify-center gap-1 px-2 py-2 sm:px-3">
+            <span className="flex min-w-0 flex-1 flex-col justify-between gap-1 px-2 py-2 sm:px-3">
               <span className="flex min-w-0 items-center justify-between gap-2 text-[9px] font-bold uppercase tracking-wider text-primary sm:text-[10px]">
                 <span className="truncate">{`${labels.gameModes[match.game_mode] ?? `${labels.unknownGameMode} (${match.game_mode})`} ${labels.matchModes[match.match_mode] ?? `${labels.unknownMatchMode} (${match.match_mode})`}`}</span>
                 <span className="inline-flex shrink-0 items-center gap-1 normal-case tracking-normal text-muted-foreground"><CalendarDays size={11} aria-hidden /><span>{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(match.start_time * 1000))}</span><span>({(() => { const elapsedSeconds = Math.max(0, Math.floor(Date.now() / 1000 - match.start_time)); const elapsedDays = Math.floor(elapsedSeconds / 86400); if (elapsedDays > 0) return labels.daysAgo.replace('{count}', String(elapsedDays)); const elapsedHours = Math.floor(elapsedSeconds / 3600); if (elapsedHours > 0) return locale === 'pt-br' ? `há ${elapsedHours} h` : `${elapsedHours}h ago`; const elapsedMinutes = Math.floor(elapsedSeconds / 60); return elapsedMinutes > 0 ? (locale === 'pt-br' ? `há ${elapsedMinutes} min` : `${elapsedMinutes}m ago`) : labels.today })()})</span></span>
@@ -318,7 +318,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <span className="shrink-0 font-semibold uppercase tracking-wide">{labels.souls}</span>
                   <span className="truncate font-mono text-xs font-extrabold tabular-nums">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span>
                 </span>
-                <span className="min-w-0 translate-y-1 truncate text-right font-mono text-[9px] font-semibold text-foreground/80 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
+                <span className="min-w-0 truncate text-right font-mono text-[9px] font-semibold text-foreground/80 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
               </span>
             </span>
           </span>
@@ -335,7 +335,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
             return (teamOrder.length ? teamOrder : [null, null]).map((team, columnIndex) => {
               const members = team === null ? [] : summary.filter((player) => player.team === team).slice(0, 6)
               const isAllies = columnIndex === 0
-              return <span key={team ?? `unknown-${columnIndex}`} className={`flex min-w-0 flex-1 flex-col justify-center px-1 sm:px-1.5 ${columnIndex === 0 ? 'border-r border-border' : 'pr-4'}`}>
+              return <span key={team ?? `unknown-${columnIndex}`} className={`flex min-w-0 flex-1 flex-col px-1 sm:px-1.5 ${columnIndex === 0 ? 'border-r border-border' : 'pr-4'}`}>
                 <span className={`mb-0.5 truncate border-b pb-0.5 text-[9px] font-bold uppercase tracking-wider sm:text-[10px] ${isAllies ? 'border-emerald-500/40 text-emerald-400' : 'border-rose-500/40 text-rose-400'}`}>{isAllies ? labels.team0 : labels.team1}</span>
                 {team === null ? <span className="text-[10px] text-muted-foreground">{labels.loading}</span> : members.length ? members.map((player, index) => {
                   const accountId = typeof player.account_id === 'number' ? player.account_id : null
