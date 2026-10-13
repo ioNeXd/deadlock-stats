@@ -295,8 +295,8 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       return <li key={id}>
         <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group relative flex min-h-[132px] w-full items-stretch gap-0 overflow-hidden text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
-          <span className="flex w-[40%] min-w-0 shrink-0 items-stretch border-r border-border">
-            <span className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 px-2 py-2 sm:px-3">
+          <span className="relative flex w-[40%] min-w-0 shrink-0 items-stretch border-r border-border">
+            <span className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 px-2 py-2 pb-6 sm:px-3">
               <span className="flex min-w-0 items-center gap-2">
                 {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-10 shrink-0 border border-border bg-background object-cover sm:size-12" /> : <span className="grid size-10 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-12">{match.hero_id}</span>}
                 <span className="min-w-0 flex-1">
@@ -314,9 +314,9 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <span className="shrink-0 font-semibold uppercase tracking-wide">{labels.souls}</span>
                   <span className="truncate font-mono text-xs font-extrabold tabular-nums">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span>
                 </span>
-                <span className="min-w-0 truncate text-right font-mono text-[9px] font-semibold text-foreground/80 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
               </span>
             </span>
+            <span className="pointer-events-none absolute bottom-1 right-2 z-10 max-w-[calc(100%-1rem)] truncate text-right font-mono text-[9px] font-semibold text-foreground/80 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
           </span>
           <span className="relative flex min-w-0 flex-1 items-stretch pb-4">
           {[0, 1].map((team) => {
