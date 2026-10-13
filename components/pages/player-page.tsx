@@ -156,25 +156,26 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
           const hero = heroId === null ? null : heroById.get(heroId)
           const label = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : steamNames[accountId] ?? (typeof player.name === 'string' && player.name.trim() ? player.name.trim() : `#${accountId}`)
-          // The final stats snapshot is the authoritative end-of-match inventory.
-          // Do not read player.abilities or other ability-upgrade fields as item slots.
-          const rawItems = Array.isArray(finalStats?.items)
-            ? finalStats.items
-            : Array.isArray(player.items)
-              ? player.items
-              : []
-          const itemIds = rawItems.map((item) => {
-            if (typeof item === 'number') return Number.isSafeInteger(item) && item > 0 ? item : null
-            if (typeof item === 'string') {
-              const parsed = Number(item)
-              return /^\\d+$/.test(item) && Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null
-            }
-            const record = asRecord(item)
-            const rawId = record?.item_id ?? record?.itemId ?? record?.id
-            const parsed = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
-            return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null
-          }).filter((itemId): itemId is number => itemId !== null).slice(0, 8)
-          const inventorySlots = Array.from({ length: 8 }, (_, slotIndex) => itemIds[slotIndex] ?? null)
+          // Match metadata records every item purchase with its game time and sale time.
+          // Build the final inventory from those purchase events, not periodic player stats
+          // (which may contain ability/upgrades data with a similar shape).
+          const rawItems = Array.isArray(player.items) ? player.items : []
+          const purchases = rawItems.map((value, sourceIndex) => {
+            const record = asRecord(value)
+            if (!record) return null
+            const rawId = record.item_id
+            const itemId = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
+            const rawGameTime = record.game_time_s
+            const gameTime = typeof rawGameTime === 'number' ? rawGameTime : typeof rawGameTime === 'string' ? Number(rawGameTime) : NaN
+            const rawSoldTime = record.sold_time_s
+            const soldTime = typeof rawSoldTime === 'number' ? rawSoldTime : typeof rawSoldTime === 'string' ? Number(rawSoldTime) : 0
+            if (!Number.isSafeInteger(itemId) || itemId <= 0) return null
+            return { itemId, gameTime: Number.isFinite(gameTime) ? gameTime : sourceIndex, soldTime, sourceIndex }
+          }).filter((purchase): purchase is { itemId: number; gameTime: number; soldTime: number; sourceIndex: number } => purchase !== null)
+            .filter((purchase) => purchase.soldTime <= 0)
+            .sort((a, b) => a.gameTime - b.gameTime || a.sourceIndex - b.sourceIndex)
+          const inventorySlots = purchases.slice(-8).map((purchase) => purchase.itemId)
+          const visibleInventory = Array.from({ length: 8 }, (_, slotIndex) => inventorySlots[slotIndex] ?? null)
           return <li key={accountId ?? index} className={accountId === selectedAccountId ? 'bg-primary/5' : ''}>
             <div className="flex items-center gap-3 px-3 py-3">
               <span className="w-5 shrink-0 text-center font-mono text-[11px] text-muted-foreground">{index + 1}</span>
@@ -189,7 +190,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <span>{labels.souls}: <span className="font-mono text-foreground">{formatNumber(netWorth)}</span></span>
                   <span>{labels.damage}: <span className="font-mono text-foreground">{formatNumber(damage)}</span></span>
                 </div>
-                <div className="mt-2 grid w-fit grid-cols-4 gap-1.5 sm:grid-cols-8" aria-label={labels.items}>{inventorySlots.map((itemId, itemIndex) => {
+                <div className="mt-2 grid w-fit grid-cols-4 gap-1.5" aria-label={labels.items}>{visibleInventory.map((itemId, itemIndex) => {
                   const item = itemId === null ? undefined : itemById.get(itemId)
                   const rawItem = item as unknown as Record<string, unknown> | undefined
                   const itemName = typeof rawItem?.name === 'string' ? rawItem.name : itemId === null ? '' : `Item #${itemId}`
