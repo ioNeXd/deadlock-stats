@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy, ChevronDown, Plus, Minus } from 'lucide-react'
+import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy, ChevronDown, Plus, Minus, CalendarDays } from 'lucide-react'
 import { ApiError } from '@/lib/api/client'
 import { getHeroes, getItemCatalog } from '@/lib/api/assets'
 import type { HeroEntity, ItemAsset } from '@/lib/api/types'
@@ -297,13 +297,10 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
           <span className="flex w-[40%] min-w-0 shrink-0 items-stretch border-r border-border">
             <span className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 px-2 py-2 sm:px-3">
-              <span className="flex min-w-0 justify-end">
-                <span className="border border-border/70 bg-background/70 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-foreground/90 sm:text-[11px]">{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(match.start_time * 1000))}</span>
-              </span>
               <span className="flex min-w-0 items-center gap-2">
                 {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-10 shrink-0 border border-border bg-background object-cover sm:size-12" /> : <span className="grid size-10 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-12">{match.hero_id}</span>}
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`}</span>
+                  <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"><span className="min-w-0 truncate">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`}</span><span className="inline-flex shrink-0 items-center gap-1 normal-case tracking-normal"><CalendarDays size={11} aria-hidden /><span>{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(match.start_time * 1000))}</span><span>({(() => { const elapsedSeconds = Math.max(0, Math.floor(Date.now() / 1000 - match.start_time)); const elapsedDays = Math.floor(elapsedSeconds / 86400); if (elapsedDays > 0) return labels.daysAgo.replace('{count}', String(elapsedDays)); const elapsedHours = Math.floor(elapsedSeconds / 3600); if (elapsedHours > 0) return locale === 'pt-br' ? `há ${elapsedHours} h` : `${elapsedHours}h ago`; const elapsedMinutes = Math.floor(elapsedSeconds / 60); return elapsedMinutes > 0 ? (locale === 'pt-br' ? `há ${elapsedMinutes} min` : `${elapsedMinutes}m ago`) : labels.today })()})</span></span></span>
                   <span className="mt-0.5 block font-mono text-base font-bold tabular-nums text-foreground sm:text-lg">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')} <span className="font-sans text-[9px] font-medium uppercase tracking-wide text-muted-foreground">{labels.duration}</span></span>
                 </span>
               </span>
@@ -316,22 +313,10 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 <span className="shrink-0 font-semibold uppercase tracking-wide">{labels.souls}</span>
                 <span className="truncate font-mono text-xs font-extrabold tabular-nums">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span>
               </span>
-              <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[10px] leading-tight text-muted-foreground sm:text-[11px]">
-                <span>{(() => {
-                  const elapsedSeconds = Math.max(0, Math.floor(Date.now() / 1000 - match.start_time))
-                  const elapsedDays = Math.floor(elapsedSeconds / 86400)
-                  if (elapsedDays > 0) return labels.daysAgo.replace('{count}', String(elapsedDays))
-                  const elapsedHours = Math.floor(elapsedSeconds / 3600)
-                  if (elapsedHours > 0) return locale === 'pt-br' ? `há ${elapsedHours} h` : `${elapsedHours}h ago`
-                  const elapsedMinutes = Math.floor(elapsedSeconds / 60)
-                  return elapsedMinutes > 0 ? (locale === 'pt-br' ? `há ${elapsedMinutes} min` : `${elapsedMinutes}m ago`) : labels.today
-                })()}</span>
-                <span aria-hidden>·</span>
-                <span className="shrink-0 font-mono font-semibold text-foreground/90">{labels.matchIdLabel}: #{id}</span>
-              </span>
+
             </span>
           </span>
-          <span className="flex min-w-0 flex-1 items-stretch">
+          <span className="relative flex min-w-0 flex-1 items-stretch pb-4">
           {[0, 1].map((team) => {
             const members = (matchSummaries[id] ?? []).filter((player) => player.team === team).slice(0, 6)
             return <span key={team} className={`flex min-w-0 flex-1 flex-col justify-center px-1 sm:px-1.5 ${team === 0 ? 'border-r border-border' : 'pr-4'}`}>
@@ -356,6 +341,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
             </span>
           })}
           </span>
+          <span className="absolute bottom-1 right-10 max-w-[45%] truncate font-mono text-[9px] font-semibold text-foreground/80 sm:right-11 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
           <span aria-hidden className={`flex w-8 shrink-0 items-center justify-center self-stretch border-l border-border bg-muted/20 text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary sm:w-9 ${isOpen ? 'bg-primary/10 text-primary' : ''}`}>
             <span className="grid size-5 place-items-center border border-current/50">{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
           </span>
