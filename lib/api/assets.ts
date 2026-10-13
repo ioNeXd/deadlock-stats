@@ -84,6 +84,13 @@ export function getHeroes(locale: Locale): Promise<HeroEntity[]> {
 
 const SLOTS: ItemSlot[] = ['weapon', 'vitality', 'spirit']
 
+/** Full item asset catalog for resolving match-history item IDs, including items outside the shop upgrade list. */
+export function getItemCatalog(locale: Locale): Promise<ItemAsset[]> {
+  return once(`assets:latest:item-catalog:${locale}`, () =>
+    apiGet<ItemAsset[]>('/v1/assets/items', { language: API_LANGUAGE[locale] }, ASSET_CACHE),
+  )
+}
+
 export async function getItems(locale: Locale): Promise<ItemEntity[]> {
   return once(`assets:latest:items:${locale}`, async () => {
     // Response is ~2 MB, above the Next data-cache limit; memoized per process instead.
