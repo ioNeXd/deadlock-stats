@@ -295,7 +295,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       return <li key={id}>
         <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex h-[110px] w-full items-stretch gap-0 overflow-hidden text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
-          <span className="flex w-1/2 min-w-0 shrink-0 flex-col justify-center gap-1 border-r border-border px-2 py-2 sm:px-3">
+          <span className="flex w-[40%] min-w-0 shrink-0 flex-col justify-center gap-1 border-r border-border px-2 py-2 sm:px-3">
             <span className="flex min-w-0 items-center gap-2">
               {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-10 shrink-0 border border-border bg-background object-cover sm:size-11" /> : <span className="grid size-10 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-11">{match.hero_id}</span>}
               <span className="min-w-0">
@@ -315,7 +315,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
               })()}
             </span>
           </span>
-          <span className="flex w-1/2 min-w-0 items-stretch">
+          <span className="flex w-[60%] min-w-0 items-stretch">
           {[0, 1].map((team) => {
             const members = (matchSummaries[id] ?? []).filter((player) => player.team === team).slice(0, 6)
             return <span key={team} className={`flex min-w-0 flex-1 flex-col justify-center px-1 sm:px-1.5 ${team === 0 ? 'border-r border-border' : 'pr-4'}`}>
