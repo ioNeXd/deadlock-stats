@@ -295,7 +295,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       return <li key={id}>
         <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex h-[110px] w-full items-stretch gap-0 overflow-hidden text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
-          <span className="flex w-[22%] min-w-[104px] max-w-[184px] shrink-0 flex-col justify-center gap-1 border-r border-border px-2 py-2 sm:w-[20%] sm:min-w-[120px] sm:px-3">
+          <span className="flex w-1/2 min-w-0 shrink-0 flex-col justify-center gap-1 border-r border-border px-2 py-2 sm:px-3">
             <span className="flex min-w-0 items-center gap-2">
               {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-10 shrink-0 border border-border bg-background object-cover sm:size-11" /> : <span className="grid size-10 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-11">{match.hero_id}</span>}
               <span className="min-w-0">
@@ -308,10 +308,17 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
               <span className="truncate">{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: '2-digit' }).format(new Date(match.start_time * 1000))}</span>
               <span className="shrink-0 font-mono">#{id}</span>
             </span>
+            <span className="truncate text-[10px] leading-none text-muted-foreground">
+              {(() => {
+                const elapsedDays = Math.max(0, Math.floor((Date.now() / 1000 - match.start_time) / 86400))
+                return elapsedDays === 0 ? labels.today : elapsedDays === 1 ? labels.yesterday : labels.daysAgo.replace('{count}', String(elapsedDays))
+              })()}
+            </span>
           </span>
+          <span className="flex w-1/2 min-w-0 items-stretch">
           {[0, 1].map((team) => {
             const members = (matchSummaries[id] ?? []).filter((player) => player.team === team).slice(0, 6)
-            return <span key={team} className={`flex min-w-0 flex-[0.8] flex-col justify-center px-1 sm:px-1.5 ${team === 0 ? 'border-r border-border' : ''}`}>
+            return <span key={team} className={`flex min-w-0 flex-1 flex-col justify-center px-1 sm:px-1.5 ${team === 0 ? 'border-r border-border' : 'pr-4'}`}>
               <span className={`mb-0.5 truncate border-b pb-0.5 text-[9px] font-bold uppercase tracking-wider sm:text-[10px] ${team === 0 ? 'border-emerald-500/40 text-emerald-400' : 'border-rose-500/40 text-rose-400'}`}>{team === 0 ? labels.team0 : labels.team1}</span>
               {members.length ? members.map((player, index) => {
                 const accountId = typeof player.account_id === 'number' ? player.account_id : null
@@ -332,7 +339,8 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
               }) : <span className="text-[10px] text-muted-foreground">{labels.loading}</span>}
             </span>
           })}
-          <span className="flex shrink-0 items-center px-1.5 text-muted-foreground"><ChevronDown size={15} aria-hidden className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} /></span>
+          </span>
+          <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"><ChevronDown size={15} aria-hidden className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} /></span>
         </button>
         {isOpen ? <div className="space-y-4 border-t border-border bg-background/40 p-3 sm:p-4">
           {metadataLoading ? <p role="status" className="py-3 text-sm text-muted-foreground"><LoaderCircle size={15} className="mr-2 inline animate-spin" />{labels.loading}</p> : null}
