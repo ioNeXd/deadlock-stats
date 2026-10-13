@@ -47,6 +47,13 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   const [metadata, setMetadata] = useState<Record<string, unknown> | null>(null)
   const [metadataLoading, setMetadataLoading] = useState(false)
   const [metadataError, setMetadataError] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 15
+  const visibleMatches = (matches ?? []).slice(0, 100)
+  const pageCount = Math.max(1, Math.ceil(visibleMatches.length / pageSize))
+  const pageMatches = visibleMatches.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const rangeStart = visibleMatches.length ? (currentPage - 1) * pageSize + 1 : 0
+  const rangeEnd = Math.min(currentPage * pageSize, visibleMatches.length)
 
   async function toggleMatch(match: PlayerMatch) {
     const id = String(match.match_id)
@@ -105,7 +112,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
     {loading && !matches ? <p className="px-4 py-5 text-sm text-muted-foreground">{labels.loading}</p> : null}
     {error ? <p className="px-4 py-5 text-sm text-muted-foreground">{error}</p> : null}
     {!loading && !error && !matches?.length ? <p className="px-4 py-5 text-sm text-muted-foreground">{empty}</p> : null}
-    {matches?.length ? <ul className="divide-y divide-border">{matches.map((match) => {
+    {visibleMatches.length ? <ul className="divide-y divide-border">{pageMatches.map((match) => {
       const id = String(match.match_id)
       const isOpen = openedMatchId === id
       return <li key={id}>
@@ -125,6 +132,14 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
         </div> : null}
       </li>
     })}</ul> : null}
+    {visibleMatches.length > 0 ? <nav aria-label={labels.title} className="flex flex-col items-center justify-center gap-3 border-t border-border px-4 py-4 sm:flex-row">
+      <p className="text-center text-xs text-muted-foreground" aria-live="polite">{labels.showing.replace('{start}', String(rangeStart)).replace('{end}', String(rangeEnd)).replace('{total}', String(visibleMatches.length))}</p>
+      <div className="flex items-center justify-center gap-2">
+        <button type="button" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={currentPage === 1} className="border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40">{labels.previous}</button>
+        <span className="min-w-20 text-center text-xs text-muted-foreground">{labels.page.replace('{page}', String(currentPage)).replace('{pages}', String(pageCount))}</span>
+        <button type="button" onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))} disabled={currentPage >= pageCount} className="border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40">{labels.next}</button>
+      </div>
+    </nav> : null}
   </section>
 }
 
@@ -235,7 +250,7 @@ export function PlayerPage({ locale }: { locale: Locale }) {
           </div>
         </section>
         {rank.error ? <p role="status" className="border border-border px-4 py-3 text-sm text-muted-foreground"><ShieldAlert className="mr-2 inline" size={16} />{rank.error}</p> : null}
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="mx-auto w-full max-w-4xl">
           <MatchHistory matches={history.data} loading={history.loading} error={history.error} empty={t.noData} playerName={selected.personaname || t.unknownPlayer} selectedAccountId={Number(selected.account_id)} labels={t.matchDetails} />
         </div>
         {isLoading ? <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle size={16} className="animate-spin" />{t.loading}</p> : null}
