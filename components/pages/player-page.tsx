@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy, ChevronDown } from 'lucide-react'
 import { ApiError } from '@/lib/api/client'
+import { getHeroes } from '@/lib/api/assets'
+import type { HeroEntity } from '@/lib/api/types'
 import { fetchMatchMetadata } from '@/lib/api/matches'
 import {
   fetchPlayerMatchHistory,
@@ -30,25 +32,41 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null
 }
 
-function MatchHistory({ matches, loading, error, empty, playerName, selectedAccountId, labels }: {
+function MatchHistory({ matches, loading, error, empty, playerName, selectedAccountId, labels, locale }: {
   matches: PlayerMatch[] | null
   loading: boolean
   error: string | null
   empty: string
   playerName: string
   selectedAccountId: number
+  locale: Locale
   labels: {
     title: string; team0: string; team1: string; player: string; hero: string
     netWorth: string; damage: string; duration: string; unavailable: string
     loading: string; result: string; win: string; loss: string
     showing: string; previous: string; next: string; page: string
+    gameMode: string; matchId: string; souls: string; lastHits: string
+    items: string; unknownHero: string
   }
 }) {
   const [openedMatchId, setOpenedMatchId] = useState<string | null>(null)
   const [metadata, setMetadata] = useState<Record<string, unknown> | null>(null)
   const [metadataLoading, setMetadataLoading] = useState(false)
   const [metadataError, setMetadataError] = useState('')
+  const [heroes, setHeroes] = useState<HeroEntity[]>([])
   const [currentPage, setCurrentPage] = useState(1)
+
+  useEffect(() => {
+    let cancelled = false
+    void getHeroes(locale).then((items) => {
+      if (!cancelled) setHeroes(items)
+    }).catch(() => {
+      if (!cancelled) setHeroes([])
+    })
+    return () => { cancelled = true }
+  }, [locale])
+
+  const heroById = new Map(heroes.map((hero) => [hero.id, hero]))
   const pageSize = 15
   const visibleMatches = (matches ?? []).slice(0, 100)
   const pageCount = Math.max(1, Math.ceil(visibleMatches.length / pageSize))
@@ -82,31 +100,49 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
 
   function renderTeam(team: number, title: string) {
     const members = players.filter((player) => player.team === team)
-    return <section key={team} className="min-w-0 border border-border bg-background/70">
-      <h4 className="border-b border-border px-3 py-2 font-display font-bold uppercase tracking-wide">{title}<span className="ml-2 text-xs text-muted-foreground">({members.length})</span></h4>
-      {!members.length ? <p className="px-3 py-4 text-sm text-muted-foreground">{labels.unavailable}</p> : <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-muted/50 text-[11px] uppercase tracking-wider text-muted-foreground"><tr><th className="px-3 py-2">{labels.player}</th><th className="px-3 py-2">{labels.hero}</th><th className="px-3 py-2">K/D/A</th><th className="px-3 py-2">{labels.netWorth}</th><th className="px-3 py-2">{labels.damage}</th></tr></thead>
-          <tbody>{members.map((player, index) => {
-            const accountId = typeof player.account_id === 'number' ? player.account_id : null
-            const snapshots = Array.isArray(player.stats) ? player.stats : []
-            const finalStats = snapshots.length ? asRecord(snapshots[snapshots.length - 1]) : null
-            const kills = typeof player.kills === 'number' ? player.kills : finalStats?.kills
-            const deaths = typeof player.deaths === 'number' ? player.deaths : finalStats?.deaths
-            const assists = typeof player.assists === 'number' ? player.assists : finalStats?.assists
-            const netWorth = typeof player.net_worth === 'number' ? player.net_worth : finalStats?.net_worth
-            const damage = finalStats?.player_damage ?? player.player_damage
-            const label = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : `#${accountId}`
-            return <tr key={accountId ?? index} className="border-t border-border/70">
-              <th scope="row" className="whitespace-nowrap px-3 py-2 font-medium">{label}</th>
-              <td className="px-3 py-2">{formatNumber(player.hero_id)}</td>
-              <td className="whitespace-nowrap px-3 py-2 font-mono">{formatNumber(kills)}/{formatNumber(deaths)}/{formatNumber(assists)}</td>
-              <td className="whitespace-nowrap px-3 py-2 font-mono">{formatNumber(netWorth)}</td>
-              <td className="whitespace-nowrap px-3 py-2 font-mono">{formatNumber(damage)}</td>
-            </tr>
-          })}</tbody>
-        </table>
-      </div>}
+    return <section key={team} className="min-w-0 overflow-hidden border border-border bg-card/70">
+      <h4 className="flex items-center justify-between border-b border-border bg-muted/40 px-3 py-3 font-display font-bold uppercase tracking-wide">
+        <span>{title}</span><span className="font-mono text-xs text-muted-foreground">{members.length}</span>
+      </h4>
+      {!members.length ? <p className="px-3 py-4 text-sm text-muted-foreground">{labels.unavailable}</p> : <ol className="divide-y divide-border/80">
+        {members.map((player, index) => {
+          const accountId = typeof player.account_id === 'number' ? player.account_id : null
+          const snapshots = Array.isArray(player.stats) ? player.stats : []
+          const finalStats = snapshots.length ? asRecord(snapshots[snapshots.length - 1]) : null
+          const kills = typeof player.kills === 'number' ? player.kills : finalStats?.kills
+          const deaths = typeof player.deaths === 'number' ? player.deaths : finalStats?.deaths
+          const assists = typeof player.assists === 'number' ? player.assists : finalStats?.assists
+          const netWorth = typeof player.net_worth === 'number' ? player.net_worth : finalStats?.net_worth
+          const damage = finalStats?.player_damage ?? player.player_damage
+          const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
+          const hero = heroId === null ? null : heroById.get(heroId)
+          const label = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : `#${accountId}`
+          const rawItems = Array.isArray(player.items) ? player.items : Array.isArray(finalStats?.items) ? finalStats.items : []
+          const itemNames = rawItems.map((item) => {
+            if (typeof item === 'string' || typeof item === 'number') return String(item)
+            const record = asRecord(item)
+            return record ? String(record.name ?? record.item_id ?? record.id ?? '') : ''
+          }).filter(Boolean).slice(0, 8)
+          return <li key={accountId ?? index} className={accountId === selectedAccountId ? 'bg-primary/5' : ''}>
+            <div className="flex items-center gap-3 px-3 py-3">
+              <span className="w-5 shrink-0 text-center font-mono text-[11px] text-muted-foreground">{index + 1}</span>
+              {hero?.icon ? <img src={hero.icon} alt="" loading="lazy" className="size-12 shrink-0 border border-border bg-background object-cover" /> : <span className="grid size-12 shrink-0 place-items-center border border-border bg-background font-mono text-xs text-muted-foreground">{heroId ?? '—'}</span>}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  <span className="truncate font-semibold">{hero?.name ?? (heroId === null ? labels.unknownHero : `${labels.hero} #${heroId}`)}</span>
+                  <span className="truncate text-xs text-muted-foreground">{label}</span>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span className="font-mono font-semibold text-foreground">{formatNumber(kills)} / {formatNumber(deaths)} / {formatNumber(assists)}</span>
+                  <span>{labels.souls}: <span className="font-mono text-foreground">{formatNumber(netWorth)}</span></span>
+                  <span>{labels.damage}: <span className="font-mono text-foreground">{formatNumber(damage)}</span></span>
+                </div>
+                {itemNames.length ? <div className="mt-2 flex flex-wrap gap-1.5" aria-label={labels.items}>{itemNames.map((item, itemIndex) => <span key={itemIndex} className="border border-border/80 bg-background/80 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">{item}</span>)}</div> : null}
+              </div>
+            </div>
+          </li>
+        })}
+      </ol>}
     </section>
   }
 
@@ -125,11 +161,33 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           <span className={match.player_match_outcome === 1 ? 'text-sm font-semibold text-primary' : 'text-sm text-muted-foreground'}>{labels.result}: {match.player_match_outcome === 1 ? labels.win : labels.loss}</span>
           <ChevronDown size={17} aria-hidden className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
-        {isOpen ? <div className="space-y-3 border-t border-border p-3 sm:p-4">
+        {isOpen ? <div className="space-y-4 border-t border-border bg-background/40 p-3 sm:p-4">
           {metadataLoading ? <p role="status" className="py-3 text-sm text-muted-foreground"><LoaderCircle size={15} className="mr-2 inline animate-spin" />{labels.loading}</p> : null}
           {metadataError ? <p role="status" className="py-3 text-sm text-muted-foreground">{metadataError}</p> : null}
           {!metadataLoading && !metadataError && matchInfo ? <>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs uppercase tracking-wider text-muted-foreground"><span>{labels.duration}: {duration === null ? '—' : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</span><span>{labels.player}: {players.length}</span></div>
+            <div className={match.player_match_outcome === 1 ? 'border border-emerald-500/30 bg-emerald-500/5 p-4' : 'border border-rose-500/25 bg-rose-500/5 p-4'}>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" className="size-20 shrink-0 border border-border bg-background object-cover" /> : <div className="grid size-20 shrink-0 place-items-center border border-border bg-background font-mono text-sm">{match.hero_id}</div>}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    <span>{labels.matchId} #{id}</span><span>·</span><span>{labels.gameMode} {match.game_mode}</span>
+                  </div>
+                  <h4 className="mt-1 font-display text-2xl font-bold uppercase">{match.player_match_outcome === 1 ? labels.win : labels.loss}</h4>
+                  <p className="mt-1 text-sm text-muted-foreground">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`} <span className="px-1">·</span> {new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(match.start_time * 1000))} <span className="px-1">·</span> {labels.duration} {duration === null ? '—' : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</p>
+                </div>
+                <div className="grid grid-cols-3 gap-3 border-t border-border/70 pt-3 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+                  <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">K</p><p className="font-mono text-lg font-bold">{formatNumber(match.player_kills)}</p></div>
+                  <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">D</p><p className="font-mono text-lg font-bold">{formatNumber(match.player_deaths)}</p></div>
+                  <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">A</p><p className="font-mono text-lg font-bold">{formatNumber(match.player_assists)}</p></div>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-px border border-border/70 bg-border sm:grid-cols-4">
+                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.souls}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.net_worth)}</p></div>
+                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.lastHits}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.last_hits)}</p></div>
+                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.hero}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.hero_level)}</p></div>
+                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.player}</p><p className="mt-1 font-mono font-bold">{players.length}</p></div>
+              </div>
+            </div>
             <div className="grid gap-3 xl:grid-cols-2">{renderTeam(0, labels.team0)}{renderTeam(1, labels.team1)}</div>
           </> : null}
         </div> : null}
@@ -254,7 +312,7 @@ export function PlayerPage({ locale }: { locale: Locale }) {
         </section>
         {rank.error ? <p role="status" className="border border-border px-4 py-3 text-sm text-muted-foreground"><ShieldAlert className="mr-2 inline" size={16} />{rank.error}</p> : null}
         <div className="w-full">
-          <MatchHistory matches={history.data} loading={history.loading} error={history.error} empty={t.noData} playerName={selected.personaname || t.unknownPlayer} selectedAccountId={Number(selected.account_id)} labels={t.matchDetails} />
+          <MatchHistory matches={history.data} loading={history.loading} error={history.error} empty={t.noData} playerName={selected.personaname || t.unknownPlayer} selectedAccountId={Number(selected.account_id)} labels={t.matchDetails} locale={locale} />
         </div>
         {isLoading ? <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle size={16} className="animate-spin" />{t.loading}</p> : null}
         <p className="text-xs text-muted-foreground">{t.dataNote}</p>
