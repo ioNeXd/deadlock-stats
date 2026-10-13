@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy, ChevronDown } from 'lucide-react'
 import { ApiError } from '@/lib/api/client'
-import { getHeroes } from '@/lib/api/assets'
-import type { HeroEntity } from '@/lib/api/types'
+import { getHeroes, getItems } from '@/lib/api/assets'
+import type { HeroEntity, ItemEntity } from '@/lib/api/types'
 import { fetchMatchMetadata } from '@/lib/api/matches'
 import {
   fetchPlayerMatchHistory,
@@ -56,6 +56,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   const [metadataError, setMetadataError] = useState('')
   const [steamNames, setSteamNames] = useState<Record<number, string>>({})
   const [heroes, setHeroes] = useState<HeroEntity[]>([])
+  const [itemAssets, setItemAssets] = useState<ItemEntity[]>([])
   const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
@@ -68,7 +69,18 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
     return () => { cancelled = true }
   }, [locale])
 
+  useEffect(() => {
+    let cancelled = false
+    void getItems(locale).then((items) => {
+      if (!cancelled) setItemAssets(items)
+    }).catch(() => {
+      if (!cancelled) setItemAssets([])
+    })
+    return () => { cancelled = true }
+  }, [locale])
+
   const heroById = new Map(heroes.map((hero) => [hero.id, hero]))
+  const itemById = new Map(itemAssets.map((item) => [item.id, item]))
   const pageSize = 15
   const visibleMatches = (matches ?? []).slice(0, 100)
   const pageCount = Math.max(1, Math.ceil(visibleMatches.length / pageSize))
@@ -145,11 +157,17 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           const hero = heroId === null ? null : heroById.get(heroId)
           const label = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : steamNames[accountId] ?? (typeof player.name === 'string' && player.name.trim() ? player.name.trim() : `#${accountId}`)
           const rawItems = Array.isArray(player.items) ? player.items : Array.isArray(finalStats?.items) ? finalStats.items : []
-          const itemNames = rawItems.map((item) => {
-            if (typeof item === 'string' || typeof item === 'number') return String(item)
+          const itemIds = rawItems.map((item) => {
+            if (typeof item === 'number') return Number.isSafeInteger(item) && item > 0 ? item : null
+            if (typeof item === 'string') {
+              const parsed = Number(item)
+              return /^\\d+$/.test(item) && Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null
+            }
             const record = asRecord(item)
-            return record ? String(record.name ?? record.item_id ?? record.id ?? '') : ''
-          }).filter(Boolean).slice(0, 8)
+            const rawId = record?.item_id ?? record?.id
+            const parsed = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
+            return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null
+          }).filter((itemId): itemId is number => itemId !== null).slice(0, 8)
           return <li key={accountId ?? index} className={accountId === selectedAccountId ? 'bg-primary/5' : ''}>
             <div className="flex items-center gap-3 px-3 py-3">
               <span className="w-5 shrink-0 text-center font-mono text-[11px] text-muted-foreground">{index + 1}</span>
@@ -164,7 +182,12 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <span>{labels.souls}: <span className="font-mono text-foreground">{formatNumber(netWorth)}</span></span>
                   <span>{labels.damage}: <span className="font-mono text-foreground">{formatNumber(damage)}</span></span>
                 </div>
-                {itemNames.length ? <div className="mt-2 flex flex-wrap gap-1.5" aria-label={labels.items}>{itemNames.map((item, itemIndex) => <span key={itemIndex} className="border border-border/80 bg-background/80 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">{item}</span>)}</div> : null}
+                {itemIds.length ? <div className="mt-2 flex flex-wrap gap-1.5" aria-label={labels.items}>{itemIds.map((itemId, itemIndex) => {
+                  const item = itemById.get(itemId)
+                  return item?.icon
+                    ? <span key={`${itemId}-${itemIndex}`} title={item.name} className="grid size-10 shrink-0 place-items-center border border-border/80 bg-background/90 p-0.5 sm:size-11"><img src={item.icon} alt={item.name} loading="lazy" className="size-full object-contain" /></span>
+                    : <span key={`${itemId}-${itemIndex}`} title={item?.name ?? `Item #${itemId}`} className="grid size-10 shrink-0 place-items-center border border-border/80 bg-background/80 font-mono text-[10px] text-muted-foreground sm:size-11">{item?.name ? item.name.slice(0, 3) : itemId}</span>
+                })}</div> : null}
               </div>
             </div>
           </li>
