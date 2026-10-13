@@ -304,12 +304,14 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <span className="mt-0.5 block font-mono text-base font-bold tabular-nums text-foreground sm:text-lg">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')} <span className="font-sans text-[9px] font-medium uppercase tracking-wide text-muted-foreground">{labels.duration}</span></span>
                 </span>
               </span>
-              <span className="grid grid-cols-3 gap-1">
-                {([{ label: 'K', value: match.player_kills, tone: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' }, { label: 'D', value: match.player_deaths, tone: 'border-rose-500/40 bg-rose-500/10 text-rose-300' }, { label: 'A', value: match.player_assists, tone: 'border-sky-500/40 bg-sky-500/10 text-sky-300' }] as const).map((stat) => <span key={stat.label} className={`flex min-w-0 items-center justify-between gap-1 border px-1.5 py-1 ${stat.tone}`}><span className="text-[9px] font-bold">{stat.label}</span><span className="font-mono text-sm font-bold leading-none tabular-nums sm:text-base">{formatNumber(stat.value)}</span></span>)}
+              <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                {([{ label: 'K', value: match.player_kills, tone: 'text-emerald-400', bar: 'bg-emerald-500' }, { label: 'D', value: match.player_deaths, tone: 'text-rose-400', bar: 'bg-rose-500' }, { label: 'A', value: match.player_assists, tone: 'text-sky-400', bar: 'bg-sky-500' }] as const).map((stat) => <span key={stat.label} className={`inline-flex items-center gap-0.5 font-mono tabular-nums ${stat.tone}`}><span className="text-sm font-extrabold leading-none sm:text-base">{formatNumber(stat.value)}</span><span className="text-[9px] font-bold">{stat.label}</span><span aria-hidden className={`ml-0.5 h-0.5 w-3 ${stat.bar}`} /></span>)}
+                <span className="shrink-0 font-mono text-[10px] font-semibold tabular-nums text-muted-foreground">({((match.player_kills + match.player_assists) / Math.max(1, match.player_deaths)).toFixed(2)} KDA)</span>
               </span>
-              <span className="flex min-w-0 items-center justify-between gap-2">
-                <span className="inline-flex min-w-0 items-center gap-1 text-[10px] text-muted-foreground"><span aria-hidden>◈</span><span className="truncate font-mono font-semibold text-foreground">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span><span className="hidden sm:inline">{labels.souls}</span></span>
-                <span className="shrink-0 border border-primary/25 bg-primary/5 px-1.5 py-0.5 font-mono text-[10px] font-bold tabular-nums text-primary">KDA {((match.player_kills + match.player_assists) / Math.max(1, match.player_deaths)).toFixed(2)}</span>
+              <span className="inline-flex w-fit max-w-full items-center gap-1.5 border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[10px] text-amber-200">
+                <span aria-hidden className="font-bold">◈</span>
+                <span className="shrink-0 font-semibold uppercase tracking-wide">{labels.souls}</span>
+                <span className="truncate font-mono text-xs font-extrabold tabular-nums">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span>
               </span>
               <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] leading-tight text-muted-foreground">
                 <span>{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(match.start_time * 1000))}</span>
@@ -326,11 +328,8 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 <span className="ml-auto shrink-0 font-mono">#{id}</span>
               </span>
             </span>
-            <span aria-hidden className={`flex w-8 shrink-0 items-center justify-center self-stretch border-l border-border bg-muted/20 text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary sm:w-9 ${isOpen ? 'bg-primary/10 text-primary' : ''}`}>
-              <span className="grid size-5 place-items-center border border-current/50">{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
-            </span>
           </span>
-          <span className="flex w-[60%] min-w-0 items-stretch">
+          <span className="flex min-w-0 flex-1 items-stretch">
           {[0, 1].map((team) => {
             const members = (matchSummaries[id] ?? []).filter((player) => player.team === team).slice(0, 6)
             return <span key={team} className={`flex min-w-0 flex-1 flex-col justify-center px-1 sm:px-1.5 ${team === 0 ? 'border-r border-border' : 'pr-4'}`}>
@@ -354,6 +353,9 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
               }) : <span className="text-[10px] text-muted-foreground">{labels.loading}</span>}
             </span>
           })}
+          </span>
+          <span aria-hidden className={`flex w-8 shrink-0 items-center justify-center self-stretch border-l border-border bg-muted/20 text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary sm:w-9 ${isOpen ? 'bg-primary/10 text-primary' : ''}`}>
+            <span className="grid size-5 place-items-center border border-current/50">{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
           </span>
         </button>
         {isOpen ? <div className="space-y-4 border-t border-border bg-background/40 p-3 sm:p-4">
