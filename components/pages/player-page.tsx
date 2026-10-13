@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy, ChevronDown } from 'lucide-react'
 import { ApiError } from '@/lib/api/client'
-import { getHeroes, getItems } from '@/lib/api/assets'
-import type { HeroEntity, ItemEntity } from '@/lib/api/types'
+import { getHeroes, getItemCatalog } from '@/lib/api/assets'
+import type { HeroEntity, ItemAsset } from '@/lib/api/types'
 import { fetchMatchMetadata } from '@/lib/api/matches'
 import {
   fetchPlayerMatchHistory,
@@ -56,7 +56,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   const [metadataError, setMetadataError] = useState('')
   const [steamNames, setSteamNames] = useState<Record<number, string>>({})
   const [heroes, setHeroes] = useState<HeroEntity[]>([])
-  const [itemAssets, setItemAssets] = useState<ItemEntity[]>([])
+  const [itemAssets, setItemAssets] = useState<ItemAsset[]>([])
   const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
@@ -71,7 +71,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
 
   useEffect(() => {
     let cancelled = false
-    void getItems(locale).then((items) => {
+    void getItemCatalog(locale).then((items) => {
       if (!cancelled) setItemAssets(items)
     }).catch(() => {
       if (!cancelled) setItemAssets([])
@@ -184,9 +184,12 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 </div>
                 {itemIds.length ? <div className="mt-2 flex flex-wrap gap-1.5" aria-label={labels.items}>{itemIds.map((itemId, itemIndex) => {
                   const item = itemById.get(itemId)
-                  return item?.icon
-                    ? <span key={`${itemId}-${itemIndex}`} title={item.name} className="grid size-10 shrink-0 place-items-center border border-border/80 bg-background/90 p-0.5 sm:size-11"><img src={item.icon} alt={item.name} loading="lazy" className="size-full object-contain" /></span>
-                    : <span key={`${itemId}-${itemIndex}`} title={item?.name ?? `Item #${itemId}`} className="grid size-10 shrink-0 place-items-center border border-border/80 bg-background/80 font-mono text-[10px] text-muted-foreground sm:size-11">{item?.name ? item.name.slice(0, 3) : itemId}</span>
+                  const rawItem = item as unknown as Record<string, unknown> | undefined
+                  const itemName = typeof rawItem?.name === 'string' ? rawItem.name : `Item #${itemId}`
+                  const itemImage = [rawItem?.shop_image_small_webp, rawItem?.shop_image_webp, rawItem?.image_webp, rawItem?.shop_image_small, rawItem?.shop_image, rawItem?.image].find((value): value is string => typeof value === 'string' && value.length > 0)
+                  return itemImage
+                    ? <span key={`${itemId}-${itemIndex}`} title={itemName} className="grid size-10 shrink-0 place-items-center border border-border/80 bg-background/90 p-0.5 sm:size-11"><img src={itemImage} alt={itemName} loading="lazy" className="size-full object-contain" /></span>
+                    : <span key={`${itemId}-${itemIndex}`} title={itemName} className="grid size-10 shrink-0 place-items-center border border-border/80 bg-background/80 font-mono text-[10px] text-muted-foreground sm:size-11">{item ? itemName.slice(0, 3) : itemId}</span>
                 })}</div> : null}
               </div>
             </div>
