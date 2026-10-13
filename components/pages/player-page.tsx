@@ -93,7 +93,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       && (raw.item_slot_type === 'weapon' || raw.item_slot_type === 'vitality' || raw.item_slot_type === 'spirit')
   })
   const itemById = new Map(inventoryItems.map((item) => [item.id, item]))
-  const pageSize = 15
+  const pageSize = 10
   const visibleMatches = (matches ?? []).slice(0, 100)
   const pageCount = Math.max(1, Math.ceil(visibleMatches.length / pageSize))
   const pageMatches = visibleMatches.slice((currentPage - 1) * pageSize, currentPage * pageSize)
@@ -293,7 +293,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       const id = String(match.match_id)
       const isOpen = openedMatchId === id
       return <li key={id}>
-        <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex min-h-24 w-full items-stretch gap-0 text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+        <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex min-h-36 w-full items-stretch gap-0 text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
           <span className="flex min-w-0 flex-1 flex-wrap items-center gap-3 px-3 py-3 sm:gap-4 sm:px-4">
             <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1.5">
@@ -305,11 +305,11 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
               <span className="text-xs text-muted-foreground">({(() => { const days = Math.floor((Date.now() - match.start_time * 1000) / 86400000); if (days <= 0) return labels.today; if (days === 1) return labels.yesterday; return labels.daysAgo.replace('{count}', String(days)) })()})</span>
               <span className="ml-auto font-mono text-[11px] text-muted-foreground">#{id}</span>
             </span>
-            <span className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-2 md:flex-none md:w-[25rem] xl:w-[30rem]">
+            <span className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-2 md:flex-none md:w-[31rem] xl:w-[36rem]">
               {[0, 1].map((team) => {
                 const teamPlayers = (matchSummaries[id] ?? []).filter((player) => player.team === team).slice(0, 6)
                 const teamLabel = team === 0 ? labels.team0 : labels.team1
-                return <span key={team} className="grid min-w-0 grid-cols-1 gap-y-1 border border-border/70 bg-background/35 p-1.5 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
+                return <span key={team} className="grid min-w-0 grid-cols-1 content-center gap-y-1.5 border border-border/70 bg-background/35 p-2 sm:p-2.5">
                   <span className="col-span-full text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{teamLabel}</span>
                   {teamPlayers.length ? teamPlayers.map((player, index) => {
                     const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
@@ -320,8 +320,8 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                     const last = stats.length ? asRecord(stats[stats.length - 1]) : null
                     const kills = typeof player.kills === 'number' ? player.kills : last?.kills
                     const deaths = typeof player.deaths === 'number' ? player.deaths : last?.deaths
-                    return <span key={accountId ?? index} title={name} className="flex min-w-0 items-center gap-1.5 text-[10px] leading-4">
-                      {hero?.icon ? <img src={hero.icon} alt="" loading="lazy" className="size-4 shrink-0 border border-border/70 object-cover" /> : <span className="size-4 shrink-0 border border-border/70 bg-muted" />}
+                    return <span key={accountId ?? index} title={name} className="flex min-w-0 items-center gap-2 text-xs leading-5">
+                      {hero?.icon ? <img src={hero.icon} alt="" loading="lazy" className="size-5 shrink-0 border border-border/70 object-cover" /> : <span className="size-5 shrink-0 border border-border/70 bg-muted" />}
                       <span className={`min-w-0 flex-1 truncate ${accountId === selectedAccountId ? 'font-bold text-primary' : 'text-foreground/90'}`}>{name}</span>
                       <span className="shrink-0 font-mono tabular-nums text-muted-foreground">{formatNumber(kills)}/{formatNumber(deaths)}</span>
                     </span>
