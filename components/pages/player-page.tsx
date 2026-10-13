@@ -10,6 +10,7 @@ import {
   fetchPlayerMatchHistory,
   fetchPlayerRank,
   searchPlayers,
+  fetchSteamProfiles,
   type PlayerMatch,
   type PlayerRank,
   type SteamProfile,
@@ -53,6 +54,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   const [metadata, setMetadata] = useState<Record<string, unknown> | null>(null)
   const [metadataLoading, setMetadataLoading] = useState(false)
   const [metadataError, setMetadataError] = useState('')
+  const [steamNames, setSteamNames] = useState<Record<number, string>>({})
   const [heroes, setHeroes] = useState<HeroEntity[]>([])
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -82,11 +84,36 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
     setOpenedMatchId(id)
     setMetadata(null)
     setMetadataError('')
+    setSteamNames({})
     setMetadataLoading(true)
     try {
       const response = asRecord(await fetchMatchMetadata(Number(id)))
       setMetadata(response)
-      if (!response) setMetadataError(labels.unavailable)
+      if (!response) {
+        setMetadataError(labels.unavailable)
+      } else {
+        const info = asRecord(response.match_info)
+        const matchPlayers = Array.isArray(info?.players)
+          ? info.players.map(asRecord).filter((player): player is Record<string, unknown> => player !== null)
+          : []
+        const accountIds = [...new Set(matchPlayers
+          .map((player) => player.account_id)
+          .filter((accountId): accountId is number => typeof accountId === 'number' && Number.isSafeInteger(accountId) && accountId > 0))]
+        if (accountIds.length) {
+          try {
+            const profiles = await fetchSteamProfiles(accountIds)
+            const names: Record<number, string> = {}
+            for (const profile of profiles) {
+              if (typeof profile.account_id === 'number' && typeof profile.personaname === 'string' && profile.personaname.trim()) {
+                names[profile.account_id] = profile.personaname.trim()
+              }
+            }
+            setSteamNames(names)
+          } catch {
+            // Match metadata remains usable if Steam profile lookup is unavailable.
+          }
+        }
+      }
     } catch {
       setMetadataError(labels.unavailable)
     } finally {
@@ -96,12 +123,6 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
 
   const matchInfo = asRecord(metadata?.match_info)
   const players = Array.isArray(matchInfo?.players) ? matchInfo.players.map(asRecord).filter((p): p is Record<string, unknown> => p !== null) : []
-  const playerNames = new Map<number, string>()
-  for (const player of players) {
-    if (typeof player.account_id === 'number' && typeof player.name === 'string' && player.name.trim()) {
-      playerNames.set(player.account_id, player.name.trim())
-    }
-  }
   const duration = typeof matchInfo?.duration_s === 'number' ? matchInfo.duration_s : null
 
   function renderTeam(team: number, title: string) {
@@ -122,7 +143,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           const damage = finalStats?.player_damage ?? player.player_damage
           const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
           const hero = heroId === null ? null : heroById.get(heroId)
-          const label = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : playerNames.get(accountId) ?? `#${accountId}`
+          const label = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : steamNames[accountId] ?? (typeof player.name === 'string' && player.name.trim() ? player.name.trim() : `#${accountId}`)
           const rawItems = Array.isArray(player.items) ? player.items : Array.isArray(finalStats?.items) ? finalStats.items : []
           const itemNames = rawItems.map((item) => {
             if (typeof item === 'string' || typeof item === 'number') return String(item)
