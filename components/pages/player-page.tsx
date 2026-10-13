@@ -156,7 +156,13 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
           const hero = heroId === null ? null : heroById.get(heroId)
           const label = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : steamNames[accountId] ?? (typeof player.name === 'string' && player.name.trim() ? player.name.trim() : `#${accountId}`)
-          const rawItems = Array.isArray(player.items) ? player.items : Array.isArray(finalStats?.items) ? finalStats.items : []
+          // The final stats snapshot is the authoritative end-of-match inventory.
+          // Do not read player.abilities or other ability-upgrade fields as item slots.
+          const rawItems = Array.isArray(finalStats?.items)
+            ? finalStats.items
+            : Array.isArray(player.items)
+              ? player.items
+              : []
           const itemIds = rawItems.map((item) => {
             if (typeof item === 'number') return Number.isSafeInteger(item) && item > 0 ? item : null
             if (typeof item === 'string') {
@@ -164,10 +170,11 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
               return /^\\d+$/.test(item) && Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null
             }
             const record = asRecord(item)
-            const rawId = record?.item_id ?? record?.id
+            const rawId = record?.item_id ?? record?.itemId ?? record?.id
             const parsed = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
             return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null
           }).filter((itemId): itemId is number => itemId !== null).slice(0, 8)
+          const inventorySlots = Array.from({ length: 8 }, (_, slotIndex) => itemIds[slotIndex] ?? null)
           return <li key={accountId ?? index} className={accountId === selectedAccountId ? 'bg-primary/5' : ''}>
             <div className="flex items-center gap-3 px-3 py-3">
               <span className="w-5 shrink-0 text-center font-mono text-[11px] text-muted-foreground">{index + 1}</span>
@@ -182,15 +189,16 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <span>{labels.souls}: <span className="font-mono text-foreground">{formatNumber(netWorth)}</span></span>
                   <span>{labels.damage}: <span className="font-mono text-foreground">{formatNumber(damage)}</span></span>
                 </div>
-                {itemIds.length ? <div className="mt-2 flex flex-wrap gap-1.5" aria-label={labels.items}>{itemIds.map((itemId, itemIndex) => {
-                  const item = itemById.get(itemId)
+                <div className="mt-2 grid w-fit grid-cols-4 gap-1.5 sm:grid-cols-8" aria-label={labels.items}>{inventorySlots.map((itemId, itemIndex) => {
+                  const item = itemId === null ? undefined : itemById.get(itemId)
                   const rawItem = item as unknown as Record<string, unknown> | undefined
-                  const itemName = typeof rawItem?.name === 'string' ? rawItem.name : `Item #${itemId}`
+                  const itemName = typeof rawItem?.name === 'string' ? rawItem.name : itemId === null ? '' : `Item #${itemId}`
                   const itemImage = [rawItem?.shop_image_small_webp, rawItem?.shop_image_webp, rawItem?.image_webp, rawItem?.shop_image_small, rawItem?.shop_image, rawItem?.image].find((value): value is string => typeof value === 'string' && value.length > 0)
-                  return itemImage
-                    ? <span key={`${itemId}-${itemIndex}`} title={itemName} className="grid size-10 shrink-0 place-items-center border border-border/80 bg-background/90 p-0.5 sm:size-11"><img src={itemImage} alt={itemName} loading="lazy" className="size-full object-contain" /></span>
-                    : <span key={`${itemId}-${itemIndex}`} title={itemName} className="grid size-10 shrink-0 place-items-center border border-border/80 bg-background/80 font-mono text-[10px] text-muted-foreground sm:size-11">{item ? itemName.slice(0, 3) : itemId}</span>
-                })}</div> : null}
+                  const slotClass = "grid size-10 shrink-0 place-items-center border p-0.5 sm:size-11 " + (itemId === null ? "border-dashed border-border/50 bg-background/30" : "border-border/80 bg-background/90")
+                  return <span key={`inventory-${itemIndex}`} title={itemName || `Slot ${itemIndex + 1}`} className={slotClass}>
+                    {itemImage ? <img src={itemImage} alt={itemName} loading="lazy" className="size-full object-contain" /> : itemId === null ? <span className="font-mono text-[10px] text-muted-foreground/40">{itemIndex + 1}</span> : <span className="font-mono text-[10px] text-muted-foreground">{itemName.slice(0, 3) || itemId}</span>}
+                  </span>
+                })}</div>
               </div>
             </div>
           </li>
