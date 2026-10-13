@@ -125,7 +125,8 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
               if (typeof player.account_id === 'number' && Number.isSafeInteger(player.account_id) && player.account_id > 0) accountIds.add(player.account_id)
             }
           } catch {
-            // Keep the compact row usable if one match's metadata is unavailable.
+            // Remember unavailable metadata so a failed match does not trigger an endless retry loop.
+            found[String(match.match_id)] = []
           }
         }
       })
