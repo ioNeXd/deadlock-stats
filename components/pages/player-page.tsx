@@ -318,7 +318,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <span className="shrink-0 font-semibold uppercase tracking-wide">{labels.souls}</span>
                   <span className="truncate font-mono text-xs font-extrabold tabular-nums">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span>
                 </span>
-                <span className="min-w-0 truncate text-right font-mono text-[9px] font-semibold text-foreground/80 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
+                <span className="min-w-0 translate-y-1 truncate text-right font-mono text-[9px] font-semibold text-foreground/80 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
               </span>
             </span>
           </span>
