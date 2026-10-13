@@ -302,6 +302,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 <span className="block font-mono text-sm font-bold tabular-nums text-foreground">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')}</span>
                 <span className="block truncate text-[10px] font-semibold text-muted-foreground">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`}</span>
               </span>
+              <span aria-hidden className={`grid size-6 shrink-0 place-items-center rounded-sm border border-border bg-card/90 text-muted-foreground transition-colors group-hover:border-primary/50 group-hover:text-primary ${isOpen ? 'border-primary/50 text-primary' : ''}`}>{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
             </span>
             <span className="grid grid-cols-4 gap-1">
               {([{ label: 'K', value: match.player_kills }, { label: 'D', value: match.player_deaths }, { label: 'A', value: match.player_assists }] as const).map((stat) => <span key={stat.label} className="min-w-0 border border-border/70 bg-background/50 px-1 py-0.5 text-center"><span className="block text-[8px] font-bold leading-tight text-muted-foreground">{stat.label}</span><span className="block truncate font-mono text-xs font-bold leading-tight tabular-nums text-foreground sm:text-sm">{formatNumber(stat.value)}</span></span>)}
@@ -343,7 +344,6 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
             </span>
           })}
           </span>
-          <span aria-hidden className={`pointer-events-none absolute right-1 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-sm border border-border bg-card/95 text-muted-foreground transition-colors group-hover:border-primary/50 group-hover:text-primary ${isOpen ? 'text-primary' : ''}`}>{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
         </button>
         {isOpen ? <div className="space-y-4 border-t border-border bg-background/40 p-3 sm:p-4">
           {metadataLoading ? <p role="status" className="py-3 text-sm text-muted-foreground"><LoaderCircle size={15} className="mr-2 inline animate-spin" />{labels.loading}</p> : null}
