@@ -348,7 +348,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   const stats = Array.isArray(player.stats) ? player.stats : []
                   const finalStats = stats.length ? asRecord(stats[stats.length - 1]) : null
                   const kd = [kills ?? finalStats?.kills, deaths ?? finalStats?.deaths, assists ?? finalStats?.assists].map((value) => typeof value === 'number' ? formatNumber(value) : '—').join('/')
-                  return <span key={accountId ?? index} className={`flex h-[15px] min-w-0 items-center gap-1 ${accountId === selectedAccountId ? 'font-bold text-primary' : 'text-foreground/90'}`}>
+                  return <span key={accountId ?? index} className={`flex min-h-[15px] flex-1 items-center gap-1 ${accountId === selectedAccountId ? 'font-bold text-primary' : 'text-foreground/90'}`}>
                     {hero?.icon ? <img src={hero.icon} alt="" loading="lazy" className="size-[14px] shrink-0 border border-border/70 object-cover sm:size-[15px]" /> : <span className="grid size-[14px] shrink-0 place-items-center border border-border/70 font-mono text-[7px]">{heroId ?? '·'}</span>}
                     <span title={name} className="min-w-0 flex-1 truncate text-[10px] leading-none sm:text-[11px]">{name}</span>
                     <span className="shrink-0 font-mono text-[9px] tabular-nums text-muted-foreground sm:text-[10px]">{kd}</span>
