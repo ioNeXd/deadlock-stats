@@ -80,7 +80,17 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   }, [locale])
 
   const heroById = new Map(heroes.map((hero) => [hero.id, hero]))
-  const itemById = new Map(itemAssets.map((item) => [item.id, item]))
+  // /v1/assets/items is a union of abilities, weapons and shop upgrades. Only
+  // shopable upgrades with a real Deadlock item slot are valid inventory entries.
+  // This allowlist prevents ability IDs (or unknown metadata IDs) from rendering
+  // as fake items in the match scoreboard.
+  const inventoryItems = itemAssets.filter((item) => {
+    const raw = item as unknown as Record<string, unknown>
+    return raw.shopable === true
+      && raw.disabled !== true
+      && (raw.item_slot_type === 'weapon' || raw.item_slot_type === 'vitality' || raw.item_slot_type === 'spirit')
+  })
+  const itemById = new Map(inventoryItems.map((item) => [item.id, item]))
   const pageSize = 15
   const visibleMatches = (matches ?? []).slice(0, 100)
   const pageCount = Math.max(1, Math.ceil(visibleMatches.length / pageSize))
@@ -163,13 +173,22 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           const purchases = rawItems.map((value, sourceIndex) => {
             const record = asRecord(value)
             if (!record) return null
-            const rawId = record.item_id
-            const itemId = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
+
+            // Metadata variants may expose both item_id and upgrade_id. Accept
+            // only an ID that resolves to a known shopable upgrade; never render
+            // the raw numeric ID as a fallback, because it may identify an ability.
+            const toId = (value: unknown) => {
+              const id = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+              return Number.isSafeInteger(id) && id > 0 ? id : null
+            }
+            const itemId = [toId(record.upgrade_id), toId(record.item_id)]
+              .find((candidate): candidate is number => candidate !== null && itemById.has(candidate))
+            if (itemId === undefined) return null
+
             const rawGameTime = record.game_time_s
             const gameTime = typeof rawGameTime === 'number' ? rawGameTime : typeof rawGameTime === 'string' ? Number(rawGameTime) : NaN
             const rawSoldTime = record.sold_time_s
             const soldTime = typeof rawSoldTime === 'number' ? rawSoldTime : typeof rawSoldTime === 'string' ? Number(rawSoldTime) : 0
-            if (!Number.isSafeInteger(itemId) || itemId <= 0) return null
             return { itemId, gameTime: Number.isFinite(gameTime) ? gameTime : sourceIndex, soldTime, sourceIndex }
           }).filter((purchase): purchase is { itemId: number; gameTime: number; soldTime: number; sourceIndex: number } => purchase !== null)
             .filter((purchase) => purchase.soldTime <= 0)
@@ -193,11 +212,13 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 <div className="mt-2 grid w-fit grid-cols-4 gap-1.5" aria-label={labels.items}>{visibleInventory.map((itemId, itemIndex) => {
                   const item = itemId === null ? undefined : itemById.get(itemId)
                   const rawItem = item as unknown as Record<string, unknown> | undefined
-                  const itemName = typeof rawItem?.name === 'string' ? rawItem.name : itemId === null ? '' : `Item #${itemId}`
+                  // Empty slot if the ID is not in the verified upgrade allowlist.
+                  const itemName = typeof rawItem?.name === 'string' ? rawItem.name : ''
                   const itemImage = [rawItem?.shop_image_small_webp, rawItem?.shop_image_webp, rawItem?.image_webp, rawItem?.shop_image_small, rawItem?.shop_image, rawItem?.image].find((value): value is string => typeof value === 'string' && value.length > 0)
-                  const slotClass = "grid size-10 shrink-0 place-items-center border p-0.5 sm:size-11 " + (itemId === null ? "border-dashed border-border/50 bg-background/30" : "border-border/80 bg-background/90")
-                  return <span key={`inventory-${itemIndex}`} title={itemName || `Slot ${itemIndex + 1}`} className={slotClass}>
-                    {itemImage ? <img src={itemImage} alt={itemName} loading="lazy" className="size-full object-contain" /> : itemId === null ? <span className="font-mono text-[10px] text-muted-foreground/40">{itemIndex + 1}</span> : <span className="font-mono text-[10px] text-muted-foreground">{itemName.slice(0, 3) || itemId}</span>}
+                  const hasValidItem = itemId !== null && item !== undefined
+                  const slotClass = "grid size-10 shrink-0 place-items-center border p-0.5 sm:size-11 " + (hasValidItem ? "border-border/80 bg-background/90" : "border-dashed border-border/50 bg-background/30")
+                  return <span key={`inventory-${itemIndex}`} title={hasValidItem ? itemName : `Slot ${itemIndex + 1}`} className={slotClass}>
+                    {hasValidItem && itemImage ? <img src={itemImage} alt={itemName} loading="lazy" className="size-full object-contain" /> : !hasValidItem ? <span className="font-mono text-[10px] text-muted-foreground/40">{itemIndex + 1}</span> : <span className="font-mono text-[10px] text-muted-foreground">{itemName.slice(0, 3)}</span>}
                   </span>
                 })}</div>
               </div>
