@@ -41,6 +41,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
     title: string; team0: string; team1: string; player: string; hero: string
     netWorth: string; damage: string; duration: string; unavailable: string
     loading: string; result: string; win: string; loss: string
+    showing: string; previous: string; next: string; page: string
   }
 }) {
   const [openedMatchId, setOpenedMatchId] = useState<string | null>(null)
