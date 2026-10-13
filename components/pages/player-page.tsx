@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy, ChevronDown } from 'lucide-react'
+import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy, ChevronDown, Plus, Minus } from 'lucide-react'
 import { ApiError } from '@/lib/api/client'
 import { getHeroes, getItemCatalog } from '@/lib/api/assets'
 import type { HeroEntity, ItemAsset } from '@/lib/api/types'
@@ -295,20 +295,23 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       return <li key={id}>
         <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex h-[110px] w-full items-stretch gap-0 overflow-hidden text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
-          <span className="flex w-[40%] min-w-0 shrink-0 flex-col justify-center gap-1 border-r border-border px-2 py-2 sm:px-3">
+          <span className="flex w-[40%] min-w-0 shrink-0 flex-col justify-center gap-1.5 border-r border-border px-2 py-2 sm:px-3">
             <span className="flex min-w-0 items-center gap-2">
               {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-10 shrink-0 border border-border bg-background object-cover sm:size-11" /> : <span className="grid size-10 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-11">{match.hero_id}</span>}
-              <span className="min-w-0">
-                <span className="block font-mono text-xs font-bold text-foreground">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')}</span>
-                <span className="block truncate font-mono text-[11px] font-bold tabular-nums">{match.player_kills}/{match.player_deaths}/{match.player_assists}</span>
-                <span className="block truncate text-[10px] text-muted-foreground"><span aria-hidden className="text-primary">◈</span> {new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-mono text-sm font-bold tabular-nums text-foreground">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')}</span>
+                <span className="block truncate text-[10px] font-semibold text-muted-foreground">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`}</span>
               </span>
             </span>
-            <span className="flex min-w-0 items-center justify-between gap-1 text-[10px] text-muted-foreground">
+            <span className="grid grid-cols-4 gap-1">
+              {([{ label: 'K', value: match.player_kills }, { label: 'D', value: match.player_deaths }, { label: 'A', value: match.player_assists }] as const).map((stat) => <span key={stat.label} className="min-w-0 border border-border/70 bg-background/50 px-1 py-0.5 text-center"><span className="block text-[8px] font-bold leading-tight text-muted-foreground">{stat.label}</span><span className="block truncate font-mono text-xs font-bold leading-tight tabular-nums text-foreground sm:text-sm">{formatNumber(stat.value)}</span></span>)}
+              <span className="min-w-0 border border-primary/30 bg-primary/5 px-1 py-0.5 text-center"><span className="block text-[8px] font-bold leading-tight text-primary">◈</span><span className="block truncate font-mono text-[10px] font-bold leading-tight tabular-nums text-foreground sm:text-xs">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span></span>
+            </span>
+            <span className="flex min-w-0 items-center justify-between gap-1 text-[9px] text-muted-foreground">
               <span className="truncate">{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: '2-digit' }).format(new Date(match.start_time * 1000))}</span>
               <span className="shrink-0 font-mono">#{id}</span>
             </span>
-            <span className="truncate text-[10px] leading-none text-muted-foreground">
+            <span className="truncate text-[9px] leading-none text-muted-foreground">
               {(() => {
                 const elapsedDays = Math.max(0, Math.floor((Date.now() / 1000 - match.start_time) / 86400))
                 return elapsedDays === 0 ? labels.today : elapsedDays === 1 ? labels.yesterday : labels.daysAgo.replace('{count}', String(elapsedDays))
@@ -340,7 +343,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
             </span>
           })}
           </span>
-          <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"><ChevronDown size={15} aria-hidden className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} /></span>
+          <span aria-hidden className={`pointer-events-none absolute right-1 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-sm border border-border bg-card/95 text-muted-foreground transition-colors group-hover:border-primary/50 group-hover:text-primary ${isOpen ? 'text-primary' : ''}`}>{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
         </button>
         {isOpen ? <div className="space-y-4 border-t border-border bg-background/40 p-3 sm:p-4">
           {metadataLoading ? <p role="status" className="py-3 text-sm text-muted-foreground"><LoaderCircle size={15} className="mr-2 inline animate-spin" />{labels.loading}</p> : null}
