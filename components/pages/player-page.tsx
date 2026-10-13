@@ -55,6 +55,8 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   const rangeStart = visibleMatches.length ? (currentPage - 1) * pageSize + 1 : 0
   const rangeEnd = Math.min(currentPage * pageSize, visibleMatches.length)
 
+  useEffect(() => { setCurrentPage(1) }, [matches])
+
   async function toggleMatch(match: PlayerMatch) {
     const id = String(match.match_id)
     if (openedMatchId === id) { setOpenedMatchId(null); return }
