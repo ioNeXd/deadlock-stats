@@ -293,7 +293,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       const id = String(match.match_id)
       const isOpen = openedMatchId === id
       return <li key={id}>
-        <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex min-h-[132px] w-full items-stretch gap-0 overflow-hidden text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+        <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group relative flex min-h-[132px] w-full items-stretch gap-0 overflow-hidden text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
           <span className="flex w-[40%] min-w-0 shrink-0 items-stretch border-r border-border">
             <span className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 px-2 py-2 sm:px-3">
@@ -341,7 +341,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
             </span>
           })}
           </span>
-          <span className="absolute bottom-1 right-1 max-w-[65%] truncate font-mono text-[9px] font-semibold text-foreground/80 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
+          <span className="pointer-events-none absolute bottom-1 right-10 z-10 max-w-[45%] truncate font-mono text-[9px] font-semibold text-foreground/80 sm:right-11 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
           <span aria-hidden className={`flex w-8 shrink-0 items-center justify-center self-stretch border-l border-border bg-muted/20 text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary sm:w-9 ${isOpen ? 'bg-primary/10 text-primary' : ''}`}>
             <span className="grid size-5 place-items-center border border-current/50">{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
           </span>
