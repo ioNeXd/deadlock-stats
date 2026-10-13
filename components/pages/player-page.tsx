@@ -293,30 +293,41 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       const id = String(match.match_id)
       const isOpen = openedMatchId === id
       return <li key={id}>
-        <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex h-[110px] w-full items-stretch gap-0 overflow-hidden text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+        <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex min-h-[132px] w-full items-stretch gap-0 overflow-hidden text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
-          <span className="flex w-[40%] min-w-0 shrink-0 flex-col justify-center gap-1.5 border-r border-border px-2 py-2 sm:px-3">
-            <span className="flex min-w-0 items-center gap-2">
-              {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-10 shrink-0 border border-border bg-background object-cover sm:size-11" /> : <span className="grid size-10 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-11">{match.hero_id}</span>}
-              <span className="min-w-0 flex-1">
-                <span className="block font-mono text-sm font-bold tabular-nums text-foreground">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')}</span>
-                <span className="block truncate text-[10px] font-semibold text-muted-foreground">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`}</span>
+          <span className="flex w-[40%] min-w-0 shrink-0 items-stretch border-r border-border">
+            <span className="flex min-w-0 flex-1 flex-col justify-center gap-2 px-2 py-2 sm:px-3">
+              <span className="flex min-w-0 items-center gap-2">
+                {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-10 shrink-0 border border-border bg-background object-cover sm:size-12" /> : <span className="grid size-10 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-12">{match.hero_id}</span>}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`}</span>
+                  <span className="mt-0.5 block font-mono text-base font-bold tabular-nums text-foreground sm:text-lg">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')} <span className="font-sans text-[9px] font-medium uppercase tracking-wide text-muted-foreground">{labels.duration}</span></span>
+                </span>
               </span>
-              <span aria-hidden className={`grid size-6 shrink-0 place-items-center rounded-sm border border-border bg-card/90 text-muted-foreground transition-colors group-hover:border-primary/50 group-hover:text-primary ${isOpen ? 'border-primary/50 text-primary' : ''}`}>{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
+              <span className="grid grid-cols-3 gap-1">
+                {([{ label: 'K', value: match.player_kills, tone: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' }, { label: 'D', value: match.player_deaths, tone: 'border-rose-500/40 bg-rose-500/10 text-rose-300' }, { label: 'A', value: match.player_assists, tone: 'border-sky-500/40 bg-sky-500/10 text-sky-300' }] as const).map((stat) => <span key={stat.label} className={`flex min-w-0 items-center justify-between gap-1 border px-1.5 py-1 ${stat.tone}`}><span className="text-[9px] font-bold">{stat.label}</span><span className="font-mono text-sm font-bold leading-none tabular-nums sm:text-base">{formatNumber(stat.value)}</span></span>)}
+              </span>
+              <span className="flex min-w-0 items-center justify-between gap-2">
+                <span className="inline-flex min-w-0 items-center gap-1 text-[10px] text-muted-foreground"><span aria-hidden>◈</span><span className="truncate font-mono font-semibold text-foreground">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span><span className="hidden sm:inline">{labels.souls}</span></span>
+                <span className="shrink-0 border border-primary/25 bg-primary/5 px-1.5 py-0.5 font-mono text-[10px] font-bold tabular-nums text-primary">KDA {((match.player_kills + match.player_assists) / Math.max(1, match.player_deaths)).toFixed(2)}</span>
+              </span>
+              <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] leading-tight text-muted-foreground">
+                <span>{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(match.start_time * 1000))}</span>
+                <span aria-hidden>·</span>
+                <span>{(() => {
+                  const elapsedSeconds = Math.max(0, Math.floor(Date.now() / 1000 - match.start_time))
+                  const elapsedDays = Math.floor(elapsedSeconds / 86400)
+                  if (elapsedDays > 0) return labels.daysAgo.replace('{count}', String(elapsedDays))
+                  const elapsedHours = Math.floor(elapsedSeconds / 3600)
+                  if (elapsedHours > 0) return locale === 'pt-br' ? `há ${elapsedHours} h` : `${elapsedHours}h ago`
+                  const elapsedMinutes = Math.floor(elapsedSeconds / 60)
+                  return elapsedMinutes > 0 ? (locale === 'pt-br' ? `há ${elapsedMinutes} min` : `${elapsedMinutes}m ago`) : labels.today
+                })()}</span>
+                <span className="ml-auto shrink-0 font-mono">#{id}</span>
+              </span>
             </span>
-            <span className="grid grid-cols-4 gap-1">
-              {([{ label: 'K', value: match.player_kills }, { label: 'D', value: match.player_deaths }, { label: 'A', value: match.player_assists }] as const).map((stat) => <span key={stat.label} className="min-w-0 border border-border/70 bg-background/50 px-1 py-0.5 text-center"><span className="block text-[8px] font-bold leading-tight text-muted-foreground">{stat.label}</span><span className="block truncate font-mono text-xs font-bold leading-tight tabular-nums text-foreground sm:text-sm">{formatNumber(stat.value)}</span></span>)}
-              <span className="min-w-0 border border-primary/30 bg-primary/5 px-1 py-0.5 text-center"><span className="block text-[8px] font-bold leading-tight text-primary">◈</span><span className="block truncate font-mono text-[10px] font-bold leading-tight tabular-nums text-foreground sm:text-xs">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span></span>
-            </span>
-            <span className="flex min-w-0 items-center justify-between gap-1 text-[9px] text-muted-foreground">
-              <span className="truncate">{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: '2-digit' }).format(new Date(match.start_time * 1000))}</span>
-              <span className="shrink-0 font-mono">#{id}</span>
-            </span>
-            <span className="truncate text-[9px] leading-none text-muted-foreground">
-              {(() => {
-                const elapsedDays = Math.max(0, Math.floor((Date.now() / 1000 - match.start_time) / 86400))
-                return elapsedDays === 0 ? labels.today : elapsedDays === 1 ? labels.yesterday : labels.daysAgo.replace('{count}', String(elapsedDays))
-              })()}
+            <span aria-hidden className={`flex w-8 shrink-0 items-center justify-center self-stretch border-l border-border bg-muted/20 text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary sm:w-9 ${isOpen ? 'bg-primary/10 text-primary' : ''}`}>
+              <span className="grid size-5 place-items-center border border-current/50">{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
             </span>
           </span>
           <span className="flex w-[60%] min-w-0 items-stretch">
