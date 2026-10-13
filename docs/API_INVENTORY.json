@@ -1849,8 +1849,8 @@
       },
       "apiCache": null,
       "siteStrategy": "runtime",
-      "usedBy": [],
-      "implementationStatus": "planned"
+      "usedBy": ["components/pages/player-page.tsx", "lib/api/matches.ts"],
+      "implementationStatus": "implemented"
     },
     {
       "operationId": "metadata_raw",

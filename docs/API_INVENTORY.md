@@ -82,7 +82,7 @@ Endpoint count: **129**
 | GET | `/v1/leaderboard/{region}/{hero_id}/raw` | `leaderboard_hero_raw` | Leaderboard | — | runtime | planned |
 | GET | `/v1/leaderboard/{region}/raw` | `leaderboard_raw` | Leaderboard | — | runtime | planned |
 | GET | `/v1/matches/{match_id}/live/url` | `url` | Matches | — | runtime | planned |
-| GET | `/v1/matches/{match_id}/metadata` | `metadata` | Matches | — | runtime | planned |
+| GET | `/v1/matches/{match_id}/metadata` | `metadata` | Matches | — | runtime | implemented |
 | GET | `/v1/matches/{match_id}/metadata/raw` | `metadata_raw` | Matches | — | runtime | planned |
 | GET | `/v1/matches/{match_id}/salts` | `salts` | Matches | — | runtime | planned |
 | GET | `/v1/matches/active` | `active_matches` | Matches | — | runtime | planned |
