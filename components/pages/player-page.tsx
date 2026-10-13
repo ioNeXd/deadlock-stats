@@ -294,8 +294,8 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       return <li key={id}>
         <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex min-h-24 w-full items-stretch gap-0 text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
-          <span className="flex min-w-0 flex-1 flex-col justify-center gap-2 px-3 py-3 sm:px-4">
-            <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
+          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-3 px-3 py-3 sm:gap-4 sm:px-4">
+            <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1.5">
               {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-11 shrink-0 border border-border bg-background object-cover sm:size-12" /> : <span className="grid size-11 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-12">{match.hero_id}</span>}
               <span className="font-mono text-xs text-muted-foreground">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')}</span>
               <span className="font-mono text-sm font-bold tabular-nums sm:text-base">{match.player_kills}/{match.player_deaths}/{match.player_assists} <span className="font-normal text-muted-foreground">({(() => { const valid = visibleMatches.filter((entry) => entry.player_deaths > 0); const average = valid.length ? valid.reduce((sum, entry) => sum + entry.player_kills / entry.player_deaths, 0) / valid.length : 0; return average ? average.toFixed(1) : '—' })()})</span></span>
@@ -304,7 +304,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
               <span className="text-xs text-muted-foreground">({(() => { const days = Math.floor((Date.now() - match.start_time * 1000) / 86400000); if (days <= 0) return labels.today; if (days === 1) return labels.yesterday; return labels.daysAgo.replace('{count}', String(days)) })()})</span>
               <span className="ml-auto font-mono text-[11px] text-muted-foreground">#{id}</span>
             </span>
-            <span className="grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2 xl:max-w-[46rem]">
+            <span className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-2 md:flex-none md:w-[25rem] xl:w-[30rem]">
               {[0, 1].map((team) => {
                 const teamPlayers = (matchSummaries[id] ?? []).filter((player) => player.team === team).slice(0, 6)
                 const teamLabel = team === 0 ? labels.team0 : labels.team1
