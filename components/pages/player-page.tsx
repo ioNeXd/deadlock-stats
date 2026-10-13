@@ -5,14 +5,10 @@ import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, Hist
 import { ApiError } from '@/lib/api/client'
 import { fetchMatchMetadata } from '@/lib/api/matches'
 import {
-  fetchPlayerEnemies,
   fetchPlayerMatchHistory,
-  fetchPlayerMates,
   fetchPlayerRank,
   searchPlayers,
-  type PlayerEnemy,
   type PlayerMatch,
-  type PlayerMate,
   type PlayerRank,
   type SteamProfile,
 } from '@/lib/api/players'
@@ -191,8 +187,6 @@ export function PlayerPage({ locale }: { locale: Locale }) {
   const [selected, setSelected] = useState<SteamProfile | null>(null)
   const [rank, setRank] = useState<DataState<PlayerRank>>({ data: null, error: null, loading: false })
   const [history, setHistory] = useState<DataState<PlayerMatch[]>>({ data: null, error: null, loading: false })
-  const [mates, setMates] = useState<DataState<PlayerMate[]>>({ data: null, error: null, loading: false })
-  const [enemies, setEnemies] = useState<DataState<PlayerEnemy[]>>({ data: null, error: null, loading: false })
   const [profileLoading, setProfileLoading] = useState(false)
 
   const selectPlayer = useCallback(async (profile: SteamProfile) => {
@@ -203,8 +197,6 @@ export function PlayerPage({ locale }: { locale: Locale }) {
     setProfileLoading(true)
     setRank({ data: null, error: null, loading: true })
     setHistory({ data: null, error: null, loading: true })
-    setMates({ data: null, error: null, loading: true })
-    setEnemies({ data: null, error: null, loading: true })
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href)
       url.searchParams.set('id', String(accountId))
@@ -213,14 +205,10 @@ export function PlayerPage({ locale }: { locale: Locale }) {
     const settled = await Promise.allSettled([
       fetchPlayerRank(accountId),
       fetchPlayerMatchHistory(accountId),
-      fetchPlayerMates(accountId),
-      fetchPlayerEnemies(accountId),
     ])
-    const [r, h, m, e] = settled
+    const [r, h] = settled
     setRank(r.status === 'fulfilled' ? { data: r.value, error: null, loading: false } : { data: null, error: errorMessage(r.reason, t.protected), loading: false })
     setHistory(h.status === 'fulfilled' ? { data: h.value, error: null, loading: false } : { data: null, error: errorMessage(h.reason, t.protected), loading: false })
-    setMates(m.status === 'fulfilled' ? { data: m.value, error: null, loading: false } : { data: null, error: errorMessage(m.reason, t.protected), loading: false })
-    setEnemies(e.status === 'fulfilled' ? { data: e.value, error: null, loading: false } : { data: null, error: errorMessage(e.reason, t.protected), loading: false })
     setProfileLoading(false)
   }, [t.protected])
 
@@ -252,7 +240,7 @@ export function PlayerPage({ locale }: { locale: Locale }) {
     }
   }
 
-  const isLoading = profileLoading || rank.loading || history.loading || mates.loading || enemies.loading
+  const isLoading = profileLoading || rank.loading || history.loading
   const accountId = selected ? String(selected.account_id) : ''
   const rankData = rank.data as (PlayerRank & Record<string, unknown>) | null
 
@@ -295,8 +283,6 @@ export function PlayerPage({ locale }: { locale: Locale }) {
         {rank.error ? <p role="status" className="border border-border px-4 py-3 text-sm text-muted-foreground"><ShieldAlert className="mr-2 inline" size={16} />{rank.error}</p> : null}
         <div className="grid gap-4 lg:grid-cols-2">
           <MatchHistory matches={history.data} loading={history.loading} error={history.error} empty={t.noData} playerName={selected.personaname || t.unknownPlayer} selectedAccountId={Number(selected.account_id)} labels={t.matchDetails} />
-          <DataTable title={t.mates} data={mates.data as unknown[] | null} empty={mates.loading ? t.loading : mates.error || t.noData} />
-          <DataTable title={t.enemies} data={enemies.data as unknown[] | null} empty={enemies.loading ? t.loading : enemies.error || t.noData} />
         </div>
         {isLoading ? <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle size={16} className="animate-spin" />{t.loading}</p> : null}
         <p className="text-xs text-muted-foreground">{t.dataNote}</p>
