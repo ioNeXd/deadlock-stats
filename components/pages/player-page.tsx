@@ -67,6 +67,12 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   }, [locale])
 
   const heroById = new Map(heroes.map((hero) => [hero.id, hero]))
+  const playerNames = new Map<number, string>()
+  for (const player of players) {
+    if (typeof player.account_id === 'number' && typeof player.name === 'string' && player.name.trim()) {
+      playerNames.set(player.account_id, player.name.trim())
+    }
+  }
   const pageSize = 15
   const visibleMatches = (matches ?? []).slice(0, 100)
   const pageCount = Math.max(1, Math.ceil(visibleMatches.length / pageSize))
@@ -116,7 +122,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           const damage = finalStats?.player_damage ?? player.player_damage
           const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
           const hero = heroId === null ? null : heroById.get(heroId)
-          const label = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : `#${accountId}`
+          const label = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : playerNames.get(accountId) ?? `#${accountId}`
           const rawItems = Array.isArray(player.items) ? player.items : Array.isArray(finalStats?.items) ? finalStats.items : []
           const itemNames = rawItems.map((item) => {
             if (typeof item === 'string' || typeof item === 'number') return String(item)
@@ -130,7 +136,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                   <span className="truncate font-semibold">{hero?.name ?? (heroId === null ? labels.unknownHero : `${labels.hero} #${heroId}`)}</span>
-                  <span className="truncate text-xs text-muted-foreground">{label}</span>
+                  <span className="truncate text-xs font-semibold text-primary">{label}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                   <span className="font-mono font-semibold text-foreground">{formatNumber(kills)} / {formatNumber(deaths)} / {formatNumber(assists)}</span>
