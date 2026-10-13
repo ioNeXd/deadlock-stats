@@ -209,16 +209,25 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <span>{labels.souls}: <span className="font-mono text-foreground">{formatNumber(netWorth)}</span></span>
                   <span>{labels.damage}: <span className="font-mono text-foreground">{formatNumber(damage)}</span></span>
                 </div>
-                <div className="mt-2 grid w-fit grid-cols-4 gap-1.5" aria-label={labels.items}>{visibleInventory.map((itemId, itemIndex) => {
+                <div className="mt-2 grid w-fit grid-cols-5 gap-1.5" aria-label={labels.items}>{visibleInventory.map((itemId, itemIndex) => {
                   const item = itemId === null ? undefined : itemById.get(itemId)
                   const rawItem = item as unknown as Record<string, unknown> | undefined
-                  // Empty slot if the ID is not in the verified upgrade allowlist.
                   const itemName = typeof rawItem?.name === 'string' ? rawItem.name : ''
+                  const itemSlot = rawItem?.item_slot_type
                   const itemImage = [rawItem?.shop_image_small_webp, rawItem?.shop_image_webp, rawItem?.image_webp, rawItem?.shop_image_small, rawItem?.shop_image, rawItem?.image].find((value): value is string => typeof value === 'string' && value.length > 0)
                   const hasValidItem = itemId !== null && item !== undefined
-                  const slotClass = "grid size-10 shrink-0 place-items-center border p-0.5 sm:size-11 " + (hasValidItem ? "border-border/80 bg-background/90" : "border-dashed border-border/50 bg-background/30")
-                  return <span key={`inventory-${itemIndex}`} title={hasValidItem ? itemName : `Slot ${itemIndex + 1}`} className={slotClass}>
-                    {hasValidItem && itemImage ? <img src={itemImage} alt={itemName} loading="lazy" className="size-full object-contain" /> : !hasValidItem ? <span className="font-mono text-[10px] text-muted-foreground/40">{itemIndex + 1}</span> : <span className="font-mono text-[10px] text-muted-foreground">{itemName.slice(0, 3)}</span>}
+                  const tone = itemSlot === 'vitality'
+                    ? { frame: 'border-emerald-400/65', glow: 'bg-emerald-400/15' }
+                    : itemSlot === 'weapon'
+                      ? { frame: 'border-orange-400/65', glow: 'bg-orange-400/15' }
+                      : { frame: 'border-violet-400/65', glow: 'bg-violet-400/15' }
+                  const slotClass = "group relative grid size-10 shrink-0 place-items-center overflow-hidden border shadow-[0_8px_18px_rgba(0,0,0,0.28)] transition-transform duration-200 sm:size-11 " + (hasValidItem ? `${tone.frame} ${tone.glow} hover:-translate-y-0.5` : "border-dashed border-border/50 bg-background/30")
+                  return <span key={`inventory-${itemIndex}`} title={hasValidItem ? itemName : `Slot ${itemIndex + 1}`} aria-label={hasValidItem ? itemName : `Slot ${itemIndex + 1}`} className={slotClass}>
+                    {hasValidItem ? <>
+                      <span aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.16),transparent_62%)]" />
+                      <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/15" />
+                      {itemImage ? <img src={itemImage} alt="" loading="lazy" className="absolute inset-0 size-full object-contain p-0.5 drop-shadow-[0_5px_8px_rgba(0,0,0,0.75)] transition-transform duration-200 group-hover:scale-105" /> : <span className="relative font-mono text-[10px] text-foreground">{itemName.slice(0, 3)}</span>}
+                    </> : <span className="font-mono text-[10px] text-muted-foreground/40">{itemIndex + 1}</span>}
                   </span>
                 })}</div>
               </div>
