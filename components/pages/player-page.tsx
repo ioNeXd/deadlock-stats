@@ -296,11 +296,15 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
         <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group relative flex min-h-[132px] w-full items-stretch gap-0 overflow-hidden text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
           <span className="relative flex w-[40%] min-w-0 shrink-0 items-stretch border-r border-border">
-            <span className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 px-2 py-2 pb-6 sm:px-3">
+            <span className="flex min-w-0 flex-1 flex-col justify-center gap-1 px-2 py-2 sm:px-3">
+              <span className="flex min-w-0 items-center justify-between gap-2 text-[9px] font-bold uppercase tracking-wider text-primary sm:text-[10px]">
+                <span className="truncate">{labels.gameMode}: {formatNumber(match.game_mode)}</span>
+                <span className="inline-flex shrink-0 items-center gap-1 normal-case tracking-normal text-muted-foreground"><CalendarDays size={11} aria-hidden /><span>{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(match.start_time * 1000))}</span><span>({(() => { const elapsedSeconds = Math.max(0, Math.floor(Date.now() / 1000 - match.start_time)); const elapsedDays = Math.floor(elapsedSeconds / 86400); if (elapsedDays > 0) return labels.daysAgo.replace('{count}', String(elapsedDays)); const elapsedHours = Math.floor(elapsedSeconds / 3600); if (elapsedHours > 0) return locale === 'pt-br' ? `há ${elapsedHours} h` : `${elapsedHours}h ago`; const elapsedMinutes = Math.floor(elapsedSeconds / 60); return elapsedMinutes > 0 ? (locale === 'pt-br' ? `há ${elapsedMinutes} min` : `${elapsedMinutes}m ago`) : labels.today })()})</span></span>
+              </span>
               <span className="flex min-w-0 items-center gap-2">
                 {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-10 shrink-0 border border-border bg-background object-cover sm:size-12" /> : <span className="grid size-10 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-12">{match.hero_id}</span>}
                 <span className="min-w-0 flex-1">
-                  <span className="flex min-w-0 items-start justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"><span className="min-w-0 truncate">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`}</span><span className="inline-flex shrink-0 items-center gap-1 normal-case tracking-normal"><CalendarDays size={11} aria-hidden /><span>{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(match.start_time * 1000))}</span><span>({(() => { const elapsedSeconds = Math.max(0, Math.floor(Date.now() / 1000 - match.start_time)); const elapsedDays = Math.floor(elapsedSeconds / 86400); if (elapsedDays > 0) return labels.daysAgo.replace('{count}', String(elapsedDays)); const elapsedHours = Math.floor(elapsedSeconds / 3600); if (elapsedHours > 0) return locale === 'pt-br' ? `há ${elapsedHours} h` : `${elapsedHours}h ago`; const elapsedMinutes = Math.floor(elapsedSeconds / 60); return elapsedMinutes > 0 ? (locale === 'pt-br' ? `há ${elapsedMinutes} min` : `${elapsedMinutes}m ago`) : labels.today })()})</span></span></span>
+                  <span className="block truncate text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`}</span>
                   <span className="mt-0.5 block font-mono text-base font-bold tabular-nums text-foreground sm:text-lg">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')} <span className="font-sans text-[9px] font-medium uppercase tracking-wide text-muted-foreground">{labels.duration}</span></span>
                 </span>
               </span>
@@ -308,15 +312,15 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 {([{ label: 'K', value: match.player_kills, tone: 'text-emerald-400' }, { label: 'D', value: match.player_deaths, tone: 'text-rose-400' }, { label: 'A', value: match.player_assists, tone: 'text-sky-400' }] as const).map((stat, index) => <span key={stat.label} className="inline-flex items-center gap-1"><span className={`inline-flex items-center gap-0.5 font-mono tabular-nums ${stat.tone}`}><span className="text-sm font-extrabold leading-none sm:text-base">{formatNumber(stat.value)}</span><span className="text-[9px] font-bold">{stat.label}</span></span>{index < 2 ? <span aria-hidden className={`px-0.5 font-mono text-sm font-bold ${stat.tone}`}>/</span> : null}</span>)}
                 <span className="shrink-0 font-mono text-[10px] font-semibold tabular-nums text-muted-foreground">({((match.player_kills + match.player_assists) / Math.max(1, match.player_deaths)).toFixed(2)} KDA)</span>
               </span>
-              <span className="flex min-w-0 w-full items-center justify-between gap-1">
+              <span className="flex min-w-0 w-full items-center justify-between gap-2">
                 <span className="inline-flex min-w-0 max-w-[60%] items-center gap-1.5 border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[10px] text-amber-200">
                   <span aria-hidden className="font-bold">◈</span>
                   <span className="shrink-0 font-semibold uppercase tracking-wide">{labels.souls}</span>
                   <span className="truncate font-mono text-xs font-extrabold tabular-nums">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span>
                 </span>
+                <span className="min-w-0 truncate text-right font-mono text-[9px] font-semibold text-foreground/80 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
               </span>
             </span>
-            <span className="pointer-events-none absolute bottom-1 right-2 z-10 max-w-[calc(100%-1rem)] truncate text-right font-mono text-[9px] font-semibold text-foreground/80 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
           </span>
           <span className="relative flex min-w-0 flex-1 items-stretch pb-4">
           {(() => {
