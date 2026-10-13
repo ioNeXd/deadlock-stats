@@ -25,6 +25,7 @@ const IMPLEMENTED_ENDPOINTS = {
   steam_search: ["components/pages/player-page.tsx", "lib/api/players.ts"],
   rank: ["components/pages/player-page.tsx", "lib/api/players.ts"],
   match_history: ["components/pages/player-page.tsx", "lib/api/players.ts"],
+  metadata: ["components/pages/player-page.tsx", "lib/api/matches.ts"],
   mate_stats: ["components/pages/player-page.tsx", "lib/api/players.ts"],
   enemy_stats: ["components/pages/player-page.tsx", "lib/api/players.ts"],
   hero_build_stats: ["components/pages/hero-page.tsx", "lib/api/builds.ts"],

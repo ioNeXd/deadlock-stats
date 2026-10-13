@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy, ChevronDown } from 'lucide-react'
 import { ApiError } from '@/lib/api/client'
+import { fetchMatchMetadata } from '@/lib/api/matches'
 import {
   fetchPlayerEnemies,
   fetchPlayerMatchHistory,
@@ -74,6 +75,109 @@ function DataTable({ title, data, empty, accountNick, accountIdLabel }: { title:
     </section>
   )
 }
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null
+}
+
+function MatchHistory({ matches, loading, error, empty, playerName, selectedAccountId, labels }: {
+  matches: PlayerMatch[] | null
+  loading: boolean
+  error: string | null
+  empty: string
+  playerName: string
+  selectedAccountId: number
+  labels: {
+    title: string; team0: string; team1: string; player: string; hero: string
+    netWorth: string; damage: string; duration: string; unavailable: string
+    loading: string; result: string; win: string; loss: string
+  }
+}) {
+  const [openedMatchId, setOpenedMatchId] = useState<string | null>(null)
+  const [metadata, setMetadata] = useState<Record<string, unknown> | null>(null)
+  const [metadataLoading, setMetadataLoading] = useState(false)
+  const [metadataError, setMetadataError] = useState('')
+
+  async function toggleMatch(match: PlayerMatch) {
+    const id = String(match.match_id)
+    if (openedMatchId === id) { setOpenedMatchId(null); return }
+    setOpenedMatchId(id)
+    setMetadata(null)
+    setMetadataError('')
+    setMetadataLoading(true)
+    try {
+      const response = asRecord(await fetchMatchMetadata(Number(id)))
+      setMetadata(response)
+      if (!response) setMetadataError(labels.unavailable)
+    } catch {
+      setMetadataError(labels.unavailable)
+    } finally {
+      setMetadataLoading(false)
+    }
+  }
+
+  const matchInfo = asRecord(metadata?.match_info)
+  const players = Array.isArray(matchInfo?.players) ? matchInfo.players.map(asRecord).filter((p): p is Record<string, unknown> => p !== null) : []
+  const duration = typeof matchInfo?.duration_s === 'number' ? matchInfo.duration_s : null
+
+  function renderTeam(team: number, title: string) {
+    const members = players.filter((player) => player.team === team)
+    return <section key={team} className="min-w-0 border border-border bg-background/70">
+      <h4 className="border-b border-border px-3 py-2 font-display font-bold uppercase tracking-wide">{title}<span className="ml-2 text-xs text-muted-foreground">({members.length})</span></h4>
+      {!members.length ? <p className="px-3 py-4 text-sm text-muted-foreground">{labels.unavailable}</p> : <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-muted/50 text-[11px] uppercase tracking-wider text-muted-foreground"><tr><th className="px-3 py-2">{labels.player}</th><th className="px-3 py-2">{labels.hero}</th><th className="px-3 py-2">K/D/A</th><th className="px-3 py-2">{labels.netWorth}</th><th className="px-3 py-2">{labels.damage}</th></tr></thead>
+          <tbody>{members.map((player, index) => {
+            const accountId = typeof player.account_id === 'number' ? player.account_id : null
+            const snapshots = Array.isArray(player.stats) ? player.stats : []
+            const finalStats = snapshots.length ? asRecord(snapshots[snapshots.length - 1]) : null
+            const kills = typeof player.kills === 'number' ? player.kills : finalStats?.kills
+            const deaths = typeof player.deaths === 'number' ? player.deaths : finalStats?.deaths
+            const assists = typeof player.assists === 'number' ? player.assists : finalStats?.assists
+            const netWorth = typeof player.net_worth === 'number' ? player.net_worth : finalStats?.net_worth
+            const damage = finalStats?.player_damage ?? player.player_damage
+            const label = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : `#${accountId}`
+            return <tr key={accountId ?? index} className="border-t border-border/70">
+              <th scope="row" className="whitespace-nowrap px-3 py-2 font-medium">{label}</th>
+              <td className="px-3 py-2">{formatNumber(player.hero_id)}</td>
+              <td className="whitespace-nowrap px-3 py-2 font-mono">{formatNumber(kills)}/{formatNumber(deaths)}/{formatNumber(assists)}</td>
+              <td className="whitespace-nowrap px-3 py-2 font-mono">{formatNumber(netWorth)}</td>
+              <td className="whitespace-nowrap px-3 py-2 font-mono">{formatNumber(damage)}</td>
+            </tr>
+          })}</tbody>
+        </table>
+      </div>}
+    </section>
+  }
+
+  return <section className="border border-border bg-card/80">
+    <h3 className="border-b border-border px-4 py-3 font-display text-lg font-bold uppercase tracking-wide">{labels.title}</h3>
+    {loading && !matches ? <p className="px-4 py-5 text-sm text-muted-foreground">{labels.loading}</p> : null}
+    {error ? <p className="px-4 py-5 text-sm text-muted-foreground">{error}</p> : null}
+    {!loading && !error && !matches?.length ? <p className="px-4 py-5 text-sm text-muted-foreground">{empty}</p> : null}
+    {matches?.length ? <ul className="divide-y divide-border">{matches.map((match) => {
+      const id = String(match.match_id)
+      const isOpen = openedMatchId === id
+      return <li key={id}>
+        <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-left transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+          <span className="min-w-0 flex-1"><span className="block font-semibold">#{id}</span><span className="block text-xs text-muted-foreground">{labels.duration}: {Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')} · {labels.hero}: {match.hero_id}</span></span>
+          <span className="font-mono text-sm">{match.player_kills}/{match.player_deaths}/{match.player_assists}</span>
+          <span className={match.player_match_outcome === 1 ? 'text-sm font-semibold text-primary' : 'text-sm text-muted-foreground'}>{labels.result}: {match.player_match_outcome === 1 ? labels.win : labels.loss}</span>
+          <ChevronDown size={17} aria-hidden className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+        {isOpen ? <div className="space-y-3 border-t border-border p-3 sm:p-4">
+          {metadataLoading ? <p role="status" className="py-3 text-sm text-muted-foreground"><LoaderCircle size={15} className="mr-2 inline animate-spin" />{labels.loading}</p> : null}
+          {metadataError ? <p role="status" className="py-3 text-sm text-muted-foreground">{metadataError}</p> : null}
+          {!metadataLoading && !metadataError && matchInfo ? <>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs uppercase tracking-wider text-muted-foreground"><span>{labels.duration}: {duration === null ? '—' : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</span><span>{labels.player}: {players.length}</span></div>
+            <div className="grid gap-3 xl:grid-cols-2">{renderTeam(0, labels.team0)}{renderTeam(1, labels.team1)}</div>
+          </> : null}
+        </div> : null}
+      </li>
+    })}</ul> : null}
+  </section>
+}
+
 function StatCard({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
   return <div className="border border-border bg-card/80 p-4"><div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">{icon}{label}</div><p className="mt-2 font-display text-2xl font-bold text-primary">{value}</p></div>
 }
@@ -189,7 +293,7 @@ export function PlayerPage({ locale }: { locale: Locale }) {
         {rank.error ? <p role="status" className="border border-border px-4 py-3 text-sm text-muted-foreground"><ShieldAlert className="mr-2 inline" size={16} />{rank.error}</p> : null}
         <div className="grid gap-4 lg:grid-cols-2">
           <DataTable title={t.rankDetails} data={rank.data ? [rank.data] : null} empty={rank.loading ? t.loading : rank.error || t.noData} />
-          <DataTable title={t.matchHistory} data={history.data as unknown[] | null} empty={history.loading ? t.loading : history.error || t.noData} accountNick={selected.personaname || t.unknownPlayer} accountIdLabel="account_id" />
+          <MatchHistory matches={history.data} loading={history.loading} error={history.error} empty={t.noData} playerName={selected.personaname || t.unknownPlayer} selectedAccountId={Number(selected.account_id)} labels={t.matchDetails} />
           <DataTable title={t.mates} data={mates.data as unknown[] | null} empty={mates.loading ? t.loading : mates.error || t.noData} />
           <DataTable title={t.enemies} data={enemies.data as unknown[] | null} empty={enemies.loading ? t.loading : enemies.error || t.noData} />
         </div>
