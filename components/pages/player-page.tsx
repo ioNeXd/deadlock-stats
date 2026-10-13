@@ -67,12 +67,6 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   }, [locale])
 
   const heroById = new Map(heroes.map((hero) => [hero.id, hero]))
-  const playerNames = new Map<number, string>()
-  for (const player of players) {
-    if (typeof player.account_id === 'number' && typeof player.name === 'string' && player.name.trim()) {
-      playerNames.set(player.account_id, player.name.trim())
-    }
-  }
   const pageSize = 15
   const visibleMatches = (matches ?? []).slice(0, 100)
   const pageCount = Math.max(1, Math.ceil(visibleMatches.length / pageSize))
@@ -102,6 +96,12 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
 
   const matchInfo = asRecord(metadata?.match_info)
   const players = Array.isArray(matchInfo?.players) ? matchInfo.players.map(asRecord).filter((p): p is Record<string, unknown> => p !== null) : []
+  const playerNames = new Map<number, string>()
+  for (const player of players) {
+    if (typeof player.account_id === 'number' && typeof player.name === 'string' && player.name.trim()) {
+      playerNames.set(player.account_id, player.name.trim())
+    }
+  }
   const duration = typeof matchInfo?.duration_s === 'number' ? matchInfo.duration_s : null
 
   function renderTeam(team: number, title: string) {
