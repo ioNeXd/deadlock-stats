@@ -278,6 +278,7 @@ export function PlayerPage({ locale }: { locale: Locale }) {
         </button></li>
       ))}</ul></section> : null}
       {selected ? <div className="mt-8 space-y-5">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <section className="border border-border bg-card/90">
           <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
             {selected.avatar ? <img src={selected.avatar} alt="" className="size-20 rounded-full border-2 border-primary/50 object-cover" /> : <span className="grid size-20 place-items-center rounded-full bg-muted"><UserRound size={34} /></span>}
@@ -290,9 +291,10 @@ export function PlayerPage({ locale }: { locale: Locale }) {
             <StatCard label={t.rank} value={rankData ? formatNumber(rankData.badge ?? rankData.rank ?? '—') : (rank.loading ? t.loading : '—')} icon={<Trophy size={15} />} />
           </div>
         </section>
+          <DataTable title={t.rankDetails} data={rank.data ? [rank.data] : null} empty={rank.loading ? t.loading : rank.error || t.noData} />
+        </div>
         {rank.error ? <p role="status" className="border border-border px-4 py-3 text-sm text-muted-foreground"><ShieldAlert className="mr-2 inline" size={16} />{rank.error}</p> : null}
         <div className="grid gap-4 lg:grid-cols-2">
-          <DataTable title={t.rankDetails} data={rank.data ? [rank.data] : null} empty={rank.loading ? t.loading : rank.error || t.noData} />
           <MatchHistory matches={history.data} loading={history.loading} error={history.error} empty={t.noData} playerName={selected.personaname || t.unknownPlayer} selectedAccountId={Number(selected.account_id)} labels={t.matchDetails} />
           <DataTable title={t.mates} data={mates.data as unknown[] | null} empty={mates.loading ? t.loading : mates.error || t.noData} />
           <DataTable title={t.enemies} data={enemies.data as unknown[] | null} empty={enemies.loading ? t.loading : enemies.error || t.noData} />
