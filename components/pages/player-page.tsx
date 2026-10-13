@@ -319,29 +319,40 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
             <span className="pointer-events-none absolute bottom-1 right-2 z-10 max-w-[calc(100%-1rem)] truncate text-right font-mono text-[9px] font-semibold text-foreground/80 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
           </span>
           <span className="relative flex min-w-0 flex-1 items-stretch pb-4">
-          {[0, 1].map((team) => {
-            const members = (matchSummaries[id] ?? []).filter((player) => player.team === team).slice(0, 6)
-            return <span key={team} className={`flex min-w-0 flex-1 flex-col justify-center px-1 sm:px-1.5 ${team === 0 ? 'border-r border-border' : 'pr-4'}`}>
-              <span className={`mb-0.5 truncate border-b pb-0.5 text-[9px] font-bold uppercase tracking-wider sm:text-[10px] ${team === 0 ? 'border-emerald-500/40 text-emerald-400' : 'border-rose-500/40 text-rose-400'}`}>{team === 0 ? labels.team0 : labels.team1}</span>
-              {members.length ? members.map((player, index) => {
-                const accountId = typeof player.account_id === 'number' ? player.account_id : null
-                const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
-                const hero = heroId === null ? null : heroById.get(heroId)
-                const name = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : summaryNames[accountId] ?? (typeof player.name === 'string' && player.name.trim() ? player.name.trim() : `#${accountId}`)
-                const kills = typeof player.kills === 'number' ? player.kills : undefined
-                const deaths = typeof player.deaths === 'number' ? player.deaths : undefined
-                const assists = typeof player.assists === 'number' ? player.assists : undefined
-                const stats = Array.isArray(player.stats) ? player.stats : []
-                const finalStats = stats.length ? asRecord(stats[stats.length - 1]) : null
-                const kd = [kills ?? finalStats?.kills, deaths ?? finalStats?.deaths, assists ?? finalStats?.assists].map((value) => typeof value === 'number' ? formatNumber(value) : '—').join('/')
-                return <span key={accountId ?? index} className={`flex h-[15px] min-w-0 items-center gap-1 ${accountId === selectedAccountId ? 'font-bold text-primary' : 'text-foreground/90'}`}>
-                  {hero?.icon ? <img src={hero.icon} alt="" loading="lazy" className="size-[14px] shrink-0 border border-border/70 object-cover sm:size-[15px]" /> : <span className="grid size-[14px] shrink-0 place-items-center border border-border/70 font-mono text-[7px]">{heroId ?? '·'}</span>}
-                  <span title={name} className="min-w-0 flex-1 truncate text-[10px] leading-none sm:text-[11px]">{name}</span>
-                  <span className="shrink-0 font-mono text-[9px] tabular-nums text-muted-foreground sm:text-[10px]">{kd}</span>
-                </span>
-              }) : <span className="text-[10px] text-muted-foreground">{labels.loading}</span>}
-            </span>
-          })}
+          {(() => {
+            const summary = matchSummaries[id] ?? []
+            const selectedPlayer = summary.find((player) => player.account_id === selectedAccountId)
+            const selectedTeam = selectedPlayer?.team
+            // Team IDs are match-relative, not aliases for allies/enemies.
+            // Put the selected player's actual team first, then the other team.
+            const teamOrder = selectedTeam === 0 || selectedTeam === 1
+              ? [selectedTeam, 1 - selectedTeam]
+              : []
+            return (teamOrder.length ? teamOrder : [null, null]).map((team, columnIndex) => {
+              const members = team === null ? [] : summary.filter((player) => player.team === team).slice(0, 6)
+              const isAllies = columnIndex === 0
+              return <span key={team ?? `unknown-${columnIndex}`} className={`flex min-w-0 flex-1 flex-col justify-center px-1 sm:px-1.5 ${columnIndex === 0 ? 'border-r border-border' : 'pr-4'}`}>
+                <span className={`mb-0.5 truncate border-b pb-0.5 text-[9px] font-bold uppercase tracking-wider sm:text-[10px] ${isAllies ? 'border-emerald-500/40 text-emerald-400' : 'border-rose-500/40 text-rose-400'}`}>{isAllies ? labels.team0 : labels.team1}</span>
+                {team === null ? <span className="text-[10px] text-muted-foreground">{labels.loading}</span> : members.length ? members.map((player, index) => {
+                  const accountId = typeof player.account_id === 'number' ? player.account_id : null
+                  const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
+                  const hero = heroId === null ? null : heroById.get(heroId)
+                  const name = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : summaryNames[accountId] ?? (typeof player.name === 'string' && player.name.trim() ? player.name.trim() : `#${accountId}`)
+                  const kills = typeof player.kills === 'number' ? player.kills : undefined
+                  const deaths = typeof player.deaths === 'number' ? player.deaths : undefined
+                  const assists = typeof player.assists === 'number' ? player.assists : undefined
+                  const stats = Array.isArray(player.stats) ? player.stats : []
+                  const finalStats = stats.length ? asRecord(stats[stats.length - 1]) : null
+                  const kd = [kills ?? finalStats?.kills, deaths ?? finalStats?.deaths, assists ?? finalStats?.assists].map((value) => typeof value === 'number' ? formatNumber(value) : '—').join('/')
+                  return <span key={accountId ?? index} className={`flex h-[15px] min-w-0 items-center gap-1 ${accountId === selectedAccountId ? 'font-bold text-primary' : 'text-foreground/90'}`}>
+                    {hero?.icon ? <img src={hero.icon} alt="" loading="lazy" className="size-[14px] shrink-0 border border-border/70 object-cover sm:size-[15px]" /> : <span className="grid size-[14px] shrink-0 place-items-center border border-border/70 font-mono text-[7px]">{heroId ?? '·'}</span>}
+                    <span title={name} className="min-w-0 flex-1 truncate text-[10px] leading-none sm:text-[11px]">{name}</span>
+                    <span className="shrink-0 font-mono text-[9px] tabular-nums text-muted-foreground sm:text-[10px]">{kd}</span>
+                  </span>
+                }) : <span className="text-[10px] text-muted-foreground">{labels.loading}</span>}
+              </span>
+            })
+          })()}
           </span>
           <span aria-hidden className={`flex w-8 shrink-0 items-center justify-center self-stretch border-l border-border bg-muted/20 text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary sm:w-9 ${isOpen ? 'bg-primary/10 text-primary' : ''}`}>
             <span className="grid size-5 place-items-center border border-current/50">{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
