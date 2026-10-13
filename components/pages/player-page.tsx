@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy, ChevronDown } from 'lucide-react'
 import { ApiError } from '@/lib/api/client'
 import { fetchMatchMetadata } from '@/lib/api/matches'
@@ -24,52 +24,6 @@ function formatNumber(value: unknown) {
   if (value === null || value === undefined || value === '') return '—'
   if (typeof value === 'string') return value
   return JSON.stringify(value)
-}
-
-function DataTable({ title, data, empty, accountNick, accountIdLabel }: { title: string; data: unknown[] | null; empty: string; accountNick?: string; accountIdLabel?: string }) {
-  const [open, setOpen] = useState(false)
-  const rows = useMemo(() => (data ?? []).map((value, index) => ({
-    index,
-    record: value && typeof value === 'object' ? value as Record<string, unknown> : { value },
-  })), [data])
-
-  return (
-    <section className="border border-border bg-card/80">
-      <h3>
-        <button
-          type="button"
-          aria-expanded={open}
-          onClick={() => setOpen((current) => !current)}
-          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left font-display text-lg font-bold uppercase tracking-wide transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-        >
-          <span>{title}</span>
-          <ChevronDown size={18} aria-hidden className={`shrink-0 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
-        </button>
-      </h3>
-      {open ? (
-        <div className="border-t border-border">
-          {!rows.length ? <p className="px-4 py-5 text-sm text-muted-foreground">{empty}</p> : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
-                  <tr><th className="px-4 py-2">#</th><th className="px-4 py-2">Field</th><th className="px-4 py-2">Value</th></tr>
-                </thead>
-                <tbody>
-                  {rows.map(({ index, record }) => Object.entries(record).map(([key, value], fieldIndex) => (
-                    <tr key={`${index}-${key}`} className="border-t border-border/70 align-top">
-                      {fieldIndex === 0 ? <td rowSpan={Object.keys(record).length} className="px-4 py-2 font-mono text-muted-foreground">{index + 1}</td> : null}
-                      <th scope="row" className="whitespace-nowrap px-4 py-2 font-medium text-muted-foreground">{key.replaceAll('_', ' ')}</th>
-                      <td className="max-w-[34rem] break-words px-4 py-2 font-mono text-xs">{key === 'account_id' && accountIdLabel === key ? (accountNick || formatNumber(value)) : formatNumber(value)}</td>
-                    </tr>
-                  )))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      ) : null}
-    </section>
-  )
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
