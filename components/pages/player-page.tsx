@@ -295,11 +295,11 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       return <li key={id}>
         <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex h-[110px] w-full items-stretch gap-0 overflow-hidden text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
-          <span className="flex w-[25%] min-w-[112px] max-w-[220px] shrink-0 flex-col justify-center gap-1 border-r border-border px-2 py-2 sm:px-3">
+          <span className="flex w-[22%] min-w-[104px] max-w-[184px] shrink-0 flex-col justify-center gap-1 border-r border-border px-2 py-2 sm:w-[20%] sm:min-w-[120px] sm:px-3">
             <span className="flex min-w-0 items-center gap-2">
-              {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-9 shrink-0 border border-border bg-background object-cover sm:size-10" /> : <span className="grid size-9 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-10">{match.hero_id}</span>}
+              {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-10 shrink-0 border border-border bg-background object-cover sm:size-11" /> : <span className="grid size-10 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-11">{match.hero_id}</span>}
               <span className="min-w-0">
-                <span className="block font-mono text-[11px] font-semibold text-foreground">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')}</span>
+                <span className="block font-mono text-xs font-bold text-foreground">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')}</span>
                 <span className="block truncate font-mono text-[11px] font-bold tabular-nums">{match.player_kills}/{match.player_deaths}/{match.player_assists}</span>
                 <span className="block truncate text-[10px] text-muted-foreground"><span aria-hidden className="text-primary">◈</span> {new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span>
               </span>
@@ -311,16 +311,23 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           </span>
           {[0, 1].map((team) => {
             const members = (matchSummaries[id] ?? []).filter((player) => player.team === team).slice(0, 6)
-            return <span key={team} className={`flex min-w-0 flex-1 flex-col justify-center px-1.5 sm:px-2 ${team === 0 ? 'border-r border-border' : ''}`}>
+            return <span key={team} className={`flex min-w-0 flex-[0.8] flex-col justify-center px-1 sm:px-1.5 ${team === 0 ? 'border-r border-border' : ''}`}>
               <span className={`mb-0.5 truncate border-b pb-0.5 text-[9px] font-bold uppercase tracking-wider sm:text-[10px] ${team === 0 ? 'border-emerald-500/40 text-emerald-400' : 'border-rose-500/40 text-rose-400'}`}>{team === 0 ? labels.team0 : labels.team1}</span>
               {members.length ? members.map((player, index) => {
                 const accountId = typeof player.account_id === 'number' ? player.account_id : null
                 const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
                 const hero = heroId === null ? null : heroById.get(heroId)
                 const name = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : summaryNames[accountId] ?? (typeof player.name === 'string' && player.name.trim() ? player.name.trim() : `#${accountId}`)
-                return <span key={accountId ?? index} className={`flex h-[14px] min-w-0 items-center gap-1 ${accountId === selectedAccountId ? 'font-bold text-primary' : 'text-foreground/90'}`}>
-                  {hero?.icon ? <img src={hero.icon} alt="" loading="lazy" className="size-[13px] shrink-0 border border-border/70 object-cover" /> : <span className="grid size-[13px] shrink-0 place-items-center border border-border/70 font-mono text-[7px]">{heroId ?? '·'}</span>}
-                  <span title={name} className="min-w-0 truncate text-[10px] leading-none sm:text-[11px]">{name}</span>
+                const kills = typeof player.kills === 'number' ? player.kills : undefined
+                const deaths = typeof player.deaths === 'number' ? player.deaths : undefined
+                const assists = typeof player.assists === 'number' ? player.assists : undefined
+                const stats = Array.isArray(player.stats) ? player.stats : []
+                const finalStats = stats.length ? asRecord(stats[stats.length - 1]) : null
+                const kd = [kills ?? finalStats?.kills, deaths ?? finalStats?.deaths, assists ?? finalStats?.assists].map((value) => typeof value === 'number' ? formatNumber(value) : '—').join('/')
+                return <span key={accountId ?? index} className={`flex h-[15px] min-w-0 items-center gap-1 ${accountId === selectedAccountId ? 'font-bold text-primary' : 'text-foreground/90'}`}>
+                  {hero?.icon ? <img src={hero.icon} alt="" loading="lazy" className="size-[14px] shrink-0 border border-border/70 object-cover sm:size-[15px]" /> : <span className="grid size-[14px] shrink-0 place-items-center border border-border/70 font-mono text-[7px]">{heroId ?? '·'}</span>}
+                  <span title={name} className="min-w-0 flex-1 truncate text-[10px] leading-none sm:text-[11px]">{name}</span>
+                  <span className="shrink-0 font-mono text-[9px] tabular-nums text-muted-foreground sm:text-[10px]">{kd}</span>
                 </span>
               }) : <span className="text-[10px] text-muted-foreground">{labels.loading}</span>}
             </span>
