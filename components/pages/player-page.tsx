@@ -179,7 +179,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
 }
 
 function StatCard({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
-  return <div className="border border-border bg-card/80 p-4"><div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">{icon}{label}</div><p className="mt-2 font-display text-2xl font-bold text-primary">{value}</p></div>
+  return <div className="min-w-0 bg-card/80 p-3 sm:p-4"><div className="flex min-w-0 items-start gap-2 text-[11px] uppercase leading-snug tracking-wide text-muted-foreground sm:text-xs">{icon}<span className="min-w-0 break-words">{label}</span></div><p className="mt-2 break-words font-display text-xl font-bold text-primary sm:text-2xl">{value}</p></div>
 }
 
 export function PlayerPage({ locale }: { locale: Locale }) {
@@ -278,22 +278,20 @@ export function PlayerPage({ locale }: { locale: Locale }) {
         </button></li>
       ))}</ul></section> : null}
       {selected ? <div className="mt-8 space-y-5">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <section className="border border-border bg-card/90">
+        <section className="min-w-0 border border-border bg-card/90">
           <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
             {selected.avatar ? <img src={selected.avatar} alt="" className="size-20 rounded-full border-2 border-primary/50 object-cover" /> : <span className="grid size-20 place-items-center rounded-full bg-muted"><UserRound size={34} /></span>}
             <div className="min-w-0 flex-1"><p className="text-xs uppercase tracking-[0.2em] text-primary">{t.profile}</p><h2 className="mt-1 break-words font-display text-3xl font-bold uppercase">{selected.personaname || t.unknownPlayer}</h2><div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground"><p>SteamID3: {accountId}</p><p>{t.accountId}: {accountId}</p></div></div>
             {selected.profileurl ? <a href={selected.profileurl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 self-start border border-border px-3 py-2 text-sm hover:bg-accent">{t.steamProfile}<ExternalLink size={14} /></a> : null}
           </div>
-          <div className="grid gap-px border-t border-border bg-border sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-px border-t border-border bg-border sm:grid-cols-3 xl:grid-cols-5">
             <StatCard label={t.matches30d} value={formatNumber(selected.matches_played_last_30d)} icon={<History size={15} />} />
             <StatCard label={t.lastTeamRank} value={formatNumber(selected.last_team_avg_badge)} icon={<Trophy size={15} />} />
-            <StatCard label="Badge" value={rankData ? formatNumber(rankData.badge ?? '—') : (rank.loading ? t.loading : '—')} icon={<Trophy size={15} />} />
+            <StatCard label={t.badge} value={rankData ? formatNumber(rankData.badge ?? '—') : (rank.loading ? t.loading : '—')} icon={<Trophy size={15} />} />
             <StatCard label={t.rank} value={rankData ? formatNumber(rankData.rank ?? '—') : (rank.loading ? t.loading : '—')} icon={<Trophy size={15} />} />
-            <StatCard label="Subrank" value={rankData ? formatNumber(rankData.subrank ?? '—') : (rank.loading ? t.loading : '—')} icon={<Trophy size={15} />} />
+            <StatCard label={t.subrank} value={rankData ? formatNumber(rankData.subrank ?? '—') : (rank.loading ? t.loading : '—')} icon={<Trophy size={15} />} />
           </div>
         </section>
-        </div>
         {rank.error ? <p role="status" className="border border-border px-4 py-3 text-sm text-muted-foreground"><ShieldAlert className="mr-2 inline" size={16} />{rank.error}</p> : null}
         <div className="grid gap-4 lg:grid-cols-2">
           <MatchHistory matches={history.data} loading={history.loading} error={history.error} empty={t.noData} playerName={selected.personaname || t.unknownPlayer} selectedAccountId={Number(selected.account_id)} labels={t.matchDetails} />
