@@ -47,7 +47,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
     loading: string; result: string; win: string; loss: string
     showing: string; previous: string; next: string; page: string
     gameMode: string; matchId: string; souls: string; lastHits: string
-    items: string; unknownHero: string
+    items: string; unknownHero: string; today: string; yesterday: string; daysAgo: string
   }
 }) {
   const [openedMatchId, setOpenedMatchId] = useState<string | null>(null)
@@ -55,6 +55,8 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   const [metadataLoading, setMetadataLoading] = useState(false)
   const [metadataError, setMetadataError] = useState('')
   const [steamNames, setSteamNames] = useState<Record<number, string>>({})
+  const [matchSummaries, setMatchSummaries] = useState<Record<string, Record<string, unknown>[]>>({})
+  const [summaryNames, setSummaryNames] = useState<Record<number, string>>({})
   const [heroes, setHeroes] = useState<HeroEntity[]>([])
   const [itemAssets, setItemAssets] = useState<ItemAsset[]>([])
   const [currentPage, setCurrentPage] = useState(1)
@@ -99,6 +101,49 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   const rangeEnd = Math.min(currentPage * pageSize, visibleMatches.length)
 
   useEffect(() => { setCurrentPage(1) }, [matches])
+
+  useEffect(() => {
+    let cancelled = false
+    const pending = pageMatches.filter((match) => !matchSummaries[String(match.match_id)])
+    if (!pending.length) return () => { cancelled = true }
+
+    void (async () => {
+      const found: Record<string, Record<string, unknown>[]> = {}
+      const accountIds = new Set<number>()
+      let cursor = 0
+      const workers = Array.from({ length: Math.min(3, pending.length) }, async () => {
+        while (cursor < pending.length && !cancelled) {
+          const match = pending[cursor++]
+          try {
+            const response = asRecord(await fetchMatchMetadata(match.match_id))
+            const info = asRecord(response?.match_info)
+            const matchPlayers = Array.isArray(info?.players)
+              ? info.players.map(asRecord).filter((player): player is Record<string, unknown> => player !== null)
+              : []
+            found[String(match.match_id)] = matchPlayers
+            for (const player of matchPlayers) {
+              if (typeof player.account_id === 'number' && Number.isSafeInteger(player.account_id) && player.account_id > 0) accountIds.add(player.account_id)
+            }
+          } catch {
+            // Keep the compact row usable if one match's metadata is unavailable.
+          }
+        }
+      })
+      await Promise.all(workers)
+      if (cancelled) return
+      if (Object.keys(found).length) setMatchSummaries((current) => ({ ...current, ...found }))
+      const ids = [...accountIds]
+      const profiles = await Promise.all(Array.from({ length: Math.ceil(ids.length / 100) }, (_, index) => fetchSteamProfiles(ids.slice(index * 100, (index + 1) * 100)).catch(() => [])))
+      if (cancelled) return
+      const names: Record<number, string> = {}
+      for (const profile of profiles.flat()) {
+        if (typeof profile.account_id === 'number' && typeof profile.personaname === 'string' && profile.personaname.trim()) names[profile.account_id] = profile.personaname.trim()
+      }
+      if (Object.keys(names).length) setSummaryNames((current) => ({ ...current, ...names }))
+    })()
+    return () => { cancelled = true }
+  }, [pageMatches, matchSummaries])
+
 
   async function toggleMatch(match: PlayerMatch) {
     const id = String(match.match_id)
@@ -247,11 +292,44 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
       const id = String(match.match_id)
       const isOpen = openedMatchId === id
       return <li key={id}>
-        <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-left transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
-          <span className="min-w-0 flex-1"><span className="block font-semibold">#{id}</span><span className="block text-xs text-muted-foreground">{labels.duration}: {Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')} · {labels.hero}: {match.hero_id}</span></span>
-          <span className="font-mono text-sm">{match.player_kills}/{match.player_deaths}/{match.player_assists}</span>
-          <span className={match.player_match_outcome === 1 ? 'text-sm font-semibold text-primary' : 'text-sm text-muted-foreground'}>{labels.result}: {match.player_match_outcome === 1 ? labels.win : labels.loss}</span>
-          <ChevronDown size={17} aria-hidden className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <button type="button" aria-expanded={isOpen} onClick={() => void toggleMatch(match)} className="group flex min-h-24 w-full items-stretch gap-0 text-left transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+          <span aria-hidden className={`w-1 shrink-0 sm:w-1.5 ${match.player_match_outcome === 1 ? 'bg-emerald-500' : match.player_match_outcome === 2 ? 'bg-rose-500' : 'bg-muted-foreground/50'}`} />
+          <span className="flex min-w-0 flex-1 flex-col justify-center gap-2 px-3 py-3 sm:px-4">
+            <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
+              {heroById.get(match.hero_id)?.icon ? <img src={heroById.get(match.hero_id)?.icon ?? ''} alt="" loading="lazy" className="size-11 shrink-0 border border-border bg-background object-cover sm:size-12" /> : <span className="grid size-11 shrink-0 place-items-center border border-border bg-background font-mono text-xs sm:size-12">{match.hero_id}</span>}
+              <span className="font-mono text-xs text-muted-foreground">{Math.floor(match.match_duration_s / 60)}:{String(match.match_duration_s % 60).padStart(2, '0')}</span>
+              <span className="font-mono text-sm font-bold tabular-nums sm:text-base">{match.player_kills}/{match.player_deaths}/{match.player_assists} <span className="font-normal text-muted-foreground">({(() => { const valid = visibleMatches.filter((entry) => entry.player_deaths > 0); const average = valid.length ? valid.reduce((sum, entry) => sum + entry.player_kills / entry.player_deaths, 0) / valid.length : 0; return average ? average.toFixed(1) : '—' })()})</span></span>
+              <span className="inline-flex items-center gap-1 font-mono text-xs font-semibold tabular-nums text-foreground"><span aria-hidden className="text-primary">◈</span>{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span>
+              <span className="text-xs text-muted-foreground">{new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(match.start_time * 1000))}</span>
+              <span className="text-xs text-muted-foreground">({(() => { const days = Math.floor((Date.now() - match.start_time * 1000) / 86400000); if (days <= 0) return labels.today; if (days === 1) return labels.yesterday; return labels.daysAgo.replace('{count}', String(days)) })()})</span>
+              <span className="ml-auto font-mono text-[11px] text-muted-foreground">#{id}</span>
+            </span>
+            <span className="grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2 xl:max-w-[46rem]">
+              {[0, 1].map((team) => {
+                const teamPlayers = (matchSummaries[id] ?? []).filter((player) => player.team === team).slice(0, 6)
+                const teamLabel = team === 0 ? labels.team0 : labels.team1
+                return <span key={team} className="grid min-w-0 grid-cols-1 gap-y-1 border border-border/70 bg-background/35 p-1.5 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
+                  <span className="col-span-full text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{teamLabel}</span>
+                  {teamPlayers.length ? teamPlayers.map((player, index) => {
+                    const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
+                    const hero = heroId === null ? null : heroById.get(heroId)
+                    const accountId = typeof player.account_id === 'number' ? player.account_id : null
+                    const name = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : summaryNames[accountId] ?? (typeof player.name === 'string' && player.name.trim() ? player.name.trim() : `#${accountId}`)
+                    const stats = Array.isArray(player.stats) ? player.stats : []
+                    const last = stats.length ? asRecord(stats[stats.length - 1]) : null
+                    const kills = typeof player.kills === 'number' ? player.kills : last?.kills
+                    const deaths = typeof player.deaths === 'number' ? player.deaths : last?.deaths
+                    return <span key={accountId ?? index} title={name} className="flex min-w-0 items-center gap-1.5 text-[10px] leading-4">
+                      {hero?.icon ? <img src={hero.icon} alt="" loading="lazy" className="size-4 shrink-0 border border-border/70 object-cover" /> : <span className="size-4 shrink-0 border border-border/70 bg-muted" />}
+                      <span className={`min-w-0 flex-1 truncate ${accountId === selectedAccountId ? 'font-bold text-primary' : 'text-foreground/90'}`}>{name}</span>
+                      <span className="shrink-0 font-mono tabular-nums text-muted-foreground">{formatNumber(kills)}/{formatNumber(deaths)}</span>
+                    </span>
+                  }) : <span className="col-span-full text-[10px] text-muted-foreground">{labels.loading}</span>}
+                </span>
+              })}
+            </span>
+          </span>
+          <span className="flex shrink-0 items-center px-2 text-muted-foreground"><ChevronDown size={16} aria-hidden className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} /></span>
         </button>
         {isOpen ? <div className="space-y-4 border-t border-border bg-background/40 p-3 sm:p-4">
           {metadataLoading ? <p role="status" className="py-3 text-sm text-muted-foreground"><LoaderCircle size={15} className="mr-2 inline animate-spin" />{labels.loading}</p> : null}
