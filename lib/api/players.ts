@@ -12,7 +12,7 @@ export type PlayerEnemy = Schemas['EnemyStats']
 export function fetchSteamProfiles(accountIds: number[]) {
   const uniqueIds = [...new Set(accountIds)].filter((id) => Number.isSafeInteger(id) && id > 0).slice(0, 100)
   if (!uniqueIds.length) return Promise.resolve([] as SteamProfile[])
-  return apiGet<SteamProfile[]>('/v1/players/steam', { account_ids: uniqueIds })
+  return apiGet<SteamProfile[]>('/v1/players/steam', { account_ids: uniqueIds.join(',') })
 }
 
 /** Search public Steam profiles by persona name or SteamID3. */
