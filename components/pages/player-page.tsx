@@ -308,12 +308,14 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 {([{ label: 'K', value: match.player_kills, tone: 'text-emerald-400' }, { label: 'D', value: match.player_deaths, tone: 'text-rose-400' }, { label: 'A', value: match.player_assists, tone: 'text-sky-400' }] as const).map((stat, index) => <span key={stat.label} className="inline-flex items-center gap-1"><span className={`inline-flex items-center gap-0.5 font-mono tabular-nums ${stat.tone}`}><span className="text-sm font-extrabold leading-none sm:text-base">{formatNumber(stat.value)}</span><span className="text-[9px] font-bold">{stat.label}</span></span>{index < 2 ? <span aria-hidden className={`px-0.5 font-mono text-sm font-bold ${stat.tone}`}>/</span> : null}</span>)}
                 <span className="shrink-0 font-mono text-[10px] font-semibold tabular-nums text-muted-foreground">({((match.player_kills + match.player_assists) / Math.max(1, match.player_deaths)).toFixed(2)} KDA)</span>
               </span>
-              <span className="inline-flex w-fit max-w-full items-center gap-1.5 border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[10px] text-amber-200">
-                <span aria-hidden className="font-bold">◈</span>
-                <span className="shrink-0 font-semibold uppercase tracking-wide">{labels.souls}</span>
-                <span className="truncate font-mono text-xs font-extrabold tabular-nums">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span>
+              <span className="flex min-w-0 w-full items-center justify-between gap-1">
+                <span className="inline-flex min-w-0 max-w-[60%] items-center gap-1.5 border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[10px] text-amber-200">
+                  <span aria-hidden className="font-bold">◈</span>
+                  <span className="shrink-0 font-semibold uppercase tracking-wide">{labels.souls}</span>
+                  <span className="truncate font-mono text-xs font-extrabold tabular-nums">{new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(match.net_worth)}</span>
+                </span>
+                <span className="min-w-0 truncate text-right font-mono text-[9px] font-semibold text-foreground/80 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
               </span>
-
             </span>
           </span>
           <span className="relative flex min-w-0 flex-1 items-stretch pb-4">
@@ -341,7 +343,6 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
             </span>
           })}
           </span>
-          <span className="pointer-events-none absolute bottom-1 right-10 z-10 max-w-[45%] truncate font-mono text-[9px] font-semibold text-foreground/80 sm:right-11 sm:text-[10px]">{labels.matchIdLabel}: #{id}</span>
           <span aria-hidden className={`flex w-8 shrink-0 items-center justify-center self-stretch border-l border-border bg-muted/20 text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary sm:w-9 ${isOpen ? 'bg-primary/10 text-primary' : ''}`}>
             <span className="grid size-5 place-items-center border border-current/50">{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
           </span>
