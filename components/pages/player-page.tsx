@@ -193,8 +193,8 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           }).filter((purchase): purchase is { itemId: number; gameTime: number; soldTime: number; sourceIndex: number } => purchase !== null)
             .filter((purchase) => purchase.soldTime <= 0)
             .sort((a, b) => a.gameTime - b.gameTime || a.sourceIndex - b.sourceIndex)
-          const inventorySlots = purchases.slice(-8).map((purchase) => purchase.itemId)
-          const visibleInventory = Array.from({ length: 8 }, (_, slotIndex) => inventorySlots[slotIndex] ?? null)
+          const inventorySlots = purchases.slice(-10).map((purchase) => purchase.itemId)
+          const visibleInventory = Array.from({ length: 10 }, (_, slotIndex) => inventorySlots[slotIndex] ?? null)
           return <li key={accountId ?? index} className={accountId === selectedAccountId ? 'bg-primary/5' : ''}>
             <div className="flex items-center gap-3 px-3 py-3">
               <span className="w-5 shrink-0 text-center font-mono text-[11px] text-muted-foreground">{index + 1}</span>
