@@ -259,7 +259,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
               .find((value): value is string => typeof value === 'string' && value.length > 0)
           }
           const statValue = (key: string) => {
-            const value = finalStats?.[key]
+            const value = finalStats?.[key] ?? player[key]
             return typeof value === 'number' || typeof value === 'string' ? value : null
           }
           const heroDamage = statValue('hero_damage')
