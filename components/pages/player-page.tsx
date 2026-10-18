@@ -383,43 +383,6 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           {metadataLoading ? <p role="status" className="py-3 text-sm text-muted-foreground"><LoaderCircle size={15} className="mr-2 inline animate-spin" />{labels.loading}</p> : null}
           {metadataError ? <p role="status" className="py-3 text-sm text-muted-foreground">{metadataError}</p> : null}
           {!metadataLoading && !metadataError && matchInfo ? <>
-            <div className={match.player_match_outcome === 1 ? 'border border-emerald-500/30 bg-emerald-500/5 p-4' : 'border border-rose-500/25 bg-rose-500/5 p-4'}>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                {heroById.get(match.hero_id) ? <HeroIcon icon={heroById.get(match.hero_id)?.icon} color={heroById.get(match.hero_id)?.color} size="size-20" /> : <div className="grid size-20 shrink-0 place-items-center rounded-sm bg-muted font-mono text-sm">{match.hero_id}</div>}
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    <span>{playerName}</span><span>·</span><span>{match.player_match_outcome === 1 ? labels.win : match.player_match_outcome === 2 ? labels.loss : match.player_match_outcome === 3 ? labels.penalized : match.player_match_outcome === 4 ? labels.penalizedParty : match.player_match_outcome === 5 ? labels.notScored : labels.result}</span>
-                  </div>
-                  <h4 className="mt-1 font-display text-2xl font-bold uppercase">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`}</h4>
-                  <p className="mt-1 text-sm text-muted-foreground">{labels.duration} {duration === null ? '—' : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</p>
-                </div>
-                <div className="grid grid-cols-3 gap-3 border-t border-border/70 pt-3 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
-                  <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">K</p><p className="font-mono text-lg font-bold">{formatNumber(match.player_kills)}</p></div>
-                  <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">D</p><p className="font-mono text-lg font-bold">{formatNumber(match.player_deaths)}</p></div>
-                  <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">A</p><p className="font-mono text-lg font-bold">{formatNumber(match.player_assists)}</p></div>
-                </div>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-px border border-border/70 bg-border sm:grid-cols-3 xl:grid-cols-6">
-                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.souls}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.net_worth)}</p></div>
-                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.lastHits}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.last_hits)}</p></div>
-                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.denies}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.denies)}</p></div>
-                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.level}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.hero_level)}</p></div>
-                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.damage}</p><p className="mt-1 font-mono font-bold">{formatNumber(selectedPlayerDamage)}</p></div>
-                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.playerCount}</p><p className="mt-1 font-mono font-bold">{players.length}</p></div>
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
-                {match.ranked_display_badge != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.rankAfterMatch}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.ranked_display_badge)}</p></div> : null}
-                {match.ranked_delta != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.rankDelta}</p><p className={`mt-1 font-mono font-bold ${match.ranked_delta > 0 ? 'text-emerald-400' : match.ranked_delta < 0 ? 'text-rose-400' : ''}`}>{match.ranked_delta > 0 ? '+' : ''}{formatNumber(match.ranked_delta)}</p></div> : null}
-                {match.ranked_calibration_match ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.calibrationMatch}</p><p className="mt-1 font-mono font-bold">✓</p></div> : null}
-                {match.ranked_used_demotion_protection ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.demotionProtection}</p><p className="mt-1 font-mono font-bold">✓</p></div> : null}
-                {match.team_abandoned != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.teamAbandoned}</p><p className="mt-1 font-mono font-bold">{match.team_abandoned ? labels.yes : labels.no}</p></div> : null}
-                {match.abandoned_time_s != null && match.abandoned_time_s > 0 ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.abandonedAt}</p><p className="mt-1 font-mono font-bold">{Math.floor(match.abandoned_time_s / 60)}:{String(match.abandoned_time_s % 60).padStart(2, '0')}</p></div> : null}
-                {match.objectives_mask_team0 != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.team0Objectives}</p><p className="mt-1 font-mono font-bold">0x{match.objectives_mask_team0.toString(16).toUpperCase()}</p></div> : null}
-                {match.objectives_mask_team1 != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.team1Objectives}</p><p className="mt-1 font-mono font-bold">0x{match.objectives_mask_team1.toString(16).toUpperCase()}</p></div> : null}
-                {match.brawl_score_team0 != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.team0}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.brawl_score_team0)}</p></div> : null}
-                {match.brawl_score_team1 != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.team1}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.brawl_score_team1)}</p></div> : null}
-              </div>
-            </div>
             <div className="grid gap-3 xl:grid-cols-2">{(() => { const selectedTeam = selectedMatchPlayer?.team; const firstTeam = selectedTeam === 0 || selectedTeam === 1 ? selectedTeam : 0; return <>{renderTeam(firstTeam, labels.team0)}{renderTeam(1 - firstTeam, labels.team1)}</> })()}</div>
           </> : null}
         </div> : null}
