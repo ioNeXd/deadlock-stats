@@ -212,6 +212,9 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           const kills = typeof player.kills === 'number' ? player.kills : finalStats?.kills
           const deaths = typeof player.deaths === 'number' ? player.deaths : finalStats?.deaths
           const assists = typeof player.assists === 'number' ? player.assists : finalStats?.assists
+          const kda = typeof kills === 'number' && typeof deaths === 'number' && typeof assists === 'number'
+            ? ((kills + assists) / Math.max(1, deaths)).toFixed(2)
+            : '—'
           const netWorth = typeof player.net_worth === 'number' ? player.net_worth : finalStats?.net_worth
           const damage = finalStats?.player_damage ?? player.player_damage
           const lastHits = typeof player.last_hits === 'number' ? player.last_hits : finalStats?.last_hits
@@ -250,23 +253,24 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           const inventorySlots = purchases.slice(-10).map((purchase) => purchase.itemId)
           const visibleInventory = Array.from({ length: 10 }, (_, slotIndex) => inventorySlots[slotIndex] ?? null)
           return <li key={accountId ?? index} className={accountId === selectedAccountId ? 'bg-primary/5' : ''}>
-            <div className="flex items-center gap-3 px-3 py-3">
-              <span className="w-5 shrink-0 text-center font-mono text-[11px] text-muted-foreground">{index + 1}</span>
-              {hero ? <HeroIcon icon={hero.icon} color={hero.color} size="size-12" /> : <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-muted font-mono text-xs text-muted-foreground">{heroId ?? '—'}</span>}
+            <div className="flex items-start gap-3 px-3 py-3 sm:gap-4">
+              <span className="w-5 shrink-0 pt-1 text-center font-mono text-[11px] text-muted-foreground">{index + 1}</span>
+              {hero ? <HeroIcon icon={hero.icon} color={hero.color} size="size-12 sm:size-14" /> : <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-muted font-mono text-xs text-muted-foreground sm:size-14">{heroId ?? '—'}</span>}
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                  <span className="truncate font-semibold">{hero?.name ?? (heroId === null ? labels.unknownHero : `${labels.hero} #${heroId}`)}</span>
-                  <span className="truncate text-xs font-semibold text-primary">{label}</span>
+                  <span className="truncate font-display font-bold uppercase tracking-wide">{hero?.name ?? (heroId === null ? labels.unknownHero : `${labels.hero} #${heroId}`)}</span>
+                  <span className={`truncate text-xs font-semibold ${accountId === selectedAccountId ? 'text-primary' : 'text-muted-foreground'}`}>{label}</span>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                  <span className="font-mono font-semibold text-foreground">{formatNumber(kills)} / {formatNumber(deaths)} / {formatNumber(assists)}</span>
-                  <span>{labels.souls}: <span className="font-mono text-foreground">{formatNumber(netWorth)}</span></span>
-                  <span>{labels.damage}: <span className="font-mono text-foreground">{formatNumber(damage)}</span></span>
+                <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                  {([{ label: 'K', value: kills, tone: 'text-emerald-400' }, { label: 'D', value: deaths, tone: 'text-rose-400' }, { label: 'A', value: assists, tone: 'text-sky-400' }] as const).map((stat, statIndex) => <span key={stat.label} className={`inline-flex items-center gap-1 font-mono tabular-nums ${stat.tone}`}><span className="text-sm font-extrabold">{formatNumber(stat.value)}</span><span className="text-[9px] font-bold">{stat.label}</span>{statIndex < 2 ? <span aria-hidden className="ml-1 text-muted-foreground">/</span> : null}</span>)}
+                  <span className="border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-bold text-primary">{kda} KDA</span>
+                  <span className="ml-auto font-mono text-[10px] text-muted-foreground">{labels.duration} {duration === null ? '—' : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</span>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                  <span>{labels.lastHits}: <span className="font-mono text-foreground">{formatNumber(lastHits)}</span></span>
-                  <span>{labels.denies}: <span className="font-mono text-foreground">{formatNumber(denies)}</span></span>
-                  <span>{labels.level}: <span className="font-mono text-foreground">{formatNumber(heroLevel)}</span></span>
+                <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                  <div className="border border-amber-400/25 bg-amber-400/5 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-amber-200/80">{labels.souls}</p><p className="font-mono text-xs font-bold text-amber-100">{formatNumber(netWorth)}</p></div>
+                  <div className="border border-border/70 bg-background/50 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.damage}</p><p className="font-mono text-xs font-bold">{formatNumber(damage)}</p></div>
+                  <div className="border border-border/70 bg-background/50 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.lastHits}</p><p className="font-mono text-xs font-bold">{formatNumber(lastHits)}</p></div>
+                  <div className="border border-border/70 bg-background/50 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.denies} <span className="text-muted-foreground/60">· {labels.level}</span></p><p className="font-mono text-xs font-bold">{formatNumber(denies)} <span className="text-muted-foreground">·</span> {formatNumber(heroLevel)}</p></div>
                 </div>
                 <div className="mt-2 grid w-fit grid-cols-5 gap-1.5" aria-label={labels.items}>{visibleInventory.map((itemId, itemIndex) => {
                   const item = itemId === null ? undefined : itemById.get(itemId)
@@ -384,10 +388,10 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 {heroById.get(match.hero_id) ? <HeroIcon icon={heroById.get(match.hero_id)?.icon} color={heroById.get(match.hero_id)?.color} size="size-20" /> : <div className="grid size-20 shrink-0 place-items-center rounded-sm bg-muted font-mono text-sm">{match.hero_id}</div>}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    <span>{labels.matchId} #{id}</span><span>·</span><span>{`${labels.gameModes[match.game_mode] ?? `${labels.unknownGameMode} (${match.game_mode})`} ${labels.matchModes[match.match_mode] ?? `${labels.unknownMatchMode} (${match.match_mode})`}`}</span>
+                    <span>{playerName}</span><span>·</span><span>{match.player_match_outcome === 1 ? labels.win : match.player_match_outcome === 2 ? labels.loss : match.player_match_outcome === 3 ? labels.penalized : match.player_match_outcome === 4 ? labels.penalizedParty : match.player_match_outcome === 5 ? labels.notScored : labels.result}</span>
                   </div>
-                  <h4 className="mt-1 font-display text-2xl font-bold uppercase">{match.player_match_outcome === 1 ? labels.win : match.player_match_outcome === 2 ? labels.loss : match.player_match_outcome === 3 ? labels.penalized : match.player_match_outcome === 4 ? labels.penalizedParty : match.player_match_outcome === 5 ? labels.notScored : labels.result}</h4>
-                  <p className="mt-1 text-sm text-muted-foreground">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`} <span className="px-1">·</span> {new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(match.start_time * 1000))} <span className="px-1">·</span> {labels.duration} {duration === null ? '—' : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</p>
+                  <h4 className="mt-1 font-display text-2xl font-bold uppercase">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`}</h4>
+                  <p className="mt-1 text-sm text-muted-foreground">{labels.duration} {duration === null ? '—' : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</p>
                 </div>
                 <div className="grid grid-cols-3 gap-3 border-t border-border/70 pt-3 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
                   <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">K</p><p className="font-mono text-lg font-bold">{formatNumber(match.player_kills)}</p></div>
@@ -416,7 +420,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                 {match.brawl_score_team1 != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.team1}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.brawl_score_team1)}</p></div> : null}
               </div>
             </div>
-            <div className="grid gap-3 xl:grid-cols-2">{renderTeam(0, labels.team0)}{renderTeam(1, labels.team1)}</div>
+            <div className="grid gap-3 xl:grid-cols-2">{(() => { const selectedTeam = selectedMatchPlayer?.team; const firstTeam = selectedTeam === 0 || selectedTeam === 1 ? selectedTeam : 0; return <>{renderTeam(firstTeam, labels.team0)}{renderTeam(1 - firstTeam, labels.team1)}</> })()}</div>
           </> : null}
         </div> : null}
       </li>
