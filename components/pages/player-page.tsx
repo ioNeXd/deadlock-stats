@@ -301,8 +301,6 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   </span>
                 })}</div>
                  {(() => {
-                   // Match metadata exposes cumulative combat stats in player.stats and
-                   // ability stats separately on player. Use only fields confirmed by the API.
                    const statDefinitions = [
                      ['player_damage', labels.metricLabels.player_damage],
                      ['player_damage_taken', labels.metricLabels.player_damage_taken],
@@ -312,63 +310,34 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                      ['denies', labels.metricLabels.denies],
                      ['net_worth', labels.metricLabels.net_worth],
                    ] as const
-                   const maxStatValue = (key: string) => {
-                     const values = snapshots.map((snapshot) => asRecord(snapshot)?.[key]).filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
-                     return values.length ? Math.max(...values) : null
-                   }
                    const metrics = statDefinitions.flatMap(([key, label]) => {
-                     const value = maxStatValue(key)
-                     return value === null ? [] : [{ key, label, value }]
+                     const values = snapshots.map((snapshot) => asRecord(snapshot)?.[key]).filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+                     return values.length ? [{ key, label, value: Math.max(...values) }] : []
                    })
-                   const customStatNames = new Map((Array.isArray(matchInfo?.custom_user_stats) ? matchInfo.custom_user_stats : [])
-                     .map(asRecord)
-                     .filter((record): record is Record<string, unknown> => record !== null && typeof record.id === 'number' && typeof record.name === 'string' && record.name.trim().length > 0)
-                     .map((record) => [record.id as number, record.name as string]))
-                   const customStats = new Map<number, number>()
-                   for (const snapshot of snapshots) {
-                     const snapshotRecord = asRecord(snapshot)
-                     const entries = Array.isArray(snapshotRecord?.custom_user_stats) ? snapshotRecord.custom_user_stats : []
-                     for (const entry of entries) {
-                       const record = asRecord(entry)
-                       if (typeof record?.id === 'number' && typeof record.value === 'number' && Number.isFinite(record.value)) {
-                         customStats.set(record.id, Math.max(customStats.get(record.id) ?? 0, record.value))
-                       }
-                     }
-                   }
-                   const customMetrics = [...customStats.entries()].map(([id, value]) => ({
-                     key: `custom-${id}`,
-                     label: customStatNames.get(id) ?? `${labels.customStat} #${id}`,
-                     value,
-                   }))
-                   const rawAbilityStats = Array.isArray(player.ability_stats) ? player.ability_stats : []
-                   const abilityStats = rawAbilityStats.map((value) => {
+                   const abilityStats = (Array.isArray(player.ability_stats) ? player.ability_stats : []).flatMap((value) => {
                      const record = asRecord(value)
-                     if (!record) return null
-                     const rawId = record.ability_id
+                     const rawId = record?.ability_id
                      const id = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
-                     if (!Number.isSafeInteger(id) || id <= 0) return null
+                     if (!Number.isSafeInteger(id) || id <= 0) return []
                      const asset = itemAssets.find((candidate) => candidate.id === id) as (ItemAsset & Record<string, unknown>) | undefined
-                     const abilityValue = typeof record.ability_value === 'number' ? record.ability_value : null
-                     return { id, name: typeof asset?.name === 'string' ? asset.name : `#${id}`, abilityValue }
-                   }).filter((ability): ability is { id: number; name: string; abilityValue: number | null } => ability !== null)
-                   const rawEvents = rawItems.map((value, sourceIndex) => {
+                     return [{ id, name: typeof asset?.name === 'string' ? asset.name : `#${id}`, value: typeof record?.ability_value === 'number' ? record.ability_value : null }]
+                   })
+                   const events = rawItems.flatMap((value, sourceIndex) => {
                      const record = asRecord(value)
-                     if (!record) return null
-                     const rawId = record.upgrade_id ?? record.item_id
+                     const rawId = record?.upgrade_id ?? record?.item_id
                      const id = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
-                     if (!Number.isSafeInteger(id) || !itemById.has(id)) return null
-                     const rawTime = record.game_time_s
+                     if (!Number.isSafeInteger(id) || !itemById.has(id)) return []
+                     const rawTime = record?.game_time_s
                      const time = typeof rawTime === 'number' ? rawTime : typeof rawTime === 'string' ? Number(rawTime) : sourceIndex
-                     const soldRaw = record.sold_time_s
-                     const soldTime = typeof soldRaw === 'number' ? soldRaw : typeof soldRaw === 'string' ? Number(soldRaw) : 0
-                     return { id, time, soldTime, sourceIndex }
-                   }).filter((event): event is { id: number; time: number; soldTime: number; sourceIndex: number } => event !== null)
-                     .sort((a, b) => a.time - b.time || a.sourceIndex - b.sourceIndex).slice(-8).reverse()
-                   if (!metrics.length && !customMetrics.length && !abilityStats.length && !rawEvents.length) return null
+                     const rawSoldTime = record?.sold_time_s
+                     const soldTime = typeof rawSoldTime === 'number' ? rawSoldTime : typeof rawSoldTime === 'string' ? Number(rawSoldTime) : 0
+                     return [{ id, time, soldTime, sourceIndex }]
+                   }).sort((left, right) => left.time - right.time || left.sourceIndex - right.sourceIndex).slice(-8).reverse()
+                   if (!metrics.length && !abilityStats.length && !events.length) return null
                    return <div className="mt-2 grid min-w-0 grid-cols-1 gap-2 xl:grid-cols-2">
-                     {metrics.length || customMetrics.length ? <section className="min-w-0 border border-border/60 bg-background/40 p-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.finalStats}</h5><dl className="grid grid-cols-2 gap-1 sm:grid-cols-3">{[...metrics, ...customMetrics].map((metric) => <div key={metric.key} className="min-w-0 border border-border/50 px-2 py-1"><dt className="truncate text-[9px] text-muted-foreground" title={metric.label}>{metric.label}</dt><dd className="truncate font-mono text-[11px] font-bold tabular-nums">{formatNumber(metric.value)}</dd></div>)}</dl></section> : null}
-                     {abilityStats.length ? <section className="min-w-0 border border-border/60 bg-background/40 p-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.abilityStats}</h5><ol className="flex flex-wrap gap-1">{abilityStats.map((ability, abilityIndex) => <li key={`${ability.id}-${abilityIndex}`} className="max-w-full border border-violet-400/30 bg-violet-400/10 px-2 py-1 text-[10px] text-violet-200"><span className="break-words">{ability.name}</span>{ability.abilityValue !== null ? <span className="ml-1 font-mono text-[9px] text-muted-foreground">{formatNumber(ability.abilityValue)}</span> : null}</li>)}</ol></section> : null}
-                     {rawEvents.length ? <section className="min-w-0 border border-border/60 bg-background/40 p-2 xl:col-span-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.purchaseTimeline}</h5><ol className="grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-4">{rawEvents.map((event) => { const rawItem = itemById.get(event.id) as unknown as Record<string, unknown> | undefined; const name = typeof rawItem?.name === 'string' ? rawItem.name : `#${event.id}`; const time = Math.max(0, Math.floor(event.time)); return <li key={`${event.id}-${event.sourceIndex}`} className="min-w-0 border border-border/50 px-2 py-1"><span className="block truncate text-[10px] font-semibold" title={name}>{name}</span><span className="block font-mono text-[9px] text-muted-foreground">{Math.floor(time / 60)}:{String(time % 60).padStart(2, '0')} · {event.soldTime > 0 ? labels.sold : labels.purchasedAt}</span></li> })}</ol></section> : null}
+                     {metrics.length > 0 ? <section className="min-w-0 border border-border/60 bg-background/40 p-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.finalStats}</h5><dl className="grid grid-cols-2 gap-1 sm:grid-cols-3">{metrics.map((metric) => <div key={metric.key} className="min-w-0 border border-border/50 px-2 py-1"><dt className="truncate text-[9px] text-muted-foreground">{metric.label}</dt><dd className="truncate font-mono text-[11px] font-bold tabular-nums">{formatNumber(metric.value)}</dd></div>)}</dl></section> : null}
+                     {abilityStats.length > 0 ? <section className="min-w-0 border border-border/60 bg-background/40 p-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.abilityStats}</h5><ol className="flex flex-wrap gap-1">{abilityStats.map((ability, index) => <li key={`${ability.id}-${index}`} className="max-w-full border border-violet-400/30 bg-violet-400/10 px-2 py-1 text-[10px] text-violet-200"><span className="break-words">{ability.name}</span>{ability.value !== null ? <span className="ml-1 font-mono text-[9px] text-muted-foreground">{formatNumber(ability.value)}</span> : null}</li>)}</ol></section> : null}
+                     {events.length > 0 ? <section className="min-w-0 border border-border/60 bg-background/40 p-2 xl:col-span-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.purchaseTimeline}</h5><ol className="grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-4">{events.map((event) => { const item = itemById.get(event.id) as (ItemAsset & Record<string, unknown>) | undefined; const name = typeof item?.name === 'string' ? item.name : `#${event.id}`; const time = Math.max(0, Math.floor(event.time)); return <li key={`${event.id}-${event.sourceIndex}`} className="min-w-0 border border-border/50 px-2 py-1"><span className="block truncate text-[10px] font-semibold" title={name}>{name}</span><span className="block font-mono text-[9px] text-muted-foreground">{Math.floor(time / 60)}:{String(time % 60).padStart(2, '0')} · {event.soldTime > 0 ? labels.sold : labels.purchasedAt}</span></li> })}</ol></section> : null}
                    </div>
                  })()}
             </div>
