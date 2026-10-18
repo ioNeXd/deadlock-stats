@@ -266,11 +266,18 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <span className="border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-bold text-primary">{kda} KDA</span>
                   <span className="ml-auto font-mono text-[10px] text-muted-foreground">{labels.duration} {duration === null ? '—' : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</span>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3 xl:grid-cols-5">
                   <div className="border border-amber-400/25 bg-amber-400/5 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-amber-200/80">{labels.souls}</p><p className="font-mono text-xs font-bold text-amber-100">{formatNumber(netWorth)}</p></div>
                   <div className="border border-border/70 bg-background/50 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.damage}</p><p className="font-mono text-xs font-bold">{formatNumber(damage)}</p></div>
                   <div className="border border-border/70 bg-background/50 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.lastHits}</p><p className="font-mono text-xs font-bold">{formatNumber(lastHits)}</p></div>
-                  <div className="border border-border/70 bg-background/50 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.denies} <span className="text-muted-foreground/60">· {labels.level}</span></p><p className="font-mono text-xs font-bold">{formatNumber(denies)} <span className="text-muted-foreground">·</span> {formatNumber(heroLevel)}</p></div>
+                  <div className="border border-border/70 bg-background/50 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.denies}</p><p className="font-mono text-xs font-bold">{formatNumber(denies)}</p></div>
+                  <div className="border border-border/70 bg-background/50 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.level}</p><p className="font-mono text-xs font-bold">{formatNumber(heroLevel)}</p></div>
+                </div>
+                <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                  <div className="border border-border/60 bg-muted/20 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.playerCount}</p><p className="font-mono text-xs font-bold">{formatNumber(players.length)}</p></div>
+                  <div className="border border-border/60 bg-muted/20 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.teamAbandoned}</p><p className="font-mono text-xs font-bold">{match.team_abandoned == null ? '—' : match.team_abandoned ? labels.yes : labels.no}</p></div>
+                  <div className="border border-border/60 bg-muted/20 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.team0Objectives}</p><p className="font-mono text-xs font-bold">{match.objectives_mask_team0 == null ? '—' : `0x${Number(match.objectives_mask_team0).toString(16).toUpperCase()}`}</p></div>
+                  <div className="border border-border/60 bg-muted/20 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.team1Objectives}</p><p className="font-mono text-xs font-bold">{match.objectives_mask_team1 == null ? '—' : `0x${Number(match.objectives_mask_team1).toString(16).toUpperCase()}`}</p></div>
                 </div>
                 <div className="mt-2 grid w-fit grid-cols-5 gap-1.5" aria-label={labels.items}>{visibleInventory.map((itemId, itemIndex) => {
                   const item = itemId === null ? undefined : itemById.get(itemId)
