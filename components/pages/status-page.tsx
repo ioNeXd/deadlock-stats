@@ -5,6 +5,7 @@ import { interpolate, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { ApiHealth } from '@/components/status/api-health'
 import { PageHeader } from './page-header'
+import { PageContainer } from '@/components/site/page-container'
 import { buildBandOptions } from './tier-page'
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
@@ -23,7 +24,7 @@ export async function StatusPage({ locale }: { locale: Locale }) {
   const builtAt = new Date().toISOString()
 
   return (
-    <main id="main" className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
+    <PageContainer>
       <PageHeader eyebrow={t.status.eyebrow} title={t.status.title} lede={t.status.lede} />
       <div className="grid gap-4 md:grid-cols-2">
         <Panel title={t.status.api}>
@@ -69,6 +70,6 @@ export async function StatusPage({ locale }: { locale: Locale }) {
           ))}
         </dl>
       </Panel>
-    </main>
+    </PageContainer>
   )
 }

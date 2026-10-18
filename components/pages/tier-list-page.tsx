@@ -10,6 +10,7 @@ import type { BandOption } from '@/components/tier/filter-bar'
 import { RankBandTheme } from '@/components/tier/rank-band-theme'
 import { TierListSwitcher } from '@/components/tier/tier-list-switcher'
 import { PageHeader } from './page-header'
+import { PageContainer } from '@/components/site/page-container'
 
 export function buildBandOptions(ranks: RankEntity[], allLabel: string): BandOption[] {
   const byTier = new Map(ranks.map((r) => [r.tier, r]))
@@ -64,7 +65,7 @@ export async function TierListPage({ locale }: { locale: Locale }) {
           <div className="absolute inset-0 bg-background/80" />
         </div>
       ) : null}
-      <main id="main" className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
+      <PageContainer className="relative z-10">
         <RankBandTheme bands={bands}>
         <PageHeader eyebrow={t.tierList.eyebrow} title={t.tierList.title} lede={t.tierList.lede} />
         <TierListSwitcher
@@ -78,7 +79,7 @@ export async function TierListPage({ locale }: { locale: Locale }) {
           itemRows={itemRows}
         />
         </RankBandTheme>
-      </main>
+      </PageContainer>
     </>
   )
 }

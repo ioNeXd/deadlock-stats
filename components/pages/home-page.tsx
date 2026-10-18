@@ -1,12 +1,7 @@
 import Link from 'next/link'
 import { localePath, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
-
-const LINKS = [
-  { path: '/tierlist', key: 'tierlist' },
-  { path: '/methodology', key: 'methodology' },
-  { path: '/status', key: 'status' },
-] as const
+import { HOME_NAV_ITEMS } from '@/lib/navigation'
 
 export function HomePage({ locale }: { locale: Locale }) {
   const t = getDictionary(locale)
@@ -23,7 +18,7 @@ export function HomePage({ locale }: { locale: Locale }) {
         </div>
 
         <nav aria-label={t.site.mainNav} className="flex flex-wrap justify-center gap-2">
-          {LINKS.map(({ path, key }) => (
+          {HOME_NAV_ITEMS.map(({ path, key }) => (
             <Link
               key={path}
               href={localePath(locale, path)}

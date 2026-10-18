@@ -3,12 +3,13 @@ import { interpolate, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
 import { CUTOFF_ROWS, getMethodology, pct } from '@/lib/i18n/methodology'
 import { PageHeader } from './page-header'
+import { PageContainer } from '@/components/site/page-container'
 
 export function MethodologyPage({ locale }: { locale: Locale }) {
   const m = getMethodology(locale)
   const t = getDictionary(locale)
   return (
-    <main id="main" className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 md:py-10">
+    <PageContainer>
       <PageHeader eyebrow={m.eyebrow} title={m.title} lede={m.lede} />
       <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
         <div className="flex max-w-2xl flex-col gap-8">
@@ -37,6 +38,6 @@ export function MethodologyPage({ locale }: { locale: Locale }) {
           </ul>
         </aside>
       </div>
-    </main>
+    </PageContainer>
   )
 }

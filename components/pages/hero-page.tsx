@@ -11,6 +11,7 @@ import { ContextStrip } from '@/components/tier/context-strip'
 import { HeroBuilds } from '@/components/tier/hero-builds'
 import { TierBadge } from '@/components/tier/tier-badge'
 import { PageHeader } from './page-header'
+import { PageContainer } from '@/components/site/page-container'
 
 export async function HeroPage({ locale, id }: { locale: Locale; id: number }) {
   const t = getDictionary(locale)
@@ -19,9 +20,9 @@ export async function HeroPage({ locale, id }: { locale: Locale; id: number }) {
 
   if (!hero) {
     return (
-      <main id="main" className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
+      <PageContainer>
         <PageHeader eyebrow={t.heroPage.eyebrow} title={t.heroPage.notFound} lede={t.heroPage.lede} />
-      </main>
+      </PageContainer>
     )
   }
 
@@ -40,7 +41,7 @@ export async function HeroPage({ locale, id }: { locale: Locale; id: number }) {
   const statsResult = snapshot ? { snapshot, source: 'live' as const } : undefined
 
   return (
-    <main id="main" className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
+    <PageContainer>
       <PageHeader eyebrow={t.heroPage.eyebrow} title={hero.name} lede={t.heroPage.lede} />
 
       <section className="rank-band-theme flex flex-col gap-6 border border-border/70 bg-card/40 px-4 py-4 shadow-[0_18px_60px_rgba(0,0,0,0.18)] md:px-6 md:py-6">
@@ -89,7 +90,7 @@ export async function HeroPage({ locale, id }: { locale: Locale; id: number }) {
       </section>
 
       {buildSections ? <HeroBuilds locale={locale} sections={buildSections} labels={t.heroPage.builds} /> : null}
-    </main>
+    </PageContainer>
   )
 }
 

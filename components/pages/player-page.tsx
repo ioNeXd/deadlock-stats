@@ -1,7 +1,32 @@
 'use client'
 
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy, ChevronDown, Plus, Minus, CalendarDays, LogOut, Clock, Layers, Swords } from 'lucide-react'
+import {
+  Search,
+  UserRound,
+  ExternalLink,
+  LoaderCircle,
+  ShieldAlert,
+  Users,
+  History,
+  Trophy,
+  ChevronDown,
+  Plus,
+  Minus,
+  CalendarDays,
+  LogOut,
+  Clock,
+  Layers,
+  Swords,
+  Award,
+  Skull,
+  Target,
+  Heart,
+  Shield,
+  Zap,
+  Box,
+  Database,
+} from 'lucide-react'
 import { ApiError } from '@/lib/api/client'
 import { getHeroes, getItemCatalog } from '@/lib/api/assets'
 import type { HeroEntity, ItemAsset } from '@/lib/api/types'
@@ -16,6 +41,7 @@ import {
   type SteamProfile,
 } from '@/lib/api/players'
 import { PageHeader } from './page-header'
+import { PageContainer } from '@/components/site/page-container'
 import { HeroIcon } from '@/components/ui/hero-icon'
 import type { Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/dictionaries'
@@ -28,6 +54,22 @@ function formatNumber(value: unknown) {
   if (value === null || value === undefined || value === '') return '—'
   if (typeof value === 'string') return value
   return JSON.stringify(value)
+}
+
+function formatCompact(value: unknown): string {
+  if (typeof value === 'number') {
+    if (value >= 1000) {
+      return (value / 1000).toFixed(1).replace(/\.0$/, '') + 'k'
+    }
+    return new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 }).format(value)
+  }
+  if (typeof value === 'string') {
+    const num = Number(value)
+    if (!Number.isNaN(num)) return formatCompact(num)
+    return value
+  }
+  if (value === null || value === undefined || value === '') return '—'
+  return String(value)
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -198,171 +240,397 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   const selectedPlayerFinalStats = selectedPlayerSnapshots.length ? asRecord(selectedPlayerSnapshots[selectedPlayerSnapshots.length - 1]) : null
   const selectedPlayerDamage = selectedPlayerFinalStats?.player_damage ?? selectedMatchPlayer?.player_damage
 
-  function renderTeam(team: number, title: string, match: PlayerMatch) {
-    const members = players.filter((player) => player.team === team)
-    return <section key={team} className="min-w-0 overflow-hidden border border-border bg-card/70 shadow-sm">
-      <h4 className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-3 py-3 font-display text-sm font-bold uppercase tracking-wide sm:text-base">
-        <span>{title}</span><span className="font-mono text-xs text-muted-foreground">{members.length}</span>
-      </h4>
-      {!members.length ? <p className="px-3 py-4 text-sm text-muted-foreground">{labels.unavailable}</p> : <ol className="divide-y divide-border/80">
-        {members.map((player, index) => {
-          const accountId = typeof player.account_id === 'number' ? player.account_id : null
-          const snapshots = Array.isArray(player.stats) ? player.stats : []
-          const finalStats = snapshots.length ? asRecord(snapshots[snapshots.length - 1]) : null
-          const kills = typeof player.kills === 'number' ? player.kills : finalStats?.kills
-          const deaths = typeof player.deaths === 'number' ? player.deaths : finalStats?.deaths
-          const assists = typeof player.assists === 'number' ? player.assists : finalStats?.assists
-          const kda = typeof kills === 'number' && typeof deaths === 'number' && typeof assists === 'number'
-            ? ((kills + assists) / Math.max(1, deaths)).toFixed(2)
-            : '—'
-          const netWorth = typeof player.net_worth === 'number' ? player.net_worth : finalStats?.net_worth
-          const damage = finalStats?.player_damage ?? player.player_damage
-          const lastHits = typeof player.last_hits === 'number' ? player.last_hits : finalStats?.last_hits
-          const denies = typeof player.denies === 'number' ? player.denies : finalStats?.denies
-          const heroLevel = typeof player.hero_level === 'number' ? player.hero_level : finalStats?.hero_level
-          const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
-          const hero = heroId === null ? null : heroById.get(heroId)
-          const label = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : steamNames[accountId] ?? (typeof player.name === 'string' && player.name.trim() ? player.name.trim() : `#${accountId}`)
-          // Match metadata records every item purchase with its game time and sale time.
-          // Build the final inventory from those purchase events, not periodic player stats
-          // (which may contain ability/upgrades data with a similar shape).
-          const rawItems = Array.isArray(player.items) ? player.items : []
-          const purchases = rawItems.map((value, sourceIndex) => {
-            const record = asRecord(value)
-            if (!record) return null
+  function renderPlayerScoreboardCard(player: Record<string, unknown>, index: number, isAllies: boolean, match: PlayerMatch) {
+    const accountId = typeof player.account_id === 'number' ? player.account_id : null
+    const snapshots = Array.isArray(player.stats) ? player.stats : []
+    const finalStats = snapshots.length ? asRecord(snapshots[snapshots.length - 1]) : null
+    const kills = typeof player.kills === 'number' ? player.kills : (finalStats?.kills as number | undefined) ?? 0
+    const deaths = typeof player.deaths === 'number' ? player.deaths : (finalStats?.deaths as number | undefined) ?? 0
+    const assists = typeof player.assists === 'number' ? player.assists : (finalStats?.assists as number | undefined) ?? 0
+    const kda = ((kills + assists) / Math.max(1, deaths)).toFixed(2)
 
-            // Metadata variants may expose both item_id and upgrade_id. Accept
-            // only an ID that resolves to a known shopable upgrade; never render
-            // the raw numeric ID as a fallback, because it may identify an ability.
-            const toId = (value: unknown) => {
-              const id = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
-              return Number.isSafeInteger(id) && id > 0 ? id : null
-            }
-            const itemId = [toId(record.upgrade_id), toId(record.item_id)]
-              .find((candidate): candidate is number => candidate !== null && itemById.has(candidate))
-            if (itemId === undefined) return null
+    const netWorth = typeof player.net_worth === 'number' ? player.net_worth : (finalStats?.net_worth as number | undefined) ?? 0
+    const damage = (finalStats?.player_damage as number | undefined) ?? (player.player_damage as number | undefined) ?? 0
+    const lastHits = typeof player.last_hits === 'number' ? player.last_hits : (finalStats?.last_hits as number | undefined) ?? 0
+    const denies = typeof player.denies === 'number' ? player.denies : (finalStats?.denies as number | undefined) ?? 0
+    const heroLevel =
+      typeof player.level === 'number'
+        ? player.level
+        : typeof player.hero_level === 'number'
+          ? player.hero_level
+          : typeof finalStats?.level === 'number'
+            ? finalStats.level
+            : typeof finalStats?.hero_level === 'number'
+              ? finalStats.hero_level
+              : '—'
+    const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
+    const hero = heroId === null ? null : heroById.get(heroId)
 
-            const rawGameTime = record.game_time_s
-            const gameTime = typeof rawGameTime === 'number' ? rawGameTime : typeof rawGameTime === 'string' ? Number(rawGameTime) : NaN
-            const rawSoldTime = record.sold_time_s
-            const soldTime = typeof rawSoldTime === 'number' ? rawSoldTime : typeof rawSoldTime === 'string' ? Number(rawSoldTime) : 0
-            return { itemId, gameTime: Number.isFinite(gameTime) ? gameTime : sourceIndex, soldTime, sourceIndex }
-          }).filter((purchase): purchase is { itemId: number; gameTime: number; soldTime: number; sourceIndex: number } => purchase !== null)
-            .filter((purchase) => purchase.soldTime <= 0)
-            .sort((a, b) => a.gameTime - b.gameTime || a.sourceIndex - b.sourceIndex)
-          const inventorySlots = purchases.slice(-10).map((purchase) => purchase.itemId)
-          const visibleInventory = Array.from({ length: 10 }, (_, slotIndex) => inventorySlots[slotIndex] ?? null)
-          const finalItems = visibleInventory.map((itemId) => itemId === null ? null : itemById.get(itemId)).filter((item): item is ItemAsset => item !== null && item !== undefined)
-          const itemImageFor = (item: ItemAsset) => {
-            const raw = item as unknown as Record<string, unknown>
-            return [raw.shop_image_small_webp, raw.shop_image_webp, raw.image_webp, raw.shop_image_small, raw.shop_image, raw.image]
-              .find((value): value is string => typeof value === 'string' && value.length > 0)
-          }
-          const statValue = (key: string) => {
-            const value = finalStats?.[key] ?? player[key]
-            return typeof value === 'number' || typeof value === 'string' ? value : null
-          }
-          const heroDamage = statValue('hero_damage')
-          const damageTaken = statValue('player_damage_taken')
-          const healing = statValue('player_healing')
-          const creepKills = statValue('creep_kills')
-          const stackRows = Array.isArray(player.stack_stats) ? player.stack_stats.map((value) => {
-            const row = asRecord(value)
-            if (!row) return null
-            const rawId = row.ability_id ?? row.item_id ?? row.upgrade_id
-            const id = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
-            const rawCount = row.stack_count ?? row.stacks ?? row.count
-            const count = typeof rawCount === 'number' ? rawCount : typeof rawCount === 'string' ? Number(rawCount) : NaN
-            if (!Number.isSafeInteger(id) || !Number.isFinite(count) || count < 0) return null
-            const asset = itemAssets.find((candidate) => candidate.id === id) as (ItemAsset & Record<string, unknown>) | undefined
-            return { id, count, name: typeof asset?.name === 'string' ? asset.name : `#${id}`, image: asset ? itemImageFor(asset) : undefined }
-          }).filter((row): row is { id: number; count: number; name: string; image: string | undefined } => row !== null) : []
-          const abandonedAt = typeof player.abandoned_time_s === 'number' && player.abandoned_time_s >= 0 ? player.abandoned_time_s : null
-          const abandoned = player.abandoned === true || abandonedAt !== null
-          const isMvp = player.mvp === true
-          const isHonorableMention = player.honorable_mention === true
-          const slotItems = (slot: string) => finalItems.filter((item) => (item as unknown as Record<string, unknown>).item_slot_type === slot)
-          const buildGroups = [
-            { key: 'weapon', title: labels.weapon, items: slotItems('weapon'), tone: 'border-orange-400/45 bg-orange-400/5 text-orange-200' },
-            { key: 'vitality', title: labels.vitality, items: slotItems('vitality'), tone: 'border-emerald-400/45 bg-emerald-400/5 text-emerald-200' },
-            { key: 'spirit', title: labels.spirit, items: slotItems('spirit'), tone: 'border-violet-400/45 bg-violet-400/5 text-violet-200' },
-          ]
-          return <li key={accountId ?? index} className={`min-w-0 transition-colors ${accountId === selectedAccountId ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : 'hover:bg-muted/20'}`}>
-            <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] gap-3 p-3 sm:grid-cols-[6.25rem_minmax(0,1fr)] sm:gap-4 sm:p-4 lg:gap-5">
-              <div className="flex min-w-0 flex-col items-center gap-2">
-                {hero ? <HeroIcon icon={hero.icon} color={hero.color} size="size-[4.5rem] sm:size-24" /> : <span className="grid size-[4.5rem] place-items-center rounded-sm border border-border bg-muted font-mono text-sm text-muted-foreground sm:size-24">{heroId ?? '—'}</span>}
-                <div className="w-full border border-sky-400/35 bg-sky-400/10 px-1.5 py-1.5 text-center text-[9px] font-bold uppercase tracking-wider text-sky-200">
-                  {labels.level}
-                  <span className="mt-0.5 block font-mono text-lg leading-none tabular-nums sm:text-xl">{formatNumber(heroLevel)}</span>
+    const label = accountId === selectedAccountId
+      ? playerName
+      : accountId === null
+        ? labels.player
+        : steamNames[accountId] ?? (typeof player.name === 'string' && player.name.trim() ? player.name.trim() : (accountId ? `#${accountId}` : labels.player))
+
+    const statValue = (key: string) => {
+      const val = finalStats?.[key] ?? player[key]
+      return typeof val === 'number' || typeof val === 'string' ? val : null
+    }
+    const heroDamage = statValue('hero_damage') ?? damage
+    const damageTaken = statValue('player_damage_taken') ?? 0
+    const healing = statValue('player_healing') ?? 0
+    const creepKills = statValue('creep_kills') ?? lastHits
+
+    const isMvp = player.mvp === true
+    const isHonorableMention = player.honorable_mention === true
+    const abandonedAt = typeof player.abandoned_time_s === 'number' && player.abandoned_time_s >= 0 ? player.abandoned_time_s : null
+    const abandoned = player.abandoned === true || abandonedAt !== null
+
+    // Purchases
+    const rawItems = Array.isArray(player.items) ? player.items : []
+    const purchases = rawItems.map((value, sourceIndex) => {
+      const record = asRecord(value)
+      if (!record) return null
+      const toId = (val: unknown) => {
+        const id = typeof val === 'number' ? val : typeof val === 'string' ? Number(val) : NaN
+        return Number.isSafeInteger(id) && id > 0 ? id : null
+      }
+      const itemId = [toId(record.upgrade_id), toId(record.item_id)]
+        .find((candidate): candidate is number => candidate !== null && itemById.has(candidate))
+      if (itemId === undefined) return null
+
+      const rawGameTime = record.game_time_s
+      const gameTime = typeof rawGameTime === 'number' ? rawGameTime : typeof rawGameTime === 'string' ? Number(rawGameTime) : NaN
+      const rawSoldTime = record.sold_time_s
+      const soldTime = typeof rawSoldTime === 'number' ? rawSoldTime : typeof rawSoldTime === 'string' ? Number(rawSoldTime) : 0
+      return { itemId, gameTime: Number.isFinite(gameTime) ? gameTime : sourceIndex, soldTime, sourceIndex }
+    }).filter((purchase): purchase is { itemId: number; gameTime: number; soldTime: number; sourceIndex: number } => purchase !== null)
+      .filter((purchase) => purchase.soldTime <= 0)
+      .sort((a, b) => a.gameTime - b.gameTime || a.sourceIndex - b.sourceIndex)
+
+    const purchasedItems = purchases.slice(-10).map((purchase) => {
+      const item = itemById.get(purchase.itemId)
+      return item ? { ...purchase, item } : null
+    }).filter((p): p is { itemId: number; gameTime: number; soldTime: number; sourceIndex: number; item: ItemAsset } => p !== null)
+
+    const itemImageFor = (item: ItemAsset) => {
+      const raw = item as unknown as Record<string, unknown>
+      return [raw.shop_image_small_webp, raw.shop_image_webp, raw.image_webp, raw.shop_image_small, raw.shop_image, raw.image]
+        .find((value): value is string => typeof value === 'string' && value.length > 0)
+    }
+
+    // Stacks
+    const stackRows = Array.isArray(player.stack_stats) ? player.stack_stats.map((value) => {
+      const row = asRecord(value)
+      if (!row) return null
+      const rawId = row.ability_id ?? row.item_id ?? row.upgrade_id
+      const id = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
+      const rawCount = row.stack_count ?? row.stacks ?? row.count
+      const count = typeof rawCount === 'number' ? rawCount : typeof rawCount === 'string' ? Number(rawCount) : NaN
+      if (!Number.isSafeInteger(id) || !Number.isFinite(count) || count < 0) return null
+      const asset = itemAssets.find((candidate) => candidate.id === id) as (ItemAsset & Record<string, unknown>) | undefined
+      return { id, count, name: typeof asset?.name === 'string' ? asset.name : `#${id}`, image: asset ? itemImageFor(asset) : undefined }
+    }).filter((row): row is { id: number; count: number; name: string; image: string | undefined } => row !== null) : []
+
+    const abilityStackRows = stackRows.filter((row) => itemAssets.some((asset) => asset.id === row.id && !inventoryItems.some((item) => item.id === row.id)))
+    const itemStackRows = stackRows.filter((row) => inventoryItems.some((item) => item.id === row.id))
+    const hasStacks = abilityStackRows.length > 0 || itemStackRows.length > 0
+
+    return (
+      <article
+        key={accountId ?? index}
+        className={`min-w-0 border bg-card/75 p-2.5 sm:p-3 shadow-xs transition-colors ${
+          accountId === selectedAccountId
+            ? 'border-primary/60 bg-primary/[0.04] ring-1 ring-inset ring-primary/30'
+            : 'border-border/80'
+        }`}
+      >
+        {/* Hero & Performance Banner (Mockup Molde) */}
+        <div className="grid grid-cols-[4.25rem_minmax(0,1fr)] sm:grid-cols-[5.25rem_minmax(0,1fr)] gap-2.5 sm:gap-3 items-end">
+          {/* Left Column: Portrait & Level (Aligned to bottom to match Damage/Net Worth) */}
+          <div className="flex flex-col items-center justify-end w-full">
+            <div className="relative aspect-[3/4] w-full overflow-hidden border border-border bg-muted shadow-xs">
+              {hero?.heroCard ? (
+                <img src={hero.heroCard} alt={hero.name} className="size-full object-cover" />
+              ) : hero ? (
+                <HeroIcon icon={hero.icon} color={hero.color} size="size-full" />
+              ) : (
+                <span className="grid size-full place-items-center font-mono text-xs text-muted-foreground">{heroId ?? '—'}</span>
+              )}
+            </div>
+            <div className="mt-1.5 w-full border border-sky-400/35 bg-sky-400/10 px-1 py-1 text-center">
+              <span className="block text-[8px] font-bold uppercase tracking-wider text-sky-200">{labels.level}</span>
+              <span className="mt-0.5 block font-mono text-base sm:text-lg font-bold leading-none tabular-nums text-foreground">{formatNumber(heroLevel)}</span>
+            </div>
+          </div>
+
+          {/* Right Column: Hero & Player Name on the same line, then KDA, Damage, Net Worth */}
+          <div className="min-w-0 flex flex-col gap-1.5">
+            {/* Hero Name, Player Nickname (Same Line) & Badges */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 flex-wrap items-baseline gap-1.5 sm:gap-2">
+                  <h5 className="truncate font-display text-sm font-bold uppercase tracking-wide text-foreground sm:text-base">
+                    {hero?.name ?? (heroId === null ? labels.unknownHero : `${labels.hero} #${heroId}`)}
+                  </h5>
+
+                  {/* Player Nickname in lowercase beside hero name */}
+                  <span
+                    title={label}
+                    className={`truncate text-xs font-medium lowercase ${
+                      accountId === selectedAccountId ? 'text-primary font-semibold' : 'text-muted-foreground'
+                    }`}
+                  >
+                    {label}
+                  </span>
+
+                  {/* MVP Badge */}
+                  {isMvp ? (
+                    <span
+                      title={labels.mvp}
+                      className="inline-flex size-5 shrink-0 items-center justify-center border border-amber-400/50 bg-amber-400/15 text-amber-300 shadow-xs"
+                    >
+                      <Trophy size={11} aria-hidden />
+                    </span>
+                  ) : null}
+
+                  {/* Honorable Mention Badge */}
+                  {isHonorableMention ? (
+                    <span
+                      title={labels.honorableMention}
+                      className="inline-flex size-5 shrink-0 items-center justify-center border border-violet-400/50 bg-violet-400/15 text-violet-300 shadow-xs"
+                    >
+                      <Award size={11} aria-hidden />
+                    </span>
+                  ) : null}
+
+                  {/* "Você" marker if current player */}
+                  {accountId === selectedAccountId ? (
+                    <span className="border border-primary/50 bg-primary/15 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-primary">
+                      Você
+                    </span>
+                  ) : null}
                 </div>
-                <span className="w-full break-words text-center font-mono text-[10px] text-muted-foreground">ID #{heroId ?? '—'}</span>
               </div>
-              <div className="min-w-0">
-                <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1">
-                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                    <h5 className="break-words font-display text-base font-extrabold uppercase leading-tight tracking-wide sm:text-lg">{hero?.name ?? (heroId === null ? labels.unknownHero : `${labels.hero} #${heroId}`)}</h5>
-                    {isMvp ? <span title={labels.mvp} aria-label={labels.mvp} className="inline-flex items-center gap-1 border border-amber-300/60 bg-amber-300/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-200"><Trophy size={11} aria-hidden /> MVP</span> : null}
-                    {isHonorableMention ? <span title={labels.honorableMention} aria-label={labels.honorableMention} className="inline-flex items-center gap-1 border border-violet-300/50 bg-violet-300/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-violet-200"><Trophy size={11} aria-hidden /> {labels.honorableMention}</span> : null}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    {abandoned ? <span title={labels.abandoned} aria-label={labels.abandoned} className="inline-flex items-center gap-1 text-rose-300"><LogOut size={14} aria-hidden />{abandonedAt !== null ? <span className="font-mono text-[10px] tabular-nums">{Math.floor(abandonedAt / 60)}:{String(Math.floor(abandonedAt % 60)).padStart(2, '0')}</span> : null}</span> : null}
-                    {abandonedAt !== null ? <span title={labels.abandonedAt} aria-label={labels.abandonedAt} className="text-rose-300"><Clock size={14} aria-hidden /></span> : null}
-                  </div>
+
+              {/* Abandoned Indicators (Door & Clock Icons with Tooltip for Minutes) */}
+              {abandoned ? (
+                <div className="flex shrink-0 items-center gap-1">
+                  <span
+                    title={labels.abandoned}
+                    className="inline-flex size-5 items-center justify-center border border-rose-500/40 bg-rose-500/15 text-rose-300 shadow-xs"
+                  >
+                    <LogOut size={11} aria-hidden />
+                  </span>
+                  <span
+                    title={
+                      abandonedAt !== null
+                        ? `${labels.abandoned} aos ${Math.floor(abandonedAt / 60)}:${String(Math.floor(abandonedAt % 60)).padStart(2, '0')}`
+                        : labels.abandoned
+                    }
+                    className="inline-flex size-5 items-center justify-center border border-rose-500/40 bg-rose-500/15 text-rose-300 shadow-xs cursor-help"
+                  >
+                    <Clock size={11} aria-hidden />
+                  </span>
                 </div>
-                <p className={`mt-1 break-words text-xs font-semibold ${accountId === selectedAccountId ? 'text-primary' : 'text-muted-foreground'}`}>{label}</p>
-                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
-                  <div className="flex min-w-0 flex-col justify-center border border-primary/35 bg-primary/[0.07] px-3 py-2.5 sm:px-4">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{labels.kda}</span>
-                    <div className="mt-1 flex min-w-0 flex-wrap items-baseline gap-x-2">
-                      {([{ label: 'K', value: kills, tone: 'text-emerald-300' }, { label: 'D', value: deaths, tone: 'text-rose-300' }, { label: 'A', value: assists, tone: 'text-sky-300' }] as const).map((stat, statIndex) => <span key={stat.label} className={`inline-flex items-baseline gap-1 font-mono tabular-nums ${stat.tone}`}><span className="text-2xl font-black leading-none sm:text-3xl">{formatNumber(stat.value)}</span><span className="text-[10px] font-extrabold">{stat.label}</span>{statIndex < 2 ? <span aria-hidden className="ml-0.5 text-muted-foreground/60">/</span> : null}</span>)}
-                    </div>
-                    <span className="mt-1 font-mono text-xs font-bold text-primary">{kda} KDA</span>
-                  </div>
-                  <div className="grid min-w-0 grid-cols-2 gap-2">
-                    <div className="flex min-w-0 flex-col justify-center border border-rose-400/35 bg-rose-400/[0.07] px-2.5 py-2"><span className="break-words text-[9px] font-bold uppercase leading-tight tracking-wide text-rose-200/80">{labels.damage}</span><span className="mt-1 break-words font-mono text-lg font-extrabold leading-none tabular-nums text-rose-200 sm:text-xl">{formatNumber(damage)}</span></div>
-                    <div className="flex min-w-0 flex-col justify-center border border-emerald-400/35 bg-emerald-400/[0.07] px-2.5 py-2"><span className="break-words text-[9px] font-bold uppercase leading-tight tracking-wide text-emerald-200/80">{labels.netWorth}</span><span className="mt-1 break-words font-mono text-lg font-extrabold leading-none tabular-nums text-emerald-200 sm:text-xl">{formatNumber(netWorth)}</span></div>
-                  </div>
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-5">
-                  {[
-                    { key: 'creepKills', label: labels.creepKills, value: creepKills, tone: 'border-amber-400/35 bg-amber-400/[0.06] text-amber-200' },
-                    { key: 'denies', label: labels.denies, value: denies, tone: 'border-cyan-400/35 bg-cyan-400/[0.06] text-cyan-200' },
-                    { key: 'heroDamage', label: labels.heroDamage, value: heroDamage, tone: 'border-rose-400/35 bg-rose-400/[0.06] text-rose-200' },
-                    { key: 'damageTaken', label: labels.damageTaken, value: damageTaken, tone: 'border-orange-400/35 bg-orange-400/[0.06] text-orange-200' },
-                    { key: 'healing', label: labels.healing, value: healing, tone: 'border-emerald-400/35 bg-emerald-400/[0.06] text-emerald-200' },
-                  ].map((metric) => metric.value === null ? null : <div key={metric.key} className={`min-w-0 border px-2 py-2 ${metric.tone}`}><p className="break-words text-[9px] font-bold uppercase leading-tight tracking-wide opacity-80">{metric.label}</p><p className="mt-1 break-words font-mono text-sm font-extrabold tabular-nums sm:text-base">{formatNumber(metric.value)}</p></div>)}
-                </div>
-                {stackRows.length ? <section className="mt-3 border border-violet-400/35 bg-violet-400/[0.04] p-2.5">
-                  <h6 className="mb-2 flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-violet-200"><Layers size={13} aria-hidden />{labels.stacks}</h6>
-                  <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
-                    <div className="min-w-0"><p className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.abilityStacks}</p><ul className="flex flex-wrap gap-1.5">{stackRows.filter((row) => itemAssets.some((asset) => asset.id === row.id && !inventoryItems.some((item) => item.id === row.id))).map((row) => <li key={row.id} className="flex min-w-0 items-center gap-1.5 border border-violet-300/25 px-1.5 py-1">{row.image ? <img src={row.image} alt="" loading="lazy" className="size-5 object-contain" /> : null}<span className="max-w-28 truncate text-[10px]">{row.name}</span><span className="font-mono text-xs font-extrabold tabular-nums text-violet-200">{formatNumber(row.count)}</span></li>)}</ul></div>
-                    <div className="min-w-0"><p className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.itemStacks}</p><ul className="flex flex-wrap gap-1.5">{stackRows.filter((row) => inventoryItems.some((item) => item.id === row.id)).map((row) => <li key={row.id} className="flex min-w-0 items-center gap-1.5 border border-violet-300/25 px-1.5 py-1">{row.image ? <img src={row.image} alt="" loading="lazy" className="size-5 object-contain" /> : null}<span className="max-w-28 truncate text-[10px]">{row.name}</span><span className="font-mono text-xs font-extrabold tabular-nums text-violet-200">{formatNumber(row.count)}</span></li>)}</ul></div>
-                  </div>
-                </section> : null}
-                <section className="mt-3 border border-border/70 bg-background/30 p-2.5 sm:p-3">
-                  <h6 className="mb-2 flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-muted-foreground"><Swords size={13} aria-hidden />{labels.finalBuild}</h6>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    {buildGroups.map((group) => <div key={group.key} className={`min-w-0 border px-2 py-2 ${group.tone}`}>
-                      <p className="mb-1.5 text-[9px] font-extrabold uppercase tracking-wider">{group.title}</p>
-                      <div className="flex min-w-0 flex-wrap gap-1.5">
-                        {group.items.length ? group.items.map((item) => {
-                          const image = itemImageFor(item)
-                          const raw = item as unknown as Record<string, unknown>
-                          const name = typeof raw.name === 'string' ? raw.name : `#${item.id}`
-                          return <span key={item.id} title={name} aria-label={name} className="group relative grid size-10 shrink-0 place-items-center overflow-hidden border border-current/35 bg-black/20 sm:size-11">
-                            {image ? <img src={image} alt="" loading="lazy" className="size-full object-contain p-0.5 transition-transform duration-200 group-hover:scale-110" /> : <span className="px-1 text-center text-[9px]">{name}</span>}
-                          </span>
-                        }) : <span className="text-[10px] text-muted-foreground">—</span>}
-                      </div>
-                    </div>)}
-                  </div>
-                </section>
+              ) : null}
+            </div>
+
+            {/* KDA Container */}
+            <div className="border border-border/80 bg-background/50 px-2 py-1.5 text-center shadow-xs">
+              <span className="block text-[8px] font-bold uppercase tracking-widest text-muted-foreground">
+                KILLS / DEATHS / ASSISTS
+              </span>
+              <div className="mt-0.5 flex items-baseline justify-center font-mono">
+                <span className="text-lg sm:text-xl font-black text-emerald-400 tabular-nums">{formatNumber(kills)}</span>
+                <span className="mx-1 text-base font-bold text-muted-foreground/40">/</span>
+                <span className="text-lg sm:text-xl font-black text-rose-400 tabular-nums">{formatNumber(deaths)}</span>
+                <span className="mx-1 text-base font-bold text-muted-foreground/40">/</span>
+                <span className="text-lg sm:text-xl font-black text-sky-400 tabular-nums">{formatNumber(assists)}</span>
+              </div>
+              <span className="block font-mono text-[10px] font-bold text-primary">
+                {kda} KDA
+              </span>
+            </div>
+
+            {/* Split Cards: Damage and Net Worth (Glued right under KDA) */}
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className="border border-rose-400/30 bg-rose-400/[0.06] px-2 py-1 text-left">
+                <span className="block text-[8px] font-bold uppercase tracking-wide text-rose-200/80">
+                  {labels.damage}
+                </span>
+                <span className="mt-0.5 block font-mono text-xs sm:text-sm font-extrabold text-rose-200">
+                  {formatCompact(damage)}
+                </span>
+              </div>
+              <div className="border border-emerald-400/30 bg-emerald-400/[0.06] px-2 py-1 text-left">
+                <span className="block text-[8px] font-bold uppercase tracking-wide text-emerald-200/80">
+                  {labels.souls}
+                </span>
+                <span className="mt-0.5 block font-mono text-xs sm:text-sm font-extrabold text-emerald-200">
+                  {formatCompact(netWorth)}
+                </span>
               </div>
             </div>
-          </li>
-        })}
-      </ol>}
-    </section>
+          </div>
+        </div>
+
+        {/* Match Statistics */}
+        <div className="mt-2.5 border-t border-border/70 pt-2">
+          <p className="mb-1.5 text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+            {labels.finalStats}
+          </p>
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="border border-amber-400/30 bg-amber-400/[0.05] px-2 py-1">
+              <div className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-wider text-amber-200/80">
+                <Skull size={11} aria-hidden />
+                <span>{labels.creepKills}</span>
+              </div>
+              <p className="mt-0.5 font-mono text-xs sm:text-sm font-extrabold text-amber-200">
+                {formatNumber(creepKills)}
+              </p>
+            </div>
+
+            <div className="border border-cyan-400/30 bg-cyan-400/[0.05] px-2 py-1">
+              <div className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-wider text-cyan-200/80">
+                <Swords size={11} aria-hidden />
+                <span>{labels.denies}</span>
+              </div>
+              <p className="mt-0.5 font-mono text-xs sm:text-sm font-extrabold text-cyan-200">
+                {formatNumber(denies)}
+              </p>
+            </div>
+
+            <div className="border border-emerald-400/30 bg-emerald-400/[0.05] px-2 py-1">
+              <div className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-wider text-emerald-200/80">
+                <Heart size={11} aria-hidden />
+                <span>{labels.healing}</span>
+              </div>
+              <p className="mt-0.5 font-mono text-xs sm:text-sm font-extrabold text-emerald-200">
+                {formatCompact(healing)}
+              </p>
+            </div>
+
+            <div className="border border-orange-400/30 bg-orange-400/[0.05] px-2 py-1">
+              <div className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-wider text-orange-200/80">
+                <ShieldAlert size={11} aria-hidden />
+                <span>{labels.damageTaken}</span>
+              </div>
+              <p className="mt-0.5 font-mono text-xs sm:text-sm font-extrabold text-orange-200">
+                {formatCompact(damageTaken)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stacks Section (Rendered only when player actually has stacks in this match) */}
+        {hasStacks ? (
+          <div className="mt-2.5 border-t border-border/70 pt-2">
+            <p className="mb-1.5 flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-wider text-violet-300">
+              <Layers size={11} aria-hidden />
+              {labels.stacks}
+            </p>
+            <div className="space-y-1.5 border border-border/60 bg-background/40 p-2">
+              {abilityStackRows.length ? (
+                <div>
+                  <span className="text-[8px] font-bold uppercase tracking-wide text-muted-foreground">{labels.abilityStacks}</span>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {abilityStackRows.map((row) => (
+                      <span key={row.id} className="inline-flex items-center gap-1 border border-border/70 bg-card/80 px-1.5 py-0.5 text-[9px]">
+                        {row.image ? <img src={row.image} alt="" className="size-3 object-contain" /> : null}
+                        <span className="max-w-28 truncate">{row.name}</span>
+                        <span className="font-mono font-bold text-primary">({formatNumber(row.count)})</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {itemStackRows.length ? (
+                <div>
+                  <span className="text-[8px] font-bold uppercase tracking-wide text-muted-foreground">{labels.itemStacks}</span>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {itemStackRows.map((row) => (
+                      <span key={row.id} className="inline-flex items-center gap-1 border border-border/70 bg-card/80 px-1.5 py-0.5 text-[9px]">
+                        {row.image ? <img src={row.image} alt="" className="size-3 object-contain" /> : null}
+                        <span className="max-w-28 truncate">{row.name}</span>
+                        <span className="font-mono font-bold text-violet-300">({formatNumber(row.count)})</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Final Build Section */}
+        <div className="mt-2.5 border-t border-border/70 pt-2">
+          <div className="mb-1.5 flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+              <Swords size={11} aria-hidden />
+              {labels.finalBuild}
+            </span>
+            <span className="font-mono text-[8px] text-muted-foreground">
+              {purchasedItems.length} {labels.items}
+            </span>
+          </div>
+
+          {purchasedItems.length > 0 ? (
+            <div className="mx-auto grid grid-cols-5 gap-1 sm:gap-1.5 w-full max-w-[70%]">
+              {Array.from({ length: Math.max(10, purchasedItems.length) }, (_, slotIndex) => {
+                const purchased = purchasedItems[slotIndex]
+                if (purchased) {
+                  const raw = purchased.item as unknown as Record<string, unknown>
+                  const slotType = (raw.item_slot_type as 'weapon' | 'vitality' | 'spirit') || 'weapon'
+                  const name = typeof raw.name === 'string' ? raw.name : `#${purchased.itemId}`
+                  const image = itemImageFor(purchased.item)
+                  const minutes = Math.floor(purchased.gameTime / 60)
+                  const seconds = String(Math.floor(purchased.gameTime % 60)).padStart(2, '0')
+                  const timeLabel = purchased.gameTime > 0 ? `${minutes}:${seconds}` : ''
+
+                  const slotTone = slotType === 'vitality'
+                    ? 'border-emerald-400/60 bg-emerald-400/10 text-emerald-200 hover:border-emerald-300 hover:bg-emerald-400/20 hover:shadow-[0_4px_12px_rgba(52,211,153,0.25)]'
+                    : slotType === 'weapon'
+                      ? 'border-orange-400/60 bg-orange-400/10 text-orange-200 hover:border-orange-300 hover:bg-orange-400/20 hover:shadow-[0_4px_12px_rgba(251,146,60,0.25)]'
+                      : 'border-violet-400/60 bg-violet-400/10 text-violet-200 hover:border-violet-300 hover:bg-violet-400/20 hover:shadow-[0_4px_12px_rgba(167,139,250,0.25)]'
+
+                  const slotLabel = slotType === 'weapon' ? labels.weapon : slotType === 'vitality' ? labels.vitality : labels.spirit
+
+                  return (
+                    <div
+                      key={slotIndex}
+                      title={`${name} (${slotLabel})${timeLabel ? ` • ${labels.purchasedAt} ${timeLabel}` : ''}`}
+                      className={`group relative flex aspect-square w-full items-center justify-center overflow-hidden border p-0.5 transition-all duration-200 ease-out hover:-translate-y-1 ${slotTone}`}
+                    >
+                      {image ? (
+                        <img
+                          src={image}
+                          alt={name}
+                          loading="lazy"
+                          className="size-[95%] object-contain drop-shadow-sm transition-transform duration-200 ease-out group-hover:scale-110"
+                        />
+                      ) : (
+                        <span className="line-clamp-1 text-center font-mono text-[7px] font-bold">{name}</span>
+                      )}
+                    </div>
+                  )
+                }
+                return (
+                  <div
+                    key={slotIndex}
+                    className="flex aspect-square w-full items-center justify-center border border-dashed border-border/50 bg-background/20"
+                  >
+                    <span className="font-mono text-[8px] text-muted-foreground/30">—</span>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="py-1 text-xs text-muted-foreground">{labels.unavailable}</p>
+          )}
+        </div>
+      </article>
+    )
   }
 
   return <section className="w-full border border-border bg-card/80">
@@ -443,28 +711,76 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
             <span className="grid size-5 place-items-center border border-current/50">{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
           </span>
         </button>
-        {isOpen ? <div className="space-y-4 border-t border-border bg-background/40 p-2 sm:p-4">
-          {metadataLoading ? <p role="status" className="py-3 text-sm text-muted-foreground"><LoaderCircle size={15} className="mr-2 inline animate-spin" />{labels.loading}</p> : null}
-          {metadataError ? <p role="status" className="py-3 text-sm text-muted-foreground">{metadataError}</p> : null}
-          {!metadataLoading && !metadataError && matchInfo ? <>
-            <section className="grid min-w-0 grid-cols-2 gap-1.5 sm:grid-cols-3 xl:grid-cols-4">
-<div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.result}</p><p className={`mt-1 truncate text-xs font-bold ${match.player_match_outcome === 1 ? 'text-emerald-400' : match.player_match_outcome === 2 ? 'text-rose-400' : 'text-foreground'}`}>{match.player_match_outcome === 1 ? labels.win : match.player_match_outcome === 2 ? labels.loss : match.player_match_outcome === 3 ? labels.penalized : match.player_match_outcome === 4 ? labels.penalizedParty : match.player_match_outcome === 5 ? labels.notScored : labels.outcomeInvalid}</p></div>
-<div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.playerTeam}</p><p className="mt-1 text-xs font-bold">{match.player_team}</p></div>
-               <div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.matchResult}</p><p className="mt-1 text-xs font-bold">{match.match_result}</p></div>
-{match.ranked_display_badge != null ? <div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.rankAfterMatch}</p><p className="mt-1 font-mono text-xs font-bold">{Math.floor(match.ranked_display_badge / 10)}.{match.ranked_display_badge % 10}</p></div> : null}
-{match.ranked_delta != null ? <div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.rankDelta}</p><p className={`mt-1 font-mono text-xs font-bold ${match.ranked_delta > 0 ? 'text-emerald-400' : match.ranked_delta < 0 ? 'text-rose-400' : ''}`}>{match.ranked_delta > 0 ? '+' : ''}{match.ranked_delta}</p></div> : null}
-{match.ranked_calibration_match != null ? <div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.calibrationMatch}</p><p className="mt-1 text-xs font-bold">{match.ranked_calibration_match !== 0 ? labels.yes : labels.no}</p></div> : null}
-{match.ranked_used_demotion_protection != null ? <div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.demotionProtection}</p><p className="mt-1 text-xs font-bold">{match.ranked_used_demotion_protection ? labels.yes : labels.no}</p></div> : null}
-{match.team_abandoned != null ? <div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.teamAbandoned}</p><p className="mt-1 text-xs font-bold">{match.team_abandoned ? labels.yes : labels.no}</p></div> : null}
-{match.abandoned_time_s != null ? <div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.abandonedAt}</p><p className="mt-1 font-mono text-xs font-bold">{Math.floor(match.abandoned_time_s / 60)}:{String(match.abandoned_time_s % 60).padStart(2, '0')}</p></div> : null}
-{match.brawl_score_team0 != null && match.brawl_score_team1 != null ? <div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.brawlScore}</p><p className="mt-1 font-mono text-xs font-bold">{match.brawl_score_team0}–{match.brawl_score_team1}</p></div> : null}
-{match.brawl_avg_round_time_s != null ? <div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.brawlRoundTime}</p><p className="mt-1 font-mono text-xs font-bold">{Math.floor(match.brawl_avg_round_time_s / 60)}:{String(match.brawl_avg_round_time_s % 60).padStart(2, '0')}</p></div> : null}
-<div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.team0Objectives}</p><p className="mt-1 break-all font-mono text-xs font-bold">{match.objectives_mask_team0 == null ? '—' : `0x${Number(match.objectives_mask_team0).toString(16).toUpperCase()}`}</p></div>
-<div className="min-w-0 border border-border/70 bg-card/70 px-2.5 py-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.team1Objectives}</p><p className="mt-1 break-all font-mono text-xs font-bold">{match.objectives_mask_team1 == null ? '—' : `0x${Number(match.objectives_mask_team1).toString(16).toUpperCase()}`}</p></div>
-</section>
-<div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">{(() => { const selectedTeam = selectedMatchPlayer?.team; const firstTeam = selectedTeam === 0 || selectedTeam === 1 ? selectedTeam : 0; return <>{renderTeam(firstTeam, labels.team0, match)}{renderTeam(1 - firstTeam, labels.team1, match)}</> })()}</div>
-          </> : null}
-        </div> : null}
+        {isOpen ? (
+          <div className="space-y-5 border-t border-border/80 bg-background/40 p-3 sm:p-5">
+            {metadataLoading ? (
+              <p role="status" className="py-4 text-center text-sm text-muted-foreground">
+                <LoaderCircle size={16} className="mr-2 inline animate-spin text-primary" />
+                {labels.loading}
+              </p>
+            ) : null}
+            {metadataError ? (
+              <p role="status" className="py-4 text-center text-sm text-muted-foreground">
+                {metadataError}
+              </p>
+            ) : null}
+            {!metadataLoading && !metadataError && matchInfo ? (
+              <>
+                {/* 2 Columns: Allies on Left, Opponents on Right */}
+                {(() => {
+                  const selectedTeam =
+                    selectedMatchPlayer?.team === 0 || selectedMatchPlayer?.team === 1
+                      ? selectedMatchPlayer.team
+                      : match.player_team === 0 || match.player_team === 1
+                        ? match.player_team
+                        : 0
+                  const alliedMembers = players.filter((p) => p.team === selectedTeam)
+                  const opponentMembers = players.filter((p) => p.team === 1 - selectedTeam)
+
+                  return (
+                    <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
+                      {/* Allies Side */}
+                      <section className="flex min-w-0 flex-col gap-3">
+                        <div className="flex items-center justify-between border-b border-emerald-500/40 pb-2">
+                          <h4 className="flex items-center gap-2 font-display text-sm sm:text-base font-bold uppercase tracking-wider text-emerald-400">
+                            <span className="inline-block size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                            {labels.team0}
+                          </h4>
+                          <span className="font-mono text-xs text-muted-foreground">
+                            {alliedMembers.length} {labels.playerCount}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-4">
+                          {alliedMembers.map((player, index) =>
+                            renderPlayerScoreboardCard(player, index, true, match)
+                          )}
+                        </div>
+                      </section>
+
+                      {/* Opponents Side */}
+                      <section className="flex min-w-0 flex-col gap-3">
+                        <div className="flex items-center justify-between border-b border-rose-500/40 pb-2">
+                          <h4 className="flex items-center gap-2 font-display text-sm sm:text-base font-bold uppercase tracking-wider text-rose-400">
+                            <span className="inline-block size-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
+                            {labels.team1}
+                          </h4>
+                          <span className="font-mono text-xs text-muted-foreground">
+                            {opponentMembers.length} {labels.playerCount}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-4">
+                          {opponentMembers.map((player, index) =>
+                            renderPlayerScoreboardCard(player, index, false, match)
+                          )}
+                        </div>
+                      </section>
+                    </div>
+                  )
+                })()}
+              </>
+            ) : null}
+          </div>
+        ) : null}
       </li>
     })}</ul> : null}
     {visibleMatches.length > 0 ? <nav aria-label={labels.title} className="flex flex-col items-center justify-center gap-3 border-t border-border px-4 py-4 sm:flex-row">
@@ -549,7 +865,7 @@ export function PlayerPage({ locale }: { locale: Locale }) {
   const rankData = rank.data as (PlayerRank & Record<string, unknown>) | null
 
   return (
-    <main id="main" className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10">
+    <PageContainer>
       <PageHeader eyebrow={t.eyebrow} title={t.title} lede={t.lede} />
       <form onSubmit={handleSearch} className="mt-7 flex flex-col gap-2 border border-border bg-card/80 p-3 sm:flex-row">
         <label htmlFor="player-search" className="sr-only">{t.searchLabel}</label>
@@ -592,7 +908,7 @@ export function PlayerPage({ locale }: { locale: Locale }) {
         <p className="text-xs text-muted-foreground">{t.dataNote}</p>
       </div> : null}
       {!selected && !results.length && !searchError ? <div className="mt-8 border border-dashed border-border px-6 py-12 text-center"><Users className="mx-auto text-primary" size={30} /><p className="mt-3 font-display text-xl font-bold uppercase">{t.emptyTitle}</p><p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">{t.emptyBody}</p></div> : null}
-    </main>
+    </PageContainer>
   )
 }
 

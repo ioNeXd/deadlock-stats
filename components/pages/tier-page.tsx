@@ -11,6 +11,7 @@ import type { BandOption } from '@/components/tier/filter-bar'
 import { TierListView } from '@/components/tier/tier-list-view'
 import { RankBandTheme } from '@/components/tier/rank-band-theme'
 import { PageHeader } from './page-header'
+import { PageContainer } from '@/components/site/page-container'
 
 export function buildBandOptions(ranks: RankEntity[], allLabel: string): BandOption[] {
   const byTier = new Map(ranks.map((r) => [r.tier, r]))
@@ -82,11 +83,11 @@ export async function TierPage({ locale, kind }: { locale: Locale; kind: 'heroes
   const strings = kind === 'heroes' ? t.heroes : t.items
 
   return (
-    <main id="main" className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:py-10">
+    <PageContainer>
       <RankBandTheme bands={bands}>
         <PageHeader eyebrow={strings.eyebrow} title={strings.title} lede={strings.lede} />
         {tierListView}
       </RankBandTheme>
-    </main>
+    </PageContainer>
   )
 }

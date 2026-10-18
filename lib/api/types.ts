@@ -17,6 +17,7 @@ export interface HeroEntity {
   id: number
   name: string
   icon: string | null
+  heroCard?: string | null
   /** "r g b" from `colors.ui`, used as a CSS variable. */
   color: string | null
 }

@@ -6,7 +6,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   const t = getDictionary(locale)
   return (
     <footer className="border-t border-border">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-6 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
         <p className="max-w-2xl text-pretty">{t.footer.disclaimer}</p>
         <p>
           {t.footer.data}{' '}

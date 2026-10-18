@@ -5,12 +5,7 @@ import { usePathname } from 'next/navigation'
 import { type Locale, localePath, type SitePath, stripLocale } from '@/lib/i18n/config'
 import { cn } from '@/lib/utils'
 
-const LINKS: { path: SitePath; key: 'tierlist' | 'player' | 'methodology' | 'status' }[] = [
-  { path: '/tierlist', key: 'tierlist' },
-  { path: '/player', key: 'player' },
-  { path: '/methodology', key: 'methodology' },
-  { path: '/status', key: 'status' },
-]
+import { SITE_NAVIGATION } from '@/lib/navigation'
 
 interface Labels {
   tierlist: string
@@ -28,7 +23,7 @@ export function SiteNav({ locale, labels }: { locale: Locale; labels: Labels }) 
     <div className="flex flex-1 flex-wrap items-center justify-between gap-3">
       <nav aria-label={labels.mainNav}>
         <ul className="flex items-center gap-1">
-          {LINKS.map(({ path, key }) => {
+          {SITE_NAVIGATION.map(({ path, key }) => {
             const active = current === path
             return (
               <li key={path}>

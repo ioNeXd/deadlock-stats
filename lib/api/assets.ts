@@ -76,6 +76,7 @@ export function getHeroes(locale: Locale): Promise<HeroEntity[]> {
         id: hero.id,
         name: hero.name,
         icon: hero.images.icon_image_small_webp ?? hero.images.icon_image_small ?? null,
+        heroCard: hero.images.icon_hero_card_webp ?? hero.images.icon_hero_card ?? hero.images.top_bar_vertical_image_webp ?? hero.images.top_bar_vertical_image ?? hero.images.icon_image_small_webp ?? null,
         color: hero.colors?.ui ? hero.colors.ui.join(' ') : null,
       }))
   })
