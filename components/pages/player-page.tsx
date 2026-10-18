@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy, ChevronDown, Plus, Minus, CalendarDays } from 'lucide-react'
+import { Search, UserRound, ExternalLink, LoaderCircle, ShieldAlert, Users, History, Trophy, ChevronDown, Plus, Minus, CalendarDays, LogOut, Clock, Layers, Swords } from 'lucide-react'
 import { ApiError } from '@/lib/api/client'
 import { getHeroes, getItemCatalog } from '@/lib/api/assets'
 import type { HeroEntity, ItemAsset } from '@/lib/api/types'
@@ -48,7 +48,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
     loading: string; result: string; win: string; loss: string
     showing: string; previous: string; next: string; page: string
     gameMode: string; normalGame: string; gameModes: Record<number, string>; matchModes: Record<number, string>; unknownGameMode: string; unknownMatchMode: string; matchId: string; souls: string; lastHits: string; denies: string; level: string; rankAfterMatch: string; rankDelta: string; calibrationMatch: string; demotionProtection: string; teamAbandoned: string; abandonedAt: string; objectives: string; team0Objectives: string; team1Objectives: string; playerCount: string; yes: string; no: string; penalized: string; penalizedParty: string; notScored: string
-    items: string; unknownHero: string; today: string; yesterday: string; daysAgo: string; matchIdLabel: string; brawlScore: string; brawlRoundTime: string; playerTeam: string; matchResult: string; outcomeInvalid: string; finalStats: string; abilityStats: string; purchaseTimeline: string; purchasedAt: string; sold: string; metricLabels: Record<string, string>
+    items: string; unknownHero: string; today: string; yesterday: string; daysAgo: string; matchIdLabel: string; brawlScore: string; brawlRoundTime: string; playerTeam: string; matchResult: string; outcomeInvalid: string; finalStats: string; abilityStats: string; purchaseTimeline: string; purchasedAt: string; sold: string; metricLabels: Record<string, string>; netWorth: string; kda: string; creepKills: string; heroDamage: string; damageTaken: string; healing: string; stacks: string; abilityStacks: string; itemStacks: string; finalBuild: string; weapon: string; vitality: string; spirit: string; mvp: string; honorableMention: string; abandoned: string
   }
 }) {
   const [openedMatchId, setOpenedMatchId] = useState<string | null>(null)
@@ -252,70 +252,111 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
             .sort((a, b) => a.gameTime - b.gameTime || a.sourceIndex - b.sourceIndex)
           const inventorySlots = purchases.slice(-10).map((purchase) => purchase.itemId)
           const visibleInventory = Array.from({ length: 10 }, (_, slotIndex) => inventorySlots[slotIndex] ?? null)
-          return <li key={accountId ?? index} className={`transition-colors ${accountId === selectedAccountId ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : 'hover:bg-muted/20'}`}>
-            <div className="grid min-w-0 grid-cols-[1.25rem_4.25rem_minmax(0,1fr)] items-start gap-x-2 gap-y-3 p-3 sm:grid-cols-[1.5rem_5rem_minmax(0,1fr)] sm:gap-x-4 sm:px-4 sm:py-4">
-              <span className="w-5 shrink-0 pt-1 text-center font-mono text-[11px] text-muted-foreground">{index + 1}</span>
+          const finalItems = visibleInventory.map((itemId) => itemId === null ? null : itemById.get(itemId)).filter((item): item is ItemAsset => item !== null && item !== undefined)
+          const itemImageFor = (item: ItemAsset) => {
+            const raw = item as unknown as Record<string, unknown>
+            return [raw.shop_image_small_webp, raw.shop_image_webp, raw.image_webp, raw.shop_image_small, raw.shop_image, raw.image]
+              .find((value): value is string => typeof value === 'string' && value.length > 0)
+          }
+          const statValue = (key: string) => {
+            const value = finalStats?.[key]
+            return typeof value === 'number' || typeof value === 'string' ? value : null
+          }
+          const heroDamage = statValue('hero_damage')
+          const damageTaken = statValue('player_damage_taken')
+          const healing = statValue('player_healing')
+          const creepKills = statValue('creep_kills')
+          const stackRows = Array.isArray(player.stack_stats) ? player.stack_stats.map((value) => {
+            const row = asRecord(value)
+            if (!row) return null
+            const rawId = row.ability_id ?? row.item_id ?? row.upgrade_id
+            const id = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
+            const rawCount = row.stack_count ?? row.stacks ?? row.count
+            const count = typeof rawCount === 'number' ? rawCount : typeof rawCount === 'string' ? Number(rawCount) : NaN
+            if (!Number.isSafeInteger(id) || !Number.isFinite(count) || count < 0) return null
+            const asset = itemAssets.find((candidate) => candidate.id === id) as (ItemAsset & Record<string, unknown>) | undefined
+            return { id, count, name: typeof asset?.name === 'string' ? asset.name : `#${id}`, image: asset ? itemImageFor(asset) : undefined }
+          }).filter((row): row is { id: number; count: number; name: string; image: string | undefined } => row !== null) : []
+          const abandonedAt = typeof player.abandoned_time_s === 'number' && player.abandoned_time_s >= 0 ? player.abandoned_time_s : null
+          const abandoned = player.abandoned === true || abandonedAt !== null
+          const isMvp = player.mvp === true
+          const isHonorableMention = player.honorable_mention === true
+          const slotItems = (slot: string) => finalItems.filter((item) => (item as unknown as Record<string, unknown>).item_slot_type === slot)
+          const buildGroups = [
+            { key: 'weapon', title: labels.weapon, items: slotItems('weapon'), tone: 'border-orange-400/45 bg-orange-400/5 text-orange-200' },
+            { key: 'vitality', title: labels.vitality, items: slotItems('vitality'), tone: 'border-emerald-400/45 bg-emerald-400/5 text-emerald-200' },
+            { key: 'spirit', title: labels.spirit, items: slotItems('spirit'), tone: 'border-violet-400/45 bg-violet-400/5 text-violet-200' },
+          ]
+          return <li key={accountId ?? index} className={`min-w-0 transition-colors ${accountId === selectedAccountId ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : 'hover:bg-muted/20'}`}>
+            <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] gap-3 p-3 sm:grid-cols-[6.25rem_minmax(0,1fr)] sm:gap-4 sm:p-4 lg:gap-5">
               <div className="flex min-w-0 flex-col items-center gap-2">
-                {hero ? <HeroIcon icon={hero.icon} color={hero.color} size="size-14 sm:size-16" /> : <span className="grid size-14 shrink-0 place-items-center rounded-sm bg-muted font-mono text-xs text-muted-foreground sm:size-16">{heroId ?? '—'}</span>}
-                <span className="w-full border border-sky-400/35 bg-sky-400/10 px-1 py-1 text-center text-[9px] font-bold uppercase tracking-wide text-sky-300">{labels.level}<span className="mt-0.5 block font-mono text-sm tabular-nums">{formatNumber(heroLevel)}</span></span>
-                <span className="w-full break-words text-center font-mono text-[9px] text-muted-foreground">#{heroId ?? '—'}</span>
+                {hero ? <HeroIcon icon={hero.icon} color={hero.color} size="size-[4.5rem] sm:size-24" /> : <span className="grid size-[4.5rem] place-items-center rounded-sm border border-border bg-muted font-mono text-sm text-muted-foreground sm:size-24">{heroId ?? '—'}</span>}
+                <div className="w-full border border-sky-400/35 bg-sky-400/10 px-1.5 py-1.5 text-center text-[9px] font-bold uppercase tracking-wider text-sky-200">
+                  {labels.level}
+                  <span className="mt-0.5 block font-mono text-lg leading-none tabular-nums sm:text-xl">{formatNumber(heroLevel)}</span>
+                </div>
+                <span className="w-full break-words text-center font-mono text-[10px] text-muted-foreground">ID #{heroId ?? '—'}</span>
               </div>
-              <div className="col-start-3 min-w-0 sm:col-span-1">
-                <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2">
-                  <span className="break-words font-display text-sm font-bold uppercase tracking-wide sm:text-base">{hero?.name ?? (heroId === null ? labels.unknownHero : `${labels.hero} #${heroId}`)}</span>
-                  <span className={`break-words text-xs font-semibold ${accountId === selectedAccountId ? 'text-primary' : 'text-muted-foreground'}`}>{label}</span>
+              <div className="min-w-0">
+                <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                    <h5 className="break-words font-display text-base font-extrabold uppercase leading-tight tracking-wide sm:text-lg">{hero?.name ?? (heroId === null ? labels.unknownHero : `${labels.hero} #${heroId}`)}</h5>
+                    {isMvp ? <span title={labels.mvp} aria-label={labels.mvp} className="inline-flex items-center gap-1 border border-amber-300/60 bg-amber-300/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-200"><Trophy size={11} aria-hidden /> MVP</span> : null}
+                    {isHonorableMention ? <span title={labels.honorableMention} aria-label={labels.honorableMention} className="inline-flex items-center gap-1 border border-violet-300/50 bg-violet-300/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-violet-200"><Trophy size={11} aria-hidden /> {labels.honorableMention}</span> : null}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {abandoned ? <span title={labels.abandoned} aria-label={labels.abandoned} className="inline-flex items-center gap-1 text-rose-300"><LogOut size={14} aria-hidden />{abandonedAt !== null ? <span className="font-mono text-[10px] tabular-nums">{Math.floor(abandonedAt / 60)}:{String(Math.floor(abandonedAt % 60)).padStart(2, '0')}</span> : null}</span> : null}
+                    {abandonedAt !== null ? <span title={labels.abandonedAt} aria-label={labels.abandonedAt} className="text-rose-300"><Clock size={14} aria-hidden /></span> : null}
+                  </div>
                 </div>
-                <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 rounded-sm border border-border/60 bg-background/40 px-2 py-2 sm:gap-2 sm:px-2.5">
-                  {([{ label: 'K', value: kills, tone: 'text-emerald-400' }, { label: 'D', value: deaths, tone: 'text-rose-400' }, { label: 'A', value: assists, tone: 'text-sky-400' }] as const).map((stat, statIndex) => <span key={stat.label} className={`inline-flex shrink-0 items-center gap-0.5 font-mono tabular-nums ${stat.tone}`}><span className="text-xs font-extrabold sm:text-sm">{formatNumber(stat.value)}</span><span className="text-[8px] font-bold sm:text-[9px]">{stat.label}</span>{statIndex < 2 ? <span aria-hidden className="px-0.5 text-muted-foreground">/</span> : null}</span>)}
-                  <span className="shrink-0 border border-primary/30 bg-primary/10 px-1 py-0.5 font-mono text-[9px] font-bold text-primary sm:px-2 sm:text-[10px]">{kda} KDA</span>
-                  <span title={labels.souls} aria-label={`${labels.souls}: ${formatNumber(netWorth)}`} className="inline-flex min-w-0 items-center justify-center gap-1 border border-emerald-400/30 bg-emerald-400/10 px-2 py-1 font-mono text-[10px] font-bold text-emerald-300 sm:gap-1.5 sm:text-[11px]"><span className="hidden uppercase tracking-wide sm:inline">{labels.souls}</span><span className="tabular-nums">{formatNumber(netWorth)}</span></span>
-                  <span title={labels.damage} aria-label={`${labels.damage}: ${formatNumber(damage)}`} className="inline-flex min-w-0 items-center justify-center gap-1 border border-rose-400/30 bg-rose-400/10 px-2 py-1 font-mono text-[10px] font-bold text-rose-300 sm:gap-1.5 sm:text-[11px]"><span className="hidden uppercase tracking-wide sm:inline">{labels.damage}</span><span className="tabular-nums">{formatNumber(damage)}</span></span>
-                  <span className="ml-auto shrink-0 whitespace-nowrap border border-border/60 bg-muted/20 px-2 py-1 font-mono text-[9px] text-muted-foreground sm:text-[10px]">{duration === null ? '—' : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</span>
+                <p className={`mt-1 break-words text-xs font-semibold ${accountId === selectedAccountId ? 'text-primary' : 'text-muted-foreground'}`}>{label}</p>
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+                  <div className="flex min-w-0 flex-col justify-center border border-primary/35 bg-primary/[0.07] px-3 py-2.5 sm:px-4">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{labels.kda}</span>
+                    <div className="mt-1 flex min-w-0 flex-wrap items-baseline gap-x-2">
+                      {([{ label: 'K', value: kills, tone: 'text-emerald-300' }, { label: 'D', value: deaths, tone: 'text-rose-300' }, { label: 'A', value: assists, tone: 'text-sky-300' }] as const).map((stat, statIndex) => <span key={stat.label} className={`inline-flex items-baseline gap-1 font-mono tabular-nums ${stat.tone}`}><span className="text-2xl font-black leading-none sm:text-3xl">{formatNumber(stat.value)}</span><span className="text-[10px] font-extrabold">{stat.label}</span>{statIndex < 2 ? <span aria-hidden className="ml-0.5 text-muted-foreground/60">/</span> : null}</span>)}
+                    </div>
+                    <span className="mt-1 font-mono text-xs font-bold text-primary">{kda} KDA</span>
+                  </div>
+                  <div className="grid min-w-0 grid-cols-2 gap-2">
+                    <div className="flex min-w-0 flex-col justify-center border border-rose-400/35 bg-rose-400/[0.07] px-2.5 py-2"><span className="break-words text-[9px] font-bold uppercase leading-tight tracking-wide text-rose-200/80">{labels.damage}</span><span className="mt-1 break-words font-mono text-lg font-extrabold leading-none tabular-nums text-rose-200 sm:text-xl">{formatNumber(damage)}</span></div>
+                    <div className="flex min-w-0 flex-col justify-center border border-emerald-400/35 bg-emerald-400/[0.07] px-2.5 py-2"><span className="break-words text-[9px] font-bold uppercase leading-tight tracking-wide text-emerald-200/80">{labels.netWorth}</span><span className="mt-1 break-words font-mono text-lg font-extrabold leading-none tabular-nums text-emerald-200 sm:text-xl">{formatNumber(netWorth)}</span></div>
+                  </div>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-2">
-                  <div className="min-w-0 border border-amber-400/25 bg-amber-400/5 px-2 py-1.5"><p className="break-words text-[9px] uppercase tracking-wide text-amber-200/80">{labels.lastHits}</p><p className="font-mono text-sm font-bold tabular-nums">{formatNumber(lastHits)}</p></div>
-                  <div className="min-w-0 border border-cyan-400/25 bg-cyan-400/5 px-2 py-1.5"><p className="break-words text-[9px] uppercase tracking-wide text-cyan-200/80">{labels.denies}</p><p className="font-mono text-sm font-bold tabular-nums">{formatNumber(denies)}</p></div>
+                <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-5">
+                  {[
+                    { key: 'creepKills', label: labels.creepKills, value: creepKills, tone: 'border-amber-400/35 bg-amber-400/[0.06] text-amber-200' },
+                    { key: 'denies', label: labels.denies, value: denies, tone: 'border-cyan-400/35 bg-cyan-400/[0.06] text-cyan-200' },
+                    { key: 'heroDamage', label: labels.heroDamage, value: heroDamage, tone: 'border-rose-400/35 bg-rose-400/[0.06] text-rose-200' },
+                    { key: 'damageTaken', label: labels.damageTaken, value: damageTaken, tone: 'border-orange-400/35 bg-orange-400/[0.06] text-orange-200' },
+                    { key: 'healing', label: labels.healing, value: healing, tone: 'border-emerald-400/35 bg-emerald-400/[0.06] text-emerald-200' },
+                  ].map((metric) => metric.value === null ? null : <div key={metric.key} className={`min-w-0 border px-2 py-2 ${metric.tone}`}><p className="break-words text-[9px] font-bold uppercase leading-tight tracking-wide opacity-80">{metric.label}</p><p className="mt-1 break-words font-mono text-sm font-extrabold tabular-nums sm:text-base">{formatNumber(metric.value)}</p></div>)}
                 </div>
-                <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-                  <div className="border border-border/60 bg-muted/20 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.playerCount}</p><p className="font-mono text-xs font-bold">{formatNumber(players.length)}</p></div>
-                  <div className="border border-border/60 bg-muted/20 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.teamAbandoned}</p><p className="font-mono text-xs font-bold">{match.team_abandoned == null ? '—' : match.team_abandoned ? labels.yes : labels.no}</p></div>
-                  <div className="border border-border/60 bg-muted/20 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.team0Objectives}</p><p className="font-mono text-xs font-bold">{match.objectives_mask_team0 == null ? '—' : `0x${Number(match.objectives_mask_team0).toString(16).toUpperCase()}`}</p></div>
-                  <div className="border border-border/60 bg-muted/20 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.team1Objectives}</p><p className="font-mono text-xs font-bold">{match.objectives_mask_team1 == null ? '—' : `0x${Number(match.objectives_mask_team1).toString(16).toUpperCase()}`}</p></div>
-                </div>
-                <div className="mt-2 grid w-fit max-w-full grid-cols-5 gap-1 sm:gap-1.5" aria-label={labels.items}>{visibleInventory.map((itemId, itemIndex) => {
-                  const item = itemId === null ? undefined : itemById.get(itemId)
-                  const rawItem = item as unknown as Record<string, unknown> | undefined
-                  const itemName = typeof rawItem?.name === 'string' ? rawItem.name : ''
-                  const itemSlot = rawItem?.item_slot_type
-                  const itemImage = [rawItem?.shop_image_small_webp, rawItem?.shop_image_webp, rawItem?.image_webp, rawItem?.shop_image_small, rawItem?.shop_image, rawItem?.image].find((value): value is string => typeof value === 'string' && value.length > 0)
-                  const hasValidItem = itemId !== null && item !== undefined
-                  const tone = itemSlot === 'vitality'
-                    ? { frame: 'border-emerald-400/65', glow: 'bg-emerald-400/15' }
-                    : itemSlot === 'weapon'
-                      ? { frame: 'border-orange-400/65', glow: 'bg-orange-400/15' }
-                      : { frame: 'border-violet-400/65', glow: 'bg-violet-400/15' }
-                  const slotClass = "group relative grid size-9 shrink-0 place-items-center overflow-hidden border shadow-[0_8px_18px_rgba(0,0,0,0.28)] transition-transform duration-200 sm:size-11 " + (hasValidItem ? `${tone.frame} ${tone.glow} hover:-translate-y-0.5` : "border-dashed border-border/50 bg-background/30")
-                  return <span key={`inventory-${itemIndex}`} title={hasValidItem ? itemName : `Slot ${itemIndex + 1}`} aria-label={hasValidItem ? itemName : `Slot ${itemIndex + 1}`} className={slotClass}>
-                    {hasValidItem ? <>
-                      <span aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.16),transparent_62%)]" />
-                      <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/15" />
-                      {itemImage ? <img src={itemImage} alt="" loading="lazy" className="absolute inset-0 size-full object-contain p-0.5 drop-shadow-[0_5px_8px_rgba(0,0,0,0.75)] transition-transform duration-200 group-hover:scale-105" /> : <span className="relative font-mono text-[10px] text-foreground">{itemName.slice(0, 3)}</span>}
-                    </> : <span className="font-mono text-[10px] text-muted-foreground/40">{itemIndex + 1}</span>}
-                  </span>
-                })}</div>
-                 {(() => {
-                   const statAliases: Record<string, string[]> = { player_damage: ['player_damage'], player_damage_taken: ['player_damage_taken'], boss_damage: ['boss_damage'], player_healing: ['player_healing'], creep_kills: ['creep_kills'], denies: ['denies'], net_worth: ['net_worth'] }
-                   const metrics = Object.entries(statAliases).flatMap(([labelKey, aliases]) => { const key = aliases.find((candidate) => finalStats && Object.prototype.hasOwnProperty.call(finalStats, candidate) && (typeof finalStats[candidate] === 'number' || typeof finalStats[candidate] === 'string')); return key ? [{ label: labels.metricLabels[labelKey] ?? labelKey, value: finalStats?.[key] }] : [] })
-                   const rawUpgrades = Array.isArray(player.ability_stats) ? player.ability_stats : []
-                   const upgrades = rawUpgrades.map((value) => { const record = asRecord(value); if (!record) return null; const rawId = record.ability_id ?? record.upgrade_id ?? record.item_id; const id = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN; if (!Number.isSafeInteger(id)) return null; const asset = itemAssets.find((candidate) => candidate.id === id) as (ItemAsset & Record<string, unknown>) | undefined; return { id, name: typeof asset?.name === 'string' ? asset.name : `#${id}`, tier: typeof record.ability_value === 'number' ? record.ability_value : null } }).filter((upgrade): upgrade is { id: number; name: string; tier: number | null } => upgrade !== null)
-                   const rawEvents = rawItems.map((value, sourceIndex) => { const record = asRecord(value); if (!record) return null; const rawId = record.upgrade_id ?? record.item_id; const id = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN; if (!Number.isSafeInteger(id) || !itemById.has(id)) return null; const rawTime = record.game_time_s; const time = typeof rawTime === 'number' ? rawTime : typeof rawTime === 'string' ? Number(rawTime) : sourceIndex; const soldRaw = record.sold_time_s; const soldTime = typeof soldRaw === 'number' ? soldRaw : typeof soldRaw === 'string' ? Number(soldRaw) : 0; return { id, time, soldTime, sourceIndex } }).filter((event): event is { id: number; time: number; soldTime: number; sourceIndex: number } => event !== null).sort((a, b) => a.time - b.time || a.sourceIndex - b.sourceIndex).slice(-8).reverse()
-                   if (!metrics.length && !upgrades.length && !rawEvents.length) return null
-                   return <div className="mt-2 grid min-w-0 grid-cols-1 gap-2 xl:grid-cols-2">
-                     {metrics.length ? <section className="min-w-0 border border-border/60 bg-background/40 p-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.finalStats}</h5><dl className="grid grid-cols-2 gap-1 sm:grid-cols-3">{metrics.map((metric) => <div key={metric.label} className="min-w-0 border border-border/50 px-2 py-1"><dt className="break-words text-[10px] leading-tight text-muted-foreground">{metric.label}</dt><dd className="break-words font-mono text-xs font-bold tabular-nums">{formatNumber(metric.value)}</dd></div>)}</dl></section> : null}
-                     {upgrades.length ? <section className="min-w-0 border border-border/60 bg-background/40 p-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.abilityStats}</h5><ol className="flex flex-wrap gap-1">{upgrades.map((upgrade, upgradeIndex) => <li key={`${upgrade.id}-${upgradeIndex}`} className="max-w-full border border-violet-400/30 bg-violet-400/10 px-2 py-1 text-[10px] text-violet-200"><span className="break-words">{upgrade.name}</span>{upgrade.tier !== null ? <span className="ml-1 font-mono text-[9px] text-muted-foreground">T{upgrade.tier}</span> : null}</li>)}</ol></section> : null}
-                     {rawEvents.length ? <section className="min-w-0 border border-border/60 bg-background/40 p-2 xl:col-span-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.purchaseTimeline}</h5><ol className="grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-4">{rawEvents.map((event) => { const rawItem = itemById.get(event.id) as unknown as Record<string, unknown> | undefined; const name = typeof rawItem?.name === 'string' ? rawItem.name : `#${event.id}`; const time = Math.max(0, Math.floor(event.time)); return <li key={`${event.id}-${event.sourceIndex}`} className="min-w-0 border border-border/50 px-2 py-1"><span className="block break-words text-[10px] font-semibold leading-tight" title={name}>{name}</span><span className="block font-mono text-[9px] text-muted-foreground">{Math.floor(time / 60)}:{String(time % 60).padStart(2, '0')} · {event.soldTime > 0 ? labels.sold : labels.purchasedAt}</span></li> })}</ol></section> : null}
-                   </div>
-                 })()}
+                {stackRows.length ? <section className="mt-3 border border-violet-400/35 bg-violet-400/[0.04] p-2.5">
+                  <h6 className="mb-2 flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-violet-200"><Layers size={13} aria-hidden />{labels.stacks}</h6>
+                  <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div className="min-w-0"><p className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.abilityStacks}</p><ul className="flex flex-wrap gap-1.5">{stackRows.filter((row) => itemAssets.some((asset) => asset.id === row.id && !inventoryItems.some((item) => item.id === row.id))).map((row) => <li key={row.id} className="flex min-w-0 items-center gap-1.5 border border-violet-300/25 px-1.5 py-1">{row.image ? <img src={row.image} alt="" loading="lazy" className="size-5 object-contain" /> : null}<span className="max-w-28 truncate text-[10px]">{row.name}</span><span className="font-mono text-xs font-extrabold tabular-nums text-violet-200">{formatNumber(row.count)}</span></li>)}</ul></div>
+                    <div className="min-w-0"><p className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.itemStacks}</p><ul className="flex flex-wrap gap-1.5">{stackRows.filter((row) => inventoryItems.some((item) => item.id === row.id)).map((row) => <li key={row.id} className="flex min-w-0 items-center gap-1.5 border border-violet-300/25 px-1.5 py-1">{row.image ? <img src={row.image} alt="" loading="lazy" className="size-5 object-contain" /> : null}<span className="max-w-28 truncate text-[10px]">{row.name}</span><span className="font-mono text-xs font-extrabold tabular-nums text-violet-200">{formatNumber(row.count)}</span></li>)}</ul></div>
+                  </div>
+                </section> : null}
+                <section className="mt-3 border border-border/70 bg-background/30 p-2.5 sm:p-3">
+                  <h6 className="mb-2 flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-muted-foreground"><Swords size={13} aria-hidden />{labels.finalBuild}</h6>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    {buildGroups.map((group) => <div key={group.key} className={`min-w-0 border px-2 py-2 ${group.tone}`}>
+                      <p className="mb-1.5 text-[9px] font-extrabold uppercase tracking-wider">{group.title}</p>
+                      <div className="flex min-w-0 flex-wrap gap-1.5">
+                        {group.items.length ? group.items.map((item) => {
+                          const image = itemImageFor(item)
+                          const raw = item as unknown as Record<string, unknown>
+                          const name = typeof raw.name === 'string' ? raw.name : `#${item.id}`
+                          return <span key={item.id} title={name} aria-label={name} className="group relative grid size-10 shrink-0 place-items-center overflow-hidden border border-current/35 bg-black/20 sm:size-11">
+                            {image ? <img src={image} alt="" loading="lazy" className="size-full object-contain p-0.5 transition-transform duration-200 group-hover:scale-110" /> : <span className="px-1 text-center text-[9px]">{name}</span>}
+                          </span>
+                        }) : <span className="text-[10px] text-muted-foreground">—</span>}
+                      </div>
+                    </div>)}
+                  </div>
+                </section>
               </div>
             </div>
           </li>
