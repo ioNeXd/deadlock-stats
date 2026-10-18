@@ -47,7 +47,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
     netWorth: string; damage: string; duration: string; unavailable: string
     loading: string; result: string; win: string; loss: string
     showing: string; previous: string; next: string; page: string
-    gameMode: string; normalGame: string; gameModes: Record<number, string>; matchModes: Record<number, string>; unknownGameMode: string; unknownMatchMode: string; matchId: string; souls: string; lastHits: string
+    gameMode: string; normalGame: string; gameModes: Record<number, string>; matchModes: Record<number, string>; unknownGameMode: string; unknownMatchMode: string; matchId: string; souls: string; lastHits: string; denies: string; level: string; rankAfterMatch: string; rankDelta: string; calibrationMatch: string; demotionProtection: string; teamAbandoned: string; abandonedAt: string; objectives: string; team0Objectives: string; team1Objectives: string; playerCount: string; penalized: string; penalizedParty: string; notScored: string
     items: string; unknownHero: string; today: string; yesterday: string; daysAgo: string; matchIdLabel: string
   }
 }) {
@@ -193,6 +193,10 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   const matchInfo = asRecord(metadata?.match_info)
   const players = Array.isArray(matchInfo?.players) ? matchInfo.players.map(asRecord).filter((p): p is Record<string, unknown> => p !== null) : []
   const duration = typeof matchInfo?.duration_s === 'number' ? matchInfo.duration_s : null
+  const selectedMatchPlayer = players.find((player) => player.account_id === selectedAccountId)
+  const selectedPlayerSnapshots = Array.isArray(selectedMatchPlayer?.stats) ? selectedMatchPlayer.stats : []
+  const selectedPlayerFinalStats = selectedPlayerSnapshots.length ? asRecord(selectedPlayerSnapshots[selectedPlayerSnapshots.length - 1]) : null
+  const selectedPlayerDamage = selectedPlayerFinalStats?.player_damage ?? selectedMatchPlayer?.player_damage
 
   function renderTeam(team: number, title: string) {
     const members = players.filter((player) => player.team === team)
@@ -210,6 +214,9 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           const assists = typeof player.assists === 'number' ? player.assists : finalStats?.assists
           const netWorth = typeof player.net_worth === 'number' ? player.net_worth : finalStats?.net_worth
           const damage = finalStats?.player_damage ?? player.player_damage
+          const lastHits = typeof player.last_hits === 'number' ? player.last_hits : finalStats?.last_hits
+          const denies = typeof player.denies === 'number' ? player.denies : finalStats?.denies
+          const heroLevel = typeof player.hero_level === 'number' ? player.hero_level : finalStats?.hero_level
           const heroId = typeof player.hero_id === 'number' ? player.hero_id : null
           const hero = heroId === null ? null : heroById.get(heroId)
           const label = accountId === selectedAccountId ? playerName : accountId === null ? labels.player : steamNames[accountId] ?? (typeof player.name === 'string' && player.name.trim() ? player.name.trim() : `#${accountId}`)
@@ -255,6 +262,11 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <span className="font-mono font-semibold text-foreground">{formatNumber(kills)} / {formatNumber(deaths)} / {formatNumber(assists)}</span>
                   <span>{labels.souls}: <span className="font-mono text-foreground">{formatNumber(netWorth)}</span></span>
                   <span>{labels.damage}: <span className="font-mono text-foreground">{formatNumber(damage)}</span></span>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                  <span>{labels.lastHits}: <span className="font-mono text-foreground">{formatNumber(lastHits)}</span></span>
+                  <span>{labels.denies}: <span className="font-mono text-foreground">{formatNumber(denies)}</span></span>
+                  <span>{labels.level}: <span className="font-mono text-foreground">{formatNumber(heroLevel)}</span></span>
                 </div>
                 <div className="mt-2 grid w-fit grid-cols-5 gap-1.5" aria-label={labels.items}>{visibleInventory.map((itemId, itemIndex) => {
                   const item = itemId === null ? undefined : itemById.get(itemId)
@@ -374,7 +386,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     <span>{labels.matchId} #{id}</span><span>·</span><span>{`${labels.gameModes[match.game_mode] ?? `${labels.unknownGameMode} (${match.game_mode})`} ${labels.matchModes[match.match_mode] ?? `${labels.unknownMatchMode} (${match.match_mode})`}`}</span>
                   </div>
-                  <h4 className="mt-1 font-display text-2xl font-bold uppercase">{match.player_match_outcome === 1 ? labels.win : labels.loss}</h4>
+                  <h4 className="mt-1 font-display text-2xl font-bold uppercase">{match.player_match_outcome === 1 ? labels.win : match.player_match_outcome === 2 ? labels.loss : match.player_match_outcome === 3 ? labels.penalized : match.player_match_outcome === 4 ? labels.penalizedParty : match.player_match_outcome === 5 ? labels.notScored : labels.result}</h4>
                   <p className="mt-1 text-sm text-muted-foreground">{heroById.get(match.hero_id)?.name ?? `${labels.hero} #${match.hero_id}`} <span className="px-1">·</span> {new Intl.DateTimeFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(match.start_time * 1000))} <span className="px-1">·</span> {labels.duration} {duration === null ? '—' : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</p>
                 </div>
                 <div className="grid grid-cols-3 gap-3 border-t border-border/70 pt-3 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
@@ -383,11 +395,25 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">A</p><p className="font-mono text-lg font-bold">{formatNumber(match.player_assists)}</p></div>
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-px border border-border/70 bg-border sm:grid-cols-4">
+              <div className="mt-4 grid grid-cols-2 gap-px border border-border/70 bg-border sm:grid-cols-3 xl:grid-cols-6">
                 <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.souls}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.net_worth)}</p></div>
                 <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.lastHits}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.last_hits)}</p></div>
-                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.hero}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.hero_level)}</p></div>
-                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.player}</p><p className="mt-1 font-mono font-bold">{players.length}</p></div>
+                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.denies}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.denies)}</p></div>
+                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.level}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.hero_level)}</p></div>
+                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.damage}</p><p className="mt-1 font-mono font-bold">{formatNumber(selectedPlayerDamage)}</p></div>
+                <div className="bg-background/80 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.playerCount}</p><p className="mt-1 font-mono font-bold">{players.length}</p></div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+                {match.ranked_display_badge != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.rankAfterMatch}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.ranked_display_badge)}</p></div> : null}
+                {match.ranked_delta != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.rankDelta}</p><p className={`mt-1 font-mono font-bold ${match.ranked_delta > 0 ? 'text-emerald-400' : match.ranked_delta < 0 ? 'text-rose-400' : ''}`}>{match.ranked_delta > 0 ? '+' : ''}{formatNumber(match.ranked_delta)}</p></div> : null}
+                {match.ranked_calibration_match ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.calibrationMatch}</p><p className="mt-1 font-mono font-bold">✓</p></div> : null}
+                {match.ranked_used_demotion_protection ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.demotionProtection}</p><p className="mt-1 font-mono font-bold">✓</p></div> : null}
+                {match.team_abandoned != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.teamAbandoned}</p><p className="mt-1 font-mono font-bold">{match.team_abandoned ? 'Yes' : 'No'}</p></div> : null}
+                {match.abandoned_time_s != null && match.abandoned_time_s > 0 ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.abandonedAt}</p><p className="mt-1 font-mono font-bold">{Math.floor(match.abandoned_time_s / 60)}:{String(match.abandoned_time_s % 60).padStart(2, '0')}</p></div> : null}
+                {match.objectives_mask_team0 != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.team0Objectives}</p><p className="mt-1 font-mono font-bold">0x{match.objectives_mask_team0.toString(16).toUpperCase()}</p></div> : null}
+                {match.objectives_mask_team1 != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.team1Objectives}</p><p className="mt-1 font-mono font-bold">0x{match.objectives_mask_team1.toString(16).toUpperCase()}</p></div> : null}
+                {match.brawl_score_team0 != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.team0}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.brawl_score_team0)}</p></div> : null}
+                {match.brawl_score_team1 != null ? <div className="border border-border/70 bg-background/70 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{labels.team1}</p><p className="mt-1 font-mono font-bold">{formatNumber(match.brawl_score_team1)}</p></div> : null}
               </div>
             </div>
             <div className="grid gap-3 xl:grid-cols-2">{renderTeam(0, labels.team0)}{renderTeam(1, labels.team1)}</div>
