@@ -69,7 +69,6 @@ export function getHeroes(locale: Locale): Promise<HeroEntity[]> {
     const heroes = await apiGet<HeroAsset[]>(
       '/v1/assets/heroes',
       { language: API_LANGUAGE[locale] },
-      ASSET_CACHE,
     )
     return heroes
       .filter((hero) => !hero.disabled)
