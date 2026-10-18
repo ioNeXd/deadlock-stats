@@ -200,8 +200,8 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
 
   function renderTeam(team: number, title: string, match: PlayerMatch) {
     const members = players.filter((player) => player.team === team)
-    return <section key={team} className="min-w-0 overflow-hidden border border-border bg-card/70">
-      <h4 className="flex items-center justify-between border-b border-border bg-muted/40 px-3 py-3 font-display font-bold uppercase tracking-wide">
+    return <section key={team} className="min-w-0 overflow-hidden border border-border bg-card/70 shadow-sm">
+      <h4 className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-3 py-3 font-display text-sm font-bold uppercase tracking-wide sm:text-base">
         <span>{title}</span><span className="font-mono text-xs text-muted-foreground">{members.length}</span>
       </h4>
       {!members.length ? <p className="px-3 py-4 text-sm text-muted-foreground">{labels.unavailable}</p> : <ol className="divide-y divide-border/80">
@@ -252,21 +252,21 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
             .sort((a, b) => a.gameTime - b.gameTime || a.sourceIndex - b.sourceIndex)
           const inventorySlots = purchases.slice(-10).map((purchase) => purchase.itemId)
           const visibleInventory = Array.from({ length: 10 }, (_, slotIndex) => inventorySlots[slotIndex] ?? null)
-          return <li key={accountId ?? index} className={accountId === selectedAccountId ? 'bg-primary/5' : ''}>
-            <div className="flex items-start gap-3 px-3 py-3 sm:gap-4">
+          return <li key={accountId ?? index} className={`transition-colors ${accountId === selectedAccountId ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : 'hover:bg-muted/20'}`}>
+            <div className="grid min-w-0 grid-cols-[1.25rem_3rem_minmax(0,1fr)] items-start gap-x-2 gap-y-3 p-3 sm:flex sm:gap-4 sm:px-4 sm:py-4">
               <span className="w-5 shrink-0 pt-1 text-center font-mono text-[11px] text-muted-foreground">{index + 1}</span>
               {hero ? <HeroIcon icon={hero.icon} color={hero.color} size="size-12 sm:size-14" /> : <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-muted font-mono text-xs text-muted-foreground sm:size-14">{heroId ?? '—'}</span>}
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                  <span className="truncate font-display font-bold uppercase tracking-wide">{hero?.name ?? (heroId === null ? labels.unknownHero : `${labels.hero} #${heroId}`)}</span>
+              <div className="col-span-3 min-w-0 sm:col-span-1 sm:flex-1">
+                <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2">
+                  <span className="truncate font-display text-sm font-bold uppercase tracking-wide sm:text-base">{hero?.name ?? (heroId === null ? labels.unknownHero : `${labels.hero} #${heroId}`)}</span>
                   <span className={`truncate text-xs font-semibold ${accountId === selectedAccountId ? 'text-primary' : 'text-muted-foreground'}`}>{label}</span>
                 </div>
-                <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-2 rounded-sm border border-border/60 bg-background/40 px-2 py-2 sm:px-2.5">
                   {([{ label: 'K', value: kills, tone: 'text-emerald-400' }, { label: 'D', value: deaths, tone: 'text-rose-400' }, { label: 'A', value: assists, tone: 'text-sky-400' }] as const).map((stat, statIndex) => <span key={stat.label} className={`inline-flex items-center gap-1 font-mono tabular-nums ${stat.tone}`}><span className="text-sm font-extrabold">{formatNumber(stat.value)}</span><span className="text-[9px] font-bold">{stat.label}</span>{statIndex < 2 ? <span aria-hidden className="ml-1 text-muted-foreground">/</span> : null}</span>)}
                   <span className="border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-bold text-primary">{kda} KDA</span>
                   <span className="ml-auto font-mono text-[10px] text-muted-foreground">{labels.duration} {duration === null ? '—' : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</span>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3 xl:grid-cols-5">
+                <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-5">
                   <div className="border border-amber-400/25 bg-amber-400/5 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-amber-200/80">{labels.souls}</p><p className="font-mono text-xs font-bold text-amber-100">{formatNumber(netWorth)}</p></div>
                   <div className="border border-border/70 bg-background/50 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.damage}</p><p className="font-mono text-xs font-bold">{formatNumber(damage)}</p></div>
                   <div className="border border-border/70 bg-background/50 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.lastHits}</p><p className="font-mono text-xs font-bold">{formatNumber(lastHits)}</p></div>
@@ -279,7 +279,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                   <div className="border border-border/60 bg-muted/20 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.team0Objectives}</p><p className="font-mono text-xs font-bold">{match.objectives_mask_team0 == null ? '—' : `0x${Number(match.objectives_mask_team0).toString(16).toUpperCase()}`}</p></div>
                   <div className="border border-border/60 bg-muted/20 px-2 py-1.5"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">{labels.team1Objectives}</p><p className="font-mono text-xs font-bold">{match.objectives_mask_team1 == null ? '—' : `0x${Number(match.objectives_mask_team1).toString(16).toUpperCase()}`}</p></div>
                 </div>
-                <div className="mt-2 grid w-fit grid-cols-5 gap-1.5" aria-label={labels.items}>{visibleInventory.map((itemId, itemIndex) => {
+                <div className="mt-2 grid w-fit max-w-full grid-cols-5 gap-1 sm:gap-1.5" aria-label={labels.items}>{visibleInventory.map((itemId, itemIndex) => {
                   const item = itemId === null ? undefined : itemById.get(itemId)
                   const rawItem = item as unknown as Record<string, unknown> | undefined
                   const itemName = typeof rawItem?.name === 'string' ? rawItem.name : ''
@@ -291,7 +291,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                     : itemSlot === 'weapon'
                       ? { frame: 'border-orange-400/65', glow: 'bg-orange-400/15' }
                       : { frame: 'border-violet-400/65', glow: 'bg-violet-400/15' }
-                  const slotClass = "group relative grid size-10 shrink-0 place-items-center overflow-hidden border shadow-[0_8px_18px_rgba(0,0,0,0.28)] transition-transform duration-200 sm:size-11 " + (hasValidItem ? `${tone.frame} ${tone.glow} hover:-translate-y-0.5` : "border-dashed border-border/50 bg-background/30")
+                  const slotClass = "group relative grid size-9 shrink-0 place-items-center overflow-hidden border shadow-[0_8px_18px_rgba(0,0,0,0.28)] transition-transform duration-200 sm:size-11 " + (hasValidItem ? `${tone.frame} ${tone.glow} hover:-translate-y-0.5` : "border-dashed border-border/50 bg-background/30")
                   return <span key={`inventory-${itemIndex}`} title={hasValidItem ? itemName : `Slot ${itemIndex + 1}`} aria-label={hasValidItem ? itemName : `Slot ${itemIndex + 1}`} className={slotClass}>
                     {hasValidItem ? <>
                       <span aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.16),transparent_62%)]" />
@@ -386,11 +386,11 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
             <span className="grid size-5 place-items-center border border-current/50">{isOpen ? <Minus size={13} /> : <Plus size={13} />}</span>
           </span>
         </button>
-        {isOpen ? <div className="space-y-4 border-t border-border bg-background/40 p-3 sm:p-4">
+        {isOpen ? <div className="space-y-4 border-t border-border bg-background/40 p-2 sm:p-4">
           {metadataLoading ? <p role="status" className="py-3 text-sm text-muted-foreground"><LoaderCircle size={15} className="mr-2 inline animate-spin" />{labels.loading}</p> : null}
           {metadataError ? <p role="status" className="py-3 text-sm text-muted-foreground">{metadataError}</p> : null}
           {!metadataLoading && !metadataError && matchInfo ? <>
-            <div className="grid gap-3 xl:grid-cols-2">{(() => { const selectedTeam = selectedMatchPlayer?.team; const firstTeam = selectedTeam === 0 || selectedTeam === 1 ? selectedTeam : 0; return <>{renderTeam(firstTeam, labels.team0, match)}{renderTeam(1 - firstTeam, labels.team1, match)}</> })()}</div>
+            <div className="grid min-w-0 grid-cols-1 gap-3 2xl:grid-cols-2">{(() => { const selectedTeam = selectedMatchPlayer?.team; const firstTeam = selectedTeam === 0 || selectedTeam === 1 ? selectedTeam : 0; return <>{renderTeam(firstTeam, labels.team0, match)}{renderTeam(1 - firstTeam, labels.team1, match)}</> })()}</div>
           </> : null}
         </div> : null}
       </li>
