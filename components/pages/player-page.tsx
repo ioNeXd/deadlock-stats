@@ -390,7 +390,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           {metadataLoading ? <p role="status" className="py-3 text-sm text-muted-foreground"><LoaderCircle size={15} className="mr-2 inline animate-spin" />{labels.loading}</p> : null}
           {metadataError ? <p role="status" className="py-3 text-sm text-muted-foreground">{metadataError}</p> : null}
           {!metadataLoading && !metadataError && matchInfo ? <>
-            <div className="grid min-w-0 grid-cols-1 gap-3 2xl:grid-cols-2">{(() => { const selectedTeam = selectedMatchPlayer?.team; const firstTeam = selectedTeam === 0 || selectedTeam === 1 ? selectedTeam : 0; return <>{renderTeam(firstTeam, labels.team0, match)}{renderTeam(1 - firstTeam, labels.team1, match)}</> })()}</div>
+            <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">{(() => { const selectedTeam = selectedMatchPlayer?.team; const firstTeam = selectedTeam === 0 || selectedTeam === 1 ? selectedTeam : 0; return <>{renderTeam(firstTeam, labels.team0, match)}{renderTeam(1 - firstTeam, labels.team1, match)}</> })()}</div>
           </> : null}
         </div> : null}
       </li>
