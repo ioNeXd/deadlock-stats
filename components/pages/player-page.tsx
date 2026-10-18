@@ -198,7 +198,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
   const selectedPlayerFinalStats = selectedPlayerSnapshots.length ? asRecord(selectedPlayerSnapshots[selectedPlayerSnapshots.length - 1]) : null
   const selectedPlayerDamage = selectedPlayerFinalStats?.player_damage ?? selectedMatchPlayer?.player_damage
 
-  function renderTeam(team: number, title: string) {
+  function renderTeam(team: number, title: string, match: PlayerMatch) {
     const members = players.filter((player) => player.team === team)
     return <section key={team} className="min-w-0 overflow-hidden border border-border bg-card/70">
       <h4 className="flex items-center justify-between border-b border-border bg-muted/40 px-3 py-3 font-display font-bold uppercase tracking-wide">
@@ -390,7 +390,7 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
           {metadataLoading ? <p role="status" className="py-3 text-sm text-muted-foreground"><LoaderCircle size={15} className="mr-2 inline animate-spin" />{labels.loading}</p> : null}
           {metadataError ? <p role="status" className="py-3 text-sm text-muted-foreground">{metadataError}</p> : null}
           {!metadataLoading && !metadataError && matchInfo ? <>
-            <div className="grid gap-3 xl:grid-cols-2">{(() => { const selectedTeam = selectedMatchPlayer?.team; const firstTeam = selectedTeam === 0 || selectedTeam === 1 ? selectedTeam : 0; return <>{renderTeam(firstTeam, labels.team0)}{renderTeam(1 - firstTeam, labels.team1)}</> })()}</div>
+            <div className="grid gap-3 xl:grid-cols-2">{(() => { const selectedTeam = selectedMatchPlayer?.team; const firstTeam = selectedTeam === 0 || selectedTeam === 1 ? selectedTeam : 0; return <>{renderTeam(firstTeam, labels.team0, match)}{renderTeam(1 - firstTeam, labels.team1, match)}</> })()}</div>
           </> : null}
         </div> : null}
       </li>
