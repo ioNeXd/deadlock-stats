@@ -252,6 +252,39 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
             .sort((a, b) => a.gameTime - b.gameTime || a.sourceIndex - b.sourceIndex)
           const inventorySlots = purchases.slice(-10).map((purchase) => purchase.itemId)
           const visibleInventory = Array.from({ length: 10 }, (_, slotIndex) => inventorySlots[slotIndex] ?? null)
+          const statDefinitions = [
+            ['player_damage', labels.metricLabels.player_damage],
+            ['player_damage_taken', labels.metricLabels.player_damage_taken],
+            ['boss_damage', labels.metricLabels.boss_damage],
+            ['player_healing', labels.metricLabels.player_healing],
+            ['creep_kills', labels.metricLabels.creep_kills],
+            ['denies', labels.metricLabels.denies],
+            ['net_worth', labels.metricLabels.net_worth],
+          ] as const
+          const metrics = statDefinitions.flatMap(([key, label]) => {
+            const values = snapshots.map((snapshot) => asRecord(snapshot)?.[key]).filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+            return values.length ? [{ key, label, value: Math.max(...values) }] : []
+          })
+          const abilities = (Array.isArray(player.ability_stats) ? player.ability_stats : []).flatMap((value) => {
+            const record = asRecord(value)
+            const rawId = record?.ability_id
+            const id = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
+            if (!Number.isSafeInteger(id) || id <= 0) return []
+            const asset = itemAssets.find((candidate) => candidate.id === id) as (ItemAsset & Record<string, unknown>) | undefined
+            return [{ id, name: typeof asset?.name === 'string' ? asset.name : `#${id}`, value: typeof record?.ability_value === 'number' ? record.ability_value : null }]
+          })
+          const events = rawItems.flatMap((value, sourceIndex) => {
+            const record = asRecord(value)
+            const rawId = record?.upgrade_id ?? record?.item_id
+            const id = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
+            if (!Number.isSafeInteger(id) || !itemById.has(id)) return []
+            const rawTime = record?.game_time_s
+            const time = typeof rawTime === 'number' ? rawTime : typeof rawTime === 'string' ? Number(rawTime) : sourceIndex
+            const rawSoldTime = record?.sold_time_s
+            const soldTime = typeof rawSoldTime === 'number' ? rawSoldTime : typeof rawSoldTime === 'string' ? Number(rawSoldTime) : 0
+            return [{ id, time, soldTime, sourceIndex }]
+          }).sort((left, right) => left.time - right.time || left.sourceIndex - right.sourceIndex).slice(-8).reverse()
+          const hasAdditionalStats = metrics.length > 0 || abilities.length > 0 || events.length > 0
           return <li key={accountId ?? index} className={`transition-colors ${accountId === selectedAccountId ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : 'hover:bg-muted/20'}`}>
             <div className="grid min-w-0 grid-cols-[1.25rem_3rem_minmax(0,1fr)] items-start gap-x-2 gap-y-3 p-3 sm:flex sm:gap-4 sm:px-4 sm:py-4">
               <span className="w-5 shrink-0 pt-1 text-center font-mono text-[11px] text-muted-foreground">{index + 1}</span>
@@ -300,50 +333,11 @@ function MatchHistory({ matches, loading, error, empty, playerName, selectedAcco
                     </> : <span className="font-mono text-[10px] text-muted-foreground/40">{itemIndex + 1}</span>}
                   </span>
                 })}</div>
-                 {(() => {
-                   const statDefinitions = [
-                     ['player_damage', labels.metricLabels.player_damage],
-                     ['player_damage_taken', labels.metricLabels.player_damage_taken],
-                     ['boss_damage', labels.metricLabels.boss_damage],
-                     ['player_healing', labels.metricLabels.player_healing],
-                     ['creep_kills', labels.metricLabels.creep_kills],
-                     ['denies', labels.metricLabels.denies],
-                     ['net_worth', labels.metricLabels.net_worth],
-                   ] as const
-                   const metrics = statDefinitions.flatMap(([key, label]) => {
-                     const values = snapshots.map((snapshot) => asRecord(snapshot)?.[key]).filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
-                     return values.length ? [{ key, label, value: Math.max(...values) }] : []
-                   })
-                   const rawAbilityStats = Array.isArray(player.ability_stats) ? player.ability_stats : []
-                   const abilities = rawAbilityStats.map((value) => {
-                     const record = asRecord(value)
-                     if (!record) return null
-                     const rawId = record.ability_id
-                     const id = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
-                     if (!Number.isSafeInteger(id) || id <= 0) return null
-                     const asset = itemAssets.find((candidate) => candidate.id === id) as (ItemAsset & Record<string, unknown>) | undefined
-                     return { id, name: typeof asset?.name === 'string' ? asset.name : `#${id}`, value: typeof record.ability_value === 'number' ? record.ability_value : null }
-                   }).filter((ability): ability is { id: number; name: string; value: number | null } => ability !== null)
-                   const events = rawItems.map((value, sourceIndex) => {
-                     const record = asRecord(value)
-                     if (!record) return null
-                     const rawId = record.upgrade_id ?? record.item_id
-                     const id = typeof rawId === 'number' ? rawId : typeof rawId === 'string' ? Number(rawId) : NaN
-                     if (!Number.isSafeInteger(id) || !itemById.has(id)) return null
-                     const rawTime = record.game_time_s
-                     const time = typeof rawTime === 'number' ? rawTime : typeof rawTime === 'string' ? Number(rawTime) : sourceIndex
-                     const rawSoldTime = record.sold_time_s
-                     const soldTime = typeof rawSoldTime === 'number' ? rawSoldTime : typeof rawSoldTime === 'string' ? Number(rawSoldTime) : 0
-                     return { id, time, soldTime, sourceIndex }
-                   }).filter((event): event is { id: number; time: number; soldTime: number; sourceIndex: number } => event !== null)
-                     .sort((left, right) => left.time - right.time || left.sourceIndex - right.sourceIndex).slice(-8).reverse()
-                   if (!metrics.length && !abilities.length && !events.length) return null
-                   return <div className="mt-2 grid min-w-0 grid-cols-1 gap-2 xl:grid-cols-2">
-                     {metrics.length ? <section className="min-w-0 border border-border/60 bg-background/40 p-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.finalStats}</h5><dl className="grid grid-cols-2 gap-1 sm:grid-cols-3">{metrics.map((metric) => <div key={metric.key} className="min-w-0 border border-border/50 px-2 py-1"><dt className="truncate text-[9px] text-muted-foreground">{metric.label}</dt><dd className="truncate font-mono text-[11px] font-bold tabular-nums">{formatNumber(metric.value)}</dd></div>)}</dl></section> : null}
-                     {abilities.length ? <section className="min-w-0 border border-border/60 bg-background/40 p-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.abilityStats}</h5><ul className="flex flex-wrap gap-1">{abilities.map((ability) => <li key={ability.id} className="max-w-full border border-violet-400/30 bg-violet-400/10 px-2 py-1 text-[10px] text-violet-200">{ability.name}{ability.value !== null ? ` · ${formatNumber(ability.value)}` : ''}</li>)}</ul></section> : null}
-                     {events.length ? <section className="min-w-0 border border-border/60 bg-background/40 p-2 xl:col-span-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.purchaseTimeline}</h5><ul className="grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-4">{events.map((event) => { const item = itemById.get(event.id) as (ItemAsset & Record<string, unknown>) | undefined; const name = typeof item?.name === 'string' ? item.name : `#${event.id}`; const time = Math.max(0, Math.floor(event.time)); return <li key={`${event.id}-${event.sourceIndex}`} className="min-w-0 border border-border/50 px-2 py-1"><span className="block truncate text-[10px] font-semibold" title={name}>{name}</span><span className="block font-mono text-[9px] text-muted-foreground">{Math.floor(time / 60)}:{String(time % 60).padStart(2, '0')} · {event.soldTime > 0 ? labels.sold : labels.purchasedAt}</span></li> })}</ul></section> : null}
-                   </div>
-                 })()}
+                 {hasAdditionalStats ? <div className="mt-2 grid min-w-0 grid-cols-1 gap-2 xl:grid-cols-2">
+                   {metrics.length ? <section className="min-w-0 border border-border/60 bg-background/40 p-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.finalStats}</h5><dl className="grid grid-cols-2 gap-1 sm:grid-cols-3">{metrics.map((metric) => <div key={metric.key} className="min-w-0 border border-border/50 px-2 py-1"><dt className="truncate text-[9px] text-muted-foreground">{metric.label}</dt><dd className="truncate font-mono text-[11px] font-bold tabular-nums">{formatNumber(metric.value)}</dd></div>)}</dl></section> : null}
+                   {abilities.length ? <section className="min-w-0 border border-border/60 bg-background/40 p-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.abilityStats}</h5><ul className="flex flex-wrap gap-1">{abilities.map((ability) => <li key={ability.id} className="max-w-full border border-violet-400/30 bg-violet-400/10 px-2 py-1 text-[10px] text-violet-200">{ability.name}{ability.value !== null ? ` · ${formatNumber(ability.value)}` : ''}</li>)}</ul></section> : null}
+                   {events.length ? <section className="min-w-0 border border-border/60 bg-background/40 p-2 xl:col-span-2"><h5 className="mb-1 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{labels.purchaseTimeline}</h5><ul className="grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-4">{events.map((event) => <li key={`${event.id}-${event.sourceIndex}`} className="min-w-0 border border-border/50 px-2 py-1">{itemById.get(event.id)?.name ?? `#${event.id}`} · {Math.floor(Math.max(0, event.time) / 60)}:{String(Math.floor(Math.max(0, event.time)) % 60).padStart(2, '0')} · {event.soldTime > 0 ? labels.sold : labels.purchasedAt}</li>)}</ul></section> : null}
+                 </div> : null}
             </div>
           </li>
         })}
